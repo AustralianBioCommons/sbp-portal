@@ -37,4 +37,4 @@ jobs:
           hide_complexity: true
           indicators: true
           output: console
-          thresholds: "80 80"
+          thresholds: "90 90"

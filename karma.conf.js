@@ -28,7 +28,8 @@ module.exports = function (config) {
         // CI workflow parses to enforce thresholds.
         { type: 'json-summary' },
         { type: 'text' },
-        { type: 'text-summary' }
+        { type: 'text-summary' },
+        { type: 'cobertura', subdir: '.', file: 'cobertura.txt' }
       ],
       check: {
         global: {
