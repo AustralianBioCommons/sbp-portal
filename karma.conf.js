@@ -20,7 +20,7 @@ module.exports = function (config) {
       // counted in the coverage totals (this makes the CI gate reflect
       // untested source files).
       includeAllSources: true,
-      dir: require('path').join(__dirname, './coverage'),
+      dir: require('path').join(__dirname, './coverage/sbp-portal'),
       reporters: [
         { type: 'html' },
         { type: 'lcovonly' },
