@@ -31,7 +31,8 @@ jobs:
         run: |
           # start a static server in background and wait for it to accept connections
           # serve the actual Angular build output folder (project name)
-          npx http-server ./dist/sbp-portal -p 4200 --silent &
+          # the Angular build places the client assets under dist/sbp-portal/browser
+          npx http-server ./dist/sbp-portal/browser -p 4200 --silent &
           npx wait-on http://127.0.0.1:4200 --timeout 30000
           # run playwright tests once the server is ready
           npx playwright test --project=chromium --reporter=list,html
