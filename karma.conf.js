@@ -16,10 +16,17 @@ module.exports = function (config) {
     },
     reporters: ['progress', 'kjhtml', 'coverage'],
     coverageReporter: {
+      // Include all sources so files that aren't executed in tests are still
+      // counted in the coverage totals (this makes the CI gate reflect
+      // untested source files).
+      includeAllSources: true,
       dir: require('path').join(__dirname, './coverage'),
       reporters: [
         { type: 'html' },
         { type: 'lcovonly' },
+        // json-summary produces coverage/coverage-summary.json which our
+        // CI workflow parses to enforce thresholds.
+        { type: 'json-summary' },
         { type: 'text' },
         { type: 'text-summary' }
       ],

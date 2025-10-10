@@ -1,26 +1,32 @@
-name: Test & Coverage
+# This workflow will run the project tests and generate a coverage report,
+#   failing if coverage is < 90%
+name: Coverage
 
 on:
   push:
-    branches: [ main ]
+    branches: ["main", "test"]
   pull_request:
-    branches: [ main ]
+    branches: ["main", "test"]
 
 jobs:
-  test-coverage:
+  build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 20
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Install deps
-        run: npm ci
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm ci
       - name: Run tests (headless) with coverage
         run: npm run test:ci
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage
+
+      - name: Coverage check (use same script as local)
+        run: npm run coverage:check
