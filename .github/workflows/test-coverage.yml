@@ -25,8 +25,16 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
       - run: npm ci
-      - name: Run tests (headless) with coverage
-        run: npm run test:ci
-
-      - name: Coverage check (use same script as local)
-        run: npm run coverage:check
+      - run: npm test -- --no-watch --no-progress --browsers=ChromeHeadless --code-coverage
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage/sbp-portal/cobertura.txt
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: true
+          hide_complexity: true
+          indicators: true
+          output: console
+          thresholds: "80 80"
