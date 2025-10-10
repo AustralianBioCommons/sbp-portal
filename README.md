@@ -1,5 +1,6 @@
 ![Lint](https://github.com/AustralianBioCommons/sbp-portal/actions/workflows/lint.yml/badge.svg)
 ![Coverage](https://github.com/AustralianBioCommons/sbp-portal/actions/workflows/test-coverage.yml/badge.svg)
+![Playwright E2E](https://github.com/AustralianBioCommons/sbp-portal/actions/workflows/e2e.yml/badge.svg)
 ![Codecov](https://img.shields.io/codecov/c/github/AustralianBioCommons/sbp-portal/main.svg)
 
 ## Frontend (Angular 20 + Tailwind)
