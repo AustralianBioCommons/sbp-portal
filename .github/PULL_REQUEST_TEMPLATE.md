@@ -11,6 +11,9 @@ Provide a short description of the changes in this pull request and the motivati
 ## Related Issues
 If this PR relates to, or closes, any issues, list them here. Use "Closes #123" to auto-close.
 
+## Ticket number
+Link to related SBP ticket
+
 ## Changes
 - What changed? (files, components, behavior)
 - Any migration or backwards-incompatible changes?
