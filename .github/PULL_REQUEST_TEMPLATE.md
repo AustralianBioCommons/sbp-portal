@@ -8,10 +8,6 @@ Delete any sections that don't apply.
 ## Summary
 [SBP-XXX](https://biocloud.atlassian.net/browse/SBP-XXX)<Provide a short description of the changes in this pull request and the motivation behind them.>
 
-
-## Ticket number
-Link to related SBP ticket
-
 ## Changes
 - <What changed? (files, components, behavior)>
 - <Any migration or backwards-incompatible changes?>
