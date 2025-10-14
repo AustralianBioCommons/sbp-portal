@@ -34,3 +34,26 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Angular cache (build artifacts)
+.angular/cache/
+
+# build output
+/dist
+
+# IDEs
+.idea/
+.vscode/
+
+# Playwright artifacts
+/test-results
+/playwright-report
+**/trace*
+**/videos
+**/screenshots
+
+# temporary
+.cache/
+
+# lock files (if using alternative package managers)
+pnpm-lock.yaml
