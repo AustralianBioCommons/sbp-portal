@@ -10,7 +10,9 @@
     "module": "es2020",
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2020",
-    "typeRoots": ["node_modules/@types"]
+    "target": "es2022",
+    "types": ["jasmine", "node"],
+    "typeRoots": ["node_modules/@types"],
+    
   }
 }
