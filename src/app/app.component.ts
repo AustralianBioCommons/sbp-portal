@@ -1,20 +1,33 @@
 import { Component, inject } from '@angular/core';
 import { AuthService } from '@auth0/auth0-angular';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  template: `
-    <div class="min-h-screen bg-gray-100 p-8">
-      <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">SBP Portal</h1>
-        <button (click)="auth.loginWithRedirect()" class="px-4 py-2 bg-blue-600 text-white rounded">Log in</button>
-      </div>
-      <p class="mt-4 text-center">Welcome to the Structural Biology Platform portal.</p>
-    </div>
-  `,
-  styles: []
+  imports: [CommonModule],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   public auth = inject(AuthService);
+  public locationHref = window.location.href;
+
+  constructor() {
+    // Debug subscriptions
+    try {
+      this.auth.isAuthenticated$?.subscribe((v) => console.debug('Auth isAuthenticated$', v));
+      this.auth.user$?.subscribe((u) => console.debug('Auth user$', u));
+    } catch (e) {
+      console.debug('Auth debug subscription failed', e);
+    }
+  }
+  logout() {
+    try {
+      (this.auth as any).logout({ logoutParams: { returnTo: window.location.origin } });
+    } catch (e) {
+      // Fallback: call without params
+      this.auth.logout();
+    }
+  }
 }

@@ -5,7 +5,11 @@
   "projects": {
     "sbp-portal": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "selector": "scss"
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
