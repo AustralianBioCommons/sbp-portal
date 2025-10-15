@@ -4,7 +4,8 @@ import { AppComponent } from './app/app.component';
 import { provideRouter } from '@angular/router';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { AuthInterceptor } from './app/interceptors/auth.interceptor';
+import { AuthInterceptor } from './app/cores/auth.interceptor';
+import { authGuard } from './app/cores/auth.guard';
 import { provideAuth0 } from '@auth0/auth0-angular';
 import { environment } from './environments/environment';
 
@@ -12,7 +13,8 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideRouter([
       { path: '', component: AppComponent },
-      // add routes here if needed
+      { path: 'protected', component: AppComponent, canActivate: [authGuard] },
+      // add more routes here
     ]),
     provideAuth0({
       domain: environment.auth.domain,

@@ -1,0 +1,19 @@
+<div class="min-h-screen bg-gray-100 p-8">
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-bold">SBP Portal</h1>
+    <ng-container *ngIf="(auth.isAuthenticated$ | async); else loggedOut">
+      <button (click)="logout()" class="px-4 py-2 bg-red-600 text-white rounded">Log out</button>
+    </ng-container>
+    <ng-template #loggedOut>
+      <button (click)="auth.loginWithRedirect()" class="px-4 py-2 bg-blue-600 text-white rounded">Log in</button>
+    </ng-template>
+  </div>
+  <p class="mt-4 text-center">Welcome to the Structural Biology Platform portal.</p>
+</div>
+
+<div class="mt-6 p-4 bg-white border rounded text-sm">
+  <strong>Auth debug</strong>
+  <div>isAuthenticated: {{ (auth.isAuthenticated$ | async) }}</div>
+  <div>user: {{ (auth.user$ | async) | json }}</div>
+  <div>location: {{ locationHref }}</div>
+</div>
