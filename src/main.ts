@@ -2,11 +2,9 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
 import { provideRouter } from '@angular/router';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { AuthInterceptor } from './app/cores/auth.interceptor';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authGuard } from './app/cores/auth.guard';
-import { provideAuth0 } from '@auth0/auth0-angular';
+import { provideAuth0, authHttpInterceptorFn } from '@auth0/auth0-angular';
 import { environment } from './environments/environment';
 
 bootstrapApplication(AppComponent, {
@@ -20,11 +18,18 @@ bootstrapApplication(AppComponent, {
       domain: environment.auth.domain,
       clientId: environment.auth.clientId,
       authorizationParams: {
-        audience: undefined,
+        audience: environment.auth.audience,
         redirect_uri: window.location.origin
+      },
+      // Configure Auth0's built-in interceptor
+      httpInterceptor: {
+        allowedList: [
+          // If apiBaseUrl is configured, use it; otherwise use relative paths pattern
+          environment.apiBaseUrl || `${window.location.origin}/api/*`,
+        ]
       }
     }),
-    provideHttpClient(withInterceptorsFromDi()),
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    // Use Auth0's built-in HTTP interceptor instead of our custom one
+    provideHttpClient(withInterceptors([authHttpInterceptorFn]))
   ],
 }).catch((err) => console.error(err));

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { AuthService } from '@auth0/auth0-angular';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
@@ -10,7 +10,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     const mockAuthService = {
       loginWithRedirect: jasmine.createSpy('loginWithRedirect'),
-      logout: jasmine.createSpy('logout'),
+      logout: jasmine.createSpy('logout').and.returnValue(of(void 0)),
       isAuthenticated$: of(false),
       user$: of(null),
       getAccessTokenSilently: () => of(undefined)
@@ -35,13 +35,56 @@ describe('AppComponent', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('SBP Portal');
   });
 
-  it('shows login button when logged out and triggers login', () => {
+  it('shows login button when logged out and triggers login method', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const button = compiled.querySelector('button');
     expect(button?.textContent).toContain('Log in');
+    
+    // Spy on the login method
+    spyOn(component, 'login');
+    
     // trigger click
     button?.dispatchEvent(new Event('click'));
+    
+    expect(component.login).toHaveBeenCalled();
+  });
+
+  it('login method should logout first then login', (done) => {
     const auth = TestBed.inject(AuthService) as any;
+    
+    component.login();
+    
+    // Should call logout first
+    expect(auth.logout).toHaveBeenCalled();
+    
+    // After timeout, should call loginWithRedirect
+    setTimeout(() => {
+      expect(auth.loginWithRedirect).toHaveBeenCalled();
+      done();
+    }, 150);
+  });
+
+  it('login method should fallback to direct login if logout fails', () => {
+    const auth = TestBed.inject(AuthService) as any;
+    auth.logout.and.throwError('Logout failed');
+    
+    component.login();
+    
+    // Should still attempt loginWithRedirect even if logout fails
+    expect(auth.loginWithRedirect).toHaveBeenCalled();
+  });
+
+  it('login method should handle logout observable error', () => {
+    const auth = TestBed.inject(AuthService) as any;
+    // Mock logout to return an observable that errors
+    auth.logout.and.returnValue(throwError(() => new Error('Logout observable failed')));
+    
+    component.login();
+    
+    // Should call logout first
+    expect(auth.logout).toHaveBeenCalled();
+    
+    // Should still call loginWithRedirect in the error handler
     expect(auth.loginWithRedirect).toHaveBeenCalled();
   });
 
