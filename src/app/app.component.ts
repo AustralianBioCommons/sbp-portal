@@ -2,6 +2,12 @@ import { Component, inject } from '@angular/core';
 import { AuthService } from '@auth0/auth0-angular';
 import { CommonModule } from '@angular/common';
 
+interface LogoutParams {
+  logoutParams?: {
+    returnTo?: string;
+  };
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -13,21 +19,35 @@ export class AppComponent {
   public auth = inject(AuthService);
   public locationHref = window.location.href;
 
-  constructor() {
-    // Debug subscriptions
-    try {
-      this.auth.isAuthenticated$?.subscribe((v) => console.debug('Auth isAuthenticated$', v));
-      this.auth.user$?.subscribe((u) => console.debug('Auth user$', u));
-    } catch (e) {
-      console.debug('Auth debug subscription failed', e);
-    }
-  }
   logout() {
     try {
-      (this.auth as any).logout({ logoutParams: { returnTo: window.location.origin } });
+      // Type assertion to access logout with parameters
+      (this.auth.logout as (options?: LogoutParams) => void)({ logoutParams: { returnTo: window.location.origin } });
     } catch (e) {
       // Fallback: call without params
       this.auth.logout();
+    }
+  }
+
+  // Login method that first clears auth state to prevent previous login errors
+  login() {
+    try {
+      // First logout to clear any partial auth state
+      this.auth.logout().subscribe({
+        complete: () => {
+          // After logout completes, start fresh login
+          setTimeout(() => {
+            this.auth.loginWithRedirect();
+          }, 100);
+        },
+        error: () => {
+          // If logout fails, still attempt login
+          this.auth.loginWithRedirect();
+        }
+      });
+    } catch (e) {
+      // If logout method fails, fall back to direct login
+      this.auth.loginWithRedirect();
     }
   }
 }
