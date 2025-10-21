@@ -1,20 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { AuthService } from '@auth0/auth0-angular';
-import { of, throwError } from 'rxjs';
+import { AuthService } from './cores/auth.service';
+import { of } from 'rxjs';
 
 describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
   let component: AppComponent;
+  let mockAuthService: jasmine.SpyObj<AuthService>;
 
   beforeEach(async () => {
-    const mockAuthService = {
-      loginWithRedirect: jasmine.createSpy('loginWithRedirect'),
-      logout: jasmine.createSpy('logout').and.returnValue(of(void 0)),
+    mockAuthService = {
+      login: jasmine.createSpy('login'),
+      logout: jasmine.createSpy('logout'),
+      dismissError: jasmine.createSpy('dismissError'),
       isAuthenticated$: of(false),
       user$: of(null),
-      getAccessTokenSilently: () => of(undefined)
-    } as unknown as AuthService;
+      error$: of(null),
+      errorMessage$: of(null),
+      showErrorBanner$: of(false),
+      bannerMessage$: of(null),
+      bannerType$: of('error'),
+      showBanner$: of(false),
+      getAccessTokenSilently: jasmine.createSpy('getAccessTokenSilently').and.returnValue(of(undefined))
+    } as unknown as jasmine.SpyObj<AuthService>;
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
@@ -30,73 +38,56 @@ describe('AppComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render title text', () => {
+  it('should render title', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('SBP Portal');
   });
 
-  it('shows login button when logged out and triggers login method', () => {
+  it('shows login button when logged out and triggers login', () => {
+    fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     const button = compiled.querySelector('button');
     expect(button?.textContent).toContain('Log in');
-    
-    // Spy on the login method
-    spyOn(component, 'login');
-    
-    // trigger click
-    button?.dispatchEvent(new Event('click'));
-    
-    expect(component.login).toHaveBeenCalled();
+    button?.click();
+    expect(mockAuthService.login).toHaveBeenCalled();
   });
 
-  it('login method should logout first then login', (done) => {
-    const auth = TestBed.inject(AuthService) as any;
-    
+  it('calls AuthService login method when login is triggered', () => {
     component.login();
-    
-    // Should call logout first
-    expect(auth.logout).toHaveBeenCalled();
-    
-    // After timeout, should call loginWithRedirect
-    setTimeout(() => {
-      expect(auth.loginWithRedirect).toHaveBeenCalled();
-      done();
-    }, 150);
+    expect(mockAuthService.login).toHaveBeenCalled();
   });
 
-  it('login method should fallback to direct login if logout fails', () => {
-    const auth = TestBed.inject(AuthService) as any;
-    auth.logout.and.throwError('Logout failed');
-    
-    component.login();
-    
-    // Should still attempt loginWithRedirect even if logout fails
-    expect(auth.loginWithRedirect).toHaveBeenCalled();
+  it('shows logout dialog when logout is triggered', () => {
+    component.logout();
+    expect(component.showLogoutDialog()).toBe(true);
   });
 
-  it('login method should handle logout observable error', () => {
-    const auth = TestBed.inject(AuthService) as any;
-    // Mock logout to return an observable that errors
-    auth.logout.and.returnValue(throwError(() => new Error('Logout observable failed')));
-    
-    component.login();
-    
-    // Should call logout first
-    expect(auth.logout).toHaveBeenCalled();
-    
-    // Should still call loginWithRedirect in the error handler
-    expect(auth.loginWithRedirect).toHaveBeenCalled();
+  it('calls AuthService logout method when logout is confirmed', () => {
+    component.onLogoutConfirmed();
+    expect(mockAuthService.logout).toHaveBeenCalled();
   });
 
-  it('shows logout button when logged in and triggers logout', async () => {
-    // Reconfigure TestBed with isAuthenticated$ = true
+  it('does not call AuthService logout method when logout is cancelled', () => {
+    component.onLogoutCancelled();
+    expect(mockAuthService.logout).not.toHaveBeenCalled();
+  });
+
+    it('calls AuthService dismissError method when dismissError is triggered', () => {
+      component.dismissError();
+      expect(mockAuthService.dismissError).toHaveBeenCalled();
+    });
+
+    // Tests removed - no longer using retry functionality
+    // Authentication errors now automatically trigger logout and redirect to home page
+    // The component now handles all authentication errors generically
+
+  it('shows logout button when logged in', async () => {
+    // Create a new mock with isAuthenticated$ = true
     const mockAuthServiceLoggedIn = {
-      loginWithRedirect: jasmine.createSpy('loginWithRedirect'),
-      logout: jasmine.createSpy('logout'),
+      ...mockAuthService,
       isAuthenticated$: of(true),
-      user$: of({ name: 'Test' }),
-      getAccessTokenSilently: () => of('token')
-    } as unknown as AuthService;
+      user$: of({ name: 'Test' })
+    };
 
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
@@ -109,38 +100,38 @@ describe('AppComponent', () => {
     const compiled = fixture2.nativeElement as HTMLElement;
     const button = compiled.querySelector('button');
     expect(button?.textContent).toContain('Log out');
-    button?.dispatchEvent(new Event('click'));
-    const auth = TestBed.inject(AuthService) as any;
-    expect(auth.logout).toHaveBeenCalled();
   });
 
-  it('logout fallback calls logout() when logout with params throws', async () => {
-    let calls = 0;
-    const throwingLogout = jasmine.createSpy('logout').and.callFake(() => {
-      calls += 1;
-      if (calls === 1) throw new Error('boom');
-      return undefined;
-    });
-    const mockAuthServiceLoggedIn = {
-      loginWithRedirect: jasmine.createSpy('loginWithRedirect'),
-      logout: throwingLogout,
-      isAuthenticated$: of(true),
-      user$: of({ name: 'Test' }),
-      getAccessTokenSilently: () => of('token')
-    } as unknown as AuthService;
+  it('displays error alert with exact error message until user logs in', async () => {
+    // Create a new mock with error state
+    const mockAuthServiceWithError = {
+      ...mockAuthService,
+      showBanner$: of(true),
+      bannerMessage$: of('email_not_verified'),
+      bannerType$: of('error')
+    };
 
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [{ provide: AuthService, useValue: mockAuthServiceLoggedIn }]
+      providers: [{ provide: AuthService, useValue: mockAuthServiceWithError }]
     }).compileComponents();
 
     const fixture2 = TestBed.createComponent(AppComponent);
     fixture2.detectChanges();
-    // call logout method directly to hit try/catch path
-    const comp = fixture2.componentInstance;
-    expect(() => comp.logout()).not.toThrow();
-    // expect both the initial failing call and the fallback to have been attempted
-    expect(throwingLogout.calls.count()).toBeGreaterThanOrEqual(1);
+    const compiled = fixture2.nativeElement as HTMLElement;
+    
+    // Should show error banner with exact error message (no prefix)
+    const errorBanner = compiled.querySelector('.bg-red-50');
+    expect(errorBanner).toBeTruthy();
+    expect(errorBanner?.textContent).toContain('email_not_verified');
+    expect(errorBanner?.textContent).not.toContain('Authentication error:');
+  });
+
+  it('hides error banner when showBanner$ is false', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const errorBanner = compiled.querySelector('.bg-red-50');
+    expect(errorBanner).toBeFalsy();
   });
 });

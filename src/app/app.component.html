@@ -1,15 +1,42 @@
 <div class="min-h-screen bg-gray-100 p-8">
+  <!-- AlertComponent - shows success/error messages for 3 seconds -->
+  <app-alert 
+    *ngIf="showBanner$ | async"
+    [type]="(bannerType$ | async) || 'error'" 
+    [message]="(bannerMessage$ | async) || ''"
+    [dismissible]="true"
+    (dismissed)="dismissError()">
+  </app-alert>
+
   <div class="flex justify-between items-center">
     <h1 class="text-3xl font-bold">SBP Portal</h1>
     <ng-container *ngIf="(auth.isAuthenticated$ | async); else loggedOut">
-      <button (click)="logout()" class="px-4 py-2 bg-red-600 text-white rounded">Log out</button>
+      <app-button (click)="logout()" [variant]="'secondary'" [borderRadius]="'rounded-10px'">
+        Log out
+      </app-button>
     </ng-container>
     <ng-template #loggedOut>
-      <button (click)="login()" class="px-4 py-2 bg-blue-600 text-white rounded">Log in</button>
+      <app-button (click)="login()" [variant]="'primary'" [widthClass]="'w-218px'" [borderRadius]="'rounded-10px'">
+        Sign up or log in
+      </app-button>
     </ng-template>
   </div>
   <p class="mt-4 text-center">Welcome to the Structural Biology Platform portal.</p>
 </div>
+
+<!-- Logout Confirmation Dialog -->
+<app-dialog
+  [isOpen]="showLogoutDialog()"
+  [title]="'Confirm Logout'"
+  [message]="'Are you sure you want to log out?'"
+  [confirmText]="'Log out'"
+  [cancelText]="'Cancel'"
+  [confirmVariant]="'secondary'"
+  (confirmed)="onLogoutConfirmed()"
+  (cancelled)="onLogoutCancelled()"
+  (closed)="showLogoutDialog.set(false)"
+>
+</app-dialog>
 
 <div class="mt-6 p-4 bg-white border rounded text-sm">
   <strong>Auth debug</strong>

@@ -1,53 +1,46 @@
-import { Component, inject } from '@angular/core';
-import { AuthService } from '@auth0/auth0-angular';
+import { Component, inject, signal } from '@angular/core';
+import { AuthService } from './cores/auth.service';
 import { CommonModule } from '@angular/common';
-
-interface LogoutParams {
-  logoutParams?: {
-    returnTo?: string;
-  };
-}
+import { AlertComponent } from './components/alert/alert.component';
+import { ButtonComponent } from './components/button/button.component';
+import { DialogComponent } from './components/dialog/dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AlertComponent, ButtonComponent, DialogComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   public auth = inject(AuthService);
   public locationHref = window.location.href;
+  
+  // Use AuthService unified banner observables
+  public bannerMessage$ = this.auth.bannerMessage$;
+  public bannerType$ = this.auth.bannerType$;
+  public showBanner$ = this.auth.showBanner$;
 
-  logout() {
-    try {
-      // Type assertion to access logout with parameters
-      (this.auth.logout as (options?: LogoutParams) => void)({ logoutParams: { returnTo: window.location.origin } });
-    } catch (e) {
-      // Fallback: call without params
-      this.auth.logout();
-    }
+  // Dialog state
+  public showLogoutDialog = signal(false);
+
+  dismissError() {
+    this.auth.dismissError();
   }
 
-  // Login method that first clears auth state to prevent previous login errors
   login() {
-    try {
-      // First logout to clear any partial auth state
-      this.auth.logout().subscribe({
-        complete: () => {
-          // After logout completes, start fresh login
-          setTimeout(() => {
-            this.auth.loginWithRedirect();
-          }, 100);
-        },
-        error: () => {
-          // If logout fails, still attempt login
-          this.auth.loginWithRedirect();
-        }
-      });
-    } catch (e) {
-      // If logout method fails, fall back to direct login
-      this.auth.loginWithRedirect();
-    }
+    this.auth.login();
+  }
+
+  logout() {
+    this.showLogoutDialog.set(true);
+  }
+
+  onLogoutConfirmed() {
+    this.auth.logout();
+  }
+
+  onLogoutCancelled() {
+    // Dialog will be closed via the (closed) event
   }
 }
