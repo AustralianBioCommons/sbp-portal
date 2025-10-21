@@ -1,0 +1,50 @@
+<!-- Dialog Backdrop -->
+<div 
+  *ngIf="isOpen"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+  (click)="onBackdropClick($event)"
+  (keydown.escape)="onCancel()"
+  tabindex="0"
+  role="button"
+  aria-label="Close dialog"
+>
+  <!-- Dialog Container -->
+  <div 
+    class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="title ? 'dialog-title' : null"
+  >
+    <!-- Dialog Header -->
+    <div *ngIf="title" class="px-6 py-4 border-b border-gray-200">
+      <h3 id="dialog-title" class="text-lg font-semibold text-gray-900">
+        {{ title }}
+      </h3>
+    </div>
+
+    <!-- Dialog Content -->
+    <div class="px-6 py-4">
+      <p class="text-gray-700">{{ message }}</p>
+    </div>
+
+    <!-- Dialog Actions -->
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+      <app-button 
+        (click)="onCancel()"
+        [variant]="'secondary'"
+        [borderRadius]="'rounded-10px'"
+      >
+        {{ cancelText }}
+      </app-button>
+      
+      <app-button 
+        (click)="onConfirm()"
+        [variant]="confirmVariant"
+        [colorClasses]="confirmColorClasses"
+        [borderRadius]="'rounded-10px'"
+      >
+        {{ confirmText }}
+      </app-button>
+    </div>
+  </div>
+</div>
