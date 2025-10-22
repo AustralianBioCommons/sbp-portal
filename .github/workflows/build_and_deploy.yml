@@ -136,7 +136,10 @@ jobs:
           cat "${RESPONSE_FILE}"
 
           STATUS=$(jq -r '.status // empty' "${RESPONSE_FILE}")
-          if [ -n "${STATUS}" ] && [ "${STATUS}" != "SUCCESS" ] && [ "${STATUS}" != "ok" ]; then
-            echo "Frontend release lambda returned unexpected status: ${STATUS}" >&2
-            exit 1
+          if [ -n "${STATUS}" ]; then
+            NORMALIZED=$(echo "${STATUS}" | tr '[:lower:]' '[:upper:]')
+            if [ "${NORMALIZED}" != "SUCCESS" ] && [ "${NORMALIZED}" != "OK" ]; then
+              echo "Frontend release lambda returned unexpected status: ${STATUS}" >&2
+              exit 1
+            fi
           fi
