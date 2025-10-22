@@ -143,7 +143,7 @@ export class AuthService {
   /**
    * Get current banner type
    */
-  get currentBannerType(): 'success' | 'error' {
+  get currentBannerType(): 'success' | 'error' | null {
     return this.bannerTypeSubject.value;
   }
 
