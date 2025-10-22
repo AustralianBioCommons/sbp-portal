@@ -1,0 +1,142 @@
+name: Upload Portal Builds (Dev)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-builds:
+    name: Build and Deploy Dev Portal
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate required secrets
+        env:
+          AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
+          AWS_ROLE_FRONTEND: ${{ secrets.AWS_ROLE_FRONTEND }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DEV_FRONTEND_SECRET_NAME: ${{ secrets.AWS_DEV_FRONTEND_SECRET_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${AWS_PORTAL_BUILD_BUCKET}" ]; then
+            echo "Missing required secret AWS_PORTAL_BUILD_BUCKET" >&2
+            exit 1
+          fi
+          if [ -z "${AWS_ROLE_FRONTEND}" ]; then
+            echo "Missing required secret AWS_ROLE_FRONTEND" >&2
+            exit 1
+          fi
+          if [ -z "${AWS_REGION}" ]; then
+            echo "Missing required secret AWS_REGION" >&2
+            exit 1
+          fi
+          if [ -z "${AWS_DEV_FRONTEND_SECRET_NAME}" ]; then
+            echo "Missing required secret AWS_DEV_FRONTEND_SECRET_NAME" >&2
+            exit 1
+          fi
+
+      - name: Determine dev identifier
+        id: dev_version
+        run: |
+          set -euo pipefail
+          BASE_VERSION=$(node -p "require('./package.json').version")
+          if [ -z "${BASE_VERSION}" ]; then
+            echo "Unable to read version from package.json" >&2
+            exit 1
+          fi
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          DEV_SUFFIX="dev_${SHORT_SHA}"
+          FULL_VERSION="${BASE_VERSION}-${DEV_SUFFIX}"
+          echo "Using dev release identifier ${FULL_VERSION}"
+          echo "suffix=${DEV_SUFFIX}" >> "${GITHUB_OUTPUT}"
+          echo "full_version=${FULL_VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Patch package.json version
+        run: |
+          set -euo pipefail
+          node <<'JS'
+          const fs = require('fs');
+          const path = require('path');
+          const pkgPath = path.resolve('package.json');
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+          pkg.version = `${pkg.version}-${process.env.DEV_SUFFIX}`;
+          fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+          JS
+        env:
+          DEV_SUFFIX: ${{ steps.dev_version.outputs.suffix }}
+
+      - name: Build production bundle
+        run: npx ng build --configuration production --output-path dist/sbp-portal-prod
+
+      - name: Build debug bundle
+        run: npx ng build --configuration debug --output-path dist/sbp-portal-debug
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_FRONTEND }}
+          role-session-name: portal-build-upload
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload dev production bundle to shared bucket
+        env:
+          AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
+        run: |
+          set -euo pipefail
+          aws s3 sync dist/sbp-portal-prod/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/prod/dev/" --delete
+
+      - name: Upload dev debug bundle to shared bucket
+        env:
+          AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
+        run: |
+          set -euo pipefail
+          aws s3 sync dist/sbp-portal-debug/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/debug/dev/" --delete
+
+      - name: Invoke dev frontend release Lambda
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          DEV_RELEASE_FUNCTION: SbpFrontendDevReleaseDeployer
+        run: |
+          set -euo pipefail
+          PAYLOAD=$(jq -n --arg version "dev" '{version: $version, keepExisting: false, setProduction: false}')
+          RESPONSE_FILE=$(mktemp)
+
+          INVOKE_METADATA=$(aws lambda invoke \
+            --function-name "${DEV_RELEASE_FUNCTION}" \
+            --payload "${PAYLOAD}" \
+            --cli-binary-format raw-in-base64-out \
+            --cli-read-timeout 0 \
+            "${RESPONSE_FILE}")
+
+          echo "${INVOKE_METADATA}"
+
+          FUNCTION_ERROR=$(echo "${INVOKE_METADATA}" | jq -r '.FunctionError // empty')
+          if [ -n "${FUNCTION_ERROR}" ]; then
+            echo "Frontend release lambda reported an error: ${FUNCTION_ERROR}" >&2
+            cat "${RESPONSE_FILE}" >&2 || true
+            exit 1
+          fi
+
+          cat "${RESPONSE_FILE}"
+
+          STATUS=$(jq -r '.status // empty' "${RESPONSE_FILE}")
+          if [ -n "${STATUS}" ] && [ "${STATUS}" != "SUCCESS" ] && [ "${STATUS}" != "ok" ]; then
+            echo "Frontend release lambda returned unexpected status: ${STATUS}" >&2
+            exit 1
+          fi
