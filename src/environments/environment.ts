@@ -13,5 +13,6 @@ export const environment: Environment = {
   auth: {
     domain: 'dev.login.aai.test.biocommons.org.au',
     clientId: 'VgTSGK8Ph92r8mVhmVvQDrxGzbWX0vCm',
+    audience: 'https://dev.api.aai.test.biocommons.org.au',
   }
 };
