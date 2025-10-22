@@ -11,20 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
-      - name: Lint commits (lenient for legacy repo)
-        uses: wagoid/commitlint-github-action@v6
-        with:
-          configFile: 'commitlint.config.cjs'
-          # Don't fail on warnings/errors for legacy commits
-          failOnWarnings: false
-          failOnErrors: false
-        continue-on-error: true
+      - uses: wagoid/commitlint-github-action@v6
