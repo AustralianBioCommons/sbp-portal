@@ -15,7 +15,7 @@ export class DialogComponent {
   @Input() message = '';
   @Input() confirmText = 'Confirm';
   @Input() cancelText = 'Cancel';
-  @Input() confirmVariant: 'primary' | 'secondary';
+  @Input() confirmVariant: 'primary' | 'secondary' = 'primary';
   @Input() confirmColorClasses = '';
 
   @Output() confirmed = new EventEmitter<void>();
