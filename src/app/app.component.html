@@ -11,12 +11,12 @@
   <div class="flex justify-between items-center">
     <h1 class="text-3xl font-bold">SBP Portal</h1>
     <ng-container *ngIf="(auth.isAuthenticated$ | async); else loggedOut">
-      <app-button (click)="logout()" [variant]="'secondary'" [borderRadius]="'rounded-10px'">
+      <app-button (click)="logout()" [variant]="'secondary'" [borderRadius]="'rounded-DEFAULT-10'">
         Log out
       </app-button>
     </ng-container>
     <ng-template #loggedOut>
-      <app-button (click)="login()" [variant]="'primary'" [widthClass]="'w-218px'" [borderRadius]="'rounded-10px'">
+      <app-button (click)="login()" [variant]="'primary'" [widthClass]="'w-218px'" [borderRadius]="'rounded-DEFAULT-10'">
         Sign up or log in
       </app-button>
     </ng-template>
