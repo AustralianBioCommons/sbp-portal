@@ -159,7 +159,7 @@ export class AuthService {
    */
   clearBanner(): void {
     this.bannerMessageSubject.next('');
-    this.bannerTypeSubject.next('error'); // Default type
+    this.bannerTypeSubject.next(null); // Default type
     this.showBannerSubject.next(false);
   }
 

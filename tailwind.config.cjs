@@ -8,7 +8,7 @@ module.exports = {
         },
       },
       borderRadius: {
-        '10px': '10px',
+        'DEFAULT-10': '10px',
       },
     },
   },
