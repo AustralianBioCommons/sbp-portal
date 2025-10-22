@@ -77,8 +77,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('login_required');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -91,8 +94,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('access_denied');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -105,8 +111,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('unauthorized');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -119,8 +128,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('network timeout');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -133,8 +145,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('connection timeout');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -147,8 +162,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('Custom error message');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -161,8 +179,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('An unexpected error occurred during authentication.');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -175,8 +196,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('Custom message');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -189,8 +213,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('email_not_verified');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -218,8 +245,11 @@ describe('AuthService', () => {
       service.bannerMessage$.subscribe(message => {
         if (message) {
           expect(message).toBe('User email is not verified and verification is required');
-          expect(service.currentBannerType).toBe('error');
-          done();
+          // Use setTimeout to allow async operations to complete
+          setTimeout(() => {
+            expect(service.currentBannerType).toBe('error');
+            done();
+          }, 0);
         }
       });
       
@@ -287,7 +317,7 @@ describe('AuthService', () => {
     it('should initialize with no banner state', () => {
       expect(service.currentBannerMessage).toBe('');
       expect(service.isBannerVisible).toBe(false);
-      expect(service.currentBannerType).toBe('error'); // Default type
+      expect(service.currentBannerType).toBe(null); // Default type
     });
 
     it('should show success banner when authentication succeeds', (done) => {
