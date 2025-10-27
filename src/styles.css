@@ -4,5 +4,5 @@
 
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font: normal normal medium 16px/25px "Helvetica Neue", Arial, sans-serif;
 }

@@ -1,13 +1,46 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { AuthService } from './cores/auth.service';
+import { CommonModule } from '@angular/common';
+import { AlertComponent } from './components/alert/alert.component';
+import { ButtonComponent } from './components/button/button.component';
+import { DialogComponent } from './components/dialog/dialog.component';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <div class="min-h-screen bg-gray-100 p-8">
-      <h1 class="text-3xl font-bold text-center">SBP Portal</h1>
-      <p class="mt-4 text-center">Welcome to the Angular + Tailwind scaffold.</p>
-    </div>
-  `,
-  styles: []
+  standalone: true,
+  imports: [CommonModule, AlertComponent, ButtonComponent, DialogComponent],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
-export class AppComponent {}
+export class AppComponent {
+  public auth = inject(AuthService);
+  public locationHref = window.location.href;
+  
+  // Use AuthService unified banner observables
+  public bannerMessage$ = this.auth.bannerMessage$;
+  public bannerType$ = this.auth.bannerType$;
+  public showBanner$ = this.auth.showBanner$;
+
+  // Dialog state
+  public showLogoutDialog = signal(false);
+
+  dismissError() {
+    this.auth.dismissError();
+  }
+
+  login() {
+    this.auth.login();
+  }
+
+  logout() {
+    this.showLogoutDialog.set(true);
+  }
+
+  onLogoutConfirmed() {
+    this.auth.logout();
+  }
+
+  onLogoutCancelled() {
+    // Dialog will be closed via the (closed) event
+  }
+}
