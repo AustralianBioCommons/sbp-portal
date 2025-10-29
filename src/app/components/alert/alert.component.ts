@@ -7,7 +7,7 @@ export type AlertType = 'success' | 'error';
   selector: 'app-alert',
   imports: [CommonModule],
   templateUrl: './alert.component.html',
-  styleUrl: './alert.component.css',
+  styleUrl: './alert.component.scss',
 })
 export class AlertComponent {
   type = input<AlertType>('error');

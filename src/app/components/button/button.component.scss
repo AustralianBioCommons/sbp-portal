@@ -1,0 +1,79 @@
+// Import Australian BioCommons Brand Color Palette
+@use '../../../scss/variables' as *;
+@use 'sass:color';
+
+// Button Component SCSS
+// Example usage of brand colors in component styles
+
+:host {
+  display: inline-block;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+
+  // Primary button using brand colors
+  &.btn-primary {
+    background-color: $biocommons-primary-teal;
+    color: $biocommons-white;
+
+    &:hover {
+      background-color: color.adjust($biocommons-primary-teal, $lightness: -10%);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $focus-color;
+      outline-offset: 2px;
+    }
+  }
+
+  // Secondary button
+  &.btn-secondary {
+    background-color: transparent;
+    color: $biocommons-primary-teal;
+    border-color: $biocommons-primary-teal;
+
+    &:hover {
+      background-color: $biocommons-primary-teal;
+      color: $biocommons-white;
+    }
+  }
+
+  // Success button
+  &.btn-success {
+    background-color: $success-color;
+    color: $biocommons-white;
+
+    &:hover {
+      background-color: color.adjust($success-color, $lightness: -10%);
+    }
+  }
+
+  // Warning button
+  &.btn-warning {
+    background-color: $warning-color;
+    color: $biocommons-white;
+
+    &:hover {
+      background-color: color.adjust($warning-color, $lightness: -10%);
+    }
+  }
+
+  // Error button
+  &.btn-error {
+    background-color: $error-color;
+    color: $biocommons-white;
+
+    &:hover {
+      background-color: color.adjust($error-color, $lightness: -10%);
+    }
+  }
+}
