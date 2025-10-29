@@ -27,4 +27,20 @@ export class NotFoundComponent {
     // Navigate to themes with focus on search
     this.router.navigate(['/themes'], { queryParams: { search: 'true' } });
   }
+
+  navigateToBinderDesign() {
+    this.router.navigate(['/themes'], { queryParams: { tab: 'binder-design' } });
+  }
+
+  navigateToStructurePrediction() {
+    this.router.navigate(['/themes'], { queryParams: { tab: 'structure-prediction' } });
+  }
+
+  navigateToStructureSearch() {
+    this.router.navigate(['/themes'], { queryParams: { tab: 'structure-search' } });
+  }
+
+  navigateToSingleStructurePrediction() {
+    this.router.navigate(['/single-structure-prediction']);
+  }
 }

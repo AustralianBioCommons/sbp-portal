@@ -51,16 +51,16 @@
     <div class="popular-links">
       <h3>Popular Destinations</h3>
       <div class="link-grid">
-        <a routerLink="/themes?tab=binder-design" class="popular-link">
+        <a (click)="navigateToBinderDesign()" class="popular-link" role="button" tabindex="0">
           Binder Design
         </a>
-        <a routerLink="/themes?tab=structure-prediction" class="popular-link">
+        <a (click)="navigateToStructurePrediction()" class="popular-link" role="button" tabindex="0">
           Structure Prediction
         </a>
-        <a routerLink="/themes?tab=structure-search" class="popular-link">
+        <a (click)="navigateToStructureSearch()" class="popular-link" role="button" tabindex="0">
           Structure Search
         </a>
-        <a routerLink="/single-structure-prediction" class="popular-link">
+        <a (click)="navigateToSingleStructurePrediction()" class="popular-link" role="button" tabindex="0">
           Single Structure Prediction
         </a>
       </div>

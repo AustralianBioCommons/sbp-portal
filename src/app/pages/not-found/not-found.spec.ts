@@ -86,19 +86,19 @@ describe('NotFoundComponent', () => {
     expect(window.history.back).toHaveBeenCalled();
   });
 
-  it('should have popular links with correct routes', () => {
+  it('should have four popular links', () => {
     const popularLinks = fixture.debugElement.queryAll(By.css('.popular-link'));
     expect(popularLinks.length).toBe(4);
     
-    const expectedRoutes = [
-      '/themes?tab=binder-design',
-      '/themes?tab=structure-prediction', 
-      '/themes?tab=structure-search',
-      '/single-structure-prediction'
+    const expectedTexts = [
+      'Binder Design',
+      'Structure Prediction', 
+      'Structure Search',
+      'Single Structure Prediction'
     ];
     
     popularLinks.forEach((link, index) => {
-      expect(link.attributes['routerLink']).toBe(expectedRoutes[index]);
+      expect(link.nativeElement.textContent.trim()).toBe(expectedTexts[index]);
     });
   });
 
@@ -132,5 +132,58 @@ describe('NotFoundComponent', () => {
     searchButton.nativeElement.click();
     
     expect(component.searchResources).toHaveBeenCalled();
+  });
+
+  it('should navigate to binder design when navigateToBinderDesign is called', () => {
+    mockRouter.navigate.and.returnValue(Promise.resolve(true));
+    
+    component.navigateToBinderDesign();
+    
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/themes'], { queryParams: { tab: 'binder-design' } });
+  });
+
+  it('should navigate to structure prediction when navigateToStructurePrediction is called', () => {
+    mockRouter.navigate.and.returnValue(Promise.resolve(true));
+    
+    component.navigateToStructurePrediction();
+    
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/themes'], { queryParams: { tab: 'structure-prediction' } });
+  });
+
+  it('should navigate to structure search when navigateToStructureSearch is called', () => {
+    mockRouter.navigate.and.returnValue(Promise.resolve(true));
+    
+    component.navigateToStructureSearch();
+    
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/themes'], { queryParams: { tab: 'structure-search' } });
+  });
+
+  it('should navigate to single structure prediction when navigateToSingleStructurePrediction is called', () => {
+    mockRouter.navigate.and.returnValue(Promise.resolve(true));
+    
+    component.navigateToSingleStructurePrediction();
+    
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/single-structure-prediction']);
+  });
+
+  it('should trigger navigation when popular links are clicked', () => {
+    const popularLinks = fixture.debugElement.queryAll(By.css('.popular-link'));
+    
+    spyOn(component, 'navigateToBinderDesign');
+    spyOn(component, 'navigateToStructurePrediction');
+    spyOn(component, 'navigateToStructureSearch');
+    spyOn(component, 'navigateToSingleStructurePrediction');
+    
+    popularLinks[0].nativeElement.click();
+    expect(component.navigateToBinderDesign).toHaveBeenCalled();
+    
+    popularLinks[1].nativeElement.click();
+    expect(component.navigateToStructurePrediction).toHaveBeenCalled();
+    
+    popularLinks[2].nativeElement.click();
+    expect(component.navigateToStructureSearch).toHaveBeenCalled();
+    
+    popularLinks[3].nativeElement.click();
+    expect(component.navigateToSingleStructurePrediction).toHaveBeenCalled();
   });
 });
