@@ -169,4 +169,18 @@ describe("AppComponent", () => {
     const errorBanner = compiled.querySelector(".bg-red-50");
     expect(errorBanner).toBeFalsy();
   });
+
+  it("handles search functionality", () => {
+    const consoleLogSpy = spyOn(console, "log");
+    const searchTerm = "test search";
+    
+    component.onSearch(searchTerm);
+    
+    expect(consoleLogSpy).toHaveBeenCalledWith("Search term:", searchTerm);
+  });
+
+  it("should set locationHref property from window.location.href", () => {
+    expect(component.locationHref).toBeDefined();
+    expect(typeof component.locationHref).toBe("string");
+  });
 });

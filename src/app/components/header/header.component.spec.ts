@@ -10,7 +10,7 @@ describe("Header", () => {
   let fixture: ComponentFixture<Header>;
   let mockAuthService: jasmine.SpyObj<AuthService>;
   let mockRouter: jasmine.SpyObj<Router>;
-  let routerEventsSubject: Subject<any>;
+  let routerEventsSubject: Subject<NavigationEnd>;
 
   beforeEach(async () => {
     mockAuthService = jasmine.createSpyObj("AuthService", ["login", "logout"], {
