@@ -33,13 +33,16 @@ describe('LoadingComponent', () => {
   it('should display loading title', () => {
     const loadingTitle = compiled.querySelector('.loading-title');
     expect(loadingTitle).toBeTruthy();
-    expect(loadingTitle?.textContent?.trim()).toBe('Loading Portal');
+    expect(loadingTitle?.textContent?.trim()).toBe('Loading...');
   });
 
-  it('should display loading subtitle', () => {
+  it('should display loading text without subtitle', () => {
+    const loadingText = compiled.querySelector('.loading-text');
+    expect(loadingText).toBeTruthy();
+    
+    // The component only has a loading title, no subtitle
     const loadingSubtitle = compiled.querySelector('.loading-subtitle');
-    expect(loadingSubtitle).toBeTruthy();
-    expect(loadingSubtitle?.textContent?.trim()).toBe('Syncing user information...');
+    expect(loadingSubtitle).toBeFalsy();
   });
 
   it('should have spinner elements', () => {

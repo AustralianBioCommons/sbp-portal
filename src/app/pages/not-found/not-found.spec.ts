@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { By } from '@angular/platform-browser';
+import { of } from 'rxjs';
 
 import { NotFoundComponent } from './not-found';
 
@@ -10,12 +11,23 @@ describe('NotFoundComponent', () => {
   let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl'], {
+      events: of({})
+    });
+    routerSpy.createUrlTree.and.returnValue({});
+    routerSpy.serializeUrl.and.returnValue('/test-url');
+    const activatedRouteMock = {
+      params: of({}),
+      queryParams: of({}),
+      fragment: of(null),
+      data: of({})
+    };
 
     await TestBed.configureTestingModule({
       imports: [NotFoundComponent],
       providers: [
-        { provide: Router, useValue: routerSpy }
+        { provide: Router, useValue: routerSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteMock }
       ]
     })
     .compileComponents();
