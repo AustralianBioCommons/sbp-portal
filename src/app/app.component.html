@@ -1,28 +1,28 @@
-<div class="min-h-screen bg-gray-100 p-8">
-  <!-- AlertComponent - shows success/error messages for 3 seconds -->
-  <app-alert 
-    *ngIf="showBanner$ | async"
-    [type]="(bannerType$ | async) || 'error'" 
-    [message]="(bannerMessage$ | async) || ''"
-    [dismissible]="true"
-    (dismissed)="dismissError()">
-  </app-alert>
+<!-- Loading overlay -->
+<app-loading *ngIf="isLoading$ | async"></app-loading>
 
-  <div class="flex justify-between items-center">
-    <h1 class="text-3xl font-bold">SBP Portal</h1>
-    <ng-container *ngIf="(auth.isAuthenticated$ | async); else loggedOut">
-      <app-button (click)="logout()" [variant]="'secondary'" [borderRadius]="'rounded-DEFAULT-10'">
-        Log out
-      </app-button>
-    </ng-container>
-    <ng-template #loggedOut>
-      <app-button (click)="login()" [variant]="'primary'" [widthClass]="'w-218px'" [borderRadius]="'rounded-DEFAULT-10'">
-        Sign up or log in
-      </app-button>
-    </ng-template>
+<!-- AlertComponent - shows success/error messages for 3 seconds (Centered overlay) -->
+<div *ngIf="showBanner$ | async" class="fixed inset-0 z-[1002] flex items-center justify-center pointer-events-none bg-black bg-opacity-25">
+  <div class="pointer-events-auto centered-alert">
+    <app-alert 
+      [type]="(bannerType$ | async) || 'error'" 
+      [message]="(bannerMessage$ | async) || ''"
+      [dismissible]="true"
+      (dismissed)="dismissError()">
+    </app-alert>
   </div>
-  <p class="mt-4 text-center">Welcome to the Structural Biology Platform portal.</p>
 </div>
+
+<!-- Header with navigation -->
+<app-header></app-header>
+
+<!-- Main content area -->
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<!-- Footer -->
+<app-footer-sections (search)="onSearch($event)"></app-footer-sections>
 
 <!-- Logout Confirmation Dialog -->
 <app-dialog
@@ -37,10 +37,3 @@
   (closed)="showLogoutDialog.set(false)"
 >
 </app-dialog>
-
-<div class="mt-6 p-4 bg-white border rounded text-sm">
-  <strong>Auth debug</strong>
-  <div>isAuthenticated: {{ (auth.isAuthenticated$ | async) }}</div>
-  <div>user: {{ (auth.user$ | async) | json }}</div>
-  <div>location: {{ locationHref }}</div>
-</div>

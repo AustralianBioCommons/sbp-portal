@@ -1,18 +1,26 @@
 // src/main.ts
 import { bootstrapApplication } from '@angular/platform-browser';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { AppComponent } from './app/app.component';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authGuard } from './app/cores/auth.guard';
 import { provideAuth0, authHttpInterceptorFn } from '@auth0/auth0-angular';
 import { environment } from './environments/environment';
+import { Home } from './app/pages/home/home';
+import { NotFoundComponent } from './app/pages/not-found/not-found';
 
 bootstrapApplication(AppComponent, {
   providers: [
+    provideAnimations(),
     provideRouter([
-      { path: '', component: AppComponent },
+      { path: '', redirectTo: '/themes', pathMatch: 'full' },
+  { path: 'themes', component: Home },
+      { path: 'single-structure-prediction', redirectTo: '/themes?tab=structure-prediction' },
+      { path: 'interaction-screening', redirectTo: '/themes?tab=interaction-screening' },
       { path: 'protected', component: AppComponent, canActivate: [authGuard] },
-      // add more routes here
+      // 404 catch-all route - MUST be last
+      { path: '**', component: NotFoundComponent }
     ]),
     provideAuth0({
       domain: environment.auth.domain,
