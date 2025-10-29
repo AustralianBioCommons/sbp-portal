@@ -22,31 +22,31 @@ describe("FooterSectionsComponent", () => {
   });
 
   describe("onSubmitSearch", () => {
-    it("should emit search event with trimmed search term", () => {
-      spyOn(component.search, "emit");
+    it("should emit searchSubmit event with trimmed search term", () => {
+      spyOn(component.searchSubmit, "emit");
       component.searchTerm = "  test query  ";
 
       component.onSubmitSearch();
 
-      expect(component.search.emit).toHaveBeenCalledWith("test query");
+      expect(component.searchSubmit.emit).toHaveBeenCalledWith("test query");
     });
 
     it("should emit empty string when search term is only whitespace", () => {
-      spyOn(component.search, "emit");
+      spyOn(component.searchSubmit, "emit");
       component.searchTerm = "   ";
 
       component.onSubmitSearch();
 
-      expect(component.search.emit).toHaveBeenCalledWith("");
+      expect(component.searchSubmit.emit).toHaveBeenCalledWith("");
     });
 
     it("should emit empty string when search term is empty", () => {
-      spyOn(component.search, "emit");
+      spyOn(component.searchSubmit, "emit");
       component.searchTerm = "";
 
       component.onSubmitSearch();
 
-      expect(component.search.emit).toHaveBeenCalledWith("");
+      expect(component.searchSubmit.emit).toHaveBeenCalledWith("");
     });
   });
 

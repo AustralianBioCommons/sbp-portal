@@ -371,4 +371,31 @@ describe("AuthService", () => {
 
     // retry login functionality removed - authentication errors now show for 3 seconds then trigger automatic logout
   });
+
+  describe("Loading State Management", () => {
+    it("should get current loading state", () => {
+      service["loadingSubject"].next(true);
+      expect(service.isLoading).toBe(true);
+      
+      service["loadingSubject"].next(false);
+      expect(service.isLoading).toBe(false);
+    });
+
+    it("should get current loading message", () => {
+      const testMessage = "Test loading message";
+      service["loadingMessageSubject"].next(testMessage);
+      expect(service.loadingMessage).toBe(testMessage);
+    });
+
+    it("should manually set loading state", () => {
+      const testMessage = "Custom loading message";
+      service.setLoadingState(true, testMessage);
+      
+      expect(service.isLoading).toBe(true);
+      expect(service.loadingMessage).toBe(testMessage);
+      
+      service.setLoadingState(false);
+      expect(service.isLoading).toBe(false);
+    });
+  });
 });

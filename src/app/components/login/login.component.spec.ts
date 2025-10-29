@@ -39,4 +39,13 @@ describe("Login", () => {
     component.logout();
     expect(mockAuthService.logout).toHaveBeenCalled();
   });
+
+  it("should log navigation path when navigate is called", () => {
+    const consoleLogSpy = spyOn(console, "log");
+    const testPath = "/test-path";
+
+    component.navigate(testPath);
+
+    expect(consoleLogSpy).toHaveBeenCalledWith("Navigate to:", testPath);
+  });
 });

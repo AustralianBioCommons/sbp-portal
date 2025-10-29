@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { Router, ActivatedRoute, UrlTree } from "@angular/router";
+import { Router, ActivatedRoute, UrlTree, NavigationEnd } from "@angular/router";
 import { AuthService } from "../../cores/auth.service";
-import { of } from "rxjs";
+import { of, Subject } from "rxjs";
 
 import { Header } from "./header.component";
 
@@ -10,6 +10,7 @@ describe("Header", () => {
   let fixture: ComponentFixture<Header>;
   let mockAuthService: jasmine.SpyObj<AuthService>;
   let mockRouter: jasmine.SpyObj<Router>;
+  let routerEventsSubject: Subject<any>;
 
   beforeEach(async () => {
     mockAuthService = jasmine.createSpyObj("AuthService", ["login", "logout"], {
@@ -18,9 +19,10 @@ describe("Header", () => {
       error$: of(null),
     });
 
+    routerEventsSubject = new Subject();
     mockRouter = jasmine.createSpyObj("Router", ["navigate", "parseUrl"], {
       url: "/themes",
-      events: of(),
+      events: routerEventsSubject.asObservable(),
     });
     mockRouter.parseUrl.and.returnValue({
       queryParams: {},
@@ -153,7 +155,7 @@ describe("Header", () => {
 
     it("should handle themes route with other query parameters", () => {
       mockRouter.parseUrl.and.returnValue({
-        queryParams: {},
+        queryParams: { tab: "structure-search", search: "test" },
         fragment: null,
       } as unknown as UrlTree);
 
@@ -177,6 +179,22 @@ describe("Header", () => {
       const ids = component.tabs.map((tab) => tab.id);
       const uniqueIds = [...new Set(ids)];
       expect(ids.length).toBe(uniqueIds.length);
+    });
+  });
+
+  describe("router events", () => {
+    it("should update route state on NavigationEnd events", () => {
+      const navigationEnd = new NavigationEnd(1, "/themes?tab=structure-search", "/themes?tab=structure-search");
+      
+      mockRouter.parseUrl.and.returnValue({
+        queryParams: { tab: "structure-search" },
+        fragment: null,
+      } as unknown as UrlTree);
+
+      routerEventsSubject.next(navigationEnd);
+
+      expect(component.showTabs()).toBe(true);
+      expect(component.activeTab()).toBe("structure-search");
     });
   });
 });

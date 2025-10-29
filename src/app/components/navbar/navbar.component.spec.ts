@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { Router, ActivatedRoute, UrlTree } from "@angular/router";
 import { AuthService } from "../../cores/auth.service";
 import { of } from "rxjs";
@@ -278,6 +278,52 @@ describe("Navbar", () => {
       expect(component.navItems[0].label).toBe("Home");
       expect(component.navItems[0].path).toBe("/themes");
       expect(component.navItems[0].children).toBeDefined();
+    });
+  });
+
+  describe("navigation error handling", () => {
+    it("should call navigate method", () => {
+      component.navigate("/test?tab=test");
+      expect(mockRouter.navigate).toHaveBeenCalled();
+    });
+  });
+
+  describe("outside click handling", () => {
+    it("should close mobile menu when clicking outside", () => {
+      component.isMobileMenuOpen.set(true);
+      const consoleLogSpy = spyOn(console, "log");
+
+      // Simulate clicking outside the menu
+      const event = new MouseEvent("click", { bubbles: true });
+      Object.defineProperty(event, "target", {
+        value: document.createElement("div"),
+        enumerable: true
+      });
+      
+      document.dispatchEvent(event);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith("Closing menu due to outside click");
+      expect(component.isMobileMenuOpen()).toBe(false);
+    });
+
+    it("should not close mobile menu when clicking inside menu", () => {
+      component.isMobileMenuOpen.set(true);
+      
+      const menuElement = document.createElement("div");
+      menuElement.className = "compact-menu";
+      document.body.appendChild(menuElement);
+
+      const event = new MouseEvent("click", { bubbles: true });
+      Object.defineProperty(event, "target", {
+        value: menuElement,
+        enumerable: true
+      });
+      
+      document.dispatchEvent(event);
+
+      expect(component.isMobileMenuOpen()).toBe(true);
+      
+      document.body.removeChild(menuElement);
     });
   });
 });
