@@ -7,7 +7,7 @@
       <!-- Main 4-column layout with first column bigger -->
       <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-7">
         <!-- Column 1: Logos and Social Links (takes 3 columns) -->
-        <div class="lg:col-span-3">
+        <div class="lg:col-span-3 sm:col-span-2 text-center">
             <div class="grid grid-cols-2">
               <a
                 *ngFor="let logo of logos.slice(0, 2)"
@@ -24,7 +24,7 @@
                 />
               </a>
             </div>
-            <div class="flex justify-center" *ngIf="logos.length > 2">
+            <div class="flex" *ngIf="logos.length > 2">
               <a
                 class="group logo-container flex items-center justify-center transition hover:opacity-80"
                 [href]="logos[2].href"
@@ -44,23 +44,25 @@
         <!-- Columns 2-4: Link Groups (each takes 1 column with centered text) -->
         <div
           *ngFor="let group of linkGroups"
-          class="space-y-6 text-center"
+          class="flex flex-col justify-center text-center"
         >
-          <p class="footer-heading text-sm">
-            {{ group.heading }}
-          </p>
-          <ul class="space-y-2 text-sm">
-            <li *ngFor="let link of group.links">
-              <a
-                class="footer-link"
-                [href]="link.href"
-                [attr.target]="link.external ? '_blank' : null"
-                [attr.rel]="link.external ? 'noopener noreferrer' : null"
-              >
-                {{ link.label }}
-              </a>
-            </li>
-          </ul>
+          <div class="space-y-6">
+            <p class="footer-heading text-sm">
+              {{ group.heading }}
+            </p>
+            <ul class="space-y-2 text-sm">
+              <li *ngFor="let link of group.links">
+                <a
+                  class="footer-link"
+                  [href]="link.href"
+                  [attr.target]="link.external ? '_blank' : null"
+                  [attr.rel]="link.external ? 'noopener noreferrer' : null"
+                >
+                  {{ link.label }}
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
