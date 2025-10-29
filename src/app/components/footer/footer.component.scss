@@ -1,0 +1,98 @@
+// Import Australian BioCommons Brand Color Palette
+@use '../../../scss/variables' as *;
+
+:host {
+  display: block;
+}
+
+#footer-sections {
+  background-color: $bg-primary;
+  color: $text-primary;
+  
+  // Logo container styling for 2x1 layout
+  .logo-container {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  // Logo specific dimensions
+  .logo-image {
+    width: 165px;
+    height: 60px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+  }
+}
+
+// Footer link styles using brand colors
+#footer-sections {
+  .footer-heading {
+    color: $text-secondary;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .footer-link {
+    color: $text-muted;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $link-color;
+    }
+  }
+
+  .footer-legal-link {
+    color: $text-primary;
+    font-weight: 500;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $link-hover;
+    }
+  }
+
+  .footer-legal-text {
+    color: $text-muted;
+  }
+
+  .footer-border {
+    border-color: $border-light;
+  }
+
+  .footer-social-link {
+    border-color: $border-light;
+    color: $text-muted;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: $link-color;
+      color: $link-color;
+    }
+  }
+}
+
+#footer-sections a {
+  text-decoration: none;
+}
+
+#footer-sections a:focus-visible {
+  outline: 2px solid $focus-color;
+  outline-offset: 2px;
+}
+
+#footer-sections .sr-only {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
