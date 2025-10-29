@@ -8,7 +8,7 @@ export type ButtonVariant = 'primary' | 'secondary';
   selector: 'app-button',
   imports: [CommonModule],
   templateUrl: './button.component.html',
-  styleUrl: './button.component.css',
+  styleUrl: './button.component.scss',
 })
 export class ButtonComponent {
   type = input<ButtonType>('button');

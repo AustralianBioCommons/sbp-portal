@@ -1,0 +1,85 @@
+<!-- Main Navigation Bar -->
+<nav class="navbar relative">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center">
+      <!-- Logo and Brand (Left corner) -->
+      <div class="flex items-center">
+        <div class="flex-shrink-0 flex items-center">
+          <img class="w-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
+        </div>
+      </div>
+
+      <!-- Compact Menu Button (Right side) -->
+      <div class="flex items-center ml-auto">
+        <!-- Compact Menu Toggle Button -->
+        <button
+          (click)="toggleMobileMenu(); $event.stopPropagation()"
+          class="compact-menu-button relative p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-biocommons-primary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-biocommons-primary focus:ring-offset-1"
+          [class.active]="isMobileMenuOpen()"
+          type="button"
+        >
+          <!-- Menu Icon using ng-icons -->
+          <ng-icon 
+            [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
+            class="w-5 h-5 transition-transform duration-200 pointer-events-none"
+            [class.rotate-90]="isMobileMenuOpen()">
+          </ng-icon>
+          
+          <!-- Menu Label -->
+          <span class="sr-only">{{ isMobileMenuOpen() ? 'Close menu' : 'Open menu' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compact Navigation Menu (Positioned overlay - Right aligned) -->
+  <div
+    *ngIf="isMobileMenuOpen()"
+    class="compact-menu absolute top-full right-0 w-80 z-50 bg-biocommons-secondary"
+    [@slideInOut]
+  >
+    <!-- Menu Content -->
+    <div class="px-4 py-4">
+
+      <!-- Navigation Items -->
+      <div class="space-y-0.5">
+        <ng-container *ngFor="let item of navItems">
+          <!-- Simple nav item -->
+          <div *ngIf="!item.children && shouldShowNavItem(item, (isAuthenticated$ | async) || false)">
+            <button
+              (click)="item.path ? navigate(item.path) : executeAction(item.action)"
+              class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md hover:bg-gray-50 font-medium transition-colors duration-200"
+              [class.nav-item-active]="isNavItemActive(item)"
+            >
+              <ng-icon [name]="item.icon" *ngIf="item.icon && !item.image" class="text-sm w-4 h-4"></ng-icon>
+              <img [src]="item.image" [alt]="item.label + ' icon'" *ngIf="item.image" class="w-4 h-4 object-contain">
+              <span>{{ item.label }}</span>
+            </button>
+          </div>
+
+          <!-- Nav item with children -->
+          <div *ngIf="item.children" class="mb-2">
+            <div class="flex items-center space-x-2 px-3 py-1.5 font-semibold"
+                 [class.nav-parent-active]="isParentNavItemActive(item)">
+              <ng-icon [name]="item.icon" *ngIf="item.icon && !item.image" class=" w-4 h-4"></ng-icon>
+              <img [src]="item.image" [alt]="item.label + ' icon'" *ngIf="item.image" class="w-4 h-4 object-contain">
+              <span>{{ item.label }}</span>
+            </div>
+            <div class="ml-3 mt-1 space-y-0.5">
+              <ng-container *ngFor="let child of item.children">
+                <button
+                  *ngIf="shouldShowNavItem(child, (isAuthenticated$ | async) || false)"
+                  (click)="child.path ? navigate(child.path) : executeAction(child.action)"
+                  class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-colors duration-200"
+                  [class.nav-item-active]="isNavItemActive(child)"
+                >
+                  <span>{{ child.label }}</span>
+                </button>
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</nav>

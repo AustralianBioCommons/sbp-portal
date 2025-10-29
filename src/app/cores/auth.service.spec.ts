@@ -23,7 +23,8 @@ describe('AuthService', () => {
     mockAuth0Service = jasmine.createSpyObj('AuthService', ['loginWithRedirect', 'logout', 'getAccessTokenSilently'], {
       isAuthenticated$: isAuthenticatedSubject.asObservable(),
       user$: of(null),
-      error$: errorSubject.asObservable()
+      error$: errorSubject.asObservable(),
+      isLoading$: of(false)
     });
 
     TestBed.configureTestingModule({

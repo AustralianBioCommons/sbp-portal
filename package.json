@@ -25,6 +25,11 @@
     "@angular/platform-browser-dynamic": "^20.3.4",
     "@angular/router": "^20.3.4",
     "@auth0/auth0-angular": "^2.3.0",
+    "@ng-icons/core": "^32.2.0",
+    "@ng-icons/heroicons": "^32.2.0",
+    "@ng-icons/lucide": "^32.2.0",
+    "@ng-icons/simple-icons": "^32.2.0",
+    "@ng-icons/tabler-icons": "^32.2.0",
     "playwright": "^1.56.0",
     "rxjs": "~7.8.0",
     "zone.js": "~0.15.1"

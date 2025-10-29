@@ -5,6 +5,7 @@ module.exports = {
       colors: {
         biocommons: {
           primary: '#3171B9',
+          secondary: '#00000029',
         },
       },
       borderRadius: {

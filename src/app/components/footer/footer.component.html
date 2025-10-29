@@ -1,0 +1,133 @@
+<footer
+  id="footer-sections"
+  data-footer-sections
+>
+  <section>
+    <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+      <!-- Main 4-column layout with first column bigger -->
+      <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-7">
+        <!-- Column 1: Logos and Social Links (takes 3 columns) -->
+        <div class="lg:col-span-3 sm:col-span-2 text-center">
+            <div class="grid grid-cols-2">
+              <a
+                *ngFor="let logo of logos.slice(0, 2)"
+                class="group logo-container flex items-center justify-center transition hover:opacity-80"
+                [href]="logo.href"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  [src]="logo.src"
+                  [alt]="logo.alt"
+                  class="logo-image"
+                  loading="lazy"
+                />
+              </a>
+            </div>
+            <div class="flex" *ngIf="logos.length > 2">
+              <a
+                class="group logo-container flex items-center justify-center transition hover:opacity-80"
+                [href]="logos[2].href"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  [src]="logos[2].src"
+                  [alt]="logos[2].alt"
+                  class="logo-image"
+                  loading="lazy"
+                />
+              </a>
+          </div>
+        </div>
+
+        <!-- Columns 2-4: Link Groups (each takes 1 column with centered text) -->
+        <div
+          *ngFor="let group of linkGroups"
+          class="flex flex-col justify-center text-center"
+        >
+          <div class="space-y-6">
+            <p class="footer-heading text-sm">
+              {{ group.heading }}
+            </p>
+            <ul class="space-y-2 text-sm">
+              <li *ngFor="let link of group.links">
+                <a
+                  class="footer-link"
+                  [href]="link.href"
+                  [attr.target]="link.external ? '_blank' : null"
+                  [attr.rel]="link.external ? 'noopener noreferrer' : null"
+                >
+                  {{ link.label }}
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+            <!-- Bottom Legal Information -->
+      <div class="mt-16 border-t footer-border pt-8">
+        <div class="max-w-4xl mx-auto space-y-3 text-center text-sm footer-legal-text">
+          <p>
+            <a class="footer-legal-link" href="/homepage">Australian BioCommons</a>
+            is supported by
+            <a class="footer-legal-link" href="https://www.bioplatforms.com/" target="_blank" rel="noopener">
+              Bioplatforms Australia
+            </a>.
+            <a class="footer-legal-link" href="https://www.bioplatforms.com/" target="_blank" rel="noopener">
+              Bioplatforms Australia
+            </a>
+            is enabled by
+            <a
+              class="footer-legal-link"
+              href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"
+              target="_blank"
+              rel="noopener"
+            >
+              NCRIS
+            </a>
+          </p>
+          <p>
+            The Australian BioCommons project is led by the
+            <a class="footer-legal-link" href="https://www.unimelb.edu.au/" target="_blank" rel="noopener">University of Melbourne</a>,
+            and hosted within the University's
+            <a
+              class="footer-legal-link"
+              href="https://mdhs.unimelb.edu.au/research/research/other-research-partnerships,-networks,-centres-and-initiatives"
+              target="_blank"
+              rel="noopener"
+            >
+              Faculty of Medicine, Dentistry and Health Sciences
+            </a>
+          </p>
+          <p>
+            The content of this website is licensed under a
+            <a class="footer-legal-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons Attribution 4.0 International (CC BY 4.0) License</a>
+            |
+            <a class="footer-legal-link" href="https://www.biocommons.org.au/privacy" target="_blank" rel="noopener">Privacy</a>
+            |
+            <a class="footer-legal-link" href="/cookies">Cookies</a>
+          </p>
+        </div>
+        <!-- Social Links -->
+          <div class="flex justify-center gap-3 pt-4">
+            <a
+              *ngFor="let social of socialLinks"
+              class="footer-social-link inline-flex h-10 w-10 items-center justify-center rounded-full border"
+              [href]="social.href"
+              target="_blank"
+              rel="noopener"
+            >
+              <span class="sr-only">{{ social.label }}</span>
+              <ng-icon 
+                [name]="social.iconName" 
+                class="h-5 w-5"
+                aria-hidden="true">
+              </ng-icon>
+            </a>
+          </div>
+      </div>
+    </div>
+  </section>
+</footer>

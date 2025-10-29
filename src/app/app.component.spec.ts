@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { AppComponent } from './app.component';
 import { AuthService } from './cores/auth.service';
 import { of } from 'rxjs';
@@ -24,9 +25,19 @@ describe('AppComponent', () => {
       getAccessTokenSilently: jasmine.createSpy('getAccessTokenSilently').and.returnValue(of(undefined))
     } as unknown as jasmine.SpyObj<AuthService>;
 
+    const activatedRouteMock = {
+      params: of({}),
+      queryParams: of({}),
+      fragment: of(null),
+      data: of({})
+    };
+
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [{ provide: AuthService, useValue: mockAuthService }]
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: ActivatedRoute, useValue: activatedRouteMock }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppComponent);
@@ -38,9 +49,11 @@ describe('AppComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render title', () => {
+  it('should render app structure', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('SBP Portal');
+    expect(compiled.querySelector('app-header')).toBeTruthy();
+    expect(compiled.querySelector('main')).toBeTruthy();
+    expect(compiled.querySelector('app-footer-sections')).toBeTruthy();
   });
 
   it('shows login button when logged out and triggers login', () => {
@@ -89,17 +102,27 @@ describe('AppComponent', () => {
       user$: of({ name: 'Test' })
     };
 
+    const activatedRouteMock = {
+      params: of({}),
+      queryParams: of({}),
+      fragment: of(null),
+      data: of({})
+    };
+
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [{ provide: AuthService, useValue: mockAuthServiceLoggedIn }]
+      providers: [
+        { provide: AuthService, useValue: mockAuthServiceLoggedIn },
+        { provide: ActivatedRoute, useValue: activatedRouteMock }
+      ]
     }).compileComponents();
 
     const fixture2 = TestBed.createComponent(AppComponent);
     fixture2.detectChanges();
     const compiled = fixture2.nativeElement as HTMLElement;
     const button = compiled.querySelector('button');
-    expect(button?.textContent).toContain('Log out');
+    expect(button?.textContent).toContain('Profile');
   });
 
   it('displays error alert with exact error message until user logs in', async () => {
@@ -111,10 +134,20 @@ describe('AppComponent', () => {
       bannerType$: of('error')
     };
 
+    const activatedRouteMock = {
+      params: of({}),
+      queryParams: of({}),
+      fragment: of(null),
+      data: of({})
+    };
+
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [{ provide: AuthService, useValue: mockAuthServiceWithError }]
+      providers: [
+        { provide: AuthService, useValue: mockAuthServiceWithError },
+        { provide: ActivatedRoute, useValue: activatedRouteMock }
+      ]
     }).compileComponents();
 
     const fixture2 = TestBed.createComponent(AppComponent);

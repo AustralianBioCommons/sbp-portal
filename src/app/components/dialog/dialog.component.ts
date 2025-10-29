@@ -7,7 +7,7 @@ import { ButtonComponent } from '../button/button.component';
   standalone: true,
   imports: [CommonModule, ButtonComponent],
   templateUrl: './dialog.component.html',
-  styleUrls: ['./dialog.component.css']
+  styleUrls: ['./dialog.component.scss']
 })
 export class DialogComponent {
   @Input() isOpen = false;

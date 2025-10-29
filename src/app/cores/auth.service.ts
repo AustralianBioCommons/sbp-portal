@@ -19,9 +19,17 @@ export class AuthService {
   private bannerTypeSubject = new BehaviorSubject<'success' | 'error' | null>(null);
   private showBannerSubject = new BehaviorSubject<boolean>(false);
 
+  // Loading state
+  private loadingSubject = new BehaviorSubject<boolean>(true);
+  private loadingMessageSubject = new BehaviorSubject<string>('Loading user information...');
+
   public bannerMessage$ = this.bannerMessageSubject.asObservable();
   public bannerType$ = this.bannerTypeSubject.asObservable();
   public showBanner$ = this.showBannerSubject.asObservable();
+  
+  // Loading observables
+  public isLoading$ = this.loadingSubject.asObservable();
+  public loadingMessage$ = this.loadingMessageSubject.asObservable();
 
   // Keep legacy observables for backward compatibility
   public errorMessage$ = this.bannerMessageSubject.asObservable();
@@ -33,8 +41,23 @@ export class AuthService {
   public error$ = this.auth0.error$;
 
   constructor() {
-    // Banner handling
+    // Initialize loading and banner handling
+    this.initializeLoadingStates();
     this.initializeBannerHandling();
+  }
+
+  private initializeLoadingStates(): void {
+    // Monitor Auth0 loading state
+    this.auth0.isLoading$.subscribe(isLoading => {
+      if (isLoading) {
+        this.setLoading(true, 'Syncing user information...');
+      } else {
+        // Small delay to ensure smooth transition
+        setTimeout(() => {
+          this.setLoading(false);
+        }, 500);
+      }
+    });
   }
 
   private initializeBannerHandling(): void {
@@ -170,5 +193,34 @@ export class AuthService {
     return this.auth0.getAccessTokenSilently();
   }
 
+  /**
+   * Set loading state with optional message
+   */
+  private setLoading(loading: boolean, message?: string): void {
+    this.loadingSubject.next(loading);
+    if (message) {
+      this.loadingMessageSubject.next(message);
+    }
+  }
 
+  /**
+   * Get current loading state
+   */
+  get isLoading(): boolean {
+    return this.loadingSubject.value;
+  }
+
+  /**
+   * Get current loading message
+   */
+  get loadingMessage(): string {
+    return this.loadingMessageSubject.value;
+  }
+
+  /**
+   * Manually set loading state (for external use)
+   */
+  setLoadingState(loading: boolean, message: string = 'Loading...'): void {
+    this.setLoading(loading, message);
+  }
 }

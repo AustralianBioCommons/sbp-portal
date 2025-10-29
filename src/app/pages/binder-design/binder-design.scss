@@ -1,0 +1,47 @@
+@use '../../../scss/variables' as *;
+@use 'sass:color';
+
+.bg-biocommons-primary {
+  background-color: transparent;
+  border: 2px solid get-brand-color('secondary-blue');
+  color: get-brand-color('secondary-blue');
+}
+
+.bg-biocommons-primary-dark {
+  background-color: transparent;
+  border: 2px solid get-brand-color('secondary-blue');
+  color: get-brand-color('secondary-blue');
+}
+
+.bg-biocommons-secondary {
+  background-color: transparent;
+  border: 2px solid get-brand-color('secondary-blue');
+  color: get-brand-color('secondary-blue');
+}
+
+.bg-biocommons-secondary-dark {
+  background-color: transparent;
+  border: 2px solid get-brand-color('secondary-blue');
+  color: get-brand-color('secondary-blue');
+}
+
+.hover\:bg-biocommons-primary-dark:hover {
+  background-color: color.adjust(get-brand-color('secondary-blue'), $alpha: -0.9);
+  border: 2px solid get-brand-color('secondary-blue');
+  color: get-brand-color('secondary-blue');
+}
+
+.hover\:bg-biocommons-secondary-dark:hover {
+  background-color: color.adjust(get-brand-color('secondary-blue'), $alpha: -0.9);
+  border: 2px solid get-brand-color('secondary-blue');
+  color: get-brand-color('secondary-blue');
+}
+
+// Tab navigation styles
+.text-biocommons-primary {
+  color: get-brand-color('secondary-blue');
+}
+
+.border-biocommons-primary {
+  border-color: get-brand-color('secondary-blue');
+}

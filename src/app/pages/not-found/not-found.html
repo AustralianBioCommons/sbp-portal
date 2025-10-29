@@ -1,0 +1,79 @@
+<div class="not-found-container">
+  <div class="not-found-content">
+    <!-- 404 Visual -->
+    <div class="error-visual">
+      <div class="error-number">404</div>
+      <div class="error-subtitle">Page Not Found</div>
+    </div>
+
+    <!-- Australian BioCommons Branding -->
+    <div class="brand-section">
+      <h1 class="brand-title">Australian BioCommons Portal</h1>
+      <p class="error-message">
+        Oops! The page you're looking for doesn't exist or has been moved.
+      </p>
+    </div>
+
+    <!-- Helpful Suggestions -->
+    <div class="suggestions">
+      <h2 class="suggestions-title">What can you do?</h2>
+      <div class="suggestion-cards">
+        <div class="suggestion-card">
+          <ng-icon name="heroHome" class="suggestion-icon"></ng-icon>
+          <h3>Go to Themes</h3>
+          <p>Explore our protein binder design tools and workflows</p>
+          <button class="suggestion-button primary" (click)="goHome()">
+            Take me home
+          </button>
+        </div>
+
+        <div class="suggestion-card">
+          <ng-icon name="heroArrowLeft" class="suggestion-icon"></ng-icon>
+          <h3>Go Back</h3>
+          <p>Return to the previous page you were viewing</p>
+          <button class="suggestion-button secondary" (click)="goBack()">
+            Go back
+          </button>
+        </div>
+
+        <div class="suggestion-card">
+          <ng-icon name="heroMagnifyingGlass" class="suggestion-icon"></ng-icon>
+          <h3>Search Resources</h3>
+          <p>Find tools, workflows, and documentation</p>
+          <button class="suggestion-button accent" (click)="searchResources()">
+            Search portal
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popular Links -->
+    <div class="popular-links">
+      <h3>Popular Destinations</h3>
+      <div class="link-grid">
+        <a (click)="navigateToBinderDesign()" class="popular-link" role="button" tabindex="0">
+          Binder Design
+        </a>
+        <a (click)="navigateToStructurePrediction()" class="popular-link" role="button" tabindex="0">
+          Structure Prediction
+        </a>
+        <a (click)="navigateToStructureSearch()" class="popular-link" role="button" tabindex="0">
+          Structure Search
+        </a>
+        <a (click)="navigateToSingleStructurePrediction()" class="popular-link" role="button" tabindex="0">
+          Single Structure Prediction
+        </a>
+      </div>
+    </div>
+
+    <!-- Contact Support -->
+    <div class="support-section">
+      <p class="support-text">
+        Still can't find what you're looking for? 
+        <a href="mailto:support@biocommons.org.au" class="support-link">
+          Contact our support team
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
