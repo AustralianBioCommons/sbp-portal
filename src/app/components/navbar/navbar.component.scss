@@ -1,6 +1,6 @@
 // Import Australian BioCommons Brand Color Palette
-@use '../../../scss/variables' as *;
-@use 'sass:color';
+@use "../../../scss/variables" as *;
+@use "sass:color";
 
 // Compact Navbar component styles
 .navbar {
@@ -11,7 +11,7 @@
   height: 115px;
   background-color: rgba($bg-primary, 0.95);
   border-bottom: 1px solid $border-light;
-  
+
   // Ensure content container matches the navbar height
   .flex.justify-between.items-center {
     height: 100%;
@@ -23,35 +23,38 @@
   color: $biocommons-secondary-blue;
   border: 1px solid $border-light;
   transition: all 0.2s ease;
-  
+
   ng-icon {
     width: 1.3rem !important;
     height: 1.3rem !important;
     font-weight: 900 !important;
     transform: scale(1.3);
   }
-  
+
   &:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     border-color: $border-medium;
   }
-  
+
   &.active {
     background-color: $biocommons-secondary-blue;
     color: $bg-secondary;
     border-color: $biocommons-secondary-blue;
-    
+
     ng-icon {
       transform: scale(1.2);
       font-weight: 900 !important;
     }
-    
+
     &:hover {
-      background-color: color.adjust($biocommons-secondary-blue, $lightness: -10%);
+      background-color: color.adjust(
+        $biocommons-secondary-blue,
+        $lightness: -10%
+      );
       opacity: 0.9;
     }
   }
-  
+
   &:focus-visible {
     outline: 2px solid $focus-color;
     outline-offset: 2px;
@@ -116,7 +119,7 @@ ng-icon {
   object-fit: contain;
   filter: grayscale(20%); // Subtle desaturation to match icon style
   transition: filter 0.2s ease;
-  
+
   &:hover {
     filter: grayscale(0%); // Full color on hover
   }
@@ -127,20 +130,20 @@ ng-icon {
   background-color: $bg-accent;
   border: 1px solid $border-light;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  
+
   button {
     position: relative;
     overflow: hidden;
     color: $biocommons-secondary-blue;
     transition: all 0.2s ease;
-    
+
     &:hover {
       transform: translateX(2px);
       color: $link-color;
     }
-    
+
     &::before {
-      content: '';
+      content: "";
       position: absolute;
       left: 0;
       top: 0;
@@ -148,13 +151,13 @@ ng-icon {
       width: 0;
       background: linear-gradient(90deg, $biocommons-secondary-blue);
       transition: width 0.3s ease;
-      opacity: 0.1
+      opacity: 0.1;
     }
-    
+
     &:hover::before {
       width: 100%;
     }
-    
+
     &:focus-visible {
       outline: 2px solid $focus-color;
       outline-offset: 2px;
@@ -163,9 +166,10 @@ ng-icon {
 }
 
 // Smooth transitions for all interactive elements
-a, button {
+a,
+button {
   transition: all 0.2s ease;
-  
+
   &:focus-visible {
     outline: 2px solid $focus-color;
     outline-offset: 2px;
@@ -192,26 +196,29 @@ a, button {
   color: $biocommons-secondary-blue !important;
   font-weight: 600 !important;
   border-left: 3px solid $biocommons-primary-teal;
-  
+
   &:hover {
     background-color: rgba($biocommons-primary-teal, 0.15) !important;
     transform: translateX(0) !important; // Override hover transform
   }
-  
+
   &::before {
     width: 100% !important; // Keep the background effect
-    background: linear-gradient(90deg, rgba($biocommons-primary-teal, 0.1)) !important;
+    background: linear-gradient(
+      90deg,
+      rgba($biocommons-primary-teal, 0.1)
+    ) !important;
   }
-  
+
   span {
     color: $biocommons-secondary-blue !important;
     font-weight: 600;
   }
-  
+
   ng-icon {
     color: $biocommons-primary-teal !important;
   }
-  
+
   img {
     filter: hue-rotate(180deg) saturate(1.2) !important; // Highlight custom images
   }
@@ -221,15 +228,15 @@ a, button {
 .nav-parent-active {
   color: $biocommons-secondary-blue !important;
   font-weight: 700 !important;
-  
+
   span {
     color: $biocommons-secondary-blue !important;
   }
-  
+
   ng-icon {
     color: $biocommons-primary-teal !important;
   }
-  
+
   img {
     filter: hue-rotate(180deg) saturate(1.2) !important;
   }

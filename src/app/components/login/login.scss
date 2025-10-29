@@ -1,5 +1,5 @@
 // Import Australian BioCommons Brand Color Palette
-@use '../../../scss/variables' as *;
+@use "../../../scss/variables" as *;
 
 // Login component styles
 :host {
@@ -9,38 +9,38 @@
 .login-bar {
   background-color: $bg-accent;
   border-bottom: 1px solid $border-light;
-  
+
   .login-button {
     color: $text-secondary;
     transition: all 0.2s ease;
     border: 1px solid $border-light;
-    
+
     &:hover {
       color: $link-color;
       border-color: $border-medium;
       background-color: rgba($biocommons-primary-teal, 0.05);
     }
-    
+
     &:focus-visible {
       outline: 2px solid $focus-color;
       outline-offset: 2px;
     }
   }
-  
+
   .profile-dropdown {
     background-color: $bg-primary;
     border: 1px solid $border-light;
     box-shadow: 0 10px 25px rgba($biocommons-black, 0.1);
-    
+
     .dropdown-item {
       color: $text-secondary;
       transition: all 0.2s ease;
-      
+
       &:hover {
         color: $link-color;
         background-color: rgba($biocommons-primary-teal, 0.05);
       }
-      
+
       &:focus-visible {
         outline: 2px solid $focus-color;
         outline-offset: 2px;

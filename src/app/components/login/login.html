@@ -3,12 +3,15 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-end items-center py-2">
       <!-- User Section (if authenticated) -->
-      <div *ngIf="(isAuthenticated$ | async)" class="flex items-center space-x-3">
+      <div
+        *ngIf="(isAuthenticated$ | async)"
+        class="flex items-center space-x-3"
+      >
         <!-- User Email -->
         <div class="text-sm font-bold">
           {{ (user$ | async)?.email || 'user@example.com' }}
         </div>
-        
+
         <!-- Profile Button -->
         <button
           (click)="navigate('/profile')"
@@ -18,7 +21,7 @@
           <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
           <span>Profile</span>
         </button>
-        
+
         <!-- Logout Button -->
         <button
           (click)="logout()"
@@ -31,7 +34,7 @@
       </div>
 
       <!-- Login Button (if not authenticated) -->
-      <div *ngIf="!(isAuthenticated$ | async)">
+      <div *ngIf="(isAuthenticated$ | async) === false">
         <app-button
           (click)="login()"
           [variant]="'primary'"
@@ -44,6 +47,4 @@
       </div>
     </div>
   </div>
-
-
 </div>

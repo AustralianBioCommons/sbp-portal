@@ -1,37 +1,43 @@
 <!-- Themes Page Container -->
-<div class="min-h-screen"
-     [class.bg-gray-50]="!isActiveTab('binder-design')"
-     [class.binder-design-bg]="isActiveTab('binder-design')">
+<div
+  class="min-h-screen"
+  [class.bg-gray-50]="!isActiveTab('binder-design')"
+  [class.binder-design-bg]="isActiveTab('binder-design')"
+>
   <!-- Content Section -->
   <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Tab Content -->
-      <!-- Binder Design Tab -->
-      <div *ngIf="isActiveTab('binder-design')">
-        <app-binder-design></app-binder-design>
-      </div>
+    <!-- Binder Design Tab -->
+    <div *ngIf="isActiveTab('binder-design')">
+      <app-binder-design></app-binder-design>
+    </div>
 
-      <!-- Structure Prediction Tab -->
-      <div *ngIf="isActiveTab('structure-prediction')" class="space-y-6">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-4">Structure Prediction</h2>
-          <p class="text-gray-600 mb-6">{{ tabs[1].description }}</p>
-        </div>
+    <!-- Structure Prediction Tab -->
+    <div *ngIf="isActiveTab('structure-prediction')" class="space-y-6">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+          Structure Prediction
+        </h2>
+        <p class="text-gray-600 mb-6">{{ tabs[1].description }}</p>
       </div>
+    </div>
 
-      <!-- Structure Search Tab -->
-      <div *ngIf="isActiveTab('structure-search')" class="space-y-6">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-4">Structure Search</h2>
-          <p class="text-gray-600 mb-6">{{ tabs[2].description }}</p>
-        </div>
+    <!-- Structure Search Tab -->
+    <div *ngIf="isActiveTab('structure-search')" class="space-y-6">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+          Structure Search
+        </h2>
+        <p class="text-gray-600 mb-6">{{ tabs[2].description }}</p>
       </div>
+    </div>
 
-      <!-- Tools Tab -->
-      <div *ngIf="isActiveTab('tools')" class="space-y-6">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-2xl font-semibold text-gray-900 mb-4">Tools</h2>
-          <p class="text-gray-600 mb-6">{{ tabs[3].description }}</p>
-        </div>
+    <!-- Tools Tab -->
+    <div *ngIf="isActiveTab('tools')" class="space-y-6">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Tools</h2>
+        <p class="text-gray-600 mb-6">{{ tabs[3].description }}</p>
       </div>
+    </div>
   </div>
 </div>

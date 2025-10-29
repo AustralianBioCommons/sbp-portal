@@ -1,6 +1,6 @@
 // Import Australian BioCommons Brand Color Palette
-@use '../../../scss/variables' as *;
-@use 'sass:color';
+@use "../../../scss/variables" as *;
+@use "sass:color";
 
 // Button Component SCSS
 // Example usage of brand colors in component styles
@@ -26,7 +26,10 @@
     color: $biocommons-white;
 
     &:hover {
-      background-color: color.adjust($biocommons-primary-teal, $lightness: -10%);
+      background-color: color.adjust(
+        $biocommons-primary-teal,
+        $lightness: -10%
+      );
     }
 
     &:focus-visible {

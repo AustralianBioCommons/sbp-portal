@@ -1,5 +1,5 @@
 // Import Australian BioCommons Brand Color Palette
-@use '../../../scss/variables' as *;
+@use "../../../scss/variables" as *;
 
 // Header component styles
 :host {
@@ -13,9 +13,9 @@
 
 // Tab navigation styles
 .text-biocommons-primary {
-  color: get-brand-color('primary-pink');
+  color: get-brand-color("primary-pink");
 }
 
 .border-biocommons-primary {
-  border-color: get-brand-color('primary-pink');
+  border-color: get-brand-color("primary-pink");
 }

@@ -1,7 +1,7 @@
-import { inject } from '@angular/core';
-import { CanActivateFn } from '@angular/router';
-import { AuthService } from '@auth0/auth0-angular';
-import { map } from 'rxjs/operators';
+import { inject } from "@angular/core";
+import { CanActivateFn } from "@angular/router";
+import { AuthService } from "@auth0/auth0-angular";
+import { map } from "rxjs/operators";
 
 // Guard that checks authentication and redirects to login using appState
 export const authGuard: CanActivateFn = (route, state) => {

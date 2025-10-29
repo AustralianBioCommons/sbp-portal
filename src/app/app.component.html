@@ -2,13 +2,17 @@
 <app-loading *ngIf="isLoading$ | async"></app-loading>
 
 <!-- AlertComponent - shows success/error messages for 3 seconds (Centered overlay) -->
-<div *ngIf="showBanner$ | async" class="fixed inset-0 z-[1002] flex items-center justify-center pointer-events-none bg-black bg-opacity-25">
+<div
+  *ngIf="showBanner$ | async"
+  class="fixed inset-0 z-[1002] flex items-center justify-center pointer-events-none bg-black bg-opacity-25"
+>
   <div class="pointer-events-auto centered-alert">
-    <app-alert 
-      [type]="(bannerType$ | async) || 'error'" 
+    <app-alert
+      [type]="(bannerType$ | async) || 'error'"
       [message]="(bannerMessage$ | async) || ''"
       [dismissible]="true"
-      (dismissed)="dismissError()">
+      (dismissed)="dismissError()"
+    >
     </app-alert>
   </div>
 </div>

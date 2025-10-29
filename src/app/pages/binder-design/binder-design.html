@@ -3,52 +3,62 @@
   <div class="space-y-12">
     <!-- Page Title -->
     <div class="text-center">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">Protein Binder Design</h1>
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        Protein Binder Design
+      </h1>
       <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur.
       </p>
     </div>
 
-  <!-- Preconfid Workflows Section -->
-  <div>
-    <h2 class="text-2xl font-semibold text-gray-900 mb-6">Pre-config Workflows</h2>
-    <div class="flex flex-wrap gap-3">
-      <div 
-        *ngFor="let workflow of workflows" 
-        class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-biocommons-primary hover:bg-biocommons-primary-dark transition-colors duration-200 cursor-pointer"
-      >
-        {{ workflow.label }}
+    <!-- Preconfid Workflows Section -->
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900 mb-6">
+        Pre-config Workflows
+      </h2>
+      <div class="flex flex-wrap gap-3">
+        <div
+          *ngFor="let workflow of workflows"
+          class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-biocommons-primary hover:bg-biocommons-primary-dark transition-colors duration-200 cursor-pointer"
+        >
+          {{ workflow.label }}
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Tools Section -->
-  <div>
-    <h2 class="text-2xl font-semibold text-gray-900 mb-6">Tools</h2>
-    <div class="flex flex-wrap gap-3">
-      <div 
-        *ngFor="let tool of tools" 
-        class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-biocommons-secondary hover:bg-biocommons-secondary-dark transition-colors duration-200 cursor-pointer"
-      >
-        {{ tool.label }}
+    <!-- Tools Section -->
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900 mb-6">Tools</h2>
+      <div class="flex flex-wrap gap-3">
+        <div
+          *ngFor="let tool of tools"
+          class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-biocommons-secondary hover:bg-biocommons-secondary-dark transition-colors duration-200 cursor-pointer"
+        >
+          {{ tool.label }}
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Community Resources Section -->
-  <div>
-    <h2 class="text-2xl font-semibold text-gray-900 mb-6">Community Resources</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div 
-        *ngFor="let resource of communityResources" 
-        class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
-      >
-        <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ resource.title }}</h3>
-        <p class="text-gray-600 text-sm">{{ resource.description }}</p>
+    <!-- Community Resources Section -->
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900 mb-6">
+        Community Resources
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div
+          *ngFor="let resource of communityResources"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">
+            {{ resource.title }}
+          </h3>
+          <p class="text-gray-600 text-sm">{{ resource.description }}</p>
+        </div>
       </div>
     </div>
-  </div>
   </div>
 </div>

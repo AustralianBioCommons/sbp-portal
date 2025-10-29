@@ -1,5 +1,5 @@
 // Import Australian BioCommons Brand Color Palette
-@use '../../../scss/variables' as *;
+@use "../../../scss/variables" as *;
 
 :host {
   display: block;
@@ -8,7 +8,7 @@
 #footer-sections {
   background-color: $bg-primary;
   color: $text-primary;
-  
+
   // Logo container styling for 2x1 layout
   .logo-container {
     min-height: 80px;
@@ -17,7 +17,7 @@
     justify-content: center;
     overflow: hidden;
   }
-  
+
   // Logo specific dimensions
   .logo-image {
     width: 230px;

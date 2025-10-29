@@ -1,46 +1,46 @@
 // Import Australian BioCommons Brand Color Palette
-@use '../../../scss/variables' as *;
-@use 'sass:color';
+@use "../../../scss/variables" as *;
+@use "sass:color";
 
 // Alert Component Styles
 .alert {
   border-radius: 0.5rem;
   padding: 1rem;
   border: 1px solid;
-  
+
   &.success {
     background-color: color.adjust($success-color, $lightness: 45%);
     border-color: $success-color;
     color: color.adjust($success-color, $lightness: -20%);
   }
-  
+
   &.error {
     background-color: color.adjust($error-color, $lightness: 45%);
     border-color: $error-color;
     color: color.adjust($error-color, $lightness: -10%);
   }
-  
+
   &.warning {
     background-color: color.adjust($warning-color, $lightness: 40%);
     border-color: $warning-color;
     color: color.adjust($warning-color, $lightness: -20%);
   }
-  
+
   &.info {
     background-color: color.adjust($biocommons-primary-teal, $lightness: 45%);
     border-color: $biocommons-primary-teal;
     color: color.adjust($biocommons-primary-teal, $lightness: -20%);
   }
-  
+
   // Alert close button
   .alert-close {
     color: inherit;
     transition: opacity 0.2s ease;
-    
+
     &:hover {
       opacity: 0.7;
     }
-    
+
     &:focus-visible {
       outline: 2px solid currentColor;
       outline-offset: 2px;

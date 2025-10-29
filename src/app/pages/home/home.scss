@@ -1,6 +1,6 @@
 // Import Australian BioCommons Brand Color Palette
-@use '../../../scss/variables' as *;
-@use 'sass:color';
+@use "../../../scss/variables" as *;
+@use "sass:color";
 
 // Home Page Styling
 
@@ -10,23 +10,27 @@
     position: relative;
     transition: all 0.2s ease;
     color: $text-secondary;
-    
+
     &:hover {
       transform: translateY(-1px);
       color: $link-color;
     }
-    
+
     &.active {
       color: $text-primary;
-      
+
       &::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: -2px;
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, $biocommons-primary-teal, $biocommons-secondary-blue);
+        background: linear-gradient(
+          90deg,
+          $biocommons-primary-teal,
+          $biocommons-secondary-blue
+        );
         border-radius: 2px 2px 0 0;
       }
     }
@@ -37,12 +41,12 @@
 .tab-content {
   max-width: none;
   width: 100%;
-  
+
   > div {
     animation: fadeInUp 0.3s ease-out;
     max-width: none;
     width: 100%;
-    
+
     // Make content cards wider
     .bg-white {
       max-width: none;
@@ -67,7 +71,7 @@
   background-color: $bg-primary;
   border: 1px solid $border-light;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -78,16 +82,16 @@
 // Button hover effects
 .btn-hover {
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
-  
+
   &:focus-visible {
     outline: 2px solid $focus-color;
     outline-offset: 2px;
@@ -99,7 +103,7 @@
   li {
     transition: transform 0.2s ease, color 0.2s ease;
     color: $text-secondary;
-    
+
     &:hover {
       transform: translateX(4px);
       color: $link-color;
@@ -115,11 +119,11 @@
       gap: 1rem;
     }
   }
-  
+
   nav.flex {
     flex-wrap: wrap;
     gap: 0.5rem;
-    
+
     button {
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
@@ -137,16 +141,16 @@
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: $bg-secondary;
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: $biocommons-primary-teal;
     border-radius: 3px;
-    
+
     &:hover {
       background: $biocommons-secondary-blue;
     }
@@ -156,52 +160,58 @@
 // Chip styling for Binder Design
 .bg-biocommons-primary {
   background-color: transparent;
-  border: 2px solid get-brand-color('secondary-blue');
-  color: get-brand-color('secondary-blue');
+  border: 2px solid get-brand-color("secondary-blue");
+  color: get-brand-color("secondary-blue");
 }
 
 .bg-biocommons-primary-dark {
   background-color: transparent;
-  border: 2px solid get-brand-color('secondary-blue');
-  color: get-brand-color('secondary-blue');
+  border: 2px solid get-brand-color("secondary-blue");
+  color: get-brand-color("secondary-blue");
 }
 
 .bg-biocommons-secondary {
   background-color: transparent;
-  border: 2px solid get-brand-color('secondary-blue');
-  color: get-brand-color('secondary-blue');
+  border: 2px solid get-brand-color("secondary-blue");
+  color: get-brand-color("secondary-blue");
 }
 
 .bg-biocommons-secondary-dark {
   background-color: transparent;
-  border: 2px solid get-brand-color('secondary-blue');
-  color: get-brand-color('secondary-blue');
+  border: 2px solid get-brand-color("secondary-blue");
+  color: get-brand-color("secondary-blue");
 }
 
 .hover\:bg-biocommons-primary-dark:hover {
-  background-color: color.adjust(get-brand-color('secondary-blue'), $alpha: -0.9);
-  border: 2px solid get-brand-color('secondary-blue');
-  color: get-brand-color('secondary-blue');
+  background-color: color.adjust(
+    get-brand-color("secondary-blue"),
+    $alpha: -0.9
+  );
+  border: 2px solid get-brand-color("secondary-blue");
+  color: get-brand-color("secondary-blue");
 }
 
 .hover\:bg-biocommons-secondary-dark:hover {
-  background-color: color.adjust(get-brand-color('secondary-blue'), $alpha: -0.9);
-  border: 2px solid get-brand-color('secondary-blue');
-  color: get-brand-color('secondary-blue');
+  background-color: color.adjust(
+    get-brand-color("secondary-blue"),
+    $alpha: -0.9
+  );
+  border: 2px solid get-brand-color("secondary-blue");
+  color: get-brand-color("secondary-blue");
 }
 
 // Tab navigation styles
 .text-biocommons-primary {
-  color: get-brand-color('primary-pink');
+  color: get-brand-color("primary-pink");
 }
 
 .border-biocommons-primary {
-  border-color: get-brand-color('primary-pink');
+  border-color: get-brand-color("primary-pink");
 }
 
 // Binder Design background image
 .binder-design-bg {
-  background-image: url('/assets/binder-design.png');
+  background-image: url("/assets/binder-design.png");
   background-repeat: no-repeat;
   background-size: 100% auto;
   background-position: top center;

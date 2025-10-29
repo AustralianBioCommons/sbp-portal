@@ -1,5 +1,5 @@
 <!-- Dialog Backdrop -->
-<div 
+<div
   *ngIf="isOpen"
   class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
   (click)="onBackdropClick($event)"
@@ -9,7 +9,7 @@
   aria-label="Close dialog"
 >
   <!-- Dialog Container -->
-  <div 
+  <div
     class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all"
     role="dialog"
     aria-modal="true"
@@ -29,15 +29,15 @@
 
     <!-- Dialog Actions -->
     <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-      <app-button 
+      <app-button
         (click)="onCancel()"
         [variant]="'secondary'"
         [borderRadius]="'rounded-DEFAULT-10'"
       >
         {{ cancelText }}
       </app-button>
-      
-      <app-button 
+
+      <app-button
         (click)="onConfirm()"
         [variant]="confirmVariant"
         [colorClasses]="confirmColorClasses"
