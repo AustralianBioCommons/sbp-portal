@@ -44,7 +44,7 @@ type SocialLink = {
   styleUrls: ["./footer.component.scss"],
 })
 export class FooterSectionsComponent {
-  @Output() readonly onSearch = new EventEmitter<string>();
+  @Output() readonly searchSubmit = new EventEmitter<string>();
 
   readonly logos: LogoLink[] = [
     {
@@ -126,6 +126,6 @@ export class FooterSectionsComponent {
 
   onSubmitSearch(): void {
     const trimmed = this.searchTerm.trim();
-    this.onSearch.emit(trimmed);
+    this.searchSubmit.emit(trimmed);
   }
 }

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { Router, ActivatedRoute, UrlTree, ParamMap } from "@angular/router";
+import { Router, ActivatedRoute, UrlTree } from "@angular/router";
 import { AuthService } from "../../cores/auth.service";
 import { of } from "rxjs";
 
