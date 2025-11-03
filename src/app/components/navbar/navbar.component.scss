@@ -1,70 +1,29 @@
-// Import Australian BioCommons Brand Color Palette
-@use "../../../scss/variables" as *;
-@use "sass:color";
+/* Navbar styles - mostly moved to Tailwind, keeping only essential custom styles */
 
-// Compact Navbar component styles
 .navbar {
+  /* Custom backdrop blur and height - not easily replicated in Tailwind */
   top: 0;
   z-index: 999;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   height: 115px;
-  background-color: rgba($bg-primary, 0.95);
-  border-bottom: 1px solid $border-light;
+  background-color: rgba(255, 255, 255, 0.95);
 
-  // Ensure content container matches the navbar height
+  /* Ensure content container matches the navbar height */
   .flex.justify-between.items-center {
     height: 100%;
   }
-}
 
-// Compact menu button styling
-.compact-menu-button {
-  color: $biocommons-secondary-blue;
-  border: 1px solid $border-light;
-  transition: all 0.2s ease;
-
-  ng-icon {
-    width: 1.3rem !important;
-    height: 1.3rem !important;
-    font-weight: 900 !important;
-    transform: scale(1.3);
-  }
-
-  &:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    border-color: $border-medium;
-  }
-
-  &.active {
-    background-color: $biocommons-secondary-blue;
-    color: $bg-secondary;
-    border-color: $biocommons-secondary-blue;
-
-    ng-icon {
-      transform: scale(1.2);
-      font-weight: 900 !important;
-    }
-
-    &:hover {
-      background-color: color.adjust(
-        $biocommons-secondary-blue,
-        $lightness: -10%
-      );
-      opacity: 0.9;
-    }
-  }
-
-  &:focus-visible {
-    outline: 2px solid $focus-color;
-    outline-offset: 2px;
+  /* Logo sizing */
+  img {
+    width: 300px;
+    height: 110px;
   }
 }
 
-// Dropdown-style compact menu
+/* Menu animation - using custom keyframes */
 .compact-menu {
   animation: slideDownIn 0.25s ease-out;
-  opacity: 1;
 }
 
 @keyframes slideDownIn {
@@ -78,163 +37,84 @@
   }
 }
 
-// // Menu overlay backdrop
-// .compact-menu {
-//   backdrop-filter: blur(4px);
-//   -webkit-backdrop-filter: blur(4px);
-// }
-
-// Logo styling
-.navbar img {
-  width: 300px;
-  height: 110px;
-}
-
-// ng-icon styling overrides
+/* Icon styling overrides */
 ng-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-// Force thicker strokes for all compact menu button icons
 .compact-menu-button ng-icon * {
   stroke-width: 2.5 !important;
   stroke-linecap: round !important;
   stroke-linejoin: round !important;
 }
 
-.compact-menu-button.active ng-icon * {
-  stroke-width: 3.5 !important;
+.compact-menu-button.active {
+  background-color: #205a86 !important; /* biocommons-secondary-blue */
+  color: #f7fafc !important; /* bg-secondary */
+  border-color: #205a86 !important;
+
+  ng-icon * {
+    stroke-width: 3.5 !important;
+  }
+
+  &:hover {
+    background-color: #1a4a73 !important; /* darker blue */
+    opacity: 0.9;
+  }
 }
 
-// Custom nav item images styling
+/* Custom nav item images */
 .compact-menu img {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 1rem !important; // Force same size as w-4 (16px)
-  height: 1rem !important; // Force same size as h-4 (16px)
+  width: 1rem !important;
+  height: 1rem !important;
   object-fit: contain;
-  filter: grayscale(20%); // Subtle desaturation to match icon style
+  filter: grayscale(20%);
   transition: filter 0.2s ease;
 
   &:hover {
-    filter: grayscale(0%); // Full color on hover
+    filter: grayscale(0%);
   }
 }
 
-// Smooth hover effects for menu items
-.compact-menu {
-  background-color: $bg-accent;
-  border: 1px solid $border-light;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-
-  button {
-    position: relative;
-    overflow: hidden;
-    color: $biocommons-secondary-blue;
-    transition: all 0.2s ease;
-
-    &:hover {
-      transform: translateX(2px);
-      color: $link-color;
-    }
-
-    &::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, $biocommons-secondary-blue);
-      transition: width 0.3s ease;
-      opacity: 0.1;
-    }
-
-    &:hover::before {
-      width: 100%;
-    }
-
-    &:focus-visible {
-      outline: 2px solid $focus-color;
-      outline-offset: 2px;
-    }
-  }
-}
-
-// Smooth transitions for all interactive elements
-a,
-button {
-  transition: all 0.2s ease;
-
-  &:focus-visible {
-    outline: 2px solid $focus-color;
-    outline-offset: 2px;
-  }
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .mobile-menu {
-    max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-  }
-}
-
-// Loading state for async operations
-.loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-// Active nav item styling
+/* Active nav item styling - complex enough to keep in SCSS */
 .nav-item-active {
-  background-color: rgba($biocommons-primary-teal, 0.1) !important;
-  color: $biocommons-secondary-blue !important;
+  background-color: rgba(90, 195, 177, 0.1) !important; /* biocommons-primary-teal with opacity */
+  color: #205a86 !important; /* biocommons-secondary-blue */
   font-weight: 600 !important;
-  border-left: 3px solid $biocommons-primary-teal;
+  border-left: 3px solid #5ac3b1; /* biocommons-primary-teal */
 
   &:hover {
-    background-color: rgba($biocommons-primary-teal, 0.15) !important;
-    transform: translateX(0) !important; // Override hover transform
-  }
-
-  &::before {
-    width: 100% !important; // Keep the background effect
-    background: linear-gradient(
-      90deg,
-      rgba($biocommons-primary-teal, 0.1)
-    ) !important;
+    background-color: rgba(90, 195, 177, 0.15) !important;
+    transform: translateX(0) !important;
   }
 
   span {
-    color: $biocommons-secondary-blue !important;
+    color: #205a86 !important;
     font-weight: 600;
   }
 
   ng-icon {
-    color: $biocommons-primary-teal !important;
+    color: #5ac3b1 !important;
   }
 
   img {
-    filter: hue-rotate(180deg) saturate(1.2) !important; // Highlight custom images
+    filter: hue-rotate(180deg) saturate(1.2) !important;
   }
 }
 
-// Active parent nav item styling (when a child is active)
+/* Active parent nav item */
 .nav-parent-active {
-  color: $biocommons-secondary-blue !important;
+  color: #205a86 !important;
   font-weight: 700 !important;
 
   span {
-    color: $biocommons-secondary-blue !important;
+    color: #205a86 !important;
   }
 
   ng-icon {
-    color: $biocommons-primary-teal !important;
+    color: #5ac3b1 !important;
   }
 
   img {

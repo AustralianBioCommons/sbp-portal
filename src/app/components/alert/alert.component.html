@@ -1,6 +1,6 @@
 <div
   class="fixed right-4 top-4 z-50 flex max-w-md items-center gap-2 rounded-md p-4 shadow"
-  [class]="type() === 'success' ? 'bg-green-50' : 'bg-red-50'"
+  [class]="type() === 'success' ? 'bg-green-50 border-success' : 'bg-red-50 border-error'"
   [class.pr-8]="!dismissible()"
 >
   <!-- Icon -->
@@ -10,7 +10,7 @@
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="currentColor"
-    class="size-5 text-green-500"
+    class="size-5 text-success"
   >
     <path
       fill-rule="evenodd"
@@ -24,7 +24,7 @@
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="currentColor"
-    class="size-5 text-red-500"
+    class="size-5 text-error"
   >
     <path
       fill-rule="evenodd"
@@ -37,7 +37,7 @@
   <!-- Content -->
   <div
     class="text-md flex-1"
-    [class]="type() === 'success' ? 'text-green-700' : 'text-red-700'"
+    [class]="type() === 'success' ? 'text-success' : 'text-error'"
   >
     {{ message() }}
   </div>
@@ -50,8 +50,8 @@
     class="flex-shrink-0 rounded-md p-1 focus-visible:outline-none focus-visible:ring-2"
     [class]="
       type() === 'success'
-        ? 'text-green-500 hover:bg-green-100 focus-visible:ring-green-500'
-        : 'text-red-500 hover:bg-red-100 focus-visible:ring-red-500'
+        ? 'text-success hover:bg-green-100 focus-visible:ring-success'
+        : 'text-error hover:bg-red-100 focus-visible:ring-error'
     "
   >
     <svg

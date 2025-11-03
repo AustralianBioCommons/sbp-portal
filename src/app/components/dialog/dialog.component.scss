@@ -1,103 +1,25 @@
-// Import Australian BioCommons Brand Color Palette
-@use "../../../scss/variables" as *;
+/* Dialog component now uses Tailwind classes exclusively */
+/* All styling is handled through Tailwind utilities in the template */
 
-// Dialog Component SCSS
-// SCSS Variables for dialog animations and styling
-$dialog-transition-duration: 150ms;
-$dialog-ease-out: ease-out;
-$dialog-ease-in: ease-in;
-$dialog-scale-start: 0.95;
-$dialog-scale-end: 1;
-
-/* Dialog animations */
+/* Only keeping essential animations that aren't easily replicated in Tailwind */
 .dialog-enter {
   opacity: 0;
-  transform: scale($dialog-scale-start);
+  transform: scale(0.95);
 }
 
 .dialog-enter-active {
   opacity: 1;
-  transform: scale($dialog-scale-end);
-  transition: opacity $dialog-transition-duration $dialog-ease-out,
-    transform $dialog-transition-duration $dialog-ease-out;
+  transform: scale(1);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
 }
 
 .dialog-leave {
   opacity: 1;
-  transform: scale($dialog-scale-end);
+  transform: scale(1);
 }
 
 .dialog-leave-active {
   opacity: 0;
-  transform: scale($dialog-scale-start);
-  transition: opacity $dialog-transition-duration $dialog-ease-in,
-    transform $dialog-transition-duration $dialog-ease-in;
-}
-
-/* Ensure dialog content doesn't scroll when backdrop is clicked */
-.dialog-backdrop {
-  overflow: hidden;
-}
-
-// Dialog styling using brand colors
-.dialog {
-  &-overlay {
-    background-color: rgba($biocommons-black, 0.5);
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: rgba($biocommons-black, 0.6);
-    }
-  }
-
-  &-content {
-    background: $bg-primary;
-    border-radius: 0.75rem;
-    box-shadow: 0 25px 50px -12px rgba($biocommons-black, 0.25);
-    border: 1px solid $border-light;
-
-    .dialog-header {
-      border-bottom: 1px solid $border-light;
-      color: $text-primary;
-
-      h2,
-      h3 {
-        color: $heading-color;
-        margin: 0;
-      }
-    }
-
-    .dialog-body {
-      color: $body-color;
-    }
-
-    .dialog-footer {
-      border-top: 1px solid $border-light;
-
-      .btn {
-        &:not(:last-child) {
-          margin-right: 0.5rem;
-        }
-
-        &:focus-visible {
-          outline: 2px solid $focus-color;
-          outline-offset: 2px;
-        }
-      }
-    }
-
-    .dialog-close {
-      color: $text-muted;
-      transition: color 0.2s ease;
-
-      &:hover {
-        color: $text-primary;
-      }
-
-      &:focus-visible {
-        outline: 2px solid $focus-color;
-        outline-offset: 2px;
-      }
-    }
-  }
+  transform: scale(0.95);
+  transition: opacity 150ms ease-in, transform 150ms ease-in;
 }

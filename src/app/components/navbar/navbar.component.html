@@ -14,7 +14,7 @@
         <!-- Compact Menu Toggle Button -->
         <button
           (click)="toggleMobileMenu(); $event.stopPropagation()"
-          class="compact-menu-button relative p-2 rounded-lg hover:bg-gray-100 text-gray-700 hover:text-biocommons-primary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-biocommons-primary focus:ring-offset-1"
+          class="compact-menu-button relative p-2 rounded-lg hover:bg-gray-100 text-biocommons-secondary-blue hover:text-biocommons-primary-teal transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-1 border border-border-light hover:shadow-lg hover:border-border-medium"
           [class.active]="isMobileMenuOpen()"
           type="button"
         >
@@ -38,7 +38,7 @@
   <!-- Compact Navigation Menu (Positioned overlay - Right aligned) -->
   @if (isMobileMenuOpen()) {
     <div
-      class="compact-menu absolute top-full right-0 w-80 z-50 bg-biocommons-secondary"
+      class="compact-menu absolute top-full right-0 w-80 z-50 bg-bg-accent border border-border-light shadow-xl rounded-lg mt-2"
       [@slideInOut]
     >
     <!-- Menu Content -->
@@ -52,7 +52,7 @@
             <button (click)="
                             item.path ? navigate(item.path) : executeAction(item.action)
                           "
-              class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md hover:bg-gray-50 font-medium transition-colors duration-200"
+              class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md hover:bg-gray-50 font-medium transition-all duration-200 text-biocommons-secondary-blue hover:text-biocommons-primary-teal hover:translate-x-1"
               [class.nav-item-active]="isNavItemActive(item)">
                 @if (item.icon && !item.image) {
                   <ng-icon [name]="item.icon"
@@ -72,7 +72,7 @@
           <!-- Nav item with children -->
           @if (item.children) {
           <div class="mb-2">
-            <div class="flex items-center space-x-2 px-3 py-1.5 font-semibold"
+            <div class="flex items-center space-x-2 px-3 py-1.5 font-semibold text-biocommons-secondary-blue"
               [class.nav-parent-active]="isParentNavItemActive(item)">
                 @if (item.icon && !item.image) {
                   <ng-icon [name]="item.icon"
@@ -95,7 +95,7 @@
                           ? navigate(child.path)
                           : executeAction(child.action)
                       "
-                      class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-colors duration-200"
+                      class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-all duration-200 text-biocommons-secondary-blue hover:text-biocommons-primary-teal hover:translate-x-1"
                       [class.nav-item-active]="isNavItemActive(child)"
                     >
                       <span>{{ child.label }}</span>

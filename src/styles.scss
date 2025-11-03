@@ -2,9 +2,6 @@
 // Australian BioCommons Portal - Main Styles
 // ===================================================
 
-// Import brand color palette
-@use "scss/variables" as *;
-
 // Tailwind CSS imports
 @tailwind base;
 @tailwind components;
@@ -16,161 +13,48 @@
 
 body {
   margin: 0;
-  font: normal normal medium 16px/25px "Averta", "Helvetica Neue", Arial,
-    sans-serif;
-  color: $text-primary;
-  background-color: $bg-primary;
+  font: normal normal medium 16px/25px "Averta", "Helvetica Neue", Arial, sans-serif;
+  color: #000000; /* biocommons-black */
+  background-color: #ffffff; /* biocommons-white */
 }
 
-// ===================================================
-// GLOBAL LINK STYLES
-// ===================================================
-
 a {
-  color: $link-color;
+  color: #5ac3b1; /* biocommons-primary-teal */
   text-decoration: none;
   transition: color 0.2s ease;
 
   &:hover {
-    color: $link-hover;
+    color: #ed087c; /* biocommons-primary-pink */
   }
 
   &:focus-visible {
-    outline: 2px solid $focus-color;
+    outline: 2px solid #5ac3b1; /* focus color */
     outline-offset: 2px;
   }
 }
 
-// ===================================================
-// TYPOGRAPHY STYLES
-// ===================================================
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: $heading-color;
+h1, h2, h3, h4, h5, h6 {
+  color: #000000; /* biocommons-black */
   font-weight: 600;
 }
 
 p {
-  color: $body-color;
+  color: #4a5568; /* text-secondary */
 }
 
+// ===================================================
+// UTILITY CLASSES - Use Tailwind classes instead
+// ===================================================
+/* Most utilities now available as Tailwind classes:
+ * text-biocommons-primary-teal, bg-biocommons-secondary-blue, etc.
+ * Use these in your templates instead of custom CSS classes.
+ */
+
 .text-caption {
-  color: $caption-color;
+  color: #718096; /* text-muted */
   font-size: 0.875rem;
 }
 
 .text-disabled {
-  color: $disabled-color;
-}
-
-// ===================================================
-// UTILITY CLASSES FOR BRAND COLORS
-// ===================================================
-
-// Primary color utilities
-.text-primary-pink {
-  color: $biocommons-primary-pink !important;
-}
-.text-primary-orange {
-  color: $biocommons-primary-orange !important;
-}
-.text-primary-teal {
-  color: $biocommons-primary-teal !important;
-}
-
-.bg-primary-pink {
-  background-color: $biocommons-primary-pink !important;
-}
-.bg-primary-orange {
-  background-color: $biocommons-primary-orange !important;
-}
-.bg-primary-teal {
-  background-color: $biocommons-primary-teal !important;
-}
-
-.border-primary-pink {
-  border-color: $biocommons-primary-pink !important;
-}
-.border-primary-orange {
-  border-color: $biocommons-primary-orange !important;
-}
-.border-primary-teal {
-  border-color: $biocommons-primary-teal !important;
-}
-
-// Secondary color utilities
-.text-secondary-purple {
-  color: $biocommons-secondary-purple !important;
-}
-.text-secondary-blue {
-  color: $biocommons-secondary-blue !important;
-}
-.text-secondary-green {
-  color: $biocommons-secondary-green !important;
-}
-.text-secondary-mint {
-  color: $biocommons-secondary-mint !important;
-}
-
-.bg-secondary-purple {
-  background-color: $biocommons-secondary-purple !important;
-}
-.bg-secondary-blue {
-  background-color: $biocommons-secondary-blue !important;
-}
-.bg-secondary-green {
-  background-color: $biocommons-secondary-green !important;
-}
-.bg-secondary-mint {
-  background-color: $biocommons-secondary-mint !important;
-}
-
-.border-secondary-purple {
-  border-color: $biocommons-secondary-purple !important;
-}
-.border-secondary-blue {
-  border-color: $biocommons-secondary-blue !important;
-}
-.border-secondary-green {
-  border-color: $biocommons-secondary-green !important;
-}
-.border-secondary-mint {
-  border-color: $biocommons-secondary-mint !important;
-}
-
-// ===================================================
-// INTERACTIVE STATE UTILITIES
-// ===================================================
-
-.hover-teal:hover {
-  color: $biocommons-primary-teal !important;
-}
-
-.hover-pink:hover {
-  color: $biocommons-primary-pink !important;
-}
-
-.hover-orange:hover {
-  color: $biocommons-primary-orange !important;
-}
-
-// ===================================================
-// ACCESSIBILITY UTILITIES
-// ===================================================
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  color: #a0aec0; /* text-light */
 }

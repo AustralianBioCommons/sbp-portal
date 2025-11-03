@@ -2,9 +2,9 @@
 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none
 focus-visible:ring-2 focus-visible:ring-offset-2 whitespace-nowrap"; @let color
 = colorClasses()?.trim(); @let variantClasses = variant() === "primary" ?
-"text-white " + (color || "bg-biocommons-primary hover:bg-sky-900
-focus-visible:ring-biocommons-primary") : "border bg-white hover:bg-gray-100 " +
-(color || "text-biocommons-primary focus-visible:ring-biocommons-primary");
+"text-white " + (color || "bg-biocommons-primary-teal hover:bg-biocommons-secondary-blue
+focus-visible:ring-biocommons-primary-teal") : "border bg-white hover:bg-bg-secondary " +
+(color || "text-biocommons-primary-teal border-biocommons-primary-teal focus-visible:ring-biocommons-primary-teal");
 
 <button
   [type]="type()"
