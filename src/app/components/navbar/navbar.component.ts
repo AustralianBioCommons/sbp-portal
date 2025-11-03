@@ -39,8 +39,8 @@ export interface NavItem {
       heroBars3,
       heroXMark,
       heroInformationCircle,
-      tablerCalendarStar,
-    }),
+      tablerCalendarStar
+    })
   ],
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.scss",
@@ -51,16 +51,16 @@ export interface NavItem {
         animate(
           "250ms ease-out",
           style({ transform: "translateY(0)", opacity: 1 })
-        ),
+        )
       ]),
       transition(":leave", [
         animate(
           "200ms ease-in",
           style({ transform: "translateY(-10px)", opacity: 0 })
-        ),
-      ]),
-    ]),
-  ],
+        )
+      ])
+    ])
+  ]
 })
 export class Navbar {
   private auth = inject(AuthService);
@@ -88,54 +88,58 @@ export class Navbar {
         {
           label: "Structure prediction",
           path: "/themes?tab=structure-prediction",
-          requiresAuth: false,
+          requiresAuth: false
         },
         {
           label: "Structure search",
           path: "/themes?tab=structure-search",
-          requiresAuth: false,
-        },
-      ],
+          requiresAuth: false
+        }
+      ]
     },
     {
       label: "Pre-config workflow",
       image: "/assets/workflow-square-01.png",
       children: [
         {
-          label: "Single structure prediction",
-          path: "/workflow/wf?=single-structure-prediction",
+          label: "De novo design",
+          path: "/workflow/de-novo-design"
         },
         {
-          label: "Interaction screening",
-          path: "/workflow/wf?=interaction-screening",
+          label: "Motif Scaffolding",
+          path: "/workflow/motif-scaffolding"
         },
-      ],
+        {
+          label: "Partial Diffusion",
+          path: "/workflow/partial-diffusion"
+        }
+      ]
     },
     {
       label: "Tools",
       path: "/tools",
-      icon: "heroWrenchScrewdriver",
+      icon: "heroWrenchScrewdriver"
     },
     {
       label: "Jobs",
       path: "/jobs",
-      image: "/assets/job-run.png",
+      image: "/assets/job-run.png"
     },
     {
       label: "About",
       path: "/about",
-      icon: "heroInformationCircle",
+      icon: "heroInformationCircle"
     },
     {
       label: "Workshops & Events",
       path: "/events",
-      icon: "tablerCalendarStar",
+      icon: "tablerCalendarStar"
     },
     {
       label: "Support/FAQ",
       path: "/support",
-      image: "/assets/contact-support-outline-rounded.png",
-    },
+      image: "/assets/contact-support-outline-rounded.png"
+    }
   ];
 
   constructor() {

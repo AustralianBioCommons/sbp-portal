@@ -23,23 +23,37 @@ describe("BinderDesignComponent", () => {
   describe("workflows", () => {
     it("should have correct workflow structure", () => {
       expect(component.workflows).toBeDefined();
-      expect(component.workflows.length).toBe(2);
+      expect(component.workflows.length).toBe(3);
     });
 
-    it("should contain single structure prediction workflow", () => {
-      const singleStructure = component.workflows.find(
-        (w) => w.id === "single-structure"
+    it("should contain de novo design workflow as default active", () => {
+      const deNovoDesign = component.workflows.find(
+        (w) => w.id === "de-novo-design"
       );
-      expect(singleStructure).toBeDefined();
-      expect(singleStructure?.label).toBe("Single Structure Prediction");
+      expect(deNovoDesign).toBeDefined();
+      expect(deNovoDesign?.label).toBe("De Novo Design");
+      expect(deNovoDesign?.active).toBe(true);
+      expect(deNovoDesign?.href).toBe("/workflows/de-novo-design");
     });
 
-    it("should contain interaction screening workflow", () => {
-      const interactionScreening = component.workflows.find(
-        (w) => w.id === "interaction-screening"
+    it("should contain motif scaffolding workflow as inactive", () => {
+      const motifScaffolding = component.workflows.find(
+        (w) => w.id === "motif-scaffolding"
       );
-      expect(interactionScreening).toBeDefined();
-      expect(interactionScreening?.label).toBe("Interaction Screening");
+      expect(motifScaffolding).toBeDefined();
+      expect(motifScaffolding?.label).toBe("Motif Scaffolding");
+      expect(motifScaffolding?.active).toBe(false);
+      expect(motifScaffolding?.href).toBe("/workflows/motif-scaffolding");
+    });
+
+    it("should contain partial diffusion workflow as inactive", () => {
+      const partialDiffusion = component.workflows.find(
+        (w) => w.id === "partial-diffusion"
+      );
+      expect(partialDiffusion).toBeDefined();
+      expect(partialDiffusion?.label).toBe("Partial Diffusion");
+      expect(partialDiffusion?.active).toBe(false);
+      expect(partialDiffusion?.href).toBe("/workflows/partial-diffusion");
     });
 
     it("should have all workflows with required properties", () => {
@@ -48,6 +62,9 @@ describe("BinderDesignComponent", () => {
         expect(workflow.id).not.toBe("");
         expect(workflow.label).toBeDefined();
         expect(workflow.label).not.toBe("");
+        expect(workflow.href).toBeDefined();
+        expect(workflow.href).not.toBe("");
+        expect(workflow.active).toBeDefined();
       });
     });
   });
