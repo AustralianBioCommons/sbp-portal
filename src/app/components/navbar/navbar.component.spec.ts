@@ -85,7 +85,7 @@ describe("Navbar", () => {
     });
 
     it("should navigate to path with query parameters", async () => {
-      await component.navigate("/themes?tab=binder-design");
+      await component.navigate("/themes", { tab: "binder-design" });
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
         queryParams: { tab: "binder-design" },
@@ -94,7 +94,10 @@ describe("Navbar", () => {
     });
 
     it("should navigate to path with multiple query parameters", async () => {
-      await component.navigate("/themes?tab=structure-prediction&search=test");
+      await component.navigate("/themes", {
+        tab: "structure-prediction",
+        search: "test"
+      });
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
         queryParams: { tab: "structure-prediction", search: "test" },
@@ -198,9 +201,16 @@ describe("Navbar", () => {
     });
 
     it("should return true for path with matching tab query parameter", () => {
+      // Mock parseUrl to return the expected query parameters
+      mockRouter.parseUrl.and.returnValue({
+        queryParams: { tab: "binder-design" },
+        fragment: null
+      } as unknown as UrlTree);
+
       const item = {
         label: "Binder Design",
-        path: "/themes?tab=binder-design",
+        path: "/themes",
+        queryParams: { tab: "binder-design" }
       };
 
       expect(component.isNavItemActive(item)).toBe(true);
@@ -209,7 +219,8 @@ describe("Navbar", () => {
     it("should return false for path with non-matching tab query parameter", () => {
       const item = {
         label: "Structure Prediction",
-        path: "/themes?tab=structure-prediction",
+        path: "/themes",
+        queryParams: { tab: "structure-prediction" }
       };
 
       expect(component.isNavItemActive(item)).toBe(false);
@@ -219,7 +230,8 @@ describe("Navbar", () => {
       component.currentRoute.set("/other");
       const item = {
         label: "Binder Design",
-        path: "/themes?tab=binder-design",
+        path: "/themes",
+        queryParams: { tab: "binder-design" }
       };
 
       expect(component.isNavItemActive(item)).toBe(false);
@@ -239,16 +251,27 @@ describe("Navbar", () => {
     });
 
     it("should return true when at least one child is active", () => {
+      // Mock parseUrl to return the expected query parameters
+      mockRouter.parseUrl.and.returnValue({
+        queryParams: { tab: "binder-design" },
+        fragment: null
+      } as unknown as UrlTree);
+
       const item = {
         label: "Home",
         path: "/themes",
         children: [
-          { label: "Binder design", path: "/themes?tab=binder-design" },
+          {
+            label: "Binder design",
+            path: "/themes",
+            queryParams: { tab: "binder-design" }
+          },
           {
             label: "Structure prediction",
-            path: "/themes?tab=structure-prediction",
-          },
-        ],
+            path: "/themes",
+            queryParams: { tab: "structure-prediction" }
+          }
+        ]
       };
 
       expect(component.isParentNavItemActive(item)).toBe(true);
@@ -260,12 +283,17 @@ describe("Navbar", () => {
         label: "Home",
         path: "/themes",
         children: [
-          { label: "Binder design", path: "/themes?tab=binder-design" },
+          {
+            label: "Binder design",
+            path: "/themes",
+            queryParams: { tab: "binder-design" }
+          },
           {
             label: "Structure prediction",
-            path: "/themes?tab=structure-prediction",
-          },
-        ],
+            path: "/themes",
+            queryParams: { tab: "structure-prediction" }
+          }
+        ]
       };
 
       expect(component.isParentNavItemActive(item)).toBe(false);

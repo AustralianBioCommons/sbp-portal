@@ -50,7 +50,7 @@
           @if (!item.children && shouldShowNavItem(item, (isAuthenticated$ | async) || false)) {
           <div>
             <button (click)="
-                            item.path ? navigate(item.path) : executeAction(item.action)
+                            item.path ? navigate(item.path, item.queryParams) : executeAction(item.action)
                           "
               class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md hover:bg-gray-50 font-medium transition-all duration-200 text-biocommons-secondary-blue hover:text-biocommons-primary-teal hover:translate-x-1"
               [class.nav-item-active]="isNavItemActive(item)">
@@ -92,7 +92,7 @@
                 <button
                       (click)="
                         child.path
-                          ? navigate(child.path)
+                          ? navigate(child.path, child.queryParams)
                           : executeAction(child.action)
                       "
                       class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-all duration-200 text-biocommons-secondary-blue hover:text-biocommons-primary-teal hover:translate-x-1"

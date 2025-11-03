@@ -22,6 +22,7 @@ import { tablerCalendarStar } from "@ng-icons/tabler-icons";
 export interface NavItem {
   label: string;
   path?: string;
+  queryParams?: { [key: string]: string }; // Query parameters for navigation
   icon?: string;
   image?: string; // For custom images from assets
   action?: () => void;
@@ -84,15 +85,21 @@ export class Navbar {
       path: "/themes",
       icon: "heroHome",
       children: [
-        { label: "Binder design", path: "/themes?tab=binder-design" },
+        {
+          label: "Binder design",
+          path: "/themes",
+          queryParams: { tab: "binder-design" }
+        },
         {
           label: "Structure prediction",
-          path: "/themes?tab=structure-prediction",
+          path: "/themes",
+          queryParams: { tab: "structure-prediction" },
           requiresAuth: false
         },
         {
           label: "Structure search",
-          path: "/themes?tab=structure-search",
+          path: "/themes",
+          queryParams: { tab: "structure-search" },
           requiresAuth: false
         }
       ]
@@ -185,24 +192,17 @@ export class Navbar {
     console.log("Menu state after toggle:", this.isMobileMenuOpen());
   }
 
-  navigate(path: string) {
-    console.log("Navigate to:", path);
+  navigate(path: string, queryParams?: { [key: string]: string }) {
+    console.log(
+      "Navigate to:",
+      path,
+      queryParams ? "with params:" : "",
+      queryParams || ""
+    );
 
-    // Check if path contains query parameters
-    if (path.includes("?")) {
-      const [routePath, queryString] = path.split("?");
-      const queryParams: { [key: string]: string } = {};
-
-      // Parse query parameters
-      queryString.split("&").forEach((param) => {
-        const [key, value] = param.split("=");
-        if (key && value) {
-          queryParams[key] = value;
-        }
-      });
-
+    if (queryParams) {
       this.router
-        .navigate([routePath], { queryParams })
+        .navigate([path], { queryParams })
         .then(() => {
           this.closeMobileMenu();
         })
@@ -211,7 +211,6 @@ export class Navbar {
           this.closeMobileMenu();
         });
     } else {
-      // Simple navigation without query parameters
       this.router
         .navigate([path])
         .then(() => {
@@ -242,23 +241,21 @@ export class Navbar {
   isNavItemActive(item: NavItem): boolean {
     if (!item.path) return false;
 
-    // Handle paths with query parameters
-    if (item.path.includes("?")) {
-      const [routePath, queryString] = item.path.split("?");
+    // Check if route matches
+    if (this.currentRoute() !== item.path) return false;
 
-      // Check if route matches
-      if (this.currentRoute() !== routePath) return false;
+    // If no query parameters expected, simple path match is sufficient
+    if (!item.queryParams) return true;
 
-      // Extract expected tab from the path
-      const queryParams = new URLSearchParams(queryString);
-      const expectedTab = queryParams.get("tab");
-
-      // Check if tab matches
-      return expectedTab === this.currentTab();
+    // Check if all expected query parameters match current URL
+    const urlTree = this.router.parseUrl(this.router.url);
+    for (const [key, expectedValue] of Object.entries(item.queryParams)) {
+      if (urlTree.queryParams[key] !== expectedValue) {
+        return false;
+      }
     }
 
-    // For simple paths without query parameters
-    return this.currentRoute() === item.path;
+    return true;
   }
 
   isParentNavItemActive(item: NavItem): boolean {
