@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { Router } from "@angular/router";
 
@@ -10,27 +10,27 @@ import { Router } from "@angular/router";
   styleUrls: ["./binder-design.scss"]
 })
 export class BinderDesignComponent {
-  constructor(private router: Router) {}
+  private router = inject(Router);
 
   // Navigation methods
   navigateToWorkflow(workflowId: string) {
     console.log(`Navigating to workflow: ${workflowId}`);
-    
+
     // Update active state first
-    this.workflows.forEach(w => w.active = w.id === workflowId);
-    
+    this.workflows.forEach((w) => (w.active = w.id === workflowId));
+
     // Navigate to the workflow route
-    this.router.navigate(['/workflow', workflowId]);
+    this.router.navigate(["/workflow", workflowId]);
   }
 
   navigateToTool(toolId: string) {
     console.log(`Navigating to tool: ${toolId}`);
-    
-    // Update active state first  
-    this.tools.forEach(t => t.active = t.id === toolId);
+
+    // Update active state first
+    this.tools.forEach((t) => (t.active = t.id === toolId));
 
     // Navigate to the tool route
-    this.router.navigate(['/tools', toolId]);
+    this.router.navigate(["/tools", toolId]);
   }
 
   navigateToResource(href: string) {

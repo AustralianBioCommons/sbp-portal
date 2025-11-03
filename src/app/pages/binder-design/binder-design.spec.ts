@@ -1,14 +1,20 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { Router } from "@angular/router";
 
 import { BinderDesignComponent } from "./binder-design";
 
 describe("BinderDesignComponent", () => {
   let component: BinderDesignComponent;
   let fixture: ComponentFixture<BinderDesignComponent>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
+    mockRouter = jasmine.createSpyObj("Router", ["navigate"]);
+    mockRouter.navigate.and.returnValue(Promise.resolve(true));
+
     await TestBed.configureTestingModule({
       imports: [BinderDesignComponent],
+      providers: [{ provide: Router, useValue: mockRouter }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(BinderDesignComponent);
@@ -26,35 +32,26 @@ describe("BinderDesignComponent", () => {
       expect(component.workflows.length).toBe(3);
     });
 
-    it("should contain de novo design workflow as default active", () => {
-      const deNovoDesign = component.workflows.find(
-        (w) => w.id === "de-novo-design"
-      );
-      expect(deNovoDesign).toBeDefined();
-      expect(deNovoDesign?.label).toBe("De Novo Design");
-      expect(deNovoDesign?.active).toBe(true);
-      expect(deNovoDesign?.href).toBe("/workflows/de-novo-design");
-    });
+    it('workflows should contain de novo design workflow as default active', () => {
+    const deNovoWorkflow = component.workflows.find(w => w.id === 'de-novo-design');
+    expect(deNovoWorkflow).toBeDefined();
+    expect(deNovoWorkflow?.active).toBe(true);
+    expect(deNovoWorkflow?.href).toBe('/workflow/de-novo-design');
+  });
 
-    it("should contain motif scaffolding workflow as inactive", () => {
-      const motifScaffolding = component.workflows.find(
-        (w) => w.id === "motif-scaffolding"
-      );
-      expect(motifScaffolding).toBeDefined();
-      expect(motifScaffolding?.label).toBe("Motif Scaffolding");
-      expect(motifScaffolding?.active).toBe(false);
-      expect(motifScaffolding?.href).toBe("/workflows/motif-scaffolding");
-    });
+  it('workflows should contain motif scaffolding workflow as inactive', () => {
+    const motifWorkflow = component.workflows.find(w => w.id === 'motif-scaffolding');
+    expect(motifWorkflow).toBeDefined();
+    expect(motifWorkflow?.active).toBe(false);
+    expect(motifWorkflow?.href).toBe('/workflow/motif-scaffolding');
+  });
 
-    it("should contain partial diffusion workflow as inactive", () => {
-      const partialDiffusion = component.workflows.find(
-        (w) => w.id === "partial-diffusion"
-      );
-      expect(partialDiffusion).toBeDefined();
-      expect(partialDiffusion?.label).toBe("Partial Diffusion");
-      expect(partialDiffusion?.active).toBe(false);
-      expect(partialDiffusion?.href).toBe("/workflows/partial-diffusion");
-    });
+  it('workflows should contain partial diffusion workflow as inactive', () => {
+    const partialWorkflow = component.workflows.find(w => w.id === 'partial-diffusion');
+    expect(partialWorkflow).toBeDefined();
+    expect(partialWorkflow?.active).toBe(false);
+    expect(partialWorkflow?.href).toBe('/workflow/partial-diffusion');
+  });
 
     it("should have all workflows with required properties", () => {
       component.workflows.forEach((workflow) => {
@@ -70,36 +67,31 @@ describe("BinderDesignComponent", () => {
   });
 
   describe("tools", () => {
-    it("should have correct tools structure", () => {
-      expect(component.tools).toBeDefined();
-      expect(component.tools.length).toBe(4);
-    });
+  it('tools should have correct tools structure', () => {
+    expect(component.tools).toBeDefined();
+    expect(component.tools.length).toBe(3);
+  });
 
-    it("should contain AlphaFold tool", () => {
-      const alphafold = component.tools.find((t) => t.id === "alphafold");
-      expect(alphafold).toBeDefined();
-      expect(alphafold?.label).toBe("AlphaFold");
-    });
+  it('tools should contain BindCraft tool as default active', () => {
+    const bindCraftTool = component.tools.find(t => t.label === 'BindCraft');
+    expect(bindCraftTool).toBeDefined();
+    expect(bindCraftTool?.label).toBe('BindCraft');
+    expect(bindCraftTool?.active).toBe(true);
+  });
 
-    it("should contain BindCraft tool", () => {
-      const bindcraft = component.tools.find((t) => t.id === "bindcraft");
-      expect(bindcraft).toBeDefined();
-      expect(bindcraft?.label).toBe("BindCraft");
-    });
+  it('tools should contain RFdiffusion tool', () => {
+    const rfdiffusionTool = component.tools.find(t => t.label === 'RFdiffusion');
+    expect(rfdiffusionTool).toBeDefined();
+    expect(rfdiffusionTool?.label).toBe('RFdiffusion');
+    expect(rfdiffusionTool?.active).toBe(false);
+  });
 
-    it("should contain ColabFold tool", () => {
-      const colabfold = component.tools.find((t) => t.id === "colabfold");
-      expect(colabfold).toBeDefined();
-      expect(colabfold?.label).toBe("ColabFold");
-    });
-
-    it("should contain RosettaFold tool", () => {
-      const rosettafold = component.tools.find((t) => t.id === "rosettafold");
-      expect(rosettafold).toBeDefined();
-      expect(rosettafold?.label).toBe("RosettaFold");
-    });
-
-    it("should have all tools with required properties", () => {
+  it('tools should contain BoltzGen tool', () => {
+    const boltzGenTool = component.tools.find(t => t.label === 'BoltzGen');
+    expect(boltzGenTool).toBeDefined();
+    expect(boltzGenTool?.label).toBe('BoltzGen');
+    expect(boltzGenTool?.active).toBe(false);
+  });    it("should have all tools with required properties", () => {
       component.tools.forEach((tool) => {
         expect(tool.id).toBeDefined();
         expect(tool.id).not.toBe("");
@@ -163,7 +155,9 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should have unique resource titles", () => {
-      const titles = component.communityResources.map((resource) => resource.title);
+      const titles = component.communityResources.map(
+        (resource) => resource.title
+      );
       const uniqueTitles = [...new Set(titles)];
       expect(titles.length).toBe(uniqueTitles.length);
     });
@@ -194,6 +188,125 @@ describe("BinderDesignComponent", () => {
       expect(Array.isArray(component.workflows)).toBe(true);
       expect(Array.isArray(component.tools)).toBe(true);
       expect(Array.isArray(component.communityResources)).toBe(true);
+    });
+  });
+
+  describe("navigation methods", () => {
+    beforeEach(() => {
+      spyOn(console, "log");
+    });
+
+    describe("navigateToWorkflow", () => {
+      it("should update workflow active state and navigate", () => {
+        const workflowId = "motif-scaffolding";
+
+        component.navigateToWorkflow(workflowId);
+
+        // Check that active states are updated
+        const activeWorkflow = component.workflows.find((w) => w.active);
+        expect(activeWorkflow?.id).toBe(workflowId);
+
+        // Check that previously active workflow is now inactive
+        const deNovoDesign = component.workflows.find(
+          (w) => w.id === "de-novo-design"
+        );
+        expect(deNovoDesign?.active).toBe(false);
+
+        // Check router navigation was called
+        expect(mockRouter.navigate).toHaveBeenCalledWith([
+          "/workflow",
+          workflowId
+        ]);
+
+        // Check console log
+        expect(console.log).toHaveBeenCalledWith(
+          `Navigating to workflow: ${workflowId}`
+        );
+      });
+
+      it("should handle navigation to each workflow", () => {
+        const workflowIds = [
+          "de-novo-design",
+          "motif-scaffolding",
+          "partial-diffusion"
+        ];
+
+        workflowIds.forEach((workflowId) => {
+          component.navigateToWorkflow(workflowId);
+
+          const activeWorkflow = component.workflows.find((w) => w.active);
+          expect(activeWorkflow?.id).toBe(workflowId);
+          expect(mockRouter.navigate).toHaveBeenCalledWith([
+            "/workflow",
+            workflowId
+          ]);
+        });
+
+        expect(mockRouter.navigate).toHaveBeenCalledTimes(workflowIds.length);
+      });
+    });
+
+    describe("navigateToTool", () => {
+      it("should update tool active state and navigate", () => {
+        const toolId = "rfdiffusion";
+
+        component.navigateToTool(toolId);
+
+        // Check that active states are updated
+        const activeTool = component.tools.find((t) => t.active);
+        expect(activeTool?.id).toBe(toolId);
+
+        // Check that previously active tool is now inactive
+        const bindcraft = component.tools.find((t) => t.id === "bindcraft");
+        expect(bindcraft?.active).toBe(false);
+
+        // Check router navigation was called
+        expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools", toolId]);
+
+        // Check console log
+        expect(console.log).toHaveBeenCalledWith(
+          `Navigating to tool: ${toolId}`
+        );
+      });
+
+      it("should handle navigation to each tool", () => {
+        const toolIds = ["bindcraft", "rfdiffusion", "boltzgen"];
+
+        toolIds.forEach((toolId) => {
+          component.navigateToTool(toolId);
+
+          const activeTool = component.tools.find((t) => t.active);
+          expect(activeTool?.id).toBe(toolId);
+          expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools", toolId]);
+        });
+
+        expect(mockRouter.navigate).toHaveBeenCalledTimes(toolIds.length);
+      });
+    });
+
+    describe("navigateToResource", () => {
+      it("should log navigation to resource", () => {
+        const href = "/docs";
+
+        component.navigateToResource(href);
+
+        expect(console.log).toHaveBeenCalledWith(
+          `Navigating to resource: ${href}`
+        );
+      });
+
+      it("should handle navigation to each resource", () => {
+        const hrefs = ["/docs", "/forum", "/best-practices", "/publications"];
+
+        hrefs.forEach((href) => {
+          component.navigateToResource(href);
+          expect(console.log).toHaveBeenCalledWith(
+            `Navigating to resource: ${href}`
+          );
+        });
+
+        expect(console.log).toHaveBeenCalledTimes(hrefs.length);
+      });
     });
   });
 });
