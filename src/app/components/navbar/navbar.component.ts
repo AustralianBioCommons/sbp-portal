@@ -98,11 +98,11 @@ export class Navbar {
       ]
     },
     {
-      label: "Pre-config workflow",
+      label: "Pre-config workflows",
       image: "/assets/workflow-square-01.png",
       children: [
         {
-          label: "De novo design",
+          label: "De Novo Design",
           path: "/workflow/de-novo-design"
         },
         {

@@ -36,88 +36,78 @@
   </div>
 
   <!-- Compact Navigation Menu (Positioned overlay - Right aligned) -->
-  <div
-    *ngIf="isMobileMenuOpen()"
-    class="compact-menu absolute top-full right-0 w-80 z-50 bg-biocommons-secondary"
-    [@slideInOut]
-  >
+  @if (isMobileMenuOpen()) {
+    <div
+      class="compact-menu absolute top-full right-0 w-80 z-50 bg-biocommons-secondary"
+      [@slideInOut]
+    >
     <!-- Menu Content -->
     <div class="px-4 py-4">
       <!-- Navigation Items -->
       <div class="space-y-0.5">
-        <ng-container *ngFor="let item of navItems">
+        @for (item of navItems; track item.label) {
           <!-- Simple nav item -->
-          <div
-            *ngIf="
-              !item.children &&
-              shouldShowNavItem(item, (isAuthenticated$ | async) || false)
-            "
-          >
-            <button
-              (click)="
-                item.path ? navigate(item.path) : executeAction(item.action)
-              "
+          @if (!item.children && shouldShowNavItem(item, (isAuthenticated$ | async) || false)) {
+          <div>
+            <button (click)="
+                            item.path ? navigate(item.path) : executeAction(item.action)
+                          "
               class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md hover:bg-gray-50 font-medium transition-colors duration-200"
-              [class.nav-item-active]="isNavItemActive(item)"
-            >
-              <ng-icon
-                [name]="item.icon"
-                *ngIf="item.icon && !item.image"
-                class="text-sm w-4 h-4"
-              ></ng-icon>
-              <img
-                [src]="item.image"
-                [alt]="item.label + ' icon'"
-                *ngIf="item.image"
-                class="w-4 h-4 object-contain"
-              />
-              <span>{{ item.label }}</span>
-            </button>
-          </div>
+              [class.nav-item-active]="isNavItemActive(item)">
+                @if (item.icon && !item.image) {
+                  <ng-icon [name]="item.icon"
+                    class="text-sm w-4 h-4"
+                  ></ng-icon>
+                }
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.label + ' icon'"
+                    class="w-4 h-4 object-contain"
+                  />
+                }
+                <span>{{ item.label }}</span>
+                </button>
+                </div>
+          }
 
           <!-- Nav item with children -->
-          <div *ngIf="item.children" class="mb-2">
-            <div
-              class="flex items-center space-x-2 px-3 py-1.5 font-semibold"
-              [class.nav-parent-active]="isParentNavItemActive(item)"
-            >
-              <ng-icon
-                [name]="item.icon"
-                *ngIf="item.icon && !item.image"
-                class="w-4 h-4"
-              ></ng-icon>
-              <img
-                [src]="item.image"
-                [alt]="item.label + ' icon'"
-                *ngIf="item.image"
-                class="w-4 h-4 object-contain"
-              />
-              <span>{{ item.label }}</span>
-            </div>
-            <div class="ml-3 mt-1 space-y-0.5">
-              <ng-container *ngFor="let child of item.children">
+          @if (item.children) {
+          <div class="mb-2">
+            <div class="flex items-center space-x-2 px-3 py-1.5 font-semibold"
+              [class.nav-parent-active]="isParentNavItemActive(item)">
+                @if (item.icon && !item.image) {
+                  <ng-icon [name]="item.icon"
+                    class="w-4 h-4"
+                  ></ng-icon>
+                }
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.label + ' icon'"
+                    class="w-4 h-4 object-contain"
+                  />
+                }
+                <span>{{ item.label }}</span>
+                </div>
+                <div class="ml-3 mt-1 space-y-0.5">
+                @for (child of item.children; track child.label) {
+                @if (shouldShowNavItem(child, (isAuthenticated$ | async) || false)) {
                 <button
-                  *ngIf="
-                    shouldShowNavItem(
-                      child,
-                      (isAuthenticated$ | async) || false
-                    )
-                  "
-                  (click)="
-                    child.path
-                      ? navigate(child.path)
-                      : executeAction(child.action)
-                  "
-                  class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-colors duration-200"
-                  [class.nav-item-active]="isNavItemActive(child)"
-                >
-                  <span>{{ child.label }}</span>
-                </button>
-              </ng-container>
-            </div>
-          </div>
-        </ng-container>
+                      (click)="
+                        child.path
+                          ? navigate(child.path)
+                          : executeAction(child.action)
+                      "
+                      class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-colors duration-200"
+                      [class.nav-item-active]="isNavItemActive(child)"
+                    >
+                      <span>{{ child.label }}</span>
+                    </button>
+                  }
+                  }
+                  </div>
+                  </div>
+          }
+          }
       </div>
     </div>
   </div>
+  }
 </nav>
