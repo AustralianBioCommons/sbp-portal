@@ -1,17 +1,16 @@
-import { Component, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, output } from "@angular/core";
+import { CommonModule } from "@angular/common";
 
-export type AlertType = 'success' | 'error';
+export type AlertType = "success" | "error";
 
 @Component({
-  selector: 'app-alert',
+  selector: "app-alert",
   imports: [CommonModule],
-  templateUrl: './alert.component.html',
-  styleUrl: './alert.component.css',
+  templateUrl: "./alert.component.html"
 })
 export class AlertComponent {
-  type = input<AlertType>('error');
-  message = input<string>('');
+  type = input<AlertType>("error");
+  message = input<string>("");
   dismissible = input<boolean>(false);
 
   dismissed = output<void>();

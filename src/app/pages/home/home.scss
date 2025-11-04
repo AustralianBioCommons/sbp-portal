@@ -1,0 +1,97 @@
+
+// Home Page Styling - using Tailwind CSS custom properties
+
+// Tab navigation styling - use Tailwind classes
+
+// Tab content styling and animations
+.tab-content {
+  max-width: none;
+  width: 100%;
+
+  > div {
+    animation: fadeInUp 0.3s ease-out;
+    max-width: none;
+    width: 100%;
+
+    // Make content cards wider
+    .bg-white {
+      max-width: none;
+      width: 100%;
+    }
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Card hover effects - use Tailwind classes:
+// Apply: bg-white border border-gray-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-gray-300
+
+// Button hover effects - use Tailwind classes:
+// Apply: transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 focus-visible:outline-2 focus-visible:outline-biocommons-primary-teal focus-visible:outline-offset-2
+
+// Feature list styling - use Tailwind classes:
+// Apply to li elements: transition-all duration-200 text-gray-600 hover:translate-x-1 hover:text-biocommons-primary-teal
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .tab-content {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  nav.flex {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    button {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Hero section gradient - use Tailwind classes:
+// Apply: bg-gradient-to-br from-white to-gray-50
+
+// Custom scrollbar - using Tailwind CSS custom properties
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: theme('colors.bg.secondary');
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: theme('colors.biocommons.primary-teal');
+    border-radius: 3px;
+
+    &:hover {
+      background: theme('colors.biocommons.secondary-blue');
+    }
+  }
+}
+
+// Chip styling and brand classes - replaced with Tailwind classes
+
+// Binder Design background image
+.binder-design-bg {
+  background-image: url("/assets/binder-design.png");
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: top center;
+  background-attachment: fixed;
+}

@@ -1,0 +1,113 @@
+<!-- Main Navigation Bar -->
+<nav class="navbar relative">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center">
+      <!-- Logo and Brand (Left corner) -->
+      <div class="flex items-center">
+        <div class="flex-shrink-0 flex items-center">
+          <img class="w-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
+        </div>
+      </div>
+
+      <!-- Compact Menu Button (Right side) -->
+      <div class="flex items-center ml-auto">
+        <!-- Compact Menu Toggle Button -->
+        <button
+          (click)="toggleMobileMenu(); $event.stopPropagation()"
+          class="compact-menu-button relative p-2 rounded-lg hover:bg-gray-100 text-biocommons-secondary-blue hover:text-biocommons-primary-teal transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-1 border border-border-light hover:shadow-lg hover:border-border-medium"
+          [class.active]="isMobileMenuOpen()"
+          type="button"
+        >
+          <!-- Menu Icon using ng-icons -->
+          <ng-icon
+            [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
+            class="w-5 h-5 transition-transform duration-200 pointer-events-none"
+            [class.rotate-90]="isMobileMenuOpen()"
+          >
+          </ng-icon>
+
+          <!-- Menu Label -->
+          <span class="sr-only">{{
+            isMobileMenuOpen() ? "Close menu" : "Open menu"
+          }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compact Navigation Menu (Positioned overlay - Right aligned) -->
+  @if (isMobileMenuOpen()) {
+    <div
+      class="compact-menu absolute top-full right-0 w-80 z-50 bg-bg-accent border border-border-light shadow-xl rounded-lg mt-2"
+      [@slideInOut]
+    >
+    <!-- Menu Content -->
+    <div class="px-4 py-4">
+      <!-- Navigation Items -->
+      <div class="space-y-0.5">
+        @for (item of navItems; track item.label) {
+          <!-- Simple nav item -->
+          @if (!item.children && shouldShowNavItem(item, (isAuthenticated$ | async) || false)) {
+          <div>
+            <button (click)="
+                            item.path ? navigate(item.path, item.queryParams) : executeAction(item.action)
+                          "
+              class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md hover:bg-gray-50 font-medium transition-all duration-200 text-biocommons-secondary-blue hover:text-biocommons-primary-teal hover:translate-x-1"
+              [class.nav-item-active]="isNavItemActive(item)">
+                @if (item.icon && !item.image) {
+                  <ng-icon [name]="item.icon"
+                    class="text-sm w-4 h-4"
+                  ></ng-icon>
+                }
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.label + ' icon'"
+                    class="w-4 h-4 object-contain"
+                  />
+                }
+                <span>{{ item.label }}</span>
+                </button>
+                </div>
+          }
+
+          <!-- Nav item with children -->
+          @if (item.children) {
+          <div class="mb-2">
+            <div class="flex items-center space-x-2 px-3 py-1.5 font-semibold text-biocommons-secondary-blue"
+              [class.nav-parent-active]="isParentNavItemActive(item)">
+                @if (item.icon && !item.image) {
+                  <ng-icon [name]="item.icon"
+                    class="w-4 h-4"
+                  ></ng-icon>
+                }
+                @if (item.image) {
+                  <img [src]="item.image" [alt]="item.label + ' icon'"
+                    class="w-4 h-4 object-contain"
+                  />
+                }
+                <span>{{ item.label }}</span>
+                </div>
+                <div class="ml-3 mt-1 space-y-0.5">
+                @for (child of item.children; track child.label) {
+                @if (shouldShowNavItem(child, (isAuthenticated$ | async) || false)) {
+                <button
+                      (click)="
+                        child.path
+                          ? navigate(child.path, child.queryParams)
+                          : executeAction(child.action)
+                      "
+                      class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-all duration-200 text-biocommons-secondary-blue hover:text-biocommons-primary-teal hover:translate-x-1"
+                      [class.nav-item-active]="isNavItemActive(child)"
+                    >
+                      <span>{{ child.label }}</span>
+                    </button>
+                  }
+                  }
+                  </div>
+                  </div>
+          }
+          }
+      </div>
+    </div>
+  </div>
+  }
+</nav>

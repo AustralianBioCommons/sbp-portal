@@ -1,0 +1,123 @@
+/* Navbar styles - using Tailwind CSS custom properties */
+
+.navbar {
+  /* Custom backdrop blur and height - not easily replicated in Tailwind */
+  top: 0;
+  z-index: 999;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  height: 115px;
+  background-color: color-mix(in srgb, theme('colors.biocommons.white') 95%, transparent);
+
+  /* Ensure content container matches the navbar height */
+  .flex.justify-between.items-center {
+    height: 100%;
+  }
+
+  /* Logo sizing */
+  img {
+    width: 300px;
+    height: 110px;
+  }
+}
+
+/* Menu animation - using custom keyframes */
+.compact-menu {
+  animation: slideDownIn 0.25s ease-out;
+}
+
+@keyframes slideDownIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Icon styling overrides */
+ng-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compact-menu-button ng-icon * {
+  stroke-width: 2.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.compact-menu-button.active {
+  background-color: theme('colors.biocommons.secondary-blue') !important;
+  color: theme('colors.bg.secondary') !important;
+  border-color: theme('colors.biocommons.secondary-blue') !important;
+
+  ng-icon * {
+    stroke-width: 3.5 !important;
+  }
+
+  &:hover {
+    background-color: color-mix(in srgb, theme('colors.biocommons.secondary-blue') 80%, black) !important;
+    opacity: 0.9;
+  }
+}
+
+/* Custom nav item images */
+.compact-menu img {
+  width: 1rem !important;
+  height: 1rem !important;
+  object-fit: contain;
+  filter: grayscale(20%);
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: grayscale(0%);
+  }
+}
+
+/* Active nav item styling - complex enough to keep in SCSS */
+.nav-item-active {
+  background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 10%, transparent) !important;
+  color: theme('colors.biocommons.secondary-blue') !important;
+  font-weight: 600 !important;
+  border-left: 3px solid theme('colors.biocommons.primary-teal');
+
+  &:hover {
+    background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 15%, transparent) !important;
+    transform: translateX(0) !important;
+  }
+
+  span {
+    color: theme('colors.biocommons.secondary-blue') !important;
+    font-weight: 600;
+  }
+
+  ng-icon {
+    color: theme('colors.biocommons.primary-teal') !important;
+  }
+
+  img {
+    filter: hue-rotate(180deg) saturate(1.2) !important;
+  }
+}
+
+/* Active parent nav item */
+.nav-parent-active {
+  color: theme('colors.biocommons.secondary-blue') !important;
+  font-weight: 700 !important;
+
+  span {
+    color: theme('colors.biocommons.secondary-blue') !important;
+  }
+
+  ng-icon {
+    color: theme('colors.biocommons.primary-teal') !important;
+  }
+
+  img {
+    filter: hue-rotate(180deg) saturate(1.2) !important;
+  }
+}

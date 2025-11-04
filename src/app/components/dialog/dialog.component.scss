@@ -1,4 +1,7 @@
-/* Dialog animations */
+/* Dialog component now uses Tailwind classes exclusively */
+/* All styling is handled through Tailwind utilities in the template */
+
+/* Only keeping essential animations that aren't easily replicated in Tailwind */
 .dialog-enter {
   opacity: 0;
   transform: scale(0.95);
@@ -19,9 +22,4 @@
   opacity: 0;
   transform: scale(0.95);
   transition: opacity 150ms ease-in, transform 150ms ease-in;
-}
-
-/* Ensure dialog content doesn't scroll when backdrop is clicked */
-.dialog-backdrop {
-  overflow: hidden;
 }

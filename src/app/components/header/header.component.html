@@ -1,0 +1,26 @@
+<div class="block sticky top-0 z-50 bg-white border-b border-gray-200">
+  <app-login></app-login>
+  <app-navbar></app-navbar>
+
+  <!-- Theme Tabs Navigation (only show on /themes route) -->
+  @if (showTabs()) {
+  <div class="w-full bg-white border-b border-gray-200">
+    <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+        @for (tab of tabs; track tab.id) {
+        <button (click)="selectTab(tab.id)" [class]="
+                  isActiveTab(tab.id)
+                  ? 'text-biocommons-primary-pink border-b-2 border-biocommons-primary-pink'
+                  : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              "
+              class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200"
+              type="button"
+            >
+              {{ tab.label }}
+            </button>
+          }
+        </nav>
+      </div>
+    </div>
+  }
+</div>

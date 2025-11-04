@@ -1,0 +1,60 @@
+// ===================================================
+// Australian BioCommons Portal - Main Styles
+// ===================================================
+
+// Tailwind CSS imports
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// ===================================================
+// BASE STYLES
+// ===================================================
+
+body {
+  margin: 0;
+  font: normal normal medium 16px/25px "Averta", "Helvetica Neue", Arial, sans-serif;
+  color: theme('colors.biocommons.black');
+  background-color: theme('colors.biocommons.white');
+}
+
+a {
+  color: theme('colors.biocommons.primary-teal');
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: theme('colors.biocommons.primary-pink');
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme('colors.focus');
+    outline-offset: 2px;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: theme('colors.biocommons.black');
+  font-weight: 600;
+}
+
+p {
+  color: theme('colors.text.secondary');
+}
+
+// ===================================================
+// UTILITY CLASSES - Use Tailwind classes instead
+// ===================================================
+/* Most utilities now available as Tailwind classes:
+ * text-biocommons-primary-teal, bg-biocommons-secondary-blue, etc.
+ * Use these in your templates instead of custom CSS classes.
+ */
+
+.text-caption {
+  color: theme('colors.text.muted');
+  font-size: 0.875rem;
+}
+
+.text-disabled {
+  color: theme('colors.text.light');
+}

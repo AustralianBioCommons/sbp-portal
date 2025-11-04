@@ -1,0 +1,231 @@
+// Not Found page styles - using Tailwind CSS custom properties
+
+.not-found-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, theme('colors.biocommons.primary-teal') 5%, transparent) 0%,
+    color-mix(in srgb, theme('colors.biocommons.primary-pink') 5%, transparent) 100%
+  );
+  padding: 2rem 1rem;
+}
+
+.not-found-content {
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+}
+
+// Error Visual Section
+.error-visual {
+  margin-bottom: 3rem;
+}
+
+.error-number {
+  font-size: 8rem;
+  font-weight: 900;
+  background: linear-gradient(
+    45deg,
+    theme('colors.biocommons.primary-pink'),
+    theme('colors.biocommons.primary-teal')
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 6rem;
+  }
+}
+
+.error-subtitle {
+  font-size: 1.5rem;
+  color: theme('colors.biocommons.secondary-blue');
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+// Brand Section
+.brand-section {
+  margin-bottom: 4rem;
+}
+
+.brand-title {
+  font-size: 2.5rem;
+  color: theme('colors.biocommons.secondary-blue');
+  font-weight: 700;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+}
+
+.error-message {
+  font-size: 1.125rem;
+  color: theme('colors.text.secondary');
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+// Suggestions Section
+.suggestions {
+  margin-bottom: 4rem;
+}
+
+.suggestions-title {
+  font-size: 1.75rem;
+  color: theme('colors.biocommons.secondary-blue');
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.suggestion-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.suggestion-card {
+  background: theme('colors.biocommons.white');
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid theme('colors.border.light');
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: theme('colors.biocommons.secondary-blue');
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: theme('colors.text.secondary');
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+}
+
+.suggestion-icon {
+  width: 3rem;
+  height: 3rem;
+  color: theme('colors.biocommons.primary-teal');
+  margin-bottom: 1rem;
+}
+
+.suggestion-button {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+
+  &.primary {
+    background-color: theme('colors.biocommons.primary-pink');
+    color: theme('colors.biocommons.white');
+
+    &:hover {
+      background-color: theme('colors.biocommons.secondary-purple');
+      transform: translateY(-1px);
+    }
+  }
+
+  &.secondary {
+    background-color: theme('colors.biocommons.secondary-blue');
+    color: theme('colors.biocommons.white');
+
+    &:hover {
+      background-color: color-mix(in srgb, theme('colors.biocommons.secondary-blue') 80%, black);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.accent {
+    background-color: theme('colors.biocommons.primary-teal');
+    color: theme('colors.biocommons.white');
+
+    &:hover {
+      background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 85%, black);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+// Popular Links Section
+.popular-links {
+  margin-bottom: 3rem;
+
+  h3 {
+    font-size: 1.25rem;
+    color: theme('colors.biocommons.secondary-blue');
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.popular-link {
+  display: block;
+  padding: 1rem;
+  background: theme('colors.biocommons.white');
+  border: 1px solid theme('colors.border.light');
+  border-radius: 0.5rem;
+  color: theme('colors.biocommons.secondary-blue');
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: theme('colors.biocommons.primary-teal');
+    color: theme('colors.biocommons.white');
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px color-mix(in srgb, theme('colors.biocommons.primary-teal') 30%, transparent);
+  }
+}
+
+// Support Section
+.support-section {
+  padding-top: 2rem;
+  border-top: 1px solid theme('colors.border.light');
+}
+
+.support-text {
+  color: theme('colors.text.secondary');
+  font-size: 1rem;
+}
+
+.support-link {
+  color: theme('colors.biocommons.primary-teal');
+  text-decoration: underline;
+  font-weight: 600;
+
+  &:hover {
+    color: theme('colors.biocommons.primary-pink');
+  }
+}

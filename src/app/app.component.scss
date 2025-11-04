@@ -1,1 +1,8 @@
-/* AppComponent styles - currently empty, Tailwind handles most styles */
+// Override alert positioning when used in centered overlay
+.centered-alert app-alert > div {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  transform: none !important;
+}

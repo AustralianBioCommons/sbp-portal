@@ -1,0 +1,46 @@
+// Login component styles - using Tailwind CSS custom properties
+:host {
+  display: block;
+}
+
+.login-bar {
+  background-color: theme('colors.bg.accent');
+  border-bottom: 1px solid theme('colors.border.light');
+
+  .login-button {
+    color: theme('colors.text.secondary');
+    transition: all 0.2s ease;
+    border: 1px solid theme('colors.border.light');
+
+    &:hover {
+      color: theme('colors.biocommons.primary-teal');
+      border-color: theme('colors.border.medium');
+      background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 5%, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid theme('colors.focus');
+      outline-offset: 2px;
+    }
+  }
+
+  .profile-dropdown {
+    background-color: theme('colors.bg.primary');
+    border: 1px solid theme('colors.border.light');
+    box-shadow: 0 4px 12px color-mix(in srgb, black 10%, transparent);
+
+    .dropdown-item {
+      color: theme('colors.text.primary');
+      border-bottom: 1px solid theme('colors.border.light');
+
+      &:hover {
+        background-color: theme('colors.bg.accent');
+        color: theme('colors.biocommons.primary-teal');
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+<!-- Login Bar (Top bar for authentication) -->
+<div class="login-bar">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-end items-center py-2">
+      <!-- User Section (if authenticated) -->
+      @if (isAuthenticated$ | async) {
+      <div class="flex items-center space-x-3">
+        <!-- User Email -->
+        <div class="text-sm font-bold">
+          {{ (user$ | async)?.email || 'user@example.com' }}
+        </div>
+
+          <!-- Profile Button -->
+          <button (click)="navigate('/profile')"
+            class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm text-gray-700 hover:text-biocommons-primary hover:bg-white transition-colors duration-200"
+            type="button">
+            <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
+            <span>Profile</span>
+          </button>
+
+          <!-- Logout Button -->
+          <button (click)="logout()"
+            class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-200"
+            type="button">
+            <ng-icon name="heroArrowRightOnRectangle" class="w-4 h-4"></ng-icon>
+            <span>Logout</span>
+          </button>
+          </div>
+      }
+
+      <!-- Login Button (if not authenticated) -->
+      @if ((isAuthenticated$ | async) === false) {
+      <div>
+        <app-button (click)="login()" [variant]="'primary'" [borderRadius]="'rounded-md'" [widthClass]="''"
+          class="text-sm px-4 py-1">
+          Sign up or log in
+        </app-button>
+      </div>
+      }
+    </div>
+  </div>
+</div>
