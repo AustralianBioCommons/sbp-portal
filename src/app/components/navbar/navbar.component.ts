@@ -83,6 +83,7 @@ export class Navbar {
     {
       label: "Home",
       path: "/themes",
+      queryParams: { tab: "binder-design" },
       icon: "heroHome",
       children: [
         {
@@ -109,16 +110,12 @@ export class Navbar {
       image: "/assets/workflow-square-01.png",
       children: [
         {
-          label: "De Novo Design",
-          path: "/workflow/de-novo-design"
+          label: "Single Structure Prediction",
+          path: "/workflow/single-structure-prediction"
         },
         {
-          label: "Motif Scaffolding",
-          path: "/workflow/motif-scaffolding"
-        },
-        {
-          label: "Partial Diffusion",
-          path: "/workflow/partial-diffusion"
+          label: "Interaction Screening",
+          path: "/workflow/interaction-screening"
         }
       ]
     },

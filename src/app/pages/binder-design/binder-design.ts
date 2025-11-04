@@ -37,23 +37,18 @@ export class BinderDesignComponent {
   }
 
   // Preconfid workflows
+
   workflows = [
     {
-      id: "de-novo-design",
-      label: "De Novo Design",
-      href: "/workflow/de-novo-design",
+      id: "single-structure-prediction",
+      label: "Single Structure Prediction",
+      href: "/workflow/single-structure-prediction",
       active: true
     },
     {
-      id: "motif-scaffolding",
-      label: "Motif Scaffolding",
-      href: "/workflow/motif-scaffolding",
-      active: false
-    },
-    {
-      id: "partial-diffusion",
-      label: "Partial Diffusion",
-      href: "/workflow/partial-diffusion",
+      id: "interaction-screening",
+      label: "Interaction Screening",
+      href: "/workflow/interaction-screening",
       active: false
     }
   ];

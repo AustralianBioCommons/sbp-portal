@@ -4,7 +4,7 @@
     <div class="flex justify-between items-center">
       <!-- Logo and Brand (Left corner) -->
       <div class="flex items-center">
-        <div class="flex-shrink-0 flex items-center">
+        <div class="flex-shrink-0 flex items-center cursor-pointer" (click)="navigate('/themes', { tab: 'binder-design' })">
           <img class="w-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
         </div>
       </div>
@@ -72,8 +72,10 @@
           <!-- Nav item with children -->
           @if (item.children) {
           <div class="mb-2">
-            <div class="flex items-center space-x-2 px-3 py-1.5 font-semibold text-biocommons-secondary-blue"
-              [class.nav-parent-active]="isParentNavItemActive(item)">
+            <button
+              class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md font-semibold text-biocommons-secondary-blue hover:bg-gray-50 hover:text-biocommons-primary-teal transition-all duration-200 hover:translate-x-1"
+              [class.nav-parent-active]="isParentNavItemActive(item)"
+              (click)="item.path ? navigate(item.path, item.queryParams) : executeAction(item.action)">
                 @if (item.icon && !item.image) {
                   <ng-icon [name]="item.icon"
                     class="w-4 h-4"
@@ -85,7 +87,7 @@
                   />
                 }
                 <span>{{ item.label }}</span>
-                </div>
+            </button>
                 <div class="ml-3 mt-1 space-y-0.5">
                 @for (child of item.children; track child.label) {
                 @if (shouldShowNavItem(child, (isAuthenticated$ | async) || false)) {
@@ -95,7 +97,7 @@
                           ? navigate(child.path, child.queryParams)
                           : executeAction(child.action)
                       "
-                      class="w-full flex items-center space-x-2 px-3 py-1.5 text-left rounded-md transition-all duration-200 text-biocommons-secondary-blue hover:text-biocommons-primary-teal hover:translate-x-1"
+                      class="w-full flex items-center space-x-2 px-3 py-2 text-left rounded-md transition-all duration-200 text-biocommons-secondary-blue hover:bg-gray-50 hover:text-biocommons-primary-teal hover:translate-x-1 text-sm"
                       [class.nav-item-active]="isNavItemActive(child)"
                     >
                       <span>{{ child.label }}</span>
