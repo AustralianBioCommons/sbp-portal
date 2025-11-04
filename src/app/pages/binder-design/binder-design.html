@@ -28,7 +28,7 @@
             [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 ' + 
               (workflow.active 
                 ? 'bg-biocommons-primary text-biocommons-secondary-blue shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-biocommons-primary hover:text-white')"
+                : 'bg-gray-100 text-text-muted hover:bg-biocommons-primary hover:text-text-primary')"
           >
             {{ workflow.label }}
           </button>
@@ -46,7 +46,7 @@
             [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 ' + 
               (tool.active 
                 ? 'bg-biocommons-secondary text-biocommons-secondary-blue shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-biocommons-secondary hover:text-white')"
+                : 'bg-gray-100 text-text-muted hover:bg-biocommons-secondary hover:text-text-primary')"
           >
             {{ tool.label }}
           </button>

@@ -1,0 +1,256 @@
+<section class="w-full">
+  <!-- Page header -->
+  <header class="w-full bg-bg-secondary border-b border-border-light">
+    <div class="max-w-6xl mx-auto px-4 py-6">
+      <h1 class="text-2xl font-semibold text-text-primary">Single Structure Prediction</h1>
+      <p class="mt-2 text-sm text-text-muted">Predict a single protein structure using your preferred tool. Configure inputs, tweak parameters, and review before submission.</p>
+    </div>
+  </header>
+
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Tabs -->
+    <nav class="sticky top-0 z-10 bg-bg-primary">
+      <ul class="flex gap-2 border-biocommons-primary-pink border-b-biocommons-primary-pink">
+        @for (tab of tabs; track tab.id) {
+          <li>
+            <button
+              (click)="switchTab(tab.id)"
+              class="px-4 py-2 text-sm rounded-t-DEFAULT-10 border-b-2 transition-colors"
+              [ngClass]="{
+                'text-biocommons-primary-pink border-b-biocommons-primary-pink': isActiveTab(tab.id),
+                'text-text-secondary border-b-transparent hover:text-biocommons-secondary-blue': !isActiveTab(tab.id)
+              }"
+            >
+              {{ tab.label }}
+            </button>
+          </li>
+        } @empty {
+          <li class="px-4 py-2 text-sm text-text-muted">No tabs available</li>
+        }
+      </ul>
+    </nav>
+
+  <!-- Overview Tab Content -->
+  @if (isActiveTab('overview')) {
+  <div class="mt-6 space-y-6">
+      <!-- Description placeholder -->
+      <div class="bg-bg-secondary border border-border-light rounded-DEFAULT-10 p-4">
+        <h2 class="text-base font-semibold text-text-primary">Description</h2>
+        <p class="mt-1 text-sm text-text-secondary">
+          This workflow helps you run a single protein structure prediction. Choose a tool, add an optional note, configure parameters, and step through to submit.
+        </p>
+      </div>
+
+      <!-- Execute workflow region -->
+  <div class="bg-bg-primary border border-border-light rounded-DEFAULT-10 p-4 max-h-[70vh] overflow-auto">
+        <h3 class="text-base font-semibold text-text-primary mb-3">Select a tool</h3>
+        <div class="flex flex-wrap gap-2">
+            @for (tool of tools; track tool.id) {
+              <button
+                type="button"
+                (click)="selectTool(tool.id)"
+                [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 ' + (isToolSelected(tool.id) ? 'bg-biocommons-secondary text-biocommons-secondary-blue shadow-md' : 'bg-gray-100 text-text-muted hover:bg-biocommons-secondary hover:text-text-primary')"
+              >
+                {{ tool.label }}
+              </button>
+            } @empty {
+              <span class="text-sm text-text-muted">No tools available</span>
+            }
+        </div>
+
+        <!-- Job note -->
+        <div class="mt-5">
+          <label class="block text-sm font-medium text-text-secondary mb-1">Job note (optional)</label>
+          <textarea
+            [ngModel]="jobNote()"
+            (ngModelChange)="jobNote.set($event)"
+            [disabled]="!(auth.isAuthenticated$ | async)"
+            rows="3"
+            class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary placeholder-text-light focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            placeholder="Add a short note to identify this run"
+          ></textarea>
+          @if (!(auth.isAuthenticated$ | async)) {
+            <p class="mt-2 text-sm text-text-muted">Please log in to save notes for your job.</p>
+          }
+        </div>
+
+        <!-- Configurations & options placeholder -->
+        <div class="mt-5">
+          <h4 class="text-sm font-semibold text-text-primary">Configurations & Options</h4>
+          <p class="mt-1 text-sm text-text-muted">Tool-specific options will appear in the stepper below.</p>
+        </div>
+
+        <!-- Stepper -->
+        <div class="mt-6 relative">
+          <!-- Lock overlay if not authenticated -->
+          @if (!(auth.isAuthenticated$ | async)) {
+            <div class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-DEFAULT-10 border border-border-light flex items-center justify-center">
+              <div class="text-center p-4">
+                <p class="text-sm text-text-secondary">You must be logged in to configure options and run the workflow.</p>
+                <button type="button" class="mt-3 px-4 py-2 rounded-DEFAULT-10 text-white bg-biocommons-primary-teal hover:bg-biocommons-secondary-blue" (click)="auth.login()">Log in</button>
+              </div>
+            </div>
+          }
+          <!-- Stepper header -->
+          <ol class="grid grid-cols-4 gap-2">
+            @for (s of steps; track s.id) {
+            <li class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="goToStep(s.id)"
+                [disabled]="!(auth.isAuthenticated$ | async)"
+                class="flex items-center gap-2 w-full p-2 rounded-DEFAULT-10 border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                [ngClass]="{
+                  'border-focus bg-biocommons-primary-teal/5 text-text-primary': currentStep() === s.id,
+                  'border-success bg-success/5 text-text-primary': currentStep() !== s.id && isStepComplete(s.id),
+                  'border-border-light bg-bg-secondary text-text-secondary hover:bg-accent': currentStep() !== s.id && !isStepComplete(s.id)
+                }"
+              >
+                <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded-full"
+                  [ngClass]="{
+                    'bg-focus text-white': currentStep() === s.id,
+                    'bg-success text-white': isStepComplete(s.id) && currentStep() !== s.id,
+                    'bg-bg-primary border border-border-light text-text-secondary': !isStepComplete(s.id) && currentStep() !== s.id
+                  }"
+                >
+                  @if (isStepComplete(s.id) && currentStep() !== s.id) { ✓ } @else { {{ s.id }} }
+                </span>
+                <span class="text-sm">{{ s.title }}</span>
+              </button>
+            </li>
+            } @empty {
+              <li class="text-sm text-text-muted">No steps defined</li>
+            }
+          </ol>
+
+          <!-- Step content panels -->
+          <div class="mt-4 border border-border-light rounded-DEFAULT-10 p-4 bg-bg-primary">
+            @if (currentStep() === 1) {
+              <h5 class="text-base font-semibold text-text-primary">Input Configuration</h5>
+              <p class="mt-1 text-sm text-text-secondary">Provide your input sequence or upload a structure file.</p>
+              <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Amino acid sequence</label>
+                  <textarea rows="4" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary placeholder-text-light focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="Paste FASTA/sequence here" [ngModel]="inputSequence()" (ngModelChange)="inputSequence.set($event)"></textarea>
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Or upload a file</label>
+                  <input type="file" class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-3 file:rounded-DEFAULT-10 file:border-0 file:text-sm file:font-medium file:bg-biocommons-primary-teal/10 file:text-biocommons-secondary-blue hover:file:bg-biocommons-primary-teal/20" (change)="onFileSelected($event)" />
+                  @if (inputFileName()) {
+                    <p class="mt-1 text-xs text-text-muted">Selected: {{ inputFileName() }}</p>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (currentStep() === 2) {
+              <h5 class="text-base font-semibold text-text-primary">Tool Settings — {{ selectedToolLabel() }}</h5>
+              <p class="mt-1 text-sm text-text-secondary">Configure parameters specific to {{ selectedToolLabel() }}.</p>
+              <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Max recycles</label>
+                  <input type="number" min="0" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="e.g. 3" [ngModel]="maxRecycles()" (ngModelChange)="maxRecycles.set(($event ?? '').toString())" />
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Ensemble</label>
+                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="ensemble()" (ngModelChange)="ensemble.set($event)">
+                    <option value="">-- Select --</option>
+                    <option value="None">None</option>
+                    <option value="Small">Small</option>
+                    <option value="Large">Large</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Relax model</label>
+                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="relax()" (ngModelChange)="relax.set($event)">
+                    <option value="">-- Select --</option>
+                    <option value="Off">Off</option>
+                    <option value="Amber">Amber</option>
+                  </select>
+                </div>
+              </div>
+            }
+
+            @if (currentStep() === 3) {
+              <h5 class="text-base font-semibold text-text-primary">Resource Allocation</h5>
+              <p class="mt-1 text-sm text-text-secondary">Select compute resources and priority for this job.</p>
+              <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">GPU type</label>
+                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="gpuType()" (ngModelChange)="gpuType.set($event)">
+                    <option value="">-- Select --</option>
+                    <option value="A100">A100</option>
+                    <option value="V100">V100</option>
+                    <option value="T4">T4</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">GPUs</label>
+                  <input type="number" min="1" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="1" [ngModel]="gpus()" (ngModelChange)="gpus.set(($event ?? '').toString())" />
+                </div>
+                <div>
+                  <label class="block text-sm text-text-secondary mb-1">Priority</label>
+                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="priority()" (ngModelChange)="priority.set($event)">
+                    <option value="">-- Select --</option>
+                    <option value="Normal">Normal</option>
+                    <option value="High">High</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+              </div>
+            }
+
+            @if (currentStep() === 4) {
+              <h5 class="text-base font-semibold text-text-primary">Review & Submit</h5>
+              <p class="mt-1 text-sm text-text-secondary">Confirm your selections before starting the job.</p>
+              <ul class="mt-3 text-sm text-text-secondary list-disc list-inside">
+                <li>Tool: <span class="text-text-primary font-medium">{{ selectedToolLabel() }}</span></li>
+                <li>Job note: <span class="text-text-primary font-medium">{{ jobNote() || '—' }}</span></li>
+                <li>Step: <span class="text-text-primary font-medium">{{ currentStep() }}/{{ steps.length }}</span></li>
+              </ul>
+            }
+
+            <!-- Step nav -->
+            <div class="mt-6 flex items-center justify-between">
+              <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-border-light text-text-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" (click)="previousStep()" [disabled]="!canGoPrev() || !(auth.isAuthenticated$ | async)">Previous</button>
+              <div class="flex items-center gap-2">
+                @if (currentStep() < steps.length) {
+                  <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-focus text-biocommons-secondary-blue bg-biocommons-primary-teal/10 hover:bg-biocommons-primary-teal/20 disabled:opacity-60 disabled:cursor-not-allowed" (click)="nextStep()" [disabled]="!(auth.isAuthenticated$ | async)">Next</button>
+                }
+                @if (currentStep() === steps.length) {
+                  <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-border-medium text-white bg-biocommons-primary-teal hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" (click)="submitWorkflow()" [disabled]="!(auth.isAuthenticated$ | async)">Submit</button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Output Tab Content -->
+    @if (isActiveTab('output')) {
+      <div class="mt-6">
+        <div class="bg-bg-secondary border border-border-light rounded-DEFAULT-10 p-4">
+          <h2 class="text-base font-semibold text-text-primary">Output</h2>
+          <p class="mt-1 text-sm text-text-secondary">Results, visualizations, and downloadable files will appear here after submission.</p>
+        </div>
+      </div>
+    }
+
+    <!-- Papers Tab Content -->
+    @if (isActiveTab('papers')) {
+      <div class="mt-6">
+        <div class="bg-bg-secondary border border-border-light rounded-DEFAULT-10 p-4">
+          <h2 class="text-base font-semibold text-text-primary">Papers</h2>
+          <p class="mt-1 text-sm text-text-secondary">Relevant publications and references related to the selected tools.</p>
+          <ul class="mt-2 list-disc list-inside text-sm text-text-secondary">
+            <li>AlphaFold: Jumper et al., 2021</li>
+            <li>ColabFold: Mirdita et al., 2022</li>
+            <li>BindCraft: Project documentation</li>
+          </ul>
+        </div>
+      </div>
+    }
+  </div>
+</section>

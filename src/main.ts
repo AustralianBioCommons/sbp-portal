@@ -9,6 +9,7 @@ import { provideAuth0, authHttpInterceptorFn } from "@auth0/auth0-angular";
 import { environment } from "./environments/environment";
 import { Home } from "./app/pages/home/home";
 import { NotFoundComponent } from "./app/pages/not-found/not-found";
+import { SingleStructurePredictionComponent } from "./app/pages/workflow/single-structure-prediction/single-structure-prediction";
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -17,33 +18,29 @@ bootstrapApplication(AppComponent, {
       { path: "", redirectTo: "/themes", pathMatch: "full" },
       { path: "themes", component: Home },
       {
-        path: "single-structure-prediction",
-        redirectTo: "/themes?tab=structure-prediction",
-      },
-      {
-        path: "interaction-screening",
-        redirectTo: "/themes?tab=interaction-screening",
+        path: "workflow/single-structure-prediction",
+        component: SingleStructurePredictionComponent
       },
       { path: "protected", component: AppComponent, canActivate: [authGuard] },
       // 404 catch-all route - MUST be last
-      { path: "**", component: NotFoundComponent },
+      { path: "**", component: NotFoundComponent }
     ]),
     provideAuth0({
       domain: environment.auth.domain,
       clientId: environment.auth.clientId,
       authorizationParams: {
         audience: environment.auth.audience,
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.origin
       },
       // Configure Auth0's built-in interceptor
       httpInterceptor: {
         allowedList: [
           // If apiBaseUrl is configured, use it; otherwise use relative paths pattern
-          environment.apiBaseUrl || `${window.location.origin}/api/*`,
-        ],
-      },
+          environment.apiBaseUrl || `${window.location.origin}/api/*`
+        ]
+      }
     }),
     // Use Auth0's built-in HTTP interceptor instead of our custom one
-    provideHttpClient(withInterceptors([authHttpInterceptorFn])),
-  ],
+    provideHttpClient(withInterceptors([authHttpInterceptorFn]))
+  ]
 }).catch((err) => console.error(err));
