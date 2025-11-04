@@ -1,21 +1,3 @@
-// Import Australian BioCommons Brand Color Palette
-@use "../scss/variables" as *;
-
-// AppComponent styles
-:host {
-  display: block;
-  width: 100%;
-  min-height: 100vh;
-  background-color: $bg-primary;
-  color: $text-primary;
-}
-
-// Ensure main content takes full width
-main {
-  width: 100%;
-  display: block;
-}
-
 // Override alert positioning when used in centered overlay
 .centered-alert app-alert > div {
   position: static !important;
@@ -23,15 +5,4 @@ main {
   right: auto !important;
   left: auto !important;
   transform: none !important;
-}
-
-// Global layout utilities
-.main-content {
-  background-color: $bg-primary;
-  min-height: calc(100vh - 200px); // Account for header/footer
-}
-
-.page-container {
-  background-color: $bg-primary;
-  color: $text-primary;
 }

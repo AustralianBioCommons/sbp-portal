@@ -6,8 +6,7 @@ import { Router } from "@angular/router";
   selector: "app-binder-design",
   standalone: true,
   imports: [CommonModule],
-  templateUrl: "./binder-design.html",
-  styleUrls: ["./binder-design.scss"]
+  templateUrl: "./binder-design.html"
 })
 export class BinderDesignComponent {
   private router = inject(Router);

@@ -15,8 +15,7 @@ export interface TabItem {
   selector: "app-header",
   standalone: true,
   imports: [CommonModule, RouterModule, Navbar, Login],
-  templateUrl: "./header.component.html",
-  styleUrls: ["./header.component.scss"],
+  templateUrl: "./header.component.html"
 })
 export class Header {
   private router = inject(Router);
@@ -28,23 +27,23 @@ export class Header {
     {
       id: "binder-design",
       label: "Binder Design",
-      description: "Design and optimize protein binders for specific targets",
+      description: "Design and optimize protein binders for specific targets"
     },
     {
       id: "structure-prediction",
       label: "Structure Prediction",
-      description: "Predict protein structures using advanced algorithms",
+      description: "Predict protein structures using advanced algorithms"
     },
     {
       id: "structure-search",
       label: "Structure Search",
-      description: "Search and compare protein structures in databases",
+      description: "Search and compare protein structures in databases"
     },
     {
       id: "tools",
       label: "Tools",
-      description: "Access various computational biology tools and utilities",
-    },
+      description: "Access various computational biology tools and utilities"
+    }
   ];
 
   constructor() {

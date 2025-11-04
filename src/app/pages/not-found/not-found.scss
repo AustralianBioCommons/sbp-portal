@@ -1,4 +1,4 @@
-@use "../../../scss/variables" as vars;
+// Not Found page styles - using Tailwind CSS custom properties
 
 .not-found-container {
   min-height: 100vh;
@@ -7,8 +7,8 @@
   justify-content: center;
   background: linear-gradient(
     135deg,
-    rgba(vars.$biocommons-primary-teal, 0.05) 0%,
-    rgba(vars.$biocommons-primary-pink, 0.05) 100%
+    color-mix(in srgb, theme('colors.biocommons.primary-teal') 5%, transparent) 0%,
+    color-mix(in srgb, theme('colors.biocommons.primary-pink') 5%, transparent) 100%
   );
   padding: 2rem 1rem;
 }
@@ -29,8 +29,8 @@
   font-weight: 900;
   background: linear-gradient(
     45deg,
-    vars.$biocommons-primary-pink,
-    vars.$biocommons-primary-teal
+    theme('colors.biocommons.primary-pink'),
+    theme('colors.biocommons.primary-teal')
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -45,7 +45,7 @@
 
 .error-subtitle {
   font-size: 1.5rem;
-  color: vars.$biocommons-secondary-blue;
+  color: theme('colors.biocommons.secondary-blue');
   font-weight: 600;
   margin-bottom: 2rem;
 }
@@ -57,7 +57,7 @@
 
 .brand-title {
   font-size: 2.5rem;
-  color: vars.$biocommons-secondary-blue;
+  color: theme('colors.biocommons.secondary-blue');
   font-weight: 700;
   margin-bottom: 1rem;
 
@@ -68,7 +68,7 @@
 
 .error-message {
   font-size: 1.125rem;
-  color: vars.$text-secondary;
+  color: theme('colors.text.secondary');
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
@@ -81,7 +81,7 @@
 
 .suggestions-title {
   font-size: 1.75rem;
-  color: vars.$biocommons-secondary-blue;
+  color: theme('colors.biocommons.secondary-blue');
   font-weight: 600;
   margin-bottom: 2rem;
 }
@@ -94,12 +94,12 @@
 }
 
 .suggestion-card {
-  background: vars.$biocommons-white;
+  background: theme('colors.biocommons.white');
   border-radius: 1rem;
   padding: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid vars.$border-light;
+  border: 1px solid theme('colors.border.light');
   transition: all 0.3s ease;
 
   &:hover {
@@ -111,12 +111,12 @@
   h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: vars.$biocommons-secondary-blue;
+    color: theme('colors.biocommons.secondary-blue');
     margin-bottom: 0.5rem;
   }
 
   p {
-    color: vars.$text-secondary;
+    color: theme('colors.text.secondary');
     margin-bottom: 1.5rem;
     line-height: 1.5;
   }
@@ -125,7 +125,7 @@
 .suggestion-icon {
   width: 3rem;
   height: 3rem;
-  color: vars.$biocommons-primary-teal;
+  color: theme('colors.biocommons.primary-teal');
   margin-bottom: 1rem;
 }
 
@@ -140,31 +140,31 @@
   cursor: pointer;
 
   &.primary {
-    background-color: vars.$biocommons-primary-pink;
-    color: vars.$biocommons-white;
+    background-color: theme('colors.biocommons.primary-pink');
+    color: theme('colors.biocommons.white');
 
     &:hover {
-      background-color: vars.$biocommons-secondary-purple;
+      background-color: theme('colors.biocommons.secondary-purple');
       transform: translateY(-1px);
     }
   }
 
   &.secondary {
-    background-color: vars.$biocommons-secondary-blue;
-    color: vars.$biocommons-white;
+    background-color: theme('colors.biocommons.secondary-blue');
+    color: theme('colors.biocommons.white');
 
     &:hover {
-      background-color: #1a4a73;
+      background-color: color-mix(in srgb, theme('colors.biocommons.secondary-blue') 80%, black);
       transform: translateY(-1px);
     }
   }
 
   &.accent {
-    background-color: vars.$biocommons-primary-teal;
-    color: vars.$biocommons-white;
+    background-color: theme('colors.biocommons.primary-teal');
+    color: theme('colors.biocommons.white');
 
     &:hover {
-      background-color: #4bb39e;
+      background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 85%, black);
       transform: translateY(-1px);
     }
   }
@@ -176,7 +176,7 @@
 
   h3 {
     font-size: 1.25rem;
-    color: vars.$biocommons-secondary-blue;
+    color: theme('colors.biocommons.secondary-blue');
     font-weight: 600;
     margin-bottom: 1.5rem;
   }
@@ -193,39 +193,39 @@
 .popular-link {
   display: block;
   padding: 1rem;
-  background: vars.$biocommons-white;
-  border: 1px solid vars.$border-light;
+  background: theme('colors.biocommons.white');
+  border: 1px solid theme('colors.border.light');
   border-radius: 0.5rem;
-  color: vars.$biocommons-secondary-blue;
+  color: theme('colors.biocommons.secondary-blue');
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: vars.$biocommons-primary-teal;
-    color: vars.$biocommons-white;
+    background-color: theme('colors.biocommons.primary-teal');
+    color: theme('colors.biocommons.white');
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(vars.$biocommons-primary-teal, 0.3);
+    box-shadow: 0 4px 12px color-mix(in srgb, theme('colors.biocommons.primary-teal') 30%, transparent);
   }
 }
 
 // Support Section
 .support-section {
   padding-top: 2rem;
-  border-top: 1px solid vars.$border-light;
+  border-top: 1px solid theme('colors.border.light');
 }
 
 .support-text {
-  color: vars.$text-secondary;
+  color: theme('colors.text.secondary');
   font-size: 1rem;
 }
 
 .support-link {
-  color: vars.$biocommons-primary-teal;
+  color: theme('colors.biocommons.primary-teal');
   text-decoration: underline;
   font-weight: 600;
 
   &:hover {
-    color: vars.$biocommons-primary-pink;
+    color: theme('colors.biocommons.primary-pink');
   }
 }

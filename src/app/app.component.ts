@@ -11,6 +11,9 @@ import { LoadingComponent } from "./components/loading/loading.component";
 @Component({
   selector: "app-root",
   standalone: true,
+  host: {
+    class: "block w-full min-h-screen bg-bg-primary text-text-primary"
+  },
   imports: [
     CommonModule,
     RouterOutlet,
@@ -18,10 +21,10 @@ import { LoadingComponent } from "./components/loading/loading.component";
     DialogComponent,
     Header,
     FooterSectionsComponent,
-    LoadingComponent,
+    LoadingComponent
   ],
   templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.scss"],
+  styleUrls: ["./app.component.scss"]
 })
 export class AppComponent {
   public auth = inject(AuthService);

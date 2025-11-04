@@ -1,49 +1,45 @@
-// Import Australian BioCommons Brand Color Palette
-@use "../../../scss/variables" as *;
-
-// Login component styles
+// Login component styles - using Tailwind CSS custom properties
 :host {
   display: block;
 }
 
 .login-bar {
-  background-color: $bg-accent;
-  border-bottom: 1px solid $border-light;
+  background-color: theme('colors.bg.accent');
+  border-bottom: 1px solid theme('colors.border.light');
 
   .login-button {
-    color: $text-secondary;
+    color: theme('colors.text.secondary');
     transition: all 0.2s ease;
-    border: 1px solid $border-light;
+    border: 1px solid theme('colors.border.light');
 
     &:hover {
-      color: $link-color;
-      border-color: $border-medium;
-      background-color: rgba($biocommons-primary-teal, 0.05);
+      color: theme('colors.biocommons.primary-teal');
+      border-color: theme('colors.border.medium');
+      background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 5%, transparent);
     }
 
     &:focus-visible {
-      outline: 2px solid $focus-color;
+      outline: 2px solid theme('colors.focus');
       outline-offset: 2px;
     }
   }
 
   .profile-dropdown {
-    background-color: $bg-primary;
-    border: 1px solid $border-light;
-    box-shadow: 0 10px 25px rgba($biocommons-black, 0.1);
+    background-color: theme('colors.bg.primary');
+    border: 1px solid theme('colors.border.light');
+    box-shadow: 0 4px 12px color-mix(in srgb, black 10%, transparent);
 
     .dropdown-item {
-      color: $text-secondary;
-      transition: all 0.2s ease;
+      color: theme('colors.text.primary');
+      border-bottom: 1px solid theme('colors.border.light');
 
       &:hover {
-        color: $link-color;
-        background-color: rgba($biocommons-primary-teal, 0.05);
+        background-color: theme('colors.bg.accent');
+        color: theme('colors.biocommons.primary-teal');
       }
 
-      &:focus-visible {
-        outline: 2px solid $focus-color;
-        outline-offset: 2px;
+      &:last-child {
+        border-bottom: none;
       }
     }
   }

@@ -6,8 +6,7 @@ export type AlertType = "success" | "error";
 @Component({
   selector: "app-alert",
   imports: [CommonModule],
-  templateUrl: "./alert.component.html",
-  styleUrl: "./alert.component.scss",
+  templateUrl: "./alert.component.html"
 })
 export class AlertComponent {
   type = input<AlertType>("error");

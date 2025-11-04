@@ -1,13 +1,11 @@
-// Import Australian BioCommons Brand Color Palette
-@use "../../../scss/variables" as *;
-
+// Footer component styles - using Tailwind CSS custom properties
 :host {
   display: block;
 }
 
 #footer-sections {
-  background-color: $bg-primary;
-  color: $text-primary;
+  background-color: theme('colors.bg.primary');
+  color: theme('colors.text.primary');
 
   // Logo container styling for 2x1 layout
   .logo-container {
@@ -28,52 +26,52 @@
   }
 }
 
-// Footer link styles using brand colors
+// Footer link styles using Tailwind CSS custom properties
 #footer-sections {
   .footer-heading {
-    color: $text-secondary;
+    color: theme('colors.text.secondary');
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   .footer-link {
-    color: $text-muted;
+    color: theme('colors.text.muted');
     text-decoration: underline;
     transition: color 0.2s ease;
 
     &:hover {
-      color: $link-color;
+      color: theme('colors.biocommons.primary-teal');
     }
   }
 
   .footer-legal-link {
-    color: $text-primary;
+    color: theme('colors.text.primary');
     font-weight: 500;
     text-decoration: underline;
     transition: color 0.2s ease;
 
     &:hover {
-      color: $link-hover;
+      color: theme('colors.biocommons.primary-pink');
     }
   }
 
   .footer-legal-text {
-    color: $text-muted;
+    color: theme('colors.text.muted');
   }
 
   .footer-border {
-    border-color: $border-light;
+    border-color: theme('colors.border.light');
   }
 
   .footer-social-link {
-    border-color: $border-light;
-    color: $text-muted;
+    border-color: theme('colors.border.light');
+    color: theme('colors.text.muted');
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: $link-color;
-      color: $link-color;
+      border-color: theme('colors.biocommons.primary-teal');
+      color: theme('colors.biocommons.primary-teal');
     }
   }
 }
@@ -83,7 +81,7 @@
 }
 
 #footer-sections a:focus-visible {
-  outline: 2px solid $focus-color;
+  outline: 2px solid theme('colors.focus');
   outline-offset: 2px;
 }
 

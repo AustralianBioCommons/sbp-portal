@@ -1,4 +1,4 @@
-/* Navbar styles - mostly moved to Tailwind, keeping only essential custom styles */
+/* Navbar styles - using Tailwind CSS custom properties */
 
 .navbar {
   /* Custom backdrop blur and height - not easily replicated in Tailwind */
@@ -7,7 +7,7 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   height: 115px;
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: color-mix(in srgb, theme('colors.biocommons.white') 95%, transparent);
 
   /* Ensure content container matches the navbar height */
   .flex.justify-between.items-center {
@@ -51,16 +51,16 @@ ng-icon {
 }
 
 .compact-menu-button.active {
-  background-color: #205a86 !important; /* biocommons-secondary-blue */
-  color: #f7fafc !important; /* bg-secondary */
-  border-color: #205a86 !important;
+  background-color: theme('colors.biocommons.secondary-blue') !important;
+  color: theme('colors.bg.secondary') !important;
+  border-color: theme('colors.biocommons.secondary-blue') !important;
 
   ng-icon * {
     stroke-width: 3.5 !important;
   }
 
   &:hover {
-    background-color: #1a4a73 !important; /* darker blue */
+    background-color: color-mix(in srgb, theme('colors.biocommons.secondary-blue') 80%, black) !important;
     opacity: 0.9;
   }
 }
@@ -80,23 +80,23 @@ ng-icon {
 
 /* Active nav item styling - complex enough to keep in SCSS */
 .nav-item-active {
-  background-color: rgba(90, 195, 177, 0.1) !important; /* biocommons-primary-teal with opacity */
-  color: #205a86 !important; /* biocommons-secondary-blue */
+  background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 10%, transparent) !important;
+  color: theme('colors.biocommons.secondary-blue') !important;
   font-weight: 600 !important;
-  border-left: 3px solid #5ac3b1; /* biocommons-primary-teal */
+  border-left: 3px solid theme('colors.biocommons.primary-teal');
 
   &:hover {
-    background-color: rgba(90, 195, 177, 0.15) !important;
+    background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 15%, transparent) !important;
     transform: translateX(0) !important;
   }
 
   span {
-    color: #205a86 !important;
+    color: theme('colors.biocommons.secondary-blue') !important;
     font-weight: 600;
   }
 
   ng-icon {
-    color: #5ac3b1 !important;
+    color: theme('colors.biocommons.primary-teal') !important;
   }
 
   img {
@@ -106,15 +106,15 @@ ng-icon {
 
 /* Active parent nav item */
 .nav-parent-active {
-  color: #205a86 !important;
+  color: theme('colors.biocommons.secondary-blue') !important;
   font-weight: 700 !important;
 
   span {
-    color: #205a86 !important;
+    color: theme('colors.biocommons.secondary-blue') !important;
   }
 
   ng-icon {
-    color: #5ac3b1 !important;
+    color: theme('colors.biocommons.primary-teal') !important;
   }
 
   img {

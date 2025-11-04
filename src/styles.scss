@@ -14,32 +14,32 @@
 body {
   margin: 0;
   font: normal normal medium 16px/25px "Averta", "Helvetica Neue", Arial, sans-serif;
-  color: #000000; /* biocommons-black */
-  background-color: #ffffff; /* biocommons-white */
+  color: theme('colors.biocommons.black');
+  background-color: theme('colors.biocommons.white');
 }
 
 a {
-  color: #5ac3b1; /* biocommons-primary-teal */
+  color: theme('colors.biocommons.primary-teal');
   text-decoration: none;
   transition: color 0.2s ease;
 
   &:hover {
-    color: #ed087c; /* biocommons-primary-pink */
+    color: theme('colors.biocommons.primary-pink');
   }
 
   &:focus-visible {
-    outline: 2px solid #5ac3b1; /* focus color */
+    outline: 2px solid theme('colors.focus');
     outline-offset: 2px;
   }
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color: #000000; /* biocommons-black */
+  color: theme('colors.biocommons.black');
   font-weight: 600;
 }
 
 p {
-  color: #4a5568; /* text-secondary */
+  color: theme('colors.text.secondary');
 }
 
 // ===================================================
@@ -51,10 +51,10 @@ p {
  */
 
 .text-caption {
-  color: #718096; /* text-muted */
+  color: theme('colors.text.muted');
   font-size: 0.875rem;
 }
 
 .text-disabled {
-  color: #a0aec0; /* text-light */
+  color: theme('colors.text.light');
 }
