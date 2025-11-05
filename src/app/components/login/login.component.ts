@@ -22,6 +22,8 @@ import {
 })
 export class Login {
   private auth = inject(AuthService);
+  private readonly profileUrl =
+    "https://dev.portal.aai.test.biocommons.org.au/profile";
 
   // Expose auth observables
   isAuthenticated$ = this.auth.isAuthenticated$;
@@ -35,7 +37,7 @@ export class Login {
     this.auth.logout();
   }
 
-  navigate(path: string) {
-    console.log("Navigate to:", path);
+  openProfile() {
+    window.open(this.profileUrl, "_self");
   }
 }

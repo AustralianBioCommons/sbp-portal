@@ -40,12 +40,14 @@ describe("Login", () => {
     expect(mockAuthService.logout).toHaveBeenCalled();
   });
 
-  it("should log navigation path when navigate is called", () => {
-    const consoleLogSpy = spyOn(console, "log");
-    const testPath = "/test-path";
+  it("should open the external profile page when Profile is selected", () => {
+    const windowOpenSpy = spyOn(window, "open");
 
-    component.navigate(testPath);
+    component.openProfile();
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("Navigate to:", testPath);
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      "https://dev.portal.aai.test.biocommons.org.au/profile",
+      "_self",
+    );
   });
 });
