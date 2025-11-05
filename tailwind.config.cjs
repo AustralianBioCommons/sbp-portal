@@ -27,12 +27,12 @@ module.exports = {
         bg: {
           primary: "#ffffff",
           secondary: "#f7fafc",
-          accent: "#edf2f7"
+          accent: "#F0F0F0"
         },
         border: {
           light: "#e2e8f0",
           medium: "#cbd5e0",
-          dark: "#a0aec0"
+          dark: "#8c9aacff"
         },
         // State Colors
         success: "#2cb77c",
@@ -42,6 +42,9 @@ module.exports = {
       },
       borderRadius: {
         "DEFAULT-10": "10px"
+      },
+      borderWidth: {
+        '3': '3px'
       }
     }
   },

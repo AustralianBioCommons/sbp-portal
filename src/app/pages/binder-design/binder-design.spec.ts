@@ -32,24 +32,24 @@ describe("BinderDesignComponent", () => {
       expect(component.workflows.length).toBe(3);
     });
 
-    it('workflows should contain de novo design workflow as default active', () => {
+    it('workflows should contain de novo design workflow', () => {
     const deNovoWorkflow = component.workflows.find(w => w.id === 'de-novo-design');
     expect(deNovoWorkflow).toBeDefined();
-    expect(deNovoWorkflow?.active).toBe(true);
+    expect(deNovoWorkflow?.label).toBe('De Novo Design');
     expect(deNovoWorkflow?.href).toBe('/workflow/de-novo-design');
   });
 
-  it('workflows should contain motif scaffolding workflow as inactive', () => {
+  it('workflows should contain motif scaffolding workflow', () => {
     const motifWorkflow = component.workflows.find(w => w.id === 'motif-scaffolding');
     expect(motifWorkflow).toBeDefined();
-    expect(motifWorkflow?.active).toBe(false);
+    expect(motifWorkflow?.label).toBe('Motif Scaffolding');
     expect(motifWorkflow?.href).toBe('/workflow/motif-scaffolding');
   });
 
-  it('workflows should contain partial diffusion workflow as inactive', () => {
+  it('workflows should contain partial diffusion workflow', () => {
     const partialWorkflow = component.workflows.find(w => w.id === 'partial-diffusion');
     expect(partialWorkflow).toBeDefined();
-    expect(partialWorkflow?.active).toBe(false);
+    expect(partialWorkflow?.label).toBe('Partial Diffusion');
     expect(partialWorkflow?.href).toBe('/workflow/partial-diffusion');
   });
 
@@ -61,7 +61,6 @@ describe("BinderDesignComponent", () => {
         expect(workflow.label).not.toBe("");
         expect(workflow.href).toBeDefined();
         expect(workflow.href).not.toBe("");
-        expect(workflow.active).toBeDefined();
       });
     });
   });
@@ -72,25 +71,25 @@ describe("BinderDesignComponent", () => {
     expect(component.tools.length).toBe(3);
   });
 
-  it('tools should contain BindCraft tool as default active', () => {
+  it('tools should contain BindCraft tool', () => {
     const bindCraftTool = component.tools.find(t => t.label === 'BindCraft');
     expect(bindCraftTool).toBeDefined();
-    expect(bindCraftTool?.label).toBe('BindCraft');
-    expect(bindCraftTool?.active).toBe(true);
+    expect(bindCraftTool?.id).toBe('bindcraft');
+    expect(bindCraftTool?.href).toBe('/tools/bindcraft');
   });
 
   it('tools should contain RFdiffusion tool', () => {
     const rfdiffusionTool = component.tools.find(t => t.label === 'RFdiffusion');
     expect(rfdiffusionTool).toBeDefined();
-    expect(rfdiffusionTool?.label).toBe('RFdiffusion');
-    expect(rfdiffusionTool?.active).toBe(false);
+    expect(rfdiffusionTool?.id).toBe('rfdiffusion');
+    expect(rfdiffusionTool?.href).toBe('/tools/rfdiffusion');
   });
 
   it('tools should contain BoltzGen tool', () => {
     const boltzGenTool = component.tools.find(t => t.label === 'BoltzGen');
     expect(boltzGenTool).toBeDefined();
-    expect(boltzGenTool?.label).toBe('BoltzGen');
-    expect(boltzGenTool?.active).toBe(false);
+    expect(boltzGenTool?.id).toBe('boltzgen');
+    expect(boltzGenTool?.href).toBe('/tools/boltzgen');
   });    it("should have all tools with required properties", () => {
       component.tools.forEach((tool) => {
         expect(tool.id).toBeDefined();
@@ -197,20 +196,10 @@ describe("BinderDesignComponent", () => {
     });
 
     describe("navigateToWorkflow", () => {
-      it("should update workflow active state and navigate", () => {
+      it("should navigate to the specified workflow", () => {
         const workflowId = "motif-scaffolding";
 
         component.navigateToWorkflow(workflowId);
-
-        // Check that active states are updated
-        const activeWorkflow = component.workflows.find((w) => w.active);
-        expect(activeWorkflow?.id).toBe(workflowId);
-
-        // Check that previously active workflow is now inactive
-        const deNovoDesign = component.workflows.find(
-          (w) => w.id === "de-novo-design"
-        );
-        expect(deNovoDesign?.active).toBe(false);
 
         // Check router navigation was called
         expect(mockRouter.navigate).toHaveBeenCalledWith([
@@ -234,8 +223,6 @@ describe("BinderDesignComponent", () => {
         workflowIds.forEach((workflowId) => {
           component.navigateToWorkflow(workflowId);
 
-          const activeWorkflow = component.workflows.find((w) => w.active);
-          expect(activeWorkflow?.id).toBe(workflowId);
           expect(mockRouter.navigate).toHaveBeenCalledWith([
             "/workflow",
             workflowId
@@ -247,18 +234,10 @@ describe("BinderDesignComponent", () => {
     });
 
     describe("navigateToTool", () => {
-      it("should update tool active state and navigate", () => {
+      it("should navigate to the specified tool", () => {
         const toolId = "rfdiffusion";
 
         component.navigateToTool(toolId);
-
-        // Check that active states are updated
-        const activeTool = component.tools.find((t) => t.active);
-        expect(activeTool?.id).toBe(toolId);
-
-        // Check that previously active tool is now inactive
-        const bindcraft = component.tools.find((t) => t.id === "bindcraft");
-        expect(bindcraft?.active).toBe(false);
 
         // Check router navigation was called
         expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools", toolId]);
@@ -275,8 +254,6 @@ describe("BinderDesignComponent", () => {
         toolIds.forEach((toolId) => {
           component.navigateToTool(toolId);
 
-          const activeTool = component.tools.find((t) => t.active);
-          expect(activeTool?.id).toBe(toolId);
           expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools", toolId]);
         });
 
