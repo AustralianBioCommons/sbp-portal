@@ -30,12 +30,12 @@
 
       <!-- Login Button (if not authenticated) -->
       @if ((isAuthenticated$ | async) === false) {
-      <div>
-        <app-button (click)="login()" [variant]="'primary'" [borderRadius]="'rounded-md'" [widthClass]="''"
-          class="text-sm px-4 py-1">
-          Sign up or log in
-        </app-button>
-      </div>
+      <button (click)="login()"
+            class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-semibold text-biocommons-secondary-blue hover:text-biocommons-primary-teal transition-colors duration-200"
+            type="button">
+            <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
+            <span>Log in</span>
+          </button>
       }
     </div>
   </div>

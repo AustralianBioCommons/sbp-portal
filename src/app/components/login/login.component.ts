@@ -1,7 +1,6 @@
 import { Component, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { AuthService } from "../../cores/auth.service";
-import { ButtonComponent } from "../button/button.component";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroUser,
@@ -10,7 +9,7 @@ import {
 
 @Component({
   selector: "app-login",
-  imports: [CommonModule, ButtonComponent, NgIconComponent],
+  imports: [CommonModule, NgIconComponent],
   providers: [
     provideIcons({
       heroUser,

@@ -15,8 +15,6 @@ export class BinderDesignComponent {
   navigateToWorkflow(workflowId: string) {
     console.log(`Navigating to workflow: ${workflowId}`);
 
-    // Update active state first
-    this.workflows.forEach((w) => (w.active = w.id === workflowId));
 
     // Navigate to the workflow route
     this.router.navigate(["/workflow", workflowId]);
@@ -25,8 +23,6 @@ export class BinderDesignComponent {
   navigateToTool(toolId: string) {
     console.log(`Navigating to tool: ${toolId}`);
 
-    // Update active state first
-    this.tools.forEach((t) => (t.active = t.id === toolId));
 
     // Navigate to the tool route
     this.router.navigate(["/tools", toolId]);
@@ -40,16 +36,19 @@ export class BinderDesignComponent {
 
   workflows = [
     {
-      id: "single-structure-prediction",
-      label: "Single Structure Prediction",
-      href: "/workflow/single-structure-prediction",
-      active: true
+      id: "de-novo-design",
+      label: "De Novo Design",
+      href: "/workflow/de-novo-design",
     },
     {
-      id: "interaction-screening",
-      label: "Interaction Screening",
-      href: "/workflow/interaction-screening",
-      active: false
+      id: "motif-scaffolding",
+      label: "Motif Scaffolding",
+      href: "/workflow/motif-scaffolding",
+    },
+    {
+      id: "partial-diffusion",
+      label: "Partial Diffusion",
+      href: "/workflow/partial-diffusion",
     }
   ];
 
@@ -59,19 +58,16 @@ export class BinderDesignComponent {
       id: "bindcraft",
       label: "BindCraft",
       href: "/tools/bindcraft",
-      active: true
     },
     {
       id: "rfdiffusion",
       label: "RFdiffusion",
       href: "/tools/rfdiffusion",
-      active: false
     },
     {
       id: "boltzgen",
       label: "BoltzGen",
       href: "/tools/boltzgen",
-      active: false
     }
   ];
 

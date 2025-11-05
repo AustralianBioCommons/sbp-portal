@@ -10,16 +10,18 @@
   <div class="max-w-6xl mx-auto px-4 py-6">
     <!-- Tabs -->
     <nav class="sticky top-0 z-10 bg-bg-primary">
-      <ul class="flex gap-2 border-biocommons-primary-pink border-b-biocommons-primary-pink">
+      <ul class="flex gap-8 border-b border-gray-200">
         @for (tab of tabs; track tab.id) {
           <li>
             <button
               (click)="switchTab(tab.id)"
-              class="px-4 py-2 text-sm rounded-t-DEFAULT-10 border-b-2 transition-colors"
-              [ngClass]="{
-                'text-biocommons-primary-pink border-b-biocommons-primary-pink': isActiveTab(tab.id),
-                'text-text-secondary border-b-transparent hover:text-biocommons-secondary-blue': !isActiveTab(tab.id)
-              }"
+              [class]="
+                isActiveTab(tab.id)
+                ? 'text-primary border-b-3 border-border-dark font-semibold'
+                : 'text-biocommons-secondary-blue hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent'
+              "
+              class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200"
+              type="button"
             >
               {{ tab.label }}
             </button>
@@ -60,16 +62,17 @@
 
         <!-- Job note -->
         <div class="mt-5">
-          <label class="block text-sm font-medium text-text-secondary mb-1">Job note (optional)</label>
+          <label for="job-note" class="block text-sm font-medium text-text-secondary mb-1">Job note (optional)</label>
           <textarea
+            id="job-note"
             [ngModel]="jobNote()"
             (ngModelChange)="jobNote.set($event)"
-            [disabled]="!(auth.isAuthenticated$ | async)"
+            [disabled]="(auth.isAuthenticated$ | async) === false"
             rows="3"
             class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary placeholder-text-light focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
             placeholder="Add a short note to identify this run"
           ></textarea>
-          @if (!(auth.isAuthenticated$ | async)) {
+          @if ((auth.isAuthenticated$ | async) === false) {
             <p class="mt-2 text-sm text-text-muted">Please log in to save notes for your job.</p>
           }
         </div>
@@ -83,11 +86,11 @@
         <!-- Stepper -->
         <div class="mt-6 relative">
           <!-- Lock overlay if not authenticated -->
-          @if (!(auth.isAuthenticated$ | async)) {
+          @if ((auth.isAuthenticated$ | async) === false) {
             <div class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-DEFAULT-10 border border-border-light flex items-center justify-center">
               <div class="text-center p-4">
                 <p class="text-sm text-text-secondary">You must be logged in to configure options and run the workflow.</p>
-                <button type="button" class="mt-3 px-4 py-2 rounded-DEFAULT-10 text-white bg-biocommons-primary-teal hover:bg-biocommons-secondary-blue" (click)="auth.login()">Log in</button>
+                <button type="button" class="mt-3 px-4 py-2 rounded-DEFAULT-10 text-white bg-biocommons-secondary-blue hover:bg-biocommons-primary-teal" (click)="auth.login()">Log in</button>
               </div>
             </div>
           }
@@ -98,7 +101,7 @@
               <button
                 type="button"
                 (click)="goToStep(s.id)"
-                [disabled]="!(auth.isAuthenticated$ | async)"
+                [disabled]="(auth.isAuthenticated$ | async) === false"
                 class="flex items-center gap-2 w-full p-2 rounded-DEFAULT-10 border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 [ngClass]="{
                   'border-focus bg-biocommons-primary-teal/5 text-text-primary': currentStep() === s.id,
@@ -130,12 +133,12 @@
               <p class="mt-1 text-sm text-text-secondary">Provide your input sequence or upload a structure file.</p>
               <div class="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Amino acid sequence</label>
-                  <textarea rows="4" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary placeholder-text-light focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="Paste FASTA/sequence here" [ngModel]="inputSequence()" (ngModelChange)="inputSequence.set($event)"></textarea>
+                  <label for="input-sequence" class="block text-sm text-text-secondary mb-1">Amino acid sequence</label>
+                  <textarea id="input-sequence" rows="4" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary placeholder-text-light focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="Paste FASTA/sequence here" [ngModel]="inputSequence()" (ngModelChange)="inputSequence.set($event)"></textarea>
                 </div>
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Or upload a file</label>
-                  <input type="file" class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-3 file:rounded-DEFAULT-10 file:border-0 file:text-sm file:font-medium file:bg-biocommons-primary-teal/10 file:text-biocommons-secondary-blue hover:file:bg-biocommons-primary-teal/20" (change)="onFileSelected($event)" />
+                  <label for="input-file" class="block text-sm text-text-secondary mb-1">Or upload a file</label>
+                  <input id="input-file" type="file" class="block w-full text-sm text-text-secondary file:mr-3 file:py-2 file:px-3 file:rounded-DEFAULT-10 file:border-0 file:text-sm file:font-medium file:bg-biocommons-primary-teal/10 file:text-biocommons-secondary-blue hover:file:bg-biocommons-primary-teal/20" (change)="onFileSelected($event)" />
                   @if (inputFileName()) {
                     <p class="mt-1 text-xs text-text-muted">Selected: {{ inputFileName() }}</p>
                   }
@@ -148,12 +151,12 @@
               <p class="mt-1 text-sm text-text-secondary">Configure parameters specific to {{ selectedToolLabel() }}.</p>
               <div class="mt-3 grid gap-3 sm:grid-cols-3">
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Max recycles</label>
-                  <input type="number" min="0" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="e.g. 3" [ngModel]="maxRecycles()" (ngModelChange)="maxRecycles.set(($event ?? '').toString())" />
+                  <label for="max-recycles" class="block text-sm text-text-secondary mb-1">Max recycles</label>
+                  <input id="max-recycles" type="number" min="0" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="e.g. 3" [ngModel]="maxRecycles()" (ngModelChange)="maxRecycles.set(($event ?? '').toString())" />
                 </div>
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Ensemble</label>
-                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="ensemble()" (ngModelChange)="ensemble.set($event)">
+                  <label for="ensemble" class="block text-sm text-text-secondary mb-1">Ensemble</label>
+                  <select id="ensemble" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="ensemble()" (ngModelChange)="ensemble.set($event)">
                     <option value="">-- Select --</option>
                     <option value="None">None</option>
                     <option value="Small">Small</option>
@@ -161,8 +164,8 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Relax model</label>
-                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="relax()" (ngModelChange)="relax.set($event)">
+                  <label for="relax-model" class="block text-sm text-text-secondary mb-1">Relax model</label>
+                  <select id="relax-model" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="relax()" (ngModelChange)="relax.set($event)">
                     <option value="">-- Select --</option>
                     <option value="Off">Off</option>
                     <option value="Amber">Amber</option>
@@ -176,8 +179,8 @@
               <p class="mt-1 text-sm text-text-secondary">Select compute resources and priority for this job.</p>
               <div class="mt-3 grid gap-3 sm:grid-cols-3">
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">GPU type</label>
-                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="gpuType()" (ngModelChange)="gpuType.set($event)">
+                  <label for="gpu-type" class="block text-sm text-text-secondary mb-1">GPU type</label>
+                  <select id="gpu-type" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="gpuType()" (ngModelChange)="gpuType.set($event)">
                     <option value="">-- Select --</option>
                     <option value="A100">A100</option>
                     <option value="V100">V100</option>
@@ -185,12 +188,12 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">GPUs</label>
-                  <input type="number" min="1" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="1" [ngModel]="gpus()" (ngModelChange)="gpus.set(($event ?? '').toString())" />
+                  <label for="gpus-count" class="block text-sm text-text-secondary mb-1">GPUs</label>
+                  <input id="gpus-count" type="number" min="1" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" placeholder="1" [ngModel]="gpus()" (ngModelChange)="gpus.set(($event ?? '').toString())" />
                 </div>
                 <div>
-                  <label class="block text-sm text-text-secondary mb-1">Priority</label>
-                  <select class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="priority()" (ngModelChange)="priority.set($event)">
+                  <label for="priority" class="block text-sm text-text-secondary mb-1">Priority</label>
+                  <select id="priority" class="w-full rounded-DEFAULT-10 border border-border-light bg-bg-secondary text-text-primary focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2" [ngModel]="priority()" (ngModelChange)="priority.set($event)">
                     <option value="">-- Select --</option>
                     <option value="Normal">Normal</option>
                     <option value="High">High</option>
@@ -212,13 +215,13 @@
 
             <!-- Step nav -->
             <div class="mt-6 flex items-center justify-between">
-              <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-border-light text-text-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" (click)="previousStep()" [disabled]="!canGoPrev() || !(auth.isAuthenticated$ | async)">Previous</button>
+              <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-border-light text-text-secondary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed" (click)="previousStep()" [disabled]="!canGoPrev() || (auth.isAuthenticated$ | async) === false">Previous</button>
               <div class="flex items-center gap-2">
                 @if (currentStep() < steps.length) {
-                  <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-focus text-biocommons-secondary-blue bg-biocommons-primary-teal/10 hover:bg-biocommons-primary-teal/20 disabled:opacity-60 disabled:cursor-not-allowed" (click)="nextStep()" [disabled]="!(auth.isAuthenticated$ | async)">Next</button>
+                  <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-focus text-biocommons-secondary-blue bg-biocommons-primary-teal/10 hover:bg-biocommons-primary-teal/20 disabled:opacity-60 disabled:cursor-not-allowed" (click)="nextStep()" [disabled]="(auth.isAuthenticated$ | async) === false">Next</button>
                 }
                 @if (currentStep() === steps.length) {
-                  <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-border-medium text-white bg-biocommons-primary-teal hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" (click)="submitWorkflow()" [disabled]="!(auth.isAuthenticated$ | async)">Submit</button>
+                  <button type="button" class="px-4 py-2 rounded-DEFAULT-10 border border-border-medium text-white bg-biocommons-primary-teal hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" (click)="submitWorkflow()" [disabled]="(auth.isAuthenticated$ | async) === false">Submit</button>
                 }
               </div>
             </div>

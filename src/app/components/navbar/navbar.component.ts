@@ -110,8 +110,8 @@ export class Navbar {
       image: "/assets/workflow-square-01.png",
       children: [
         {
-          label: "Single Structure Prediction",
-          path: "/workflow/single-structure-prediction"
+          label: "De Novo Design",
+          path: "/workflow/de-novo-design"
         },
         {
           label: "Interaction Screening",
@@ -179,6 +179,14 @@ export class Navbar {
           console.log("Closing menu due to outside click");
           this.isMobileMenuOpen.set(false);
         }
+      }
+    });
+
+    // Close menu on escape key
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.isMobileMenuOpen()) {
+        console.log("Closing menu due to escape key");
+        this.isMobileMenuOpen.set(false);
       }
     });
   }

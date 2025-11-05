@@ -9,7 +9,7 @@ import { provideAuth0, authHttpInterceptorFn } from "@auth0/auth0-angular";
 import { environment } from "./environments/environment";
 import { Home } from "./app/pages/home/home";
 import { NotFoundComponent } from "./app/pages/not-found/not-found";
-import { SingleStructurePredictionComponent } from "./app/pages/workflow/single-structure-prediction/single-structure-prediction";
+import { DeNovoDesignComponent } from "./app/pages/workflow/de-novo-design/de-novo-design";
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -18,8 +18,8 @@ bootstrapApplication(AppComponent, {
       { path: "", redirectTo: "/themes", pathMatch: "full" },
       { path: "themes", component: Home },
       {
-        path: "workflow/single-structure-prediction",
-        component: SingleStructurePredictionComponent
+        path: "workflow/de-novo-design",
+        component: DeNovoDesignComponent
       },
       { path: "protected", component: AppComponent, canActivate: [authGuard] },
       // 404 catch-all route - MUST be last

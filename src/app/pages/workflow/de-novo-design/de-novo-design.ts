@@ -21,16 +21,16 @@ interface StepItem {
 }
 
 @Component({
-  selector: "app-single-structure-prediction",
+  selector: "app-de-novo-design",
   standalone: true,
   imports: [CommonModule, FormsModule],
   host: {
     class: "block w-full"
   },
-  templateUrl: "./single-structure-prediction.html",
-  styleUrls: ["./single-structure-prediction.scss"]
+  templateUrl: "./de-novo-design.html",
+  styleUrls: ["./de-novo-design.scss"]
 })
-export class SingleStructurePredictionComponent {
+export class DeNovoDesignComponent {
   // Auth
   public auth = inject(AuthService);
   // Tabs
@@ -115,7 +115,7 @@ export class SingleStructurePredictionComponent {
 
   submitWorkflow() {
     // Placeholder: hook up to actual submission later
-    console.log("Submitting Single Structure Prediction:", {
+    console.log("Submitting De Novo Design:", {
       tool: this.selectedTool(),
       jobNote: this.jobNote(),
       step: this.currentStep()
