@@ -10,15 +10,6 @@
           {{ (user$ | async)?.email || 'user@example.com' }}
         </div>
 
-<<<<<<< Updated upstream
-          <!-- Profile Button -->
-          <button (click)="navigate('/profile')"
-            class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm text-gray-700 hover:text-biocommons-primary hover:bg-white transition-colors duration-200"
-            type="button">
-            <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
-            <span>Profile</span>
-          </button>
-=======
         <!-- Profile Button -->
         <button
           (click)="openProfile()"
@@ -28,7 +19,6 @@
           <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
           <span>Profile</span>
         </button>
->>>>>>> Stashed changes
 
           <!-- Logout Button -->
           <button (click)="logout()"
