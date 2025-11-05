@@ -184,6 +184,14 @@ export class Navbar {
         }
       }
     });
+
+    // Close menu on escape key
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.isMobileMenuOpen()) {
+        console.log("Closing menu due to escape key");
+        this.isMobileMenuOpen.set(false);
+      }
+    });
   }
 
   toggleMobileMenu() {

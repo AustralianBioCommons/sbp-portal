@@ -62,7 +62,7 @@ describe("AppComponent", () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     const button = compiled.querySelector("button");
-    expect(button?.textContent).toContain("Sign up or log in");
+    expect(button?.textContent).toContain("Log in");
     button?.click();
     expect(mockAuthService.login).toHaveBeenCalled();
   });

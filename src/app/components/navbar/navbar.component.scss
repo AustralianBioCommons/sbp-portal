@@ -121,3 +121,20 @@ ng-icon {
     filter: hue-rotate(180deg) saturate(1.2) !important;
   }
 }
+
+/* Close button - independent styling that overrides parent active state */
+.close-button {
+  ng-icon {
+    color: inherit !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+}
+
+/* Ensure close button styling takes precedence even within active parent */
+.nav-parent-active .close-button {
+
+  ng-icon {
+    color: inherit !important;
+  }
+}
