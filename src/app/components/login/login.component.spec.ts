@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { AuthService } from "../../cores/auth.service";
 import { BehaviorSubject, of } from "rxjs";
+import { By } from "@angular/platform-browser";
 
 import { Login } from "./login.component";
+import { ButtonComponent } from "../button/button.component";
 
 describe("Login", () => {
   let component: Login;
@@ -52,12 +54,17 @@ describe("Login", () => {
   it("should render the login button when the user is not authenticated", async () => {
     await detectComponentChanges();
 
-    const nativeElement = fixture.nativeElement as HTMLElement;
-    const loginButtonHost = nativeElement.querySelector("app-button");
-    const loginButton = loginButtonHost?.querySelector("button");
+    const buttonDebugElement = fixture.debugElement.query(
+      By.directive(ButtonComponent),
+    );
+    const buttonNativeElement = buttonDebugElement?.nativeElement as
+      | HTMLElement
+      | undefined;
 
-    expect(loginButtonHost).not.toBeNull();
-    expect(loginButton?.textContent?.toLowerCase()).toContain("log in");
+    expect(buttonDebugElement).toBeTruthy();
+    expect(buttonNativeElement?.textContent?.toLowerCase()).toContain("log in");
+
+    const nativeElement = fixture.nativeElement as HTMLElement;
     expect(nativeElement.textContent).not.toContain("Profile");
     expect(nativeElement.textContent).not.toContain("Logout");
   });
