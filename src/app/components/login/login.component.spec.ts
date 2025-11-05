@@ -10,6 +10,7 @@ describe("Login", () => {
   let mockAuthService: jasmine.SpyObj<AuthService>;
   let isAuthenticatedSubject: BehaviorSubject<boolean>;
   let userSubject: BehaviorSubject<{ email?: string } | null>;
+  let windowOpenSpy: jasmine.Spy;
 
   beforeEach(async () => {
     isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
@@ -29,6 +30,8 @@ describe("Login", () => {
     fixture = TestBed.createComponent(Login);
     component = fixture.componentInstance;
     fixture.detectChanges();
+
+    windowOpenSpy = spyOn(window, "open").and.callFake(() => null);
   });
 
   it("should create", () => {
@@ -91,8 +94,6 @@ describe("Login", () => {
   });
 
   it("should open the external profile page when Profile is selected", () => {
-    const windowOpenSpy = spyOn(window, "open");
-
     component.openProfile();
 
     expect(windowOpenSpy).toHaveBeenCalledWith(
