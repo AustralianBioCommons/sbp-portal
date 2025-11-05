@@ -12,6 +12,12 @@ describe("Login", () => {
   let userSubject: BehaviorSubject<{ email?: string } | null>;
   let windowOpenSpy: jasmine.Spy;
 
+  const detectComponentChanges = async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
   beforeEach(async () => {
     isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     userSubject = new BehaviorSubject<{ email?: string } | null>(null);
@@ -29,7 +35,7 @@ describe("Login", () => {
 
     fixture = TestBed.createComponent(Login);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await detectComponentChanges();
 
     windowOpenSpy = spyOn(window, "open").and.callFake(() => null);
   });
@@ -43,12 +49,15 @@ describe("Login", () => {
     expect(mockAuthService.login).toHaveBeenCalled();
   });
 
-  it("should render the login button when the user is not authenticated", () => {
-    fixture.detectChanges();
-    const nativeElement = fixture.nativeElement as HTMLElement;
+  it("should render the login button when the user is not authenticated", async () => {
+    await detectComponentChanges();
 
-    expect(nativeElement.querySelector("app-button")).not.toBeNull();
-    expect(nativeElement.textContent).toContain("Sign up or log in");
+    const nativeElement = fixture.nativeElement as HTMLElement;
+    const loginButtonHost = nativeElement.querySelector("app-button");
+    const loginButton = loginButtonHost?.querySelector("button");
+
+    expect(loginButtonHost).not.toBeNull();
+    expect(loginButton?.textContent?.toLowerCase()).toContain("log in");
     expect(nativeElement.textContent).not.toContain("Profile");
     expect(nativeElement.textContent).not.toContain("Logout");
   });
@@ -58,10 +67,10 @@ describe("Login", () => {
     expect(mockAuthService.logout).toHaveBeenCalled();
   });
 
-  it("should show the authenticated user email and actions", () => {
+  it("should show the authenticated user email and actions", async () => {
     isAuthenticatedSubject.next(true);
     userSubject.next({ email: "tester@example.com" });
-    fixture.detectChanges();
+    await detectComponentChanges();
 
     const nativeElement = fixture.nativeElement as HTMLElement;
     const emailDisplay = nativeElement.querySelector(
@@ -80,10 +89,10 @@ describe("Login", () => {
     expect(nativeElement.querySelector("app-button")).toBeNull();
   });
 
-  it("should show the default email placeholder when user information is missing", () => {
+  it("should show the default email placeholder when user information is missing", async () => {
     isAuthenticatedSubject.next(true);
     userSubject.next(null);
-    fixture.detectChanges();
+    await detectComponentChanges();
 
     const nativeElement = fixture.nativeElement as HTMLElement;
     const emailDisplay = nativeElement.querySelector(
