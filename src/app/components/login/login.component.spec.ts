@@ -4,6 +4,7 @@ import { BehaviorSubject, of } from "rxjs";
 import { By } from "@angular/platform-browser";
 
 import { Login } from "./login.component";
+import { environment } from "../../../environments/environment";
 
 describe("Login", () => {
   let component: Login;
@@ -108,9 +109,6 @@ describe("Login", () => {
   it("should open the external profile page when Profile is selected", () => {
     component.openProfile();
 
-    expect(windowOpenSpy).toHaveBeenCalledWith(
-      "https://dev.portal.aai.test.biocommons.org.au/profile",
-      "_self",
-    );
+    expect(windowOpenSpy).toHaveBeenCalledWith(environment.profileUrl, "_self");
   });
 });

@@ -7,6 +7,7 @@ import {
   heroUser,
   heroArrowRightOnRectangle,
 } from "@ng-icons/heroicons/outline";
+import { environment } from "../../../environments/environment";
 
 @Component({
   selector: "app-login",
@@ -22,8 +23,7 @@ import {
 })
 export class Login {
   private auth = inject(AuthService);
-  private readonly profileUrl =
-    "https://dev.portal.aai.test.biocommons.org.au/profile";
+  private readonly profileUrl = environment.profileUrl;
 
   // Expose auth observables
   isAuthenticated$ = this.auth.isAuthenticated$;
