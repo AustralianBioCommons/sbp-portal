@@ -16,7 +16,7 @@
       </p>
     </div>
 
-    <!-- Preconfid Workflows Section -->
+    <!-- Preconfig Workflows Section -->
     <div>
       <h2 class="text-2xl font-semibold text-gray-900 mb-6">
         Pre-config Workflows
@@ -25,10 +25,7 @@
         @for (workflow of workflows; track workflow.id) {
           <button
             (click)="navigateToWorkflow(workflow.id)"
-            [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 ' + 
-              (workflow.active 
-                ? 'bg-biocommons-primary text-biocommons-secondary-blue shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-biocommons-primary hover:text-white')"
+            [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 bg-biocommons-primary text-biocommons-secondary-blue shadow-md hover:translate-y-0.5 hover:text-gray-700'"
           >
             {{ workflow.label }}
           </button>
@@ -43,10 +40,7 @@
         @for (tool of tools; track tool.id) {
           <button
             (click)="navigateToTool(tool.id)"
-            [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 ' + 
-              (tool.active 
-                ? 'bg-biocommons-secondary text-biocommons-secondary-blue shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-biocommons-secondary hover:text-white')"
+            [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 bg-biocommons-secondary text-biocommons-secondary-blue shadow-md hover:translate-y-0.5 hover:text-gray-700'"
           >
             {{ tool.label }}
           </button>
