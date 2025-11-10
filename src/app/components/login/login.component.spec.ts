@@ -54,12 +54,14 @@ describe("Login", () => {
   it("should render the login button when the user is not authenticated", async () => {
     await detectComponentChanges();
 
-    const buttonElement = fixture.debugElement.query(By.css("app-button"));
+    const buttonElement = fixture.debugElement.query(
+      By.css('[data-testid="login-button"]')
+    );
 
     expect(buttonElement).toBeTruthy();
-    expect(buttonElement?.nativeElement?.textContent?.toLowerCase()).toContain(
-      "log in",
-    );
+    expect(
+      buttonElement?.nativeElement?.textContent?.toLowerCase()
+    ).toContain("log in");
 
     const nativeElement = fixture.nativeElement as HTMLElement;
     expect(nativeElement.textContent).not.toContain("Profile");
@@ -90,7 +92,9 @@ describe("Login", () => {
     expect(emailDisplay?.textContent).toContain("tester@example.com");
     expect(profileButton).toBeDefined();
     expect(logoutButton).toBeDefined();
-    expect(nativeElement.querySelector("app-button")).toBeNull();
+    expect(
+      nativeElement.querySelector('[data-testid="login-button"]')
+    ).toBeNull();
   });
 
   it("should show the default email placeholder when user information is missing", async () => {
