@@ -10,13 +10,15 @@
           {{ (user$ | async)?.email || 'user@example.com' }}
         </div>
 
-          <!-- Profile Button -->
-          <button (click)="navigate('/profile')"
-            class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm text-gray-700 hover:text-biocommons-primary hover:bg-white transition-colors duration-200"
-            type="button">
-            <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
-            <span>Profile</span>
-          </button>
+        <!-- Profile Button -->
+        <button
+          (click)="openProfile()"
+          class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm text-gray-700 hover:text-biocommons-primary hover:bg-white transition-colors duration-200"
+          type="button"
+        >
+          <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
+          <span>Profile</span>
+        </button>
 
           <!-- Logout Button -->
           <button (click)="logout()"
@@ -26,16 +28,18 @@
             <span>Logout</span>
           </button>
           </div>
-      }
-
-      <!-- Login Button (if not authenticated) -->
-      @if ((isAuthenticated$ | async) === false) {
-      <button (click)="login()"
-            class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-semibold text-biocommons-secondary-blue hover:text-biocommons-primary-teal transition-colors duration-200"
-            type="button">
-            <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
-            <span>Log in</span>
-          </button>
+      } @else {
+      <div>
+        <button
+          type="button"
+          data-testid="login-button"
+          (click)="login()"
+          class="flex items-center space-x-2 text-sm font-semibold text-biocommons-secondary-blue bg-transparent px-4 py-1 rounded-md hover:text-biocommons-primary focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-biocommons-secondary-blue transition-colors duration-200"
+        >
+          <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
+          <span>Log in</span>
+        </button>
+      </div>
       }
     </div>
   </div>
