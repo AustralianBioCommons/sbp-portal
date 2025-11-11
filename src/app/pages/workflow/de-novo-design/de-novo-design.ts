@@ -1,7 +1,14 @@
-import { Component, Signal, computed, signal, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { Component, computed, inject, OnDestroy, OnInit, Signal, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { filter, Subscription, take } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
+import {
+  InputSchemaField,
+  InputSchemaService,
+  ParsedInputSchema,
+} from "../../../cores/input-schema.service";
+import { SchemaService } from "../../../cores/schema.service";
 
 interface TabItem {
   id: "overview" | "output" | "papers";
@@ -20,24 +27,53 @@ interface StepItem {
   description: string;
 }
 
+interface InputRow {
+  id: string;
+  values: Record<string, unknown>;
+}
+
 @Component({
   selector: "app-de-novo-design",
   standalone: true,
   imports: [CommonModule, FormsModule],
   host: {
-    class: "block w-full"
+    class: "block w-full",
   },
   templateUrl: "./de-novo-design.html",
-  styleUrls: ["./de-novo-design.scss"]
+  styleUrls: ["./de-novo-design.scss"],
 })
-export class DeNovoDesignComponent {
+export class DeNovoDesignComponent implements OnInit, OnDestroy {
+  // // Make Object available in template
+  Object = Object;
+
   // Auth
   public auth = inject(AuthService);
+  // Schema services
+  private schemaService = inject(SchemaService);
+  private inputSchemaService = inject(InputSchemaService);
+
+  // Schema URLs for bindflow workflow
+  private readonly inputSchemaUrl =
+    "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/schema_input.json";
+
+  // Input schema data for UI table construction
+  inputSchemaData = signal<ParsedInputSchema | null>(null);
+  inputSchemaFields = signal<InputSchemaField[]>([]);
+  requiredInputFields = signal<InputSchemaField[]>([]);
+
+  // Form data and validation
+  formData = signal<Record<string, unknown>>({});
+  formErrors = signal<{ [key: string]: string }>({});
+  isFormValid = signal<boolean>(false);
+
+  // Table rows for input configuration
+  inputRows = signal<InputRow[]>([]);
+  nextRowId = signal<number>(1);
   // Tabs
   readonly tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
     { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" }
+    { id: "papers", label: "Papers" },
   ];
   activeTab = signal<TabItem["id"]>("overview");
   isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
@@ -49,7 +85,7 @@ export class DeNovoDesignComponent {
   readonly tools: ToolChip[] = [
     { id: "alphafold", label: "AlphaFold" },
     { id: "bindcraft", label: "BindCraft" },
-    { id: "colabfold", label: "ColabFold" }
+    { id: "colabfold", label: "ColabFold" },
   ];
   selectedTool = signal<ToolChip["id"]>("bindcraft");
   isToolSelected = (id: ToolChip["id"]) => this.selectedTool() === id;
@@ -91,9 +127,13 @@ export class DeNovoDesignComponent {
   // Stepper
   readonly steps: StepItem[] = [
     { id: 1, title: "Input Configuration", description: "Provide sequence or structure inputs" },
-    { id: 2, title: "Tool Settings", description: "Configure parameters specific to the selected tool" },
+    {
+      id: 2,
+      title: "Tool Settings",
+      description: "Configure parameters specific to the selected tool",
+    },
     { id: 3, title: "Resource Allocation", description: "Choose compute resources and priority" },
-    { id: 4, title: "Review & Submit", description: "Review all settings and run the job" }
+    { id: 4, title: "Review & Submit", description: "Review all settings and run the job" },
   ];
   currentStep = signal<number>(1);
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -113,12 +153,501 @@ export class DeNovoDesignComponent {
     if (step >= 1 && step <= this.steps.length) this.currentStep.set(step);
   }
 
+  constructor() {
+    console.log("🏗️ DeNovoDesignComponent constructor called");
+
+    // Ensure all signals are properly initialized
+    this.formData.set({});
+    this.formErrors.set({});
+    this.isFormValid.set(false);
+  }
+
+  private subscription = new Subscription();
+
+  ngOnInit() {
+    console.log("🚀 DeNovoDesignComponent ngOnInit called");
+    console.log("🔍 Navigation context:", {
+      currentUrl: window.location.href,
+      timestamp: new Date().toISOString(),
+    });
+    console.log("🔧 Services status:", {
+      authService: !!this.auth,
+      schemaService: !!this.schemaService,
+      inputSchemaService: !!this.inputSchemaService,
+    });
+
+    // Wait for Auth0 to initialize before making HTTP requests
+    // Use take(1) and filter to only react once when loading is complete
+    this.subscription.add(
+      this.auth.isLoading$
+        .pipe(
+          filter(isLoading => !isLoading),
+          take(1)
+        )
+        .subscribe(() => {
+          console.log("✅ Auth service ready, starting schema load...");
+          this.loadInputSchema();
+        })
+    );
+
+    // Fallback: If auth doesn't initialize within 5 seconds, load anyway
+    setTimeout(() => {
+      if (!this.inputSchemaData()) {
+        console.log("⚠️ Fallback: Loading schema without waiting for auth...");
+        this.loadInputSchema();
+      }
+    }, 5000);
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+
+  loadInputSchema() {
+    console.log("🔄 Fetching input schema from:", this.inputSchemaUrl);
+    console.log("🔧 InputSchemaService instance:", this.inputSchemaService);
+
+    this.inputSchemaService.fetchInputSchema(this.inputSchemaUrl).subscribe({
+      next: rawSchema => {
+        console.log("📥 Raw input schema received:", rawSchema);
+        console.log("🔍 Schema structure check:");
+
+        // Type-safe access to schema properties
+        const items = rawSchema.items as Record<string, unknown> | undefined;
+        const hasItems = !!items;
+        const properties = items?.properties as Record<string, unknown> | undefined;
+        const hasProperties = !!properties;
+        const required = items?.required;
+
+        console.log("  - has items:", hasItems);
+        console.log("  - has items.properties:", hasProperties);
+        console.log("  - items.required:", required);
+        console.log("  - properties keys:", properties ? Object.keys(properties) : "none");
+
+        if (!items || !properties) {
+          console.error("❌ Schema does not have the expected bindflow structure");
+          console.error("Expected: schema.items.properties, got:", { items: rawSchema.items });
+          return;
+        }
+
+        // Parse the raw schema
+        this.inputSchemaService.parseInputSchema(rawSchema).subscribe({
+          next: parsedSchema => {
+            console.log("✅ Input Schema parsed successfully!");
+            console.log("📋 Parsed Schema:", parsedSchema);
+            console.log("📊 Sections count:", parsedSchema.sections.length);
+
+            if (parsedSchema.sections.length > 0) {
+              console.log("📝 First section:", parsedSchema.sections[0]);
+              console.log("🔢 Total fields:", parsedSchema.sections[0].fields.length);
+              console.log(
+                "🏷️ Field names:",
+                parsedSchema.sections[0].fields.map(f => f.name)
+              );
+            }
+
+            // Store schema data in signals for UI construction
+            this.inputSchemaData.set(parsedSchema);
+
+            // Extract all fields from all sections
+            const allFields = parsedSchema.sections.flatMap(section => section.fields);
+            this.inputSchemaFields.set(allFields);
+
+            // Get required and optional fields for table sections
+            const requiredFields = this.inputSchemaService.getRequiredFields(parsedSchema);
+
+            this.requiredInputFields.set(requiredFields);
+
+            // Initialize form data with default values
+            const defaultValues = this.inputSchemaService.generateDefaultValues(parsedSchema);
+            this.initializeFormData(defaultValues);
+
+            // Initialize table with one default row
+            this.initializeDefaultRow();
+
+            console.log("🎯 Required fields count:", requiredFields.length);
+            console.log("📝 Default values:", defaultValues);
+
+            // Log first few fields for debugging
+            if (requiredFields.length > 0) {
+              console.log("🎯 First required field:", requiredFields[0]);
+            }
+          },
+          error: parseError => {
+            console.error("❌ Error parsing input schema:", parseError);
+          },
+        });
+      },
+      error: error => {
+        console.error("💥 Error loading input schema:", error);
+      },
+    });
+  }
+
+  // Test method to manually trigger schema loading (for debugging)
+  testSchemaLoad() {
+    console.log("🧪 Manual test: Loading input schema...");
+    this.loadInputSchema();
+  }
+
+  // Test method with a simple mock schema
+  testWithMockSchema() {
+    console.log("🧪 Testing with mock schema...");
+    const mockSchema = {
+      title: "Mock Input Schema",
+      description: "Test schema for debugging",
+      sections: [
+        {
+          name: "basic_inputs",
+          title: "Basic Inputs",
+          description: "Basic input parameters",
+          fields: [
+            {
+              name: "input_file",
+              type: "file" as const,
+              label: "Input File",
+              description: "Select an input file",
+              required: true,
+            },
+            {
+              name: "output_name",
+              type: "string" as const,
+              label: "Output Name",
+              description: "Name for the output",
+              required: true,
+              placeholder: "Enter output name",
+            },
+            {
+              name: "num_iterations",
+              type: "number" as const,
+              label: "Number of Iterations",
+              description: "Number of iterations to run",
+              required: false,
+              default: 10,
+              validation: {
+                min: 1,
+                max: 100,
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    // Set the mock schema data
+    this.inputSchemaData.set(mockSchema);
+
+    // Extract all fields from all sections
+    const allFields = mockSchema.sections.flatMap(section => section.fields);
+    this.inputSchemaFields.set(allFields);
+
+    // Separate required and optional fields
+    const requiredFields = allFields.filter(field => field.required);
+
+    this.requiredInputFields.set(requiredFields);
+
+    // Initialize form data with default values
+    const defaultValues = this.inputSchemaService.generateDefaultValues(mockSchema);
+    this.initializeFormData(defaultValues);
+
+    console.log("✅ Mock schema loaded successfully!");
+    console.log("📋 Mock Schema:", mockSchema);
+    console.log("🎯 Required fields:", requiredFields);
+  }
+
   submitWorkflow() {
     // Placeholder: hook up to actual submission later
     console.log("Submitting De Novo Design:", {
       tool: this.selectedTool(),
       jobNote: this.jobNote(),
-      step: this.currentStep()
+      step: this.currentStep(),
     });
+  }
+
+  // Initialize form data with default values from schema
+  private initializeFormData(defaultValues: Record<string, unknown>): void {
+    this.formData.set(defaultValues);
+    this.validateForm();
+  }
+
+  // Update form data for a specific field
+  updateFieldValue(fieldName: string, value: unknown): void {
+    const currentData = this.formData();
+    const updatedData = { ...currentData, [fieldName]: value };
+    this.formData.set(updatedData);
+    this.validateField(fieldName, value);
+    this.validateForm();
+  }
+
+  // Handle input events
+  onInputChange(fieldName: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.updateFieldValue(fieldName, target.value);
+  }
+
+  // Handle number input events
+  onNumberChange(fieldName: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const value = target.value ? parseInt(target.value, 10) : null;
+    this.updateFieldValue(fieldName, value);
+  }
+
+  // Handle select change events
+  onSelectChange(fieldName: string, event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.updateFieldValue(fieldName, target.value);
+  }
+
+  // Handle boolean select change events
+  onBooleanChange(fieldName: string, event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.updateFieldValue(fieldName, target.value === "true");
+  }
+
+  // Handle file input events
+  onFileChange(fieldName: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    this.updateFieldValue(fieldName, file);
+  }
+
+  // Validate a single field
+  private validateField(fieldName: string, value: unknown): void {
+    const currentErrors = this.formErrors();
+    const field = this.inputSchemaFields().find(f => f.name === fieldName);
+
+    if (!field) {
+      return;
+    }
+
+    const validationResult = this.inputSchemaService.validateFieldValue(field, value);
+
+    if (validationResult.valid) {
+      // Remove the error for this field
+      const updatedErrors = { ...currentErrors };
+      delete updatedErrors[fieldName];
+      this.formErrors.set(updatedErrors);
+    } else {
+      this.formErrors.set({
+        ...currentErrors,
+        [fieldName]: validationResult.errors[0] || "Invalid value",
+      });
+    }
+  }
+
+  // Public method for template to validate single field (called on blur events)
+  validateSingleField(fieldName: string): void {
+    const currentData = this.formData();
+    const value = currentData[fieldName];
+    this.validateField(fieldName, value);
+    this.validateForm(); // Re-validate entire form after single field validation
+  }
+
+  // Validate the entire form
+  private validateForm(): void {
+    const requiredFields = this.requiredInputFields();
+    const currentData = this.formData();
+
+    let isValid = true;
+
+    // Check if all required fields have values
+    for (const field of requiredFields) {
+      const value = currentData[field.name];
+      if (value === undefined || value === null || value === "") {
+        isValid = false;
+        break;
+      }
+    }
+
+    // Check if there are any validation errors
+    const errors = this.formErrors();
+    if (Object.keys(errors).length > 0) {
+      isValid = false;
+    }
+
+    this.isFormValid.set(isValid);
+  }
+
+  // Get current form data for submission
+  getFormData(): Record<string, unknown> {
+    return this.formData();
+  }
+
+  // Reset form to default values
+  resetForm(): void {
+    const inputSchema = this.inputSchemaData();
+    if (inputSchema) {
+      const defaultValues = this.inputSchemaService.generateDefaultValues(inputSchema);
+      this.initializeFormData(defaultValues);
+    }
+  }
+
+  // Table row management methods
+  addInputRow(): void {
+    const inputSchema = this.inputSchemaData();
+    if (!inputSchema) return;
+
+    const rowId = `row-${this.nextRowId()}`;
+    const defaultValues: Record<string, unknown> = {};
+
+    // Initialize default values for all fields
+    inputSchema.sections.forEach(section => {
+      section.fields.forEach(field => {
+        defaultValues[field.name] = this.getDefaultValueForField(field);
+      });
+    });
+
+    const newRow: InputRow = {
+      id: rowId,
+      values: defaultValues,
+    };
+
+    this.inputRows.update(rows => [...rows, newRow]);
+    this.nextRowId.update(id => id + 1);
+
+    // Validate the form after adding a new row
+    this.validateAllRows();
+  }
+
+  removeInputRow(rowId: string): void {
+    // Remove any validation errors for this row
+    const currentErrors = this.formErrors();
+    const updatedErrors = { ...currentErrors };
+
+    // Remove all errors for this row
+    Object.keys(updatedErrors).forEach(key => {
+      if (key.startsWith(`${rowId}_`)) {
+        delete updatedErrors[key];
+      }
+    });
+
+    this.formErrors.set(updatedErrors);
+    this.inputRows.update(rows => rows.filter(row => row.id !== rowId));
+    this.validateAllRows();
+  }
+
+  updateRowValue(rowId: string, fieldName: string, value: unknown): void {
+    this.inputRows.update(rows =>
+      rows.map(row =>
+        row.id === rowId ? { ...row, values: { ...row.values, [fieldName]: value } } : row
+      )
+    );
+  }
+
+  private getDefaultValueForField(field: InputSchemaField): unknown {
+    if (field.default !== undefined) {
+      return field.default;
+    }
+
+    switch (field.type) {
+      case "string":
+        return "";
+      case "number":
+        return field.validation?.min || 0;
+      case "boolean":
+        return false;
+      case "array":
+        return [];
+      case "object":
+        return {};
+      default:
+        return "";
+    }
+  }
+
+  // Get value for a specific row and field
+  getRowValue(rowId: string, fieldName: string): unknown {
+    const row = this.inputRows().find(r => r.id === rowId);
+    return row?.values[fieldName] || "";
+  }
+
+  // Initialize with one empty row when schema loads
+  private initializeDefaultRow(): void {
+    if (this.inputRows().length === 0) {
+      this.addInputRow();
+    }
+  }
+
+  // Row-level validation methods
+  validateRowField(rowId: string, fieldName: string): void {
+    const value = this.getRowValue(rowId, fieldName);
+    const field = this.inputSchemaFields().find(f => f.name === fieldName);
+
+    if (!field) return;
+
+    const validationResult = this.inputSchemaService.validateFieldValue(field, value);
+    const errorKey = `${rowId}_${fieldName}`;
+    const currentErrors = this.formErrors();
+
+    if (validationResult.valid) {
+      // Remove error for this specific cell
+      const updatedErrors = { ...currentErrors };
+      delete updatedErrors[errorKey];
+      this.formErrors.set(updatedErrors);
+    } else {
+      // Add error for this specific cell
+      this.formErrors.set({
+        ...currentErrors,
+        [errorKey]: validationResult.errors[0] || "Invalid value",
+      });
+    }
+
+    this.validateAllRows();
+  }
+
+  // Validate all rows and update overall form validity
+  validateAllRows(): void {
+    const rows = this.inputRows();
+    const requiredFields = this.requiredInputFields();
+    let hasErrors = false;
+
+    // Check each row for required field completeness
+    for (const row of rows) {
+      for (const field of requiredFields) {
+        const value = row.values[field.name];
+        if (value === undefined || value === null || value === "") {
+          hasErrors = true;
+          break;
+        }
+      }
+      if (hasErrors) break;
+    }
+
+    // Check if there are validation errors
+    const errors = this.formErrors();
+    if (Object.keys(errors).length > 0) {
+      hasErrors = true;
+    }
+
+    this.isFormValid.set(!hasErrors && rows.length > 0);
+  }
+
+  // Get validation error for a specific cell
+  getRowFieldError(rowId: string, fieldName: string): string | null {
+    const errorKey = `${rowId}_${fieldName}`;
+    return this.formErrors()[errorKey] || null;
+  }
+
+  // Check if a specific cell has an error
+  hasRowFieldError(rowId: string, fieldName: string): boolean {
+    return this.getRowFieldError(rowId, fieldName) !== null;
+  }
+
+  // Update row value with validation
+  updateRowValueWithValidation(rowId: string, fieldName: string, value: unknown): void {
+    this.updateRowValue(rowId, fieldName, value);
+    this.validateRowField(rowId, fieldName);
+  }
+
+  // Get overall form validation status
+  getFormValidationSummary(): { valid: boolean; errorCount: number; rowCount: number } {
+    const errors = this.formErrors();
+    const rows = this.inputRows();
+
+    return {
+      valid: this.isFormValid(),
+      errorCount: Object.keys(errors).length,
+      rowCount: rows.length,
+    };
   }
 }

@@ -81,11 +81,11 @@ export class FooterSectionsComponent {
       links: [
         {
           label: "De novo design",
-          href: "/workflow/de-novo-design",
+          href: "/de-novo-design",
         },
         {
           label: "Interaction screening",
-          href: "/workflow?wf=interaction-screening",
+          href: "/interaction-screening",
         },
       ],
     },

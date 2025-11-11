@@ -36,21 +36,21 @@ describe("BinderDesignComponent", () => {
     const deNovoWorkflow = component.workflows.find(w => w.id === 'de-novo-design');
     expect(deNovoWorkflow).toBeDefined();
     expect(deNovoWorkflow?.label).toBe('De Novo Design');
-    expect(deNovoWorkflow?.href).toBe('/workflow/de-novo-design');
+    expect(deNovoWorkflow?.href).toBe('/de-novo-design');
   });
 
   it('workflows should contain motif scaffolding workflow', () => {
     const motifWorkflow = component.workflows.find(w => w.id === 'motif-scaffolding');
     expect(motifWorkflow).toBeDefined();
     expect(motifWorkflow?.label).toBe('Motif Scaffolding');
-    expect(motifWorkflow?.href).toBe('/workflow/motif-scaffolding');
+    expect(motifWorkflow?.href).toBe('/motif-scaffolding');
   });
 
   it('workflows should contain partial diffusion workflow', () => {
     const partialWorkflow = component.workflows.find(w => w.id === 'partial-diffusion');
     expect(partialWorkflow).toBeDefined();
     expect(partialWorkflow?.label).toBe('Partial Diffusion');
-    expect(partialWorkflow?.href).toBe('/workflow/partial-diffusion');
+    expect(partialWorkflow?.href).toBe('/partial-diffusion');
   });
 
     it("should have all workflows with required properties", () => {

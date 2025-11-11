@@ -18,7 +18,7 @@ bootstrapApplication(AppComponent, {
       { path: "", redirectTo: "/themes", pathMatch: "full" },
       { path: "themes", component: Home },
       {
-        path: "workflow/de-novo-design",
+        path: "de-novo-design",
         component: DeNovoDesignComponent
       },
       { path: "protected", component: AppComponent, canActivate: [authGuard] },

@@ -111,11 +111,11 @@ export class Navbar {
       children: [
         {
           label: "De Novo Design",
-          path: "/workflow/de-novo-design"
+          path: "/de-novo-design"
         },
         {
           label: "Interaction Screening",
-          path: "/workflow/interaction-screening"
+          path: "/interaction-screening"
         }
       ]
     },

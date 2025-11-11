@@ -4,8 +4,8 @@
 }
 
 #footer-sections {
-  background-color: theme('colors.bg.primary');
-  color: theme('colors.text.primary');
+  background-color: theme("colors.bg.primary");
+  color: theme("colors.text.primary");
 
   // Logo container styling for 2x1 layout
   .logo-container {
@@ -29,49 +29,49 @@
 // Footer link styles using Tailwind CSS custom properties
 #footer-sections {
   .footer-heading {
-    color: theme('colors.text.secondary');
+    color: theme("colors.text.primary");
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   .footer-link {
-    color: theme('colors.text.muted');
+    color: theme("colors.text.muted");
     text-decoration: underline;
     transition: color 0.2s ease;
 
     &:hover {
-      color: theme('colors.biocommons.primary-teal');
+      color: theme("colors.text.primary");
     }
   }
 
   .footer-legal-link {
-    color: theme('colors.text.primary');
+    color: theme("colors.text.muted");
     font-weight: 500;
     text-decoration: underline;
     transition: color 0.2s ease;
 
     &:hover {
-      color: theme('colors.biocommons.primary-pink');
+      color: theme("colors.text.primary");
     }
   }
 
   .footer-legal-text {
-    color: theme('colors.text.muted');
+    color: theme("colors.text.muted");
   }
 
   .footer-border {
-    border-color: theme('colors.border.light');
+    border-color: theme("colors.border.light");
   }
 
   .footer-social-link {
-    border-color: theme('colors.border.light');
-    color: theme('colors.text.muted');
+    border-color: theme("colors.border.light");
+    color: theme("colors.text.muted");
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: theme('colors.biocommons.primary-teal');
-      color: theme('colors.biocommons.primary-teal');
+      border-color: theme("colors.blue.800");
+      color: theme("colors.blue.800");
     }
   }
 }
@@ -81,7 +81,7 @@
 }
 
 #footer-sections a:focus-visible {
-  outline: 2px solid theme('colors.focus');
+  outline: 2px solid theme("colors.focus");
   outline-offset: 2px;
 }
 
