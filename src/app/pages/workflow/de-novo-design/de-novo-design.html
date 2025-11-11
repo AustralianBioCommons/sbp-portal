@@ -21,7 +21,7 @@
             [class]="
               isActiveTab(tab.id)
                 ? 'text-primary border-b-3 border-gray-400 font-semibold'
-                : 'text-blue-900 hover:text-blue-700 hover:border-gray-300 border-b-2 border-transparent'
+                : 'text-blue-800 hover:text-blue-700 hover:border-gray-300 border-b-2 border-transparent'
             "
             class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200"
             type="button"
@@ -492,94 +492,13 @@
         <p class="mt-1 text-sm text-gray-600">
           Configure parameters specific to {{ selectedToolLabel() }}.
         </p>
-        <div class="mt-3 grid gap-3 sm:grid-cols-3">
-          <div>
-            <label for="max-recycles" class="block text-sm text-gray-600 mb-1">Max recycles</label>
-            <input
-              id="max-recycles"
-              type="number"
-              min="0"
-              class="w-full rounded-DEFAULT-10 border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2"
-              placeholder="e.g. 3"
-              [ngModel]="maxRecycles()"
-              (ngModelChange)="maxRecycles.set(($event ?? '').toString())"
-            />
-          </div>
-          <div>
-            <label for="ensemble" class="block text-sm text-gray-600 mb-1">Ensemble</label>
-            <select
-              id="ensemble"
-              class="w-full rounded-DEFAULT-10 border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2"
-              [ngModel]="ensemble()"
-              (ngModelChange)="ensemble.set($event)"
-            >
-              <option value="">-- Select --</option>
-              <option value="None">None</option>
-              <option value="Small">Small</option>
-              <option value="Large">Large</option>
-            </select>
-          </div>
-          <div>
-            <label for="relax-model" class="block text-sm text-gray-600 mb-1">Relax model</label>
-            <select
-              id="relax-model"
-              class="w-full rounded-DEFAULT-10 border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2"
-              [ngModel]="relax()"
-              (ngModelChange)="relax.set($event)"
-            >
-              <option value="">-- Select --</option>
-              <option value="Off">Off</option>
-              <option value="Amber">Amber</option>
-            </select>
-          </div>
-        </div>
+        <div class="mt-3 grid gap-3 sm:grid-cols-3"></div>
         } @if (currentStep() === 3) {
         <h5 class="text-base font-semibold text-gray-900">Resource Allocation</h5>
         <p class="mt-1 text-sm text-gray-600">
           Select compute resources and priority for this job.
         </p>
-        <div class="mt-3 grid gap-3 sm:grid-cols-3">
-          <div>
-            <label for="gpu-type" class="block text-sm text-gray-600 mb-1">GPU type</label>
-            <select
-              id="gpu-type"
-              class="w-full rounded-DEFAULT-10 border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2"
-              [ngModel]="gpuType()"
-              (ngModelChange)="gpuType.set($event)"
-            >
-              <option value="">-- Select --</option>
-              <option value="A100">A100</option>
-              <option value="V100">V100</option>
-              <option value="T4">T4</option>
-            </select>
-          </div>
-          <div>
-            <label for="gpus-count" class="block text-sm text-gray-600 mb-1">GPUs</label>
-            <input
-              id="gpus-count"
-              type="number"
-              min="1"
-              class="w-full rounded-DEFAULT-10 border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2"
-              placeholder="1"
-              [ngModel]="gpus()"
-              (ngModelChange)="gpus.set(($event ?? '').toString())"
-            />
-          </div>
-          <div>
-            <label for="priority" class="block text-sm text-gray-600 mb-1">Priority</label>
-            <select
-              id="priority"
-              class="w-full rounded-DEFAULT-10 border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus px-3 py-2"
-              [ngModel]="priority()"
-              (ngModelChange)="priority.set($event)"
-            >
-              <option value="">-- Select --</option>
-              <option value="Normal">Normal</option>
-              <option value="High">High</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-        </div>
+        <div class="mt-3 grid gap-3 sm:grid-cols-3"></div>
         } @if (currentStep() === 4) {
         <h5 class="text-base font-semibold text-gray-900">Review & Submit</h5>
         <p class="mt-1 text-sm text-gray-600">Confirm your selections before starting the job.</p>
