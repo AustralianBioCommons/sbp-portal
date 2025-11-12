@@ -7,12 +7,16 @@
         Protein Binder Design
       </h1>
       <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-        Synthetic protein binders are emerging as powerful tools in therapeutics, diagnostics, and fundamental research,
-        offering a highly tunable alternative to traditional antibody development. This platform has been developed to support
-        the design and optimization of synthetic protein binders through state-of-the-art AI workflows. By integrating modern
-        protein modeling, sequence design, and quality control methods, it enables reproducible and efficient in silico
-        experimentation for academic research. Researchers can investigate new binding modalities, benchmark computational
-        protocols, and accelerate the progression from sequence design to structural insight.
+        Synthetic protein binders are emerging as powerful tools in
+        therapeutics, diagnostics, and fundamental research, offering a highly
+        tunable alternative to traditional antibody development. This platform
+        has been developed to support the design and optimization of synthetic
+        protein binders through state-of-the-art AI workflows. By integrating
+        modern protein modeling, sequence design, and quality control methods,
+        it enables reproducible and efficient in silico experimentation for
+        academic research. Researchers can investigate new binding modalities,
+        benchmark computational protocols, and accelerate the progression from
+        sequence design to structural insight.
       </p>
     </div>
 
@@ -23,12 +27,15 @@
       </h2>
       <div class="flex flex-wrap gap-3">
         @for (workflow of workflows; track workflow.id) {
-          <button
-            (click)="navigateToWorkflow(workflow.id)"
-            [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 bg-biocommons-primary text-biocommons-secondary-blue shadow-md hover:translate-y-0.5 hover:text-gray-700'"
-          >
-            {{ workflow.label }}
-          </button>
+        <app-button
+          variant="secondary"
+          widthClass="w-auto"
+          borderRadius="rounded-3xl"
+          colorClasses="!px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 !bg-white !text-blue-900 hover:!text-gray-700"
+          (click)="navigateToWorkflow(workflow.id)"
+        >
+          {{ workflow.label }}
+        </app-button>
         }
       </div>
     </div>
@@ -38,12 +45,15 @@
       <h2 class="text-2xl font-semibold text-gray-900 mb-6">Tools</h2>
       <div class="flex flex-wrap gap-3">
         @for (tool of tools; track tool.id) {
-          <button
-            (click)="navigateToTool(tool.id)"
-            [class]="'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 bg-biocommons-secondary text-biocommons-secondary-blue shadow-md hover:translate-y-0.5 hover:text-gray-700'"
-          >
-            {{ tool.label }}
-          </button>
+        <app-button
+          variant="secondary"
+          widthClass="w-auto"
+          borderRadius="rounded-3xl"
+          colorClasses="!px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 !bg-white !text-blue-900 hover:!text-gray-700"
+          (click)="navigateToTool(tool.id)"
+        >
+          {{ tool.label }}
+        </app-button>
         }
       </div>
     </div>
@@ -55,15 +65,15 @@
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @for (resource of communityResources; track resource.href) {
-          <a
-            [href]="resource.href"
-            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-biocommons-primary transition-all duration-200 cursor-pointer block"
-          >
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">
-              {{ resource.title }}
-            </h3>
-            <p class="text-gray-600 text-sm">{{ resource.description }}</p>
-          </a>
+        <a
+          [href]="resource.href"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-gray-200 transition-all duration-200 cursor-pointer block"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">
+            {{ resource.title }}
+          </h3>
+          <p class="text-gray-600 text-sm">{{ resource.description }}</p>
+        </a>
         }
       </div>
     </div>

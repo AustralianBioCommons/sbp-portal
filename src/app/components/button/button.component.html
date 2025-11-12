@@ -1,22 +1,33 @@
-@let base = "px-4 py-2.5 text-sm font-medium shadow-sm transition-all
-disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none
-focus-visible:ring-2 focus-visible:ring-offset-2 whitespace-nowrap"; @let color
-= colorClasses()?.trim(); @let variantClasses = variant() === "primary" ?
-"text-white " + (color || "bg-biocommons-primary-teal hover:bg-biocommons-secondary-blue
-focus-visible:ring-biocommons-primary-teal") : "border bg-white hover:bg-bg-secondary " +
-(color || "text-biocommons-primary-teal border-biocommons-primary-teal focus-visible:ring-biocommons-primary-teal");
+@let base = "flex items-center space-x-2 px-3 py-2 text-left font-medium
+transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50
+focus:outline-none focus:ring-2 focus:ring-offset-1 whitespace-nowrap
+overflow-hidden"; @let color = colorClasses()?.trim(); @let activeClasses =
+active() ? "btn-active" : ""; @let variantClasses = variant() === "primary" ?
+"text-white justify-center " + (color || "bg-blue-800 hover:bg-blue-700
+focus:ring-blue-500") : "border-0 bg-transparent hover:bg-white " + (color ||
+"text-blue-900 hover:text-blue-600 focus:ring-blue-500 hover:translate-x-1");
 
 <button
   [type]="type()"
   [disabled]="disabled() || loading()"
   [class]="
-    base + ' ' + widthClass() + ' ' + borderRadius() + ' ' + variantClasses
+    base +
+    ' ' +
+    widthClass() +
+    ' ' +
+    borderRadius() +
+    ' ' +
+    variantClasses +
+    ' ' +
+    activeClasses +
+    ' ' +
+    (color || '')
   "
 >
   @if (loading()) {
-  <div class="flex items-center justify-center">
+  <div class="flex items-center justify-center space-x-2">
     <svg
-      class="h-5 w-5 animate-spin text-white"
+      class="h-4 w-4 animate-spin"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -35,6 +46,9 @@ focus-visible:ring-biocommons-primary-teal") : "border bg-white hover:bg-bg-seco
         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
       ></path>
     </svg>
+    @if (variant() === "primary") {
+    <span>Loading...</span>
+    }
   </div>
   } @else {
   <ng-content></ng-content>

@@ -41,7 +41,7 @@
 
 .error-subtitle {
   font-size: 1.5rem;
-  color: theme("colors.blue.600");
+  color: theme("colors.blue.900");
   font-weight: 600;
   margin-bottom: 2rem;
 }
@@ -123,54 +123,13 @@
   margin-bottom: 1rem;
 }
 
-.suggestion-button {
-  width: 100%;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-
-  &.primary {
-    background-color: theme("colors.pink.500");
-    color: theme("colors.white");
-
-    &:hover {
-      background-color: theme("colors.pink.600");
-      transform: translateY(-1px);
-    }
-  }
-
-  &.secondary {
-    background-color: theme("colors.blue.600");
-    color: theme("colors.white");
-
-    &:hover {
-      background-color: theme("colors.blue.700");
-      transform: translateY(-1px);
-    }
-  }
-
-  &.accent {
-    background-color: theme("colors.teal.500");
-    color: theme("colors.white");
-
-    &:hover {
-      background-color: theme("colors.teal.600");
-      transform: translateY(-1px);
-    }
-  }
-}
-
 // Popular Links Section
 .popular-links {
   margin-bottom: 3rem;
 
   h3 {
     font-size: 1.25rem;
-    color: theme("colors.blue.600");
+    color: theme("colors.blue.900");
     font-weight: 600;
     margin-bottom: 1.5rem;
   }
@@ -178,28 +137,30 @@
 
 .link-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  max-width: 800px;
+  max-width: 600px;
   margin: 0 auto;
-}
 
-.popular-link {
-  display: block;
-  padding: 1rem;
-  background: theme("colors.white");
-  border: 1px solid theme("colors.gray.200");
-  border-radius: 0.5rem;
-  color: theme("colors.blue.600");
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  app-button {
+    min-height: 4rem;
 
-  &:hover {
-    background-color: theme("colors.teal.500");
-    color: theme("colors.white");
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px color-mix(in srgb, theme("colors.teal.500") 30%, transparent);
+    button {
+      height: 100%;
+      justify-content: center !important;
+      text-align: center !important;
+      white-space: normal !important;
+      word-wrap: break-word;
+      padding: 0.75rem 1rem !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+  }
+
+  // Responsive layout
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    max-width: 400px;
   }
 }
 
@@ -207,19 +168,4 @@
 .support-section {
   padding-top: 2rem;
   border-top: 1px solid theme("colors.gray.200");
-}
-
-.support-text {
-  color: theme("colors.gray.600");
-  font-size: 1rem;
-}
-
-.support-link {
-  color: theme("colors.teal.500");
-  text-decoration: underline;
-  font-weight: 600;
-
-  &:hover {
-    color: theme("colors.pink.500");
-  }
 }

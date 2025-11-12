@@ -1,23 +1,19 @@
-import { Component, inject, signal } from "@angular/core";
+import { animate, style, transition, trigger } from "@angular/animations";
 import { CommonModule } from "@angular/common";
-import { Router, ActivatedRoute, NavigationEnd } from "@angular/router";
-import {
-  trigger,
-  style,
-  transition,
-  animate,
-} from "@angular/animations";
-import { filter, map } from "rxjs/operators";
-import { AuthService } from "../../cores/auth.service";
+import { Component, inject, signal } from "@angular/core";
+import { ActivatedRoute, NavigationEnd, Router } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
-  heroHome,
-  heroWrenchScrewdriver,
   heroBars3,
-  heroXMark,
+  heroHome,
   heroInformationCircle,
+  heroWrenchScrewdriver,
+  heroXMark,
 } from "@ng-icons/heroicons/outline";
 import { tablerCalendarStar } from "@ng-icons/tabler-icons";
+import { filter, map } from "rxjs/operators";
+import { AuthService } from "../../cores/auth.service";
+import { ButtonComponent } from "../button/button.component";
 
 export interface NavItem {
   label: string;
@@ -32,7 +28,7 @@ export interface NavItem {
 
 @Component({
   selector: "app-navbar",
-  imports: [CommonModule, NgIconComponent],
+  imports: [CommonModule, NgIconComponent, ButtonComponent],
   providers: [
     provideIcons({
       heroHome,
@@ -40,8 +36,8 @@ export interface NavItem {
       heroBars3,
       heroXMark,
       heroInformationCircle,
-      tablerCalendarStar
-    })
+      tablerCalendarStar,
+    }),
   ],
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.scss",
@@ -49,19 +45,13 @@ export interface NavItem {
     trigger("slideInOut", [
       transition(":enter", [
         style({ transform: "translateY(-10px)", opacity: 0 }),
-        animate(
-          "250ms ease-out",
-          style({ transform: "translateY(0)", opacity: 1 })
-        )
+        animate("250ms ease-out", style({ transform: "translateY(0)", opacity: 1 })),
       ]),
       transition(":leave", [
-        animate(
-          "200ms ease-in",
-          style({ transform: "translateY(-10px)", opacity: 0 })
-        )
-      ])
-    ])
-  ]
+        animate("200ms ease-in", style({ transform: "translateY(-10px)", opacity: 0 })),
+      ]),
+    ]),
+  ],
 })
 export class Navbar {
   private auth = inject(AuthService);
@@ -89,21 +79,21 @@ export class Navbar {
         {
           label: "Binder design",
           path: "/themes",
-          queryParams: { tab: "binder-design" }
+          queryParams: { tab: "binder-design" },
         },
         {
           label: "Structure prediction",
           path: "/themes",
           queryParams: { tab: "structure-prediction" },
-          requiresAuth: false
+          requiresAuth: false,
         },
         {
           label: "Structure search",
           path: "/themes",
           queryParams: { tab: "structure-search" },
-          requiresAuth: false
-        }
-      ]
+          requiresAuth: false,
+        },
+      ],
     },
     {
       label: "Pre-config workflows",
@@ -111,39 +101,39 @@ export class Navbar {
       children: [
         {
           label: "De Novo Design",
-          path: "/de-novo-design"
+          path: "/de-novo-design",
         },
         {
           label: "Interaction Screening",
-          path: "/interaction-screening"
-        }
-      ]
+          path: "/interaction-screening",
+        },
+      ],
     },
     {
       label: "Tools",
       path: "/tools",
-      icon: "heroWrenchScrewdriver"
+      icon: "heroWrenchScrewdriver",
     },
     {
       label: "Jobs",
       path: "/jobs",
-      image: "/assets/job-run.png"
+      image: "/assets/job-run.png",
     },
     {
       label: "About",
       path: "/about",
-      icon: "heroInformationCircle"
+      icon: "heroInformationCircle",
     },
     {
       label: "Workshops & Events",
       path: "/events",
-      icon: "tablerCalendarStar"
+      icon: "tablerCalendarStar",
     },
     {
       label: "Support/FAQ",
       path: "/support",
-      image: "/assets/contact-support-outline-rounded.png"
-    }
+      image: "/assets/contact-support-outline-rounded.png",
+    },
   ];
 
   constructor() {
@@ -155,7 +145,7 @@ export class Navbar {
     // Track route changes to determine active tab
     this.router.events
       .pipe(
-        filter((event) => event instanceof NavigationEnd),
+        filter(event => event instanceof NavigationEnd),
         map(() => {
           let route = this.activatedRoute;
           while (route.firstChild) {
@@ -169,12 +159,9 @@ export class Navbar {
       });
 
     // Close menu when clicking outside
-    document.addEventListener("click", (event) => {
+    document.addEventListener("click", event => {
       const target = event.target as HTMLElement;
-      if (
-        !target.closest(".compact-menu") &&
-        !target.closest(".compact-menu-button")
-      ) {
+      if (!target.closest(".compact-menu") && !target.closest(".compact-menu-button")) {
         if (this.isMobileMenuOpen()) {
           console.log("Closing menu due to outside click");
           this.isMobileMenuOpen.set(false);
@@ -183,7 +170,7 @@ export class Navbar {
     });
 
     // Close menu on escape key
-    document.addEventListener("keydown", (event) => {
+    document.addEventListener("keydown", event => {
       if (event.key === "Escape" && this.isMobileMenuOpen()) {
         console.log("Closing menu due to escape key");
         this.isMobileMenuOpen.set(false);
@@ -193,17 +180,12 @@ export class Navbar {
 
   toggleMobileMenu() {
     console.log("Toggle menu clicked, current state:", this.isMobileMenuOpen());
-    this.isMobileMenuOpen.update((open) => !open);
+    this.isMobileMenuOpen.update(open => !open);
     console.log("Menu state after toggle:", this.isMobileMenuOpen());
   }
 
   navigate(path: string, queryParams?: { [key: string]: string }) {
-    console.log(
-      "Navigate to:",
-      path,
-      queryParams ? "with params:" : "",
-      queryParams || ""
-    );
+    console.log("Navigate to:", path, queryParams ? "with params:" : "", queryParams || "");
 
     if (queryParams) {
       this.router
@@ -211,7 +193,7 @@ export class Navbar {
         .then(() => {
           this.closeMobileMenu();
         })
-        .catch((error) => {
+        .catch(error => {
           console.error("Navigation failed:", error);
           this.closeMobileMenu();
         });
@@ -221,7 +203,7 @@ export class Navbar {
         .then(() => {
           this.closeMobileMenu();
         })
-        .catch((error) => {
+        .catch(error => {
           console.error("Navigation failed:", error);
           this.closeMobileMenu();
         });
@@ -267,7 +249,7 @@ export class Navbar {
     if (!item.children) return this.isNavItemActive(item);
 
     // Check if any child is active
-    return item.children.some((child) => this.isNavItemActive(child));
+    return item.children.some(child => this.isNavItemActive(child));
   }
 
   private updateRouteState(): void {

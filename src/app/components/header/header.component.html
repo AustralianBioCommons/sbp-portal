@@ -8,19 +8,21 @@
     <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8">
       <nav class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
         @for (tab of tabs; track tab.id) {
-        <button (click)="selectTab(tab.id)" [class]="
-                  isActiveTab(tab.id)
-                  ? 'text-primary border-b-3 border-border-dark font-semibold'
-                  : 'text-biocommons-secondary-blue hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent'
-              "
-              class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200"
-              type="button"
-            >
-              {{ tab.label }}
-            </button>
-          }
-        </nav>
-      </div>
+        <button
+          (click)="selectTab(tab.id)"
+          [class]="
+            isActiveTab(tab.id)
+              ? 'text-primary border-b-3 border-gray-800 font-semibold'
+              : 'text-blue-900 hover:text-blue-800 hover:border-gray-300 border-b-2 border-transparent'
+          "
+          class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-all duration-200 hover:scale-110 transform origin-center"
+          type="button"
+        >
+          {{ tab.label }}
+        </button>
+        }
+      </nav>
     </div>
+  </div>
   }
 </div>

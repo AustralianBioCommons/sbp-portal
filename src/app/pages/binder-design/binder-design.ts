@@ -1,12 +1,13 @@
-import { Component, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
+import { ButtonComponent } from "../../components/button/button.component";
 
 @Component({
   selector: "app-binder-design",
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: "./binder-design.html"
+  imports: [CommonModule, ButtonComponent],
+  templateUrl: "./binder-design.html",
 })
 export class BinderDesignComponent {
   private router = inject(Router);
@@ -21,7 +22,6 @@ export class BinderDesignComponent {
 
   navigateToTool(toolId: string) {
     console.log(`Navigating to tool: ${toolId}`);
-
 
     // Navigate to the tool route
     this.router.navigate(["/tools", toolId]);
@@ -48,7 +48,7 @@ export class BinderDesignComponent {
       id: "partial-diffusion",
       label: "Partial Diffusion",
       href: "/partial-diffusion",
-    }
+    },
   ];
 
   // Tools
@@ -67,31 +67,30 @@ export class BinderDesignComponent {
       id: "boltzgen",
       label: "BoltzGen",
       href: "/tools/boltzgen",
-    }
+    },
   ];
 
   // Community resources
   communityResources = [
     {
       title: "Documentation",
-      description:
-        "Comprehensive guides and tutorials for protein binder design",
-      href: "/docs"
+      description: "Comprehensive guides and tutorials for protein binder design",
+      href: "/docs",
     },
     {
       title: "Community Forum",
       description: "Connect with other researchers and share insights",
-      href: "/forum"
+      href: "/forum",
     },
     {
       title: "Best Practices",
       description: "Learn from established protocols and methodologies",
-      href: "/best-practices"
+      href: "/best-practices",
     },
     {
       title: "Publication Repository",
       description: "Access relevant research papers and publications",
-      href: "/publications"
-    }
+      href: "/publications",
+    },
   ];
 }

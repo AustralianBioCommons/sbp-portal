@@ -1,9 +1,9 @@
-import { Component, signal, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { Router, RouterModule, NavigationEnd } from "@angular/router";
+import { Component, inject, signal } from "@angular/core";
+import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { filter } from "rxjs/operators";
-import { Navbar } from "../navbar/navbar.component";
 import { Login } from "../login/login.component";
+import { Navbar } from "../navbar/navbar.component";
 
 export interface TabItem {
   id: string;
@@ -15,7 +15,7 @@ export interface TabItem {
   selector: "app-header",
   standalone: true,
   imports: [CommonModule, RouterModule, Navbar, Login],
-  templateUrl: "./header.component.html"
+  templateUrl: "./header.component.html",
 })
 export class Header {
   private router = inject(Router);
@@ -27,23 +27,23 @@ export class Header {
     {
       id: "binder-design",
       label: "Binder Design",
-      description: "Design and optimize protein binders for specific targets"
+      description: "Design and optimize protein binders for specific targets",
     },
     {
       id: "structure-prediction",
       label: "Structure Prediction",
-      description: "Predict protein structures using advanced algorithms"
+      description: "Predict protein structures using advanced algorithms",
     },
     {
       id: "structure-search",
       label: "Structure Search",
-      description: "Search and compare protein structures in databases"
+      description: "Search and compare protein structures in databases",
     },
     {
       id: "tools",
       label: "Tools",
-      description: "Access various computational biology tools and utilities"
-    }
+      description: "Access various computational biology tools and utilities",
+    },
   ];
 
   constructor() {
