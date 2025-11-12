@@ -7,7 +7,7 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   height: 115px;
-  background-color: color-mix(in srgb, theme('colors.biocommons.white') 95%, transparent);
+  background-color: color-mix(in srgb, theme("colors.white") 95%, transparent);
 
   /* Ensure content container matches the navbar height */
   .flex.justify-between.items-center {
@@ -23,6 +23,7 @@
 
 /* Menu animation - using custom keyframes */
 .compact-menu {
+  background-color: theme("colors.gray.100");
   animation: slideDownIn 0.25s ease-out;
 }
 
@@ -51,16 +52,20 @@ ng-icon {
 }
 
 .compact-menu-button.active {
-  background-color: theme('colors.biocommons.secondary-blue') !important;
-  color: theme('colors.bg.secondary') !important;
-  border-color: theme('colors.biocommons.secondary-blue') !important;
+  background-color: theme("colors.blue.400") !important;
+  color: theme("colors.gray.800") !important;
+  border-color: theme("colors.blue.900") !important;
 
   ng-icon * {
     stroke-width: 3.5 !important;
   }
 
   &:hover {
-    background-color: color-mix(in srgb, theme('colors.biocommons.secondary-blue') 80%, black) !important;
+    background-color: color-mix(
+      in srgb,
+      theme("colors.blue.900") 80%,
+      black
+    ) !important;
     opacity: 0.9;
   }
 }
@@ -78,43 +83,19 @@ ng-icon {
   }
 }
 
-/* Active nav item styling - complex enough to keep in SCSS */
-.nav-item-active {
-  background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 10%, transparent) !important;
-  color: theme('colors.biocommons.secondary-blue') !important;
-  font-weight: 600 !important;
-  border-left: 3px solid theme('colors.biocommons.primary-teal');
-
-  &:hover {
-    background-color: color-mix(in srgb, theme('colors.biocommons.primary-teal') 15%, transparent) !important;
-    transform: translateX(0) !important;
-  }
-
-  span {
-    color: theme('colors.biocommons.secondary-blue') !important;
-    font-weight: 600;
-  }
-
-  ng-icon {
-    color: theme('colors.biocommons.primary-teal') !important;
-  }
-
-  img {
-    filter: hue-rotate(180deg) saturate(1.2) !important;
-  }
-}
+/* Active nav item styling moved to button component */
 
 /* Active parent nav item */
 .nav-parent-active {
-  color: theme('colors.biocommons.secondary-blue') !important;
+  color: theme("colors.blue.900") !important;
   font-weight: 700 !important;
 
   span {
-    color: theme('colors.biocommons.secondary-blue') !important;
+    color: theme("colors.blue.900") !important;
   }
 
   ng-icon {
-    color: theme('colors.biocommons.primary-teal') !important;
+    color: theme("colors.teal.500") !important;
   }
 
   img {
@@ -133,8 +114,7 @@ ng-icon {
 
 /* Ensure close button styling takes precedence even within active parent */
 .nav-parent-active .close-button {
-
   ng-icon {
-    color: inherit !important;
+    color: theme("colors.blue.900") !important;
   }
 }

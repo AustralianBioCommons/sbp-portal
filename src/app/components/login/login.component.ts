@@ -1,17 +1,16 @@
-import { Component, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { AuthService } from "../../cores/auth.service";
-import { ButtonComponent } from "../button/button.component";
+import { Component, inject } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
-  heroUser,
   heroArrowRightOnRectangle,
+  heroUser,
 } from "@ng-icons/heroicons/outline";
 import { environment } from "../../../environments/environment";
+import { AuthService } from "../../cores/auth.service";
 
 @Component({
   selector: "app-login",
-  imports: [CommonModule, ButtonComponent, NgIconComponent],
+  imports: [CommonModule, NgIconComponent],
   providers: [
     provideIcons({
       heroUser,

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { Router, ActivatedRoute } from "@angular/router";
 import { By } from "@angular/platform-browser";
+import { ActivatedRoute, Router } from "@angular/router";
 import { of } from "rxjs";
 
 import { NotFoundComponent } from "./not-found";
@@ -98,7 +98,9 @@ describe("NotFoundComponent", () => {
   });
 
   it("should have four popular links", () => {
-    const popularLinks = fixture.debugElement.queryAll(By.css(".popular-link"));
+    const popularLinks = fixture.debugElement.queryAll(
+      By.css(".link-grid app-button")
+    );
     expect(popularLinks.length).toBe(4);
 
     const expectedTexts = [
@@ -114,7 +116,9 @@ describe("NotFoundComponent", () => {
   });
 
   it("should have support email link", () => {
-    const supportLink = fixture.debugElement.query(By.css(".support-link"));
+    const supportLink = fixture.debugElement.query(
+      By.css("a[href='mailto:support@biocommons.org.au']")
+    );
     expect(supportLink.nativeElement.getAttribute("href")).toBe(
       "mailto:support@biocommons.org.au"
     );
@@ -124,7 +128,7 @@ describe("NotFoundComponent", () => {
     spyOn(component, "goHome");
 
     const homeButton = fixture.debugElement.query(
-      By.css(".suggestion-button.primary")
+      By.css(".suggestion-cards app-button button")
     );
     homeButton.nativeElement.click();
 
@@ -134,10 +138,10 @@ describe("NotFoundComponent", () => {
   it("should trigger goBack when back button is clicked", () => {
     spyOn(component, "goBack");
 
-    const backButton = fixture.debugElement.query(
-      By.css(".suggestion-button.secondary")
+    const backButtons = fixture.debugElement.queryAll(
+      By.css(".suggestion-cards app-button button")
     );
-    backButton.nativeElement.click();
+    backButtons[1].nativeElement.click(); // Second button is "Go back"
 
     expect(component.goBack).toHaveBeenCalled();
   });
@@ -145,10 +149,10 @@ describe("NotFoundComponent", () => {
   it("should trigger searchResources when search button is clicked", () => {
     spyOn(component, "searchResources");
 
-    const searchButton = fixture.debugElement.query(
-      By.css(".suggestion-button.accent")
+    const searchButtons = fixture.debugElement.queryAll(
+      By.css(".suggestion-cards app-button button")
     );
-    searchButton.nativeElement.click();
+    searchButtons[2].nativeElement.click(); // Third button is "Search portal"
 
     expect(component.searchResources).toHaveBeenCalled();
   });
@@ -194,7 +198,9 @@ describe("NotFoundComponent", () => {
   });
 
   it("should trigger navigation when popular links are clicked", () => {
-    const popularLinks = fixture.debugElement.queryAll(By.css(".popular-link"));
+    const popularLinks = fixture.debugElement.queryAll(
+      By.css(".link-grid app-button button")
+    );
 
     spyOn(component, "navigateToBinderDesign");
     spyOn(component, "navigateToStructurePrediction");
