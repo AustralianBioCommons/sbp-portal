@@ -4,17 +4,15 @@
     <div class="flex justify-between items-center">
       <!-- Logo and Brand (Left corner) -->
       <div class="flex items-center">
-        <app-button
-          variant="secondary"
-          widthClass="w-auto"
-          colorClasses="flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
+        <button
+          class="flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
           (click)="navigate('/themes', { tab: 'binder-design' })"
           (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
           (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
           aria-label="Navigate to home page"
         >
           <img class="w-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
-        </app-button>
+        </button>
       </div>
 
       <!-- Compact Menu Button (Right side) -->
