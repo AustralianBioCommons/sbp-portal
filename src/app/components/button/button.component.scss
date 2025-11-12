@@ -1,0 +1,26 @@
+/* Button component styles */
+
+/* Active button styling - transferred from navbar */
+.btn-active {
+  background-color: color-mix(
+    in srgb,
+    theme("colors.teal.300") 10%,
+    transparent
+  ) !important;
+  color: theme("colors.blue.900") !important;
+  font-weight: 600 !important;
+  border-left: 4px solid theme("colors.teal.300") !important;
+
+  span {
+    color: theme("colors.blue.900") !important;
+    font-weight: 400;
+  }
+
+  ng-icon {
+    color: theme("colors.teal.500") !important;
+  }
+
+  img {
+    filter: hue-rotate(180deg) saturate(1.2) !important;
+  }
+}

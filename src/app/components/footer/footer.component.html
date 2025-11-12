@@ -7,26 +7,35 @@
         <div class="lg:col-span-3 sm:col-span-2 text-center">
           <div class="grid grid-cols-2">
             @for (logo of logos.slice(0, 2); track logo.href) {
-              <a
-                class="group logo-container flex items-center justify-center transition hover:opacity-80"
-                [href]="logo.href"
-                target="_blank"
-                rel="noopener"
-              >
-                <img
-                  [src]="logo.src"
-                  [alt]="logo.alt"
-                  class="logo-image"
-                  loading="lazy"
-                />
-              </a>
+            <a
+              class="group logo-container flex items-center justify-center transition hover:opacity-80"
+              [href]="logo.href"
+              target="_blank"
+              rel="noopener"
+            >
+              <img
+                [src]="logo.src"
+                [alt]="logo.alt"
+                class="logo-image"
+                loading="lazy"
+              />
+            </a>
             }
           </div>
           @if (logos.length > 2) {
           <div class="flex">
-            <a class="group logo-container flex items-center justify-center transition hover:opacity-80" [href]="logos[2].href"
-              target="_blank" rel="noopener">
-              <img [src]="logos[2].src" [alt]="logos[2].alt" class="logo-image" loading="lazy" />
+            <a
+              class="group logo-container flex items-center justify-center transition hover:opacity-80"
+              [href]="logos[2].href"
+              target="_blank"
+              rel="noopener"
+            >
+              <img
+                [src]="logos[2].src"
+                [alt]="logos[2].alt"
+                class="logo-image"
+                loading="lazy"
+              />
             </a>
           </div>
           }
@@ -34,23 +43,27 @@
 
         <!-- Columns 2-4: Link Groups (each takes 1 column with centered text) -->
         @for (group of linkGroups; track group.heading) {
-        <div class="flex flex-col justify-center text-center">
+        <div class="flex flex-col justify-center">
           <div class="space-y-6">
             <p class="footer-heading text-sm">
               {{ group.heading }}
             </p>
             <ul class="space-y-2 text-sm">
-                @for (link of group.links; track link.href) {
-                <li>
-                  <a class="footer-link" [href]="link.href" [attr.target]="link.external ? '_blank' : null"
-                    [attr.rel]="link.external ? 'noopener noreferrer' : null">
-                    {{ link.label }}
-                  </a>
-                </li>
-                }
-              </ul>
-              </div>
-              </div>
+              @for (link of group.links; track link.href) {
+              <li>
+                <a
+                  class="footer-link"
+                  [href]="link.href"
+                  [attr.target]="link.external ? '_blank' : null"
+                  [attr.rel]="link.external ? 'noopener noreferrer' : null"
+                >
+                  {{ link.label }}
+                </a>
+              </li>
+              }
+            </ul>
+          </div>
+        </div>
         }
       </div>
 
@@ -133,20 +146,20 @@
         <!-- Social Links -->
         <div class="flex justify-center gap-3 pt-4">
           @for (social of socialLinks; track social.href) {
-            <a
-              class="footer-social-link inline-flex h-10 w-10 items-center justify-center rounded-full border"
-              [href]="social.href"
-              target="_blank"
-              rel="noopener"
+          <a
+            class="footer-social-link inline-flex h-10 w-10 items-center justify-center rounded-full border"
+            [href]="social.href"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="sr-only">{{ social.label }}</span>
+            <ng-icon
+              [name]="social.iconName"
+              class="h-5 w-5"
+              aria-hidden="true"
             >
-              <span class="sr-only">{{ social.label }}</span>
-              <ng-icon
-                [name]="social.iconName"
-                class="h-5 w-5"
-                aria-hidden="true"
-              >
-              </ng-icon>
-            </a>
+            </ng-icon>
+          </a>
           }
         </div>
       </div>

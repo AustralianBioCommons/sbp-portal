@@ -1,23 +1,19 @@
-import { Component, inject, signal } from "@angular/core";
+import { animate, style, transition, trigger } from "@angular/animations";
 import { CommonModule } from "@angular/common";
-import { Router, ActivatedRoute, NavigationEnd } from "@angular/router";
-import {
-  trigger,
-  style,
-  transition,
-  animate,
-} from "@angular/animations";
-import { filter, map } from "rxjs/operators";
-import { AuthService } from "../../cores/auth.service";
+import { Component, inject, signal } from "@angular/core";
+import { ActivatedRoute, NavigationEnd, Router } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
-  heroHome,
-  heroWrenchScrewdriver,
   heroBars3,
-  heroXMark,
+  heroHome,
   heroInformationCircle,
+  heroWrenchScrewdriver,
+  heroXMark,
 } from "@ng-icons/heroicons/outline";
 import { tablerCalendarStar } from "@ng-icons/tabler-icons";
+import { filter, map } from "rxjs/operators";
+import { AuthService } from "../../cores/auth.service";
+import { ButtonComponent } from "../button/button.component";
 
 export interface NavItem {
   label: string;
@@ -32,7 +28,7 @@ export interface NavItem {
 
 @Component({
   selector: "app-navbar",
-  imports: [CommonModule, NgIconComponent],
+  imports: [CommonModule, NgIconComponent, ButtonComponent],
   providers: [
     provideIcons({
       heroHome,
@@ -40,8 +36,8 @@ export interface NavItem {
       heroBars3,
       heroXMark,
       heroInformationCircle,
-      tablerCalendarStar
-    })
+      tablerCalendarStar,
+    }),
   ],
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.scss",
@@ -52,16 +48,16 @@ export interface NavItem {
         animate(
           "250ms ease-out",
           style({ transform: "translateY(0)", opacity: 1 })
-        )
+        ),
       ]),
       transition(":leave", [
         animate(
           "200ms ease-in",
           style({ transform: "translateY(-10px)", opacity: 0 })
-        )
-      ])
-    ])
-  ]
+        ),
+      ]),
+    ]),
+  ],
 })
 export class Navbar {
   private auth = inject(AuthService);
@@ -88,21 +84,21 @@ export class Navbar {
         {
           label: "Binder design",
           path: "/themes",
-          queryParams: { tab: "binder-design" }
+          queryParams: { tab: "binder-design" },
         },
         {
           label: "Structure prediction",
           path: "/themes",
           queryParams: { tab: "structure-prediction" },
-          requiresAuth: false
+          requiresAuth: false,
         },
         {
           label: "Structure search",
           path: "/themes",
           queryParams: { tab: "structure-search" },
-          requiresAuth: false
-        }
-      ]
+          requiresAuth: false,
+        },
+      ],
     },
     {
       label: "Pre-config workflows",
@@ -110,43 +106,43 @@ export class Navbar {
       children: [
         {
           label: "De Novo Design",
-          path: "/workflow/de-novo-design"
+          path: "/workflow/de-novo-design",
         },
         {
           label: "Motif Scaffolding",
-          path: "/workflow/motif-scaffolding"
+          path: "/workflow/motif-scaffolding",
         },
         {
           label: "Partial Diffusion",
-          path: "/workflow/partial-diffusion"
-        }
-      ]
+          path: "/workflow/partial-diffusion",
+        },
+      ],
     },
     {
       label: "Tools",
       path: "/tools",
-      icon: "heroWrenchScrewdriver"
+      icon: "heroWrenchScrewdriver",
     },
     {
       label: "Jobs",
       path: "/jobs",
-      image: "/assets/job-run.png"
+      image: "/assets/job-run.png",
     },
     {
       label: "About",
       path: "/about",
-      icon: "heroInformationCircle"
+      icon: "heroInformationCircle",
     },
     {
       label: "Workshops & Events",
       path: "/events",
-      icon: "tablerCalendarStar"
+      icon: "tablerCalendarStar",
     },
     {
       label: "Support/FAQ",
       path: "/support",
-      image: "/assets/contact-support-outline-rounded.png"
-    }
+      image: "/assets/contact-support-outline-rounded.png",
+    },
   ];
 
   constructor() {
