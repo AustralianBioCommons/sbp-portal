@@ -15,11 +15,7 @@
     &:hover {
       color: theme("colors.teal.500");
       border-color: theme("colors.gray.300");
-      background-color: color-mix(
-        in srgb,
-        theme("colors.teal.500") 5%,
-        transparent
-      );
+      background-color: color-mix(in srgb, theme("colors.teal.500") 5%, transparent);
     }
 
     &:focus-visible {

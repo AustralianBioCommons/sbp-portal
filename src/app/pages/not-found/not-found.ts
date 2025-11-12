@@ -2,11 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { Router, RouterModule } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import {
-  heroArrowLeft,
-  heroHome,
-  heroMagnifyingGlass,
-} from "@ng-icons/heroicons/outline";
+import { heroArrowLeft, heroHome, heroMagnifyingGlass } from "@ng-icons/heroicons/outline";
 import { ButtonComponent } from "src/app/components/button/button.component";
 
 @Component({

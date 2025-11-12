@@ -1,18 +1,7 @@
 <section class="w-full">
-  <!-- Page header -->
-  <header class="w-full bg-gray-50 border-b border-gray-200">
-    <div class="max-w-6xl mx-auto px-4 py-6">
-      <h1 class="text-2xl font-semibold text-gray-900">De Novo Design</h1>
-      <p class="mt-2 text-sm text-gray-500">
-        Predict a single protein structure using your preferred tool. Configure inputs, tweak
-        parameters, and review before submission.
-      </p>
-    </div>
-  </header>
-
   <div class="max-w-6xl mx-auto px-4 py-6">
     <!-- Tabs -->
-    <nav class="sticky top-0 z-10 bg-white">
+    <nav class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
       <ul class="flex gap-8 border-b border-gray-200">
         @for (tab of tabs; track tab.id) {
         <li>
@@ -20,10 +9,10 @@
             (click)="switchTab(tab.id)"
             [class]="
               isActiveTab(tab.id)
-                ? 'text-primary border-b-3 border-gray-400 font-semibold'
-                : 'text-blue-800 hover:text-blue-700 hover:border-gray-300 border-b-2 border-transparent'
+                ? 'text-primary border-b-3 border-gray-800 font-semibold'
+                : 'text-blue-900 hover:text-blue-800 hover:border-gray-300 border-b-2 border-transparent'
             "
-            class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-colors duration-200"
+            class="whitespace-nowrap py-4 px-1 font-medium text-sm transition-all duration-200 hover:scale-110 transform origin-center"
             type="button"
           >
             {{ tab.label }}
@@ -34,6 +23,16 @@
         }
       </ul>
     </nav>
+    <!-- Page header -->
+    <header class="w-full bg-gray-50 border-b border-gray-200">
+      <div class="max-w-6xl mx-auto px-4 py-6">
+        <h1 class="text-2xl font-semibold text-gray-900">De Novo Design</h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Predict a single protein structure using your preferred tool. Configure inputs, tweak
+          parameters, and review before submission.
+        </p>
+      </div>
+    </header>
 
     <!-- Overview Tab Content -->
     @if (isActiveTab('overview')) {
@@ -54,18 +53,20 @@
         <h3 class="text-base font-semibold text-gray-900 mb-3">Select a tool</h3>
         <div class="flex flex-wrap gap-2">
           @for (tool of tools; track tool.id) {
-          <button
+          <app-button
             type="button"
+            variant="secondary"
             (click)="selectTool(tool.id)"
-            [class]="
-              'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer border-0 ' +
-              (isToolSelected(tool.id)
-                ? 'bg-white text-blue-800 shadow-md'
-                : 'bg-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900')
-            "
+            widthClass="w-auto"
+            borderRadius="rounded-3xl"
+            colorClasses="!px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 transition-all duration-200 {{
+              isToolSelected(tool.id)
+                ? '!bg-white !text-black transform scale-105 shadow-sm'
+                : '!bg-white !text-blue-900 hover:!text-gray-700 hover:shadow-lg'
+            }}"
           >
             {{ tool.label }}
-          </button>
+          </app-button>
           } @empty {
           <span class="text-sm text-gray-500">No tools available</span>
           }
@@ -109,13 +110,17 @@
           <p class="text-sm text-gray-600">
             You must be logged in to configure options and run the workflow.
           </p>
-          <button
-            type="button"
-            class="mt-3 px-4 py-2 rounded-DEFAULT-10 text-white bg-blue-800 hover:bg-blue-600"
-            (click)="auth.login()"
-          >
-            Log in
-          </button>
+          <div class="mt-3 flex justify-center">
+            <app-button
+              type="button"
+              variant="primary"
+              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-900"
+              borderRadius="rounded-DEFAULT-10"
+              (click)="auth.login()"
+            >
+              Log in
+            </app-button>
+          </div>
         </div>
       </div>
       }
@@ -123,18 +128,20 @@
       <ol class="grid grid-cols-4 gap-2">
         @for (s of steps; track s.id) {
         <li class="flex items-center gap-2">
-          <button
+          <app-button
             type="button"
+            variant="secondary"
             (click)="goToStep(s.id)"
             [disabled]="(auth.isAuthenticated$ | async) === false"
-            class="flex items-center gap-2 w-full p-2 rounded-DEFAULT-10 border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            [ngClass]="{
-              'border-blue-500 bg-white text-primary': currentStep() === s.id,
-              'border-teal-500 bg-teal-500/5 text-gray-700':
-                currentStep() !== s.id && isStepComplete(s.id),
-              'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100':
-                currentStep() !== s.id && !isStepComplete(s.id)
-            }"
+            borderRadius="rounded-DEFAULT-10"
+            widthClass="w-full"
+            colorClasses="flex items-center gap-2 p-2 border transition-colors disabled:opacity-60 disabled:cursor-not-allowed {{
+              currentStep() === s.id
+                ? 'border-blue-500 bg-white text-primary'
+                : currentStep() !== s.id && isStepComplete(s.id)
+                ? 'border-teal-500 bg-teal-500/5 text-gray-700'
+                : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
+            }}"
           >
             <span
               class="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded-full"
@@ -148,7 +155,7 @@
               @if (isStepComplete(s.id) && currentStep() !== s.id) { ✓ } @else { {{ s.id }} }
             </span>
             <span class="text-sm">{{ s.title }}</span>
-          </button>
+          </app-button>
         </li>
         } @empty {
         <li class="text-sm text-gray-500">No steps defined</li>
@@ -169,21 +176,16 @@
           <!-- Table Header with Add Row Button -->
           <div class="flex justify-between items-center mb-4">
             <h7 class="text-xs font-semibold text-gray-900 tracking-wide">Input Configuration</h7>
-            <button
+            <app-button
               type="button"
-              class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-800 border border-blue-800 rounded-DEFAULT-10 hover:bg-blue-600 hover:text-white transition-colors"
+              variant="secondary"
               (click)="addInputRow()"
+              borderRadius="rounded-DEFAULT-10"
+              colorClasses="text-xs text-blue-900 hover:text-blue-800 flex items-center gap-1 !px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 transition-all duration-200"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+              <ng-icon name="heroPlus" class="w-4 h-4"></ng-icon>
               Add Row
-            </button>
+            </app-button>
           </div>
           <!-- Input Configuration Table -->
           <div class="border border-gray-200 rounded-DEFAULT-10 overflow-hidden">
@@ -207,7 +209,7 @@
                       <div class="flex items-center gap-1">
                         <span>{{ field.label || field.name }}</span>
                         @if (field.required) {
-                        <span class="text-error">*</span>
+                        <span class="text-error text-pink-600">*</span>
                         }
                         <svg
                           class="w-3 h-3 text-gray-400"
@@ -261,21 +263,15 @@
                     <td class="px-3 py-2">
                       <button
                         type="button"
-                        class="text-error hover:text-red-700 p-1 rounded transition-colors"
+                        variant="ghost"
                         (click)="removeInputRow(row.id)"
                         [disabled]="inputRows().length <= 1"
                         [class.opacity-50]="inputRows().length <= 1"
                         [class.cursor-not-allowed]="inputRows().length <= 1"
                         title="Remove row"
+                        class="text-error text-pink-600 hover:text-pink-500 p-1 rounded transition-colors"
                       >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
+                        <ng-icon name="heroTrash" class="w-4 h-4"></ng-icon>
                       </button>
                     </td>
                     <!-- Dynamic Field Inputs -->
@@ -308,7 +304,7 @@
                           (blur)="validateRowField(row.id, field.name)"
                         />
                         @if (hasRowFieldError(row.id, field.name)) {
-                        <div class="text-error text-xs mt-1">
+                        <div class="text-error text-xs mt-1 text-pink-600">
                           {{ getRowFieldError(row.id, field.name) }}
                         </div>
                         }
@@ -342,7 +338,7 @@
                           (blur)="validateRowField(row.id, field.name)"
                         />
                         @if (hasRowFieldError(row.id, field.name)) {
-                        <div class="text-error text-xs mt-1">
+                        <div class="text-error text-xs mt-1 text-pink-600">
                           {{ getRowFieldError(row.id, field.name) }}
                         </div>
                         }
@@ -371,7 +367,7 @@
                           (blur)="validateRowField(row.id, field.name)"
                         />
                         @if (hasRowFieldError(row.id, field.name)) {
-                        <div class="text-error text-xs mt-1 text-center">
+                        <div class="text-error text-xs mt-1 text-center text-pink-600">
                           {{ getRowFieldError(row.id, field.name) }}
                         </div>
                         }
@@ -408,7 +404,7 @@
                           } }
                         </select>
                         @if (hasRowFieldError(row.id, field.name)) {
-                        <div class="text-error text-xs mt-1">
+                        <div class="text-error text-xs mt-1 text-pink-600">
                           {{ getRowFieldError(row.id, field.name) }}
                         </div>
                         }
@@ -430,7 +426,7 @@
                           (blur)="validateRowField(row.id, field.name)"
                         />
                         @if (hasRowFieldError(row.id, field.name)) {
-                        <div class="text-error text-xs mt-1">
+                        <div class="text-error text-xs mt-1 text-pink-600">
                           {{ getRowFieldError(row.id, field.name) }}
                         </div>
                         }
@@ -461,7 +457,7 @@
             <span class="text-sm text-gray-600">Form Status:</span>
             <span
               class="text-sm font-medium"
-              [class]="isFormValid() ? 'text-success' : 'text-error'"
+              [class]="isFormValid() ? 'text-success' : 'text-error text-pink-600'"
             >
               {{ isFormValid() ? "Valid" : "Invalid" }}
             </span>
@@ -480,7 +476,7 @@
           </div>
 
           @if (!isFormValid() && getFormValidationSummary().errorCount > 0) {
-          <div class="mt-2 text-xs text-error">
+          <div class="mt-2 text-xs text-error text-pink-600">
             <p>Please fix the validation errors in the table above.</p>
           </div>
           }
@@ -517,33 +513,39 @@
         }
         <!-- Step nav -->
         <div class="mt-6 flex items-center justify-between">
-          <button
+          <app-button
             type="button"
-            class="px-4 py-2 rounded-DEFAULT-10 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="outline"
             (click)="previousStep()"
             [disabled]="!canGoPrev() || (auth.isAuthenticated$ | async) === false"
+            borderRadius="rounded-DEFAULT-10"
+            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
-          </button>
+          </app-button>
           <div class="flex items-center gap-2">
             @if (currentStep() < steps.length) {
-            <button
+            <app-button
               type="button"
-              class="px-4 py-2 rounded-DEFAULT-10 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              variant="primary"
               (click)="nextStep()"
               [disabled]="(auth.isAuthenticated$ | async) === false"
+              borderRadius="rounded-DEFAULT-10"
+              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Next
-            </button>
+            </app-button>
             } @if (currentStep() === steps.length) {
-            <button
+            <app-button
               type="button"
-              class="px-4 py-2 rounded-DEFAULT-10 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed"
+              variant="primary"
               (click)="submitWorkflow()"
               [disabled]="(auth.isAuthenticated$ | async) === false"
+              borderRadius="rounded-DEFAULT-10"
+              colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed"
             >
               Submit
-            </button>
+            </app-button>
             }
           </div>
         </div>

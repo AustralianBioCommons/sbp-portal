@@ -53,7 +53,7 @@ export class Header {
     }, 0);
 
     this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
+      .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.checkRoute(event.url);
       });

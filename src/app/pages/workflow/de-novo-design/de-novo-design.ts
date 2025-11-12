@@ -1,7 +1,10 @@
 import { CommonModule } from "@angular/common";
 import { Component, computed, inject, OnDestroy, OnInit, Signal, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { heroPlus, heroTrash } from "@ng-icons/heroicons/outline";
 import { filter, Subscription, take } from "rxjs";
+import { ButtonComponent } from "../../../components/button/button.component";
 import { AuthService } from "../../../cores/auth.service";
 import {
   InputSchemaField,
@@ -35,7 +38,8 @@ interface InputRow {
 @Component({
   selector: "app-de-novo-design",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ButtonComponent, NgIconComponent],
+  providers: [provideIcons({ heroPlus, heroTrash })],
   host: {
     class: "block w-full",
   },
@@ -219,11 +223,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         const hasProperties = !!properties;
         const required = items?.required;
 
-        console.log("  - has items:", hasItems);
-        console.log("  - has items.properties:", hasProperties);
-        console.log("  - items.required:", required);
-        console.log("  - properties keys:", properties ? Object.keys(properties) : "none");
-
         if (!items || !properties) {
           console.error("❌ Schema does not have the expected bindflow structure");
           console.error("Expected: schema.items.properties, got:", { items: rawSchema.items });
@@ -236,15 +235,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             console.log("✅ Input Schema parsed successfully!");
             console.log("📋 Parsed Schema:", parsedSchema);
             console.log("📊 Sections count:", parsedSchema.sections.length);
-
-            if (parsedSchema.sections.length > 0) {
-              console.log("📝 First section:", parsedSchema.sections[0]);
-              console.log("🔢 Total fields:", parsedSchema.sections[0].fields.length);
-              console.log(
-                "🏷️ Field names:",
-                parsedSchema.sections[0].fields.map(f => f.name)
-              );
-            }
 
             // Store schema data in signals for UI construction
             this.inputSchemaData.set(parsedSchema);
@@ -264,14 +254,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
             // Initialize table with one default row
             this.initializeDefaultRow();
-
-            console.log("🎯 Required fields count:", requiredFields.length);
-            console.log("📝 Default values:", defaultValues);
-
-            // Log first few fields for debugging
-            if (requiredFields.length > 0) {
-              console.log("🎯 First required field:", requiredFields[0]);
-            }
           },
           error: parseError => {
             console.error("❌ Error parsing input schema:", parseError);
@@ -282,77 +264,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         console.error("💥 Error loading input schema:", error);
       },
     });
-  }
-
-  // Test method to manually trigger schema loading (for debugging)
-  testSchemaLoad() {
-    console.log("🧪 Manual test: Loading input schema...");
-    this.loadInputSchema();
-  }
-
-  // Test method with a simple mock schema
-  testWithMockSchema() {
-    console.log("🧪 Testing with mock schema...");
-    const mockSchema = {
-      title: "Mock Input Schema",
-      description: "Test schema for debugging",
-      sections: [
-        {
-          name: "basic_inputs",
-          title: "Basic Inputs",
-          description: "Basic input parameters",
-          fields: [
-            {
-              name: "input_file",
-              type: "file" as const,
-              label: "Input File",
-              description: "Select an input file",
-              required: true,
-            },
-            {
-              name: "output_name",
-              type: "string" as const,
-              label: "Output Name",
-              description: "Name for the output",
-              required: true,
-              placeholder: "Enter output name",
-            },
-            {
-              name: "num_iterations",
-              type: "number" as const,
-              label: "Number of Iterations",
-              description: "Number of iterations to run",
-              required: false,
-              default: 10,
-              validation: {
-                min: 1,
-                max: 100,
-              },
-            },
-          ],
-        },
-      ],
-    };
-
-    // Set the mock schema data
-    this.inputSchemaData.set(mockSchema);
-
-    // Extract all fields from all sections
-    const allFields = mockSchema.sections.flatMap(section => section.fields);
-    this.inputSchemaFields.set(allFields);
-
-    // Separate required and optional fields
-    const requiredFields = allFields.filter(field => field.required);
-
-    this.requiredInputFields.set(requiredFields);
-
-    // Initialize form data with default values
-    const defaultValues = this.inputSchemaService.generateDefaultValues(mockSchema);
-    this.initializeFormData(defaultValues);
-
-    console.log("✅ Mock schema loaded successfully!");
-    console.log("📋 Mock Schema:", mockSchema);
-    console.log("🎯 Required fields:", requiredFields);
   }
 
   submitWorkflow() {

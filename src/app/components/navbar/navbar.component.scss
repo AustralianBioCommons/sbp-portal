@@ -61,11 +61,7 @@ ng-icon {
   }
 
   &:hover {
-    background-color: color-mix(
-      in srgb,
-      theme("colors.blue.900") 80%,
-      black
-    ) !important;
+    background-color: color-mix(in srgb, theme("colors.blue.900") 80%, black) !important;
     opacity: 0.9;
   }
 }
