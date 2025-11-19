@@ -14,7 +14,7 @@ describe("BinderDesignComponent", () => {
 
     await TestBed.configureTestingModule({
       imports: [BinderDesignComponent],
-      providers: [{ provide: Router, useValue: mockRouter }]
+      providers: [{ provide: Router, useValue: mockRouter }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BinderDesignComponent);
@@ -32,26 +32,32 @@ describe("BinderDesignComponent", () => {
       expect(component.workflows.length).toBe(3);
     });
 
-    it('workflows should contain de novo design workflow', () => {
-    const deNovoWorkflow = component.workflows.find(w => w.id === 'de-novo-design');
-    expect(deNovoWorkflow).toBeDefined();
-    expect(deNovoWorkflow?.label).toBe('De Novo Design');
-    expect(deNovoWorkflow?.href).toBe('/workflow/de-novo-design');
-  });
+    it("workflows should contain de novo design workflow", () => {
+      const deNovoWorkflow = component.workflows.find(
+        (w) => w.id === "de-novo-design"
+      );
+      expect(deNovoWorkflow).toBeDefined();
+      expect(deNovoWorkflow?.label).toBe("De Novo Design");
+      expect(deNovoWorkflow?.href).toBe("/de-novo-design");
+    });
 
-  it('workflows should contain motif scaffolding workflow', () => {
-    const motifWorkflow = component.workflows.find(w => w.id === 'motif-scaffolding');
-    expect(motifWorkflow).toBeDefined();
-    expect(motifWorkflow?.label).toBe('Motif Scaffolding');
-    expect(motifWorkflow?.href).toBe('/workflow/motif-scaffolding');
-  });
+    it("workflows should contain motif scaffolding workflow", () => {
+      const motifWorkflow = component.workflows.find(
+        (w) => w.id === "motif-scaffolding"
+      );
+      expect(motifWorkflow).toBeDefined();
+      expect(motifWorkflow?.label).toBe("Motif Scaffolding");
+      expect(motifWorkflow?.href).toBe("/motif-scaffolding");
+    });
 
-  it('workflows should contain partial diffusion workflow', () => {
-    const partialWorkflow = component.workflows.find(w => w.id === 'partial-diffusion');
-    expect(partialWorkflow).toBeDefined();
-    expect(partialWorkflow?.label).toBe('Partial Diffusion');
-    expect(partialWorkflow?.href).toBe('/workflow/partial-diffusion');
-  });
+    it("workflows should contain partial diffusion workflow", () => {
+      const partialWorkflow = component.workflows.find(
+        (w) => w.id === "partial-diffusion"
+      );
+      expect(partialWorkflow).toBeDefined();
+      expect(partialWorkflow?.label).toBe("Partial Diffusion");
+      expect(partialWorkflow?.href).toBe("/partial-diffusion");
+    });
 
     it("should have all workflows with required properties", () => {
       component.workflows.forEach((workflow) => {
@@ -66,31 +72,36 @@ describe("BinderDesignComponent", () => {
   });
 
   describe("tools", () => {
-  it('tools should have correct tools structure', () => {
-    expect(component.tools).toBeDefined();
-    expect(component.tools.length).toBe(3);
-  });
+    it("tools should have correct tools structure", () => {
+      expect(component.tools).toBeDefined();
+      expect(component.tools.length).toBe(3);
+    });
 
-  it('tools should contain BindCraft tool', () => {
-    const bindCraftTool = component.tools.find(t => t.label === 'BindCraft');
-    expect(bindCraftTool).toBeDefined();
-    expect(bindCraftTool?.id).toBe('bindcraft');
-    expect(bindCraftTool?.href).toBe('/tools/bindcraft');
-  });
+    it("tools should contain BindCraft tool", () => {
+      const bindCraftTool = component.tools.find(
+        (t) => t.label === "BindCraft"
+      );
+      expect(bindCraftTool).toBeDefined();
+      expect(bindCraftTool?.id).toBe("bindcraft");
+      expect(bindCraftTool?.href).toBe("/tools/bindcraft");
+    });
 
-  it('tools should contain RFdiffusion tool', () => {
-    const rfdiffusionTool = component.tools.find(t => t.label === 'RFdiffusion');
-    expect(rfdiffusionTool).toBeDefined();
-    expect(rfdiffusionTool?.id).toBe('rfdiffusion');
-    expect(rfdiffusionTool?.href).toBe('/tools/rfdiffusion');
-  });
+    it("tools should contain RFdiffusion tool", () => {
+      const rfdiffusionTool = component.tools.find(
+        (t) => t.label === "RFdiffusion"
+      );
+      expect(rfdiffusionTool).toBeDefined();
+      expect(rfdiffusionTool?.id).toBe("rfdiffusion");
+      expect(rfdiffusionTool?.href).toBe("/tools/rfdiffusion");
+    });
 
-  it('tools should contain BoltzGen tool', () => {
-    const boltzGenTool = component.tools.find(t => t.label === 'BoltzGen');
-    expect(boltzGenTool).toBeDefined();
-    expect(boltzGenTool?.id).toBe('boltzgen');
-    expect(boltzGenTool?.href).toBe('/tools/boltzgen');
-  });    it("should have all tools with required properties", () => {
+    it("tools should contain BoltzGen tool", () => {
+      const boltzGenTool = component.tools.find((t) => t.label === "BoltzGen");
+      expect(boltzGenTool).toBeDefined();
+      expect(boltzGenTool?.id).toBe("boltzgen");
+      expect(boltzGenTool?.href).toBe("/tools/boltzgen");
+    });
+    it("should have all tools with required properties", () => {
       component.tools.forEach((tool) => {
         expect(tool.id).toBeDefined();
         expect(tool.id).not.toBe("");
@@ -202,10 +213,7 @@ describe("BinderDesignComponent", () => {
         component.navigateToWorkflow(workflowId);
 
         // Check router navigation was called
-        expect(mockRouter.navigate).toHaveBeenCalledWith([
-          "/workflow",
-          workflowId
-        ]);
+        expect(mockRouter.navigate).toHaveBeenCalledWith([`/${workflowId}`]);
 
         // Check console log
         expect(console.log).toHaveBeenCalledWith(
@@ -217,16 +225,13 @@ describe("BinderDesignComponent", () => {
         const workflowIds = [
           "de-novo-design",
           "motif-scaffolding",
-          "partial-diffusion"
+          "partial-diffusion",
         ];
 
         workflowIds.forEach((workflowId) => {
           component.navigateToWorkflow(workflowId);
 
-          expect(mockRouter.navigate).toHaveBeenCalledWith([
-            "/workflow",
-            workflowId
-          ]);
+          expect(mockRouter.navigate).toHaveBeenCalledWith([`/${workflowId}`]);
         });
 
         expect(mockRouter.navigate).toHaveBeenCalledTimes(workflowIds.length);

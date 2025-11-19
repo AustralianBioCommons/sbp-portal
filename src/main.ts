@@ -1,14 +1,15 @@
 // src/main.ts
+import { provideHttpClient, withInterceptors } from "@angular/common/http";
 import { bootstrapApplication } from "@angular/platform-browser";
 import { provideAnimations } from "@angular/platform-browser/animations";
-import { AppComponent } from "./app/app.component";
 import { provideRouter } from "@angular/router";
-import { provideHttpClient, withInterceptors } from "@angular/common/http";
+import { authHttpInterceptorFn, provideAuth0 } from "@auth0/auth0-angular";
+import { AppComponent } from "./app/app.component";
 import { authGuard } from "./app/cores/auth.guard";
-import { provideAuth0, authHttpInterceptorFn } from "@auth0/auth0-angular";
-import { environment } from "./environments/environment";
 import { Home } from "./app/pages/home/home";
 import { NotFoundComponent } from "./app/pages/not-found/not-found";
+import { DeNovoDesignComponent } from "./app/pages/workflow/de-novo-design/de-novo-design";
+import { environment } from "./environments/environment";
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -17,12 +18,8 @@ bootstrapApplication(AppComponent, {
       { path: "", redirectTo: "/themes", pathMatch: "full" },
       { path: "themes", component: Home },
       {
-        path: "single-structure-prediction",
-        redirectTo: "/themes?tab=structure-prediction",
-      },
-      {
-        path: "interaction-screening",
-        redirectTo: "/themes?tab=interaction-screening",
+        path: "de-novo-design",
+        component: DeNovoDesignComponent,
       },
       { path: "protected", component: AppComponent, canActivate: [authGuard] },
       // 404 catch-all route - MUST be last

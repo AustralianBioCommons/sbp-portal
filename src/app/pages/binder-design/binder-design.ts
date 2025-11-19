@@ -17,7 +17,7 @@ export class BinderDesignComponent {
     console.log(`Navigating to workflow: ${workflowId}`);
 
     // Navigate to the workflow route
-    this.router.navigate(["/workflow", workflowId]);
+    this.router.navigate([`/${workflowId}`]);
   }
 
   navigateToTool(toolId: string) {
@@ -36,17 +36,17 @@ export class BinderDesignComponent {
     {
       id: "de-novo-design",
       label: "De Novo Design",
-      href: "/workflow/de-novo-design",
+      href: "/de-novo-design",
     },
     {
       id: "motif-scaffolding",
       label: "Motif Scaffolding",
-      href: "/workflow/motif-scaffolding",
+      href: "/motif-scaffolding",
     },
     {
       id: "partial-diffusion",
       label: "Partial Diffusion",
-      href: "/workflow/partial-diffusion",
+      href: "/partial-diffusion",
     },
   ];
 

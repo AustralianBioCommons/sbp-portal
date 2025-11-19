@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { Router, ActivatedRoute, UrlTree } from "@angular/router";
-import { AuthService } from "../../cores/auth.service";
+import { ActivatedRoute, Router, UrlTree } from "@angular/router";
 import { of } from "rxjs";
+import { AuthService } from "../../cores/auth.service";
 
 import { Navbar } from "./navbar.component";
 
@@ -96,15 +96,16 @@ describe("Navbar", () => {
     it("should navigate to path with multiple query parameters", async () => {
       await component.navigate("/themes", {
         tab: "structure-prediction",
-        search: "test"
+        search: "test",
       });
 
       expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
         queryParams: { tab: "structure-prediction", search: "test" },
       });
+      expect(component.isMobileMenuOpen()).toBe(false);
     });
 
-    it("should handle navigation error gracefully", async () => {
+    it("should handle navigation error gracefully without query params", async () => {
       mockRouter.navigate.and.returnValue(Promise.reject("Navigation error"));
       spyOn(console, "error");
 
@@ -120,6 +121,28 @@ describe("Navbar", () => {
       expect(console.error).toHaveBeenCalledWith(
         "Navigation failed:",
         "Navigation error"
+      );
+      expect(component.isMobileMenuOpen()).toBe(false);
+    });
+
+    it("should handle navigation error gracefully with query params", async () => {
+      mockRouter.navigate.and.returnValue(
+        Promise.reject("Navigation error with params")
+      );
+      spyOn(console, "error");
+
+      try {
+        await component.navigate("/invalid-path", { tab: "test" });
+      } catch {
+        // Error is expected
+      }
+
+      // Allow async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(console.error).toHaveBeenCalledWith(
+        "Navigation failed:",
+        "Navigation error with params"
       );
       expect(component.isMobileMenuOpen()).toBe(false);
     });
@@ -204,13 +227,13 @@ describe("Navbar", () => {
       // Mock parseUrl to return the expected query parameters
       mockRouter.parseUrl.and.returnValue({
         queryParams: { tab: "binder-design" },
-        fragment: null
+        fragment: null,
       } as unknown as UrlTree);
 
       const item = {
         label: "Binder Design",
         path: "/themes",
-        queryParams: { tab: "binder-design" }
+        queryParams: { tab: "binder-design" },
       };
 
       expect(component.isNavItemActive(item)).toBe(true);
@@ -220,7 +243,7 @@ describe("Navbar", () => {
       const item = {
         label: "Structure Prediction",
         path: "/themes",
-        queryParams: { tab: "structure-prediction" }
+        queryParams: { tab: "structure-prediction" },
       };
 
       expect(component.isNavItemActive(item)).toBe(false);
@@ -231,7 +254,7 @@ describe("Navbar", () => {
       const item = {
         label: "Binder Design",
         path: "/themes",
-        queryParams: { tab: "binder-design" }
+        queryParams: { tab: "binder-design" },
       };
 
       expect(component.isNavItemActive(item)).toBe(false);
@@ -254,7 +277,7 @@ describe("Navbar", () => {
       // Mock parseUrl to return the expected query parameters
       mockRouter.parseUrl.and.returnValue({
         queryParams: { tab: "binder-design" },
-        fragment: null
+        fragment: null,
       } as unknown as UrlTree);
 
       const item = {
@@ -264,14 +287,14 @@ describe("Navbar", () => {
           {
             label: "Binder design",
             path: "/themes",
-            queryParams: { tab: "binder-design" }
+            queryParams: { tab: "binder-design" },
           },
           {
             label: "Structure prediction",
             path: "/themes",
-            queryParams: { tab: "structure-prediction" }
-          }
-        ]
+            queryParams: { tab: "structure-prediction" },
+          },
+        ],
       };
 
       expect(component.isParentNavItemActive(item)).toBe(true);
@@ -286,14 +309,14 @@ describe("Navbar", () => {
           {
             label: "Binder design",
             path: "/themes",
-            queryParams: { tab: "binder-design" }
+            queryParams: { tab: "binder-design" },
           },
           {
             label: "Structure prediction",
             path: "/themes",
-            queryParams: { tab: "structure-prediction" }
-          }
-        ]
+            queryParams: { tab: "structure-prediction" },
+          },
+        ],
       };
 
       expect(component.isParentNavItemActive(item)).toBe(false);
@@ -325,18 +348,20 @@ describe("Navbar", () => {
       const event = new MouseEvent("click", { bubbles: true });
       Object.defineProperty(event, "target", {
         value: document.createElement("div"),
-        enumerable: true
+        enumerable: true,
       });
-      
+
       document.dispatchEvent(event);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith("Closing menu due to outside click");
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        "Closing menu due to outside click"
+      );
       expect(component.isMobileMenuOpen()).toBe(false);
     });
 
     it("should not close mobile menu when clicking inside menu", () => {
       component.isMobileMenuOpen.set(true);
-      
+
       const menuElement = document.createElement("div");
       menuElement.className = "compact-menu";
       document.body.appendChild(menuElement);
@@ -344,14 +369,26 @@ describe("Navbar", () => {
       const event = new MouseEvent("click", { bubbles: true });
       Object.defineProperty(event, "target", {
         value: menuElement,
-        enumerable: true
+        enumerable: true,
       });
-      
+
       document.dispatchEvent(event);
 
       expect(component.isMobileMenuOpen()).toBe(true);
-      
+
       document.body.removeChild(menuElement);
+    });
+
+    it("should close mobile menu on escape key press", () => {
+      // Open the menu first
+      component.isMobileMenuOpen.set(true);
+      expect(component.isMobileMenuOpen()).toBe(true);
+
+      // Simulate escape key press
+      const event = new KeyboardEvent("keydown", { key: "Escape" });
+      document.dispatchEvent(event);
+
+      expect(component.isMobileMenuOpen()).toBe(false);
     });
   });
 });

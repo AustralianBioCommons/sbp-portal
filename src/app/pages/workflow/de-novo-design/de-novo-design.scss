@@ -1,0 +1,18 @@
+/* Keep styles minimal; rely on Tailwind tokens defined in tailwind.config.cjs */
+:host {
+  display: block;
+}
+
+/* Optional subtle transitions */
+button {
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+}
+// Binder Design background image
+.de-novo-design-bg {
+  background-image: url("/assets/denovo-design.png");
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: top center;
+  background-attachment: fixed;
+}

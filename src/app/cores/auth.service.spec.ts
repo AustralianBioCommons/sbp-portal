@@ -1,7 +1,8 @@
-import { TestBed } from "@angular/core/testing";
-import { AuthService } from "./auth.service";
+import { TestBed, fakeAsync, tick } from "@angular/core/testing";
+import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { of, BehaviorSubject } from "rxjs";
+import { BehaviorSubject, of } from "rxjs";
+import { AuthService } from "./auth.service";
 
 interface TestAuthError {
   error?: string;
@@ -15,10 +16,16 @@ describe("AuthService", () => {
   let mockAuth0Service: jasmine.SpyObj<Auth0Service>;
   let errorSubject: BehaviorSubject<TestAuthError | null>;
   let isAuthenticatedSubject: BehaviorSubject<boolean>;
+  let isLoadingSubject: BehaviorSubject<boolean>;
+  let appStateSubject: BehaviorSubject<{ target?: string } | null>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(() => {
     errorSubject = new BehaviorSubject<TestAuthError | null>(null);
     isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+    isLoadingSubject = new BehaviorSubject<boolean>(true);
+    appStateSubject = new BehaviorSubject<{ target?: string } | null>(null);
+    mockRouter = jasmine.createSpyObj("Router", ["navigateByUrl"]);
 
     mockAuth0Service = jasmine.createSpyObj(
       "AuthService",
@@ -27,7 +34,8 @@ describe("AuthService", () => {
         isAuthenticated$: isAuthenticatedSubject.asObservable(),
         user$: of(null),
         error$: errorSubject.asObservable(),
-        isLoading$: of(false),
+        isLoading$: isLoadingSubject.asObservable(),
+        appState$: appStateSubject.asObservable(),
       }
     );
 
@@ -35,6 +43,7 @@ describe("AuthService", () => {
       providers: [
         AuthService,
         { provide: Auth0Service, useValue: mockAuth0Service },
+        { provide: Router, useValue: mockRouter },
       ],
     });
     service = TestBed.inject(AuthService);
@@ -44,9 +53,32 @@ describe("AuthService", () => {
     expect(service).toBeTruthy();
   });
 
+  it("should have loading state management methods", () => {
+    // Test the loading state getters and setters
+    expect(service.isLoading).toBeDefined();
+    expect(service.loadingMessage).toBeDefined();
+
+    // Test manual loading state control
+    service.setLoadingState(true, "Test loading message");
+    expect(service.isLoading).toBe(true);
+    expect(service.loadingMessage).toBe("Test loading message");
+
+    service.setLoadingState(false, "Done loading");
+    expect(service.isLoading).toBe(false);
+    expect(service.loadingMessage).toBe("Done loading");
+  });
+
   it("should call Auth0 loginWithRedirect when login is called", () => {
     service.login();
     expect(mockAuth0Service.loginWithRedirect).toHaveBeenCalled();
+  });
+
+  it("should call Auth0 loginWithRedirect with returnUrl when provided", () => {
+    const returnUrl = "/dashboard";
+    service.login(returnUrl);
+    expect(mockAuth0Service.loginWithRedirect).toHaveBeenCalledWith({
+      appState: { target: returnUrl },
+    });
   });
 
   it("should call Auth0 logout with correct params when logout is called", () => {
@@ -349,6 +381,9 @@ describe("AuthService", () => {
     it("should show error banner and automatically logout after 3 seconds on authentication error", (done) => {
       const error = { error: "email_not_verified" };
 
+      // Reset the spy call count
+      (mockAuth0Service.logout as jasmine.Spy).calls.reset();
+
       // Track banner visibility
       let bannerShown = false;
       service.showBanner$.subscribe((visible) => {
@@ -359,7 +394,11 @@ describe("AuthService", () => {
 
           // Check that logout will be called after 3 seconds
           setTimeout(() => {
-            expect(mockAuth0Service.logout).toHaveBeenCalled();
+            expect(mockAuth0Service.logout).toHaveBeenCalledWith({
+              logoutParams: {
+                returnTo: window.location.origin,
+              },
+            });
             done();
           }, 3100); // Slightly more than 3 seconds to ensure timeout completes
         }
@@ -372,11 +411,20 @@ describe("AuthService", () => {
     // retry login functionality removed - authentication errors now show for 3 seconds then trigger automatic logout
   });
 
+  describe("Authentication callback handling", () => {
+    it("should handle appState changes for navigation", () => {
+      const targetUrl = "/protected";
+      appStateSubject.next({ target: targetUrl });
+
+      expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(targetUrl);
+    });
+  });
+
   describe("Loading State Management", () => {
     it("should get current loading state", () => {
       service["loadingSubject"].next(true);
       expect(service.isLoading).toBe(true);
-      
+
       service["loadingSubject"].next(false);
       expect(service.isLoading).toBe(false);
     });
@@ -390,12 +438,26 @@ describe("AuthService", () => {
     it("should manually set loading state", () => {
       const testMessage = "Custom loading message";
       service.setLoadingState(true, testMessage);
-      
+
       expect(service.isLoading).toBe(true);
       expect(service.loadingMessage).toBe(testMessage);
-      
+
       service.setLoadingState(false);
       expect(service.isLoading).toBe(false);
     });
+
+    it("should update loading state when auth0 loading completes", fakeAsync(() => {
+      // Initial emission should set custom loading state
+      isLoadingSubject.next(true);
+      expect(service.isLoading).toBeTrue();
+
+      isLoadingSubject.next(false);
+
+      // Loading should remain true until timeout completes
+      expect(service.isLoading).toBeTrue();
+
+      tick(500);
+      expect(service.isLoading).toBeFalse();
+    }));
   });
 });

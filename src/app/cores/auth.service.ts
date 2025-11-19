@@ -1,4 +1,5 @@
 import { Injectable, inject } from "@angular/core";
+import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
 import { BehaviorSubject, Observable } from "rxjs";
 
@@ -13,6 +14,7 @@ interface AuthError {
 })
 export class AuthService {
   private auth0 = inject(Auth0Service);
+  private router = inject(Router);
 
   // Banner state
   private bannerMessageSubject = new BehaviorSubject<string | null>(null);
@@ -48,6 +50,7 @@ export class AuthService {
     // Initialize loading and banner handling
     this.initializeLoadingStates();
     this.initializeBannerHandling();
+    this.handleAuthCallback();
   }
 
   private initializeLoadingStates(): void {
@@ -141,10 +144,16 @@ export class AuthService {
   /**
    * Initiate login with Auth0 and clear any banners
    */
-  login(): void {
+  login(returnUrl?: string): void {
     // Clear any banner when user clicks login
     this.clearBanner();
-    this.auth0.loginWithRedirect();
+
+    const redirectOptions: { appState?: { target: string } } = {};
+    if (returnUrl) {
+      redirectOptions.appState = { target: returnUrl };
+    }
+
+    this.auth0.loginWithRedirect(redirectOptions);
   }
 
   /**
@@ -232,5 +241,17 @@ export class AuthService {
    */
   setLoadingState(loading: boolean, message: string = "Loading..."): void {
     this.setLoading(loading, message);
+  }
+
+  /**
+   * Handle authentication callback and redirect to target URL
+   */
+  private handleAuthCallback(): void {
+    this.auth0.appState$.subscribe((appState) => {
+      if (appState?.target) {
+        // Redirect to the target URL that was stored before login
+        this.router.navigateByUrl(appState.target);
+      }
+    });
   }
 }
