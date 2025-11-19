@@ -1,0 +1,299 @@
+<section class="de-novo-design-bg">
+  <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Browser-style Tabs attached to container -->
+    <nav class="flex justify-center" aria-label="Tabs">
+      <ul class="flex space-x-1">
+        @for (tab of tabs; track tab.id; let i = $index) {
+        <li class="relative">
+          <button
+            (click)="switchTab(tab.id)"
+            [class]="
+              isActiveTab(tab.id)
+                ? 'bg-white border-t border-l border-r border-gray-200 text-gray-900 font-semibold relative z-10'
+                : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+            "
+            class="px-6 py-3 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
+            type="button"
+          >
+            {{ tab.label }}
+          </button>
+        </li>
+        } @empty {
+        <li
+          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg"
+        >
+          No tabs available
+        </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+      <!-- Page header -->
+      <header class="w-full">
+        <div class="px-4 py-4">
+          <h1 class="text-2xl font-semibold text-gray-900">De Novo Design</h1>
+          <p class="mt-2 text-sm text-gray-500">
+            Predict a single protein structure using your preferred tool.
+            Configure inputs, tweak parameters, and review before submission.
+          </p>
+        </div>
+      </header>
+
+      <!-- Overview Tab Content -->
+      @if (isActiveTab('overview')) {
+      <div class="mt-6 space-y-6">
+        <!-- Description placeholder -->
+        <div class="rounded-DEFAULT-10 p-4">
+          <h2 class="text-base font-semibold text-gray-900">Description</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            This workflow enables the de novo design of protein binders by
+            defining hotspot residues on the surface of the target. Choose a
+            tool from the options below and configure the necessary job
+            parameters to execute the workflow.
+          </p>
+        </div>
+
+        <!-- Tool Selection Component -->
+        <app-tool-selection
+          [tools]="tools"
+          [selectedToolId]="selectedTool()"
+          (toolSelect)="selectTool($event)"
+        ></app-tool-selection>
+      </div>
+
+      <!-- Stepper -->
+      <div class="mt-6 relative">
+        <!-- Lock overlay if not authenticated -->
+        @if ((auth.isAuthenticated$ | async) === false) {
+        <div
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-DEFAULT-10 border border-gray-200 flex items-center justify-center"
+        >
+          <div class="text-center p-4">
+            <p class="text-sm text-gray-600">
+              You must be logged in to configure options and run the workflow.
+            </p>
+            <div class="mt-3 flex justify-center">
+              <app-button
+                type="button"
+                variant="primary"
+                colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-900"
+                borderRadius="rounded-DEFAULT-10"
+                (click)="loginWithReturnUrl()"
+              >
+                Log in
+              </app-button>
+            </div>
+          </div>
+        </div>
+        }
+
+        <!-- Step Navigation Component -->
+        <app-step-navigation
+          [steps]="steps"
+          [currentStep]="currentStep()"
+          [isDisabled]="(auth.isAuthenticated$ | async) === false"
+          [isStepInvalid]="isStepInvalid"
+          [isStepComplete]="isStepComplete"
+          (stepClick)="goToStep($event)"
+        ></app-step-navigation>
+
+        <!-- Step 1: Input Configuration -->
+        @if (currentStep() === 1) {
+        <app-step-content
+          title="Input Configuration"
+          description="Configure input parameters based on the workflow schema."
+        >
+          @if (inputSchemaData() && inputSchemaFields().length > 0) {
+          <div class="mt-4">
+            <div class="space-y-4">
+              @for (row of inputRows(); track row.id; let i = $index) {
+              <div
+                class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div class="mb-4">
+                  <h4 class="text-base font-medium text-gray-900">
+                    Input Parameters
+                  </h4>
+                </div>
+
+                <div
+                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                >
+                  @for (field of requiredInputFields(); track field.name) {
+                  <app-form-field
+                    [field]="field"
+                    [value]="getRowValue(row.id, field.name)"
+                    [hasError]="hasRowFieldError(row.id, field.name)"
+                    [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                    (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                    (blur)="validateRowField(row.id, field.name)"
+                  ></app-form-field>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+
+            <!-- Form Status Component -->
+            <app-form-status
+              [isValid]="isFormValid()"
+              [validationSummary]="getFormValidationSummary()"
+            ></app-form-status>
+          </div>
+          }
+        </app-step-content>
+        }
+
+        <!-- Step 2: Tool Settings -->
+        @if (currentStep() === 2) {
+        <app-step-content
+          title="Tool Settings — {{ selectedToolLabel() }}"
+          description="Configure parameters specific to {{ selectedToolLabel() }}."
+        >
+          @if (!selectedToolHasParams()) {
+          <div class="mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg
+                  class="h-5 w-5 text-blue-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">
+                  No Parameters Available
+                </h3>
+                <div class="mt-2 text-sm text-blue-700">
+                  <p>
+                    There are no configurable parameters for
+                    <strong>{{ selectedToolLabel() }}</strong> in this workflow.
+                    This step is automatically completed and you can proceed to
+                    review and submit your job.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          } @else {
+          <div
+            class="mt-3 grid gap-3 sm:grid-cols-3"
+            role="region"
+            aria-label="Tool specific parameters"
+          >
+            @for (p of toolParams[selectedTool()] || []; track p.name) {
+            <div class="bg-white border border-gray-200 rounded-md p-3">
+              <label
+                [for]="'param-' + p.name"
+                class="block text-sm font-medium text-gray-700"
+                >{{ p.label }}</label
+              >
+              <div class="text-xs text-gray-500 mt-1">{{ p.description }}</div>
+              <input
+                [id]="'param-' + p.name"
+                type="text"
+                class="mt-2 w-full px-3 py-2 border rounded text-sm"
+              />
+            </div>
+            }
+          </div>
+          }
+        </app-step-content>
+        }
+
+        <!-- Step 3: Review & Submit -->
+        @if (currentStep() === 3) {
+        <app-step-content
+          title="Review & Submit"
+          description="Confirm your selections before starting the job."
+        >
+          <app-configuration-summary
+            [selectedTool]="selectedToolLabel()"
+            [hasParameters]="selectedToolHasParams()"
+            [summaryItems]="formSummary()"
+            [requiredFieldCount]="requiredInputFields().length"
+            [isValid]="isFormValid()"
+          ></app-configuration-summary>
+        </app-step-content>
+        }
+
+        <!-- Step Navigation Buttons -->
+        <div class="mt-6 flex items-center justify-between">
+          <app-button
+            type="button"
+            variant="outline"
+            (click)="previousStep()"
+            [disabled]="!canGoPrev() || (auth.isAuthenticated$ | async) === false"
+            borderRadius="rounded-DEFAULT-10"
+            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </app-button>
+          <div class="flex items-center gap-2">
+            @if (currentStep() < steps.length) {
+            <app-button
+              type="button"
+              variant="primary"
+              (click)="nextStep()"
+              [disabled]="!canGoNext() || (auth.isAuthenticated$ | async) === false"
+              borderRadius="rounded-DEFAULT-10"
+              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Next
+            </app-button>
+            } @if (currentStep() === steps.length) {
+            <app-button
+              type="button"
+              variant="primary"
+              (click)="submitWorkflow()"
+              [disabled]="(auth.isAuthenticated$ | async) === false"
+              borderRadius="rounded-DEFAULT-10"
+              colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed"
+            >
+              Submit
+            </app-button>
+            }
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Output Tab Content -->
+      @if (isActiveTab('output')) {
+      <div class="mt-6">
+        <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
+          <h2 class="text-base font-semibold text-gray-900">Output</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            Results, visualizations, and downloadable files will appear here
+            after submission.
+          </p>
+        </div>
+      </div>
+      }
+
+      <!-- Papers Tab Content -->
+      @if (isActiveTab('papers')) {
+      <div class="mt-6">
+        <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
+          <h2 class="text-base font-semibold text-gray-900">Papers</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            Relevant publications and references related to the selected tools.
+          </p>
+          <ul class="mt-2 list-disc list-inside text-sm text-gray-600">
+            <li>AlphaFold: Jumper et al., 2021</li>
+            <li>ColabFold: Mirdita et al., 2022</li>
+            <li>BindCraft: Project documentation</li>
+          </ul>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</section>

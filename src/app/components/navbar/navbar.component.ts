@@ -79,6 +79,7 @@ export class Navbar {
     {
       label: "Home",
       path: "/themes",
+      queryParams: { tab: "binder-design" },
       icon: "heroHome",
       children: [
         {
@@ -106,15 +107,11 @@ export class Navbar {
       children: [
         {
           label: "De Novo Design",
-          path: "/workflow/de-novo-design",
+          path: "/de-novo-design",
         },
         {
-          label: "Motif Scaffolding",
-          path: "/workflow/motif-scaffolding",
-        },
-        {
-          label: "Partial Diffusion",
-          path: "/workflow/partial-diffusion",
+          label: "Interaction Screening",
+          path: "/interaction-screening",
         },
       ],
     },

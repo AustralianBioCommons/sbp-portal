@@ -5,8 +5,52 @@
   <!-- Theme Tabs Navigation (only show on /themes route) -->
   @if (showTabs()) {
   <div class="w-full bg-white border-b border-gray-200">
-    <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8">
-      <nav class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+    <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <!-- Left scroll arrow -->
+      <button
+        class="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 hover:bg-white border border-gray-200 rounded-full p-1 shadow-sm transition-opacity duration-200 lg:hidden"
+        [class.opacity-0]="!canScrollLeft"
+        [class.pointer-events-none]="!canScrollLeft"
+        (click)="scrollLeft()"
+        type="button"
+        aria-label="Scroll left"
+      >
+        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Right scroll arrow -->
+      <button
+        class="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 hover:bg-white border border-gray-200 rounded-full p-1 shadow-sm transition-opacity duration-200 lg:hidden"
+        [class.opacity-0]="!canScrollRight"
+        [class.pointer-events-none]="!canScrollRight"
+        (click)="scrollRight()"
+        type="button"
+        aria-label="Scroll right"
+      >
+        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          ></path>
+        </svg>
+      </button>
+
+      <nav
+        #tabsContainer
+        class="-mb-px overflow-x-auto scrollbar-hide scroll-smooth"
+        (scroll)="onScroll($event)"
+        aria-label="Tabs"
+      >
+        <div class="flex justify-center space-x-8 min-w-max px-8 lg:px-0">
         @for (tab of tabs; track tab.id) {
         <button
           (click)="selectTab(tab.id)"
@@ -21,6 +65,7 @@
           {{ tab.label }}
         </button>
         }
+        </div>
       </nav>
     </div>
   </div>
