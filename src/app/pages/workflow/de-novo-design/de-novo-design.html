@@ -127,7 +127,7 @@
                     [hasError]="hasRowFieldError(row.id, field.name)"
                     [errorMessage]="getRowFieldError(row.id, field.name) || ''"
                     (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                    (blur)="validateRowField(row.id, field.name)"
+                    (fieldBlur)="validateRowField(row.id, field.name)"
                   ></app-form-field>
                   }
                 </div>
