@@ -7,6 +7,7 @@ import { TestBed } from "@angular/core/testing";
 import { throwError } from "rxjs";
 import {
   InputSchemaField,
+  InputSchemaSection,
   InputSchemaService,
   ParsedInputSchema,
 } from "./input-schema.service";
@@ -169,7 +170,13 @@ describe("InputSchemaService", () => {
         sections: [],
       };
 
-      spyOn<any>(service, "parseSections").and.callFake(() => {
+      const serviceWithPrivate = service as unknown as {
+        parseSections: (
+          sections: Record<string, unknown>[]
+        ) => InputSchemaSection[];
+      };
+
+      spyOn(serviceWithPrivate, "parseSections").and.callFake(() => {
         throw "string error";
       });
 

@@ -1,5 +1,12 @@
 import { CommonModule } from "@angular/common";
-import { AfterViewInit, Component, ElementRef, inject, signal, ViewChild } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  inject,
+  signal,
+  ViewChild,
+} from "@angular/core";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { filter } from "rxjs/operators";
 import { Login } from "../login/login.component";
@@ -119,7 +126,7 @@ export class Header implements AfterViewInit {
     }
   }
 
-  onScroll(event: Event): void {
+  onScroll(): void {
     this.updateScrollState();
   }
 

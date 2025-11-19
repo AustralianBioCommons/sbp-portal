@@ -364,7 +364,7 @@ describe("Header", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       spyOn(component as any, "updateScrollState");
 
-      component.onScroll(new Event("scroll"));
+      component.onScroll();
 
       expect(component["updateScrollState"]).toHaveBeenCalled();
     });
