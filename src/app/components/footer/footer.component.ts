@@ -80,12 +80,12 @@ export class FooterSectionsComponent {
       heading: "Pre-config workflows",
       links: [
         {
-          label: "Single structure prediction",
-          href: "/workflow?wf=single-structure-prediction",
+          label: "De novo design",
+          href: "/de-novo-design",
         },
         {
           label: "Interaction screening",
-          href: "/workflow?wf=interaction-screening",
+          href: "/interaction-screening",
         },
       ],
     },

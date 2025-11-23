@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { AuthService } from "../../cores/auth.service";
-import { BehaviorSubject, of } from "rxjs";
 import { By } from "@angular/platform-browser";
+import { BehaviorSubject, of } from "rxjs";
+import { AuthService } from "../../cores/auth.service";
 
-import { Login } from "./login.component";
 import { environment } from "../../../environments/environment";
+import { Login } from "./login.component";
 
 describe("Login", () => {
   let component: Login;
@@ -59,9 +59,9 @@ describe("Login", () => {
     );
 
     expect(buttonElement).toBeTruthy();
-    expect(
-      buttonElement?.nativeElement?.textContent?.toLowerCase()
-    ).toContain("log in");
+    expect(buttonElement?.nativeElement?.textContent?.toLowerCase()).toContain(
+      "log in"
+    );
 
     const nativeElement = fixture.nativeElement as HTMLElement;
     expect(nativeElement.textContent).not.toContain("Profile");
@@ -87,7 +87,7 @@ describe("Login", () => {
     ).find((button) => button.textContent?.includes("Profile"));
     const logoutButton = Array.from(
       nativeElement.querySelectorAll("button")
-    ).find((button) => button.textContent?.includes("Logout"));
+    ).find((button) => button.textContent?.includes("Log out"));
 
     expect(emailDisplay?.textContent).toContain("tester@example.com");
     expect(profileButton).toBeDefined();

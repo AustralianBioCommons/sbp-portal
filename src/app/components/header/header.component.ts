@@ -1,5 +1,12 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject, signal } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  inject,
+  signal,
+  ViewChild,
+} from "@angular/core";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { filter } from "rxjs/operators";
 import { Login } from "../login/login.component";
@@ -17,11 +24,17 @@ export interface TabItem {
   imports: [CommonModule, RouterModule, Navbar, Login],
   templateUrl: "./header.component.html",
 })
-export class Header {
+export class Header implements AfterViewInit {
   private router = inject(Router);
 
   activeTab = signal("binder-design");
   showTabs = signal(false);
+
+  // Scroll state
+  canScrollLeft = signal(false);
+  canScrollRight = signal(false);
+
+  @ViewChild("tabsContainer") tabsContainer!: ElementRef<HTMLElement>;
 
   tabs: TabItem[] = [
     {
@@ -77,6 +90,13 @@ export class Header {
     }
   }
 
+  ngAfterViewInit() {
+    // Check scroll state after view init
+    setTimeout(() => {
+      this.updateScrollState();
+    }, 100);
+  }
+
   selectTab(tabId: string) {
     this.activeTab.set(tabId);
     // Navigate to themes route with query param or use a service to communicate with home component
@@ -90,5 +110,33 @@ export class Header {
 
   isActiveTab(tabId: string): boolean {
     return this.activeTab() === tabId;
+  }
+
+  scrollLeft(): void {
+    const container = this.tabsContainer?.nativeElement;
+    if (container) {
+      container.scrollBy({ left: -200, behavior: "smooth" });
+    }
+  }
+
+  scrollRight(): void {
+    const container = this.tabsContainer?.nativeElement;
+    if (container) {
+      container.scrollBy({ left: 200, behavior: "smooth" });
+    }
+  }
+
+  onScroll(): void {
+    this.updateScrollState();
+  }
+
+  private updateScrollState(): void {
+    const container = this.tabsContainer?.nativeElement;
+    if (!container) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+
+    this.canScrollLeft.set(scrollLeft > 0);
+    this.canScrollRight.set(scrollLeft < scrollWidth - clientWidth - 1);
   }
 }
