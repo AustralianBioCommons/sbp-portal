@@ -12,7 +12,6 @@
     "importHelpers": true,
     "target": "es2022",
     "types": ["jasmine", "node"],
-    "typeRoots": ["node_modules/@types"],
-    
+    "typeRoots": ["node_modules/@types"]
   }
 }
