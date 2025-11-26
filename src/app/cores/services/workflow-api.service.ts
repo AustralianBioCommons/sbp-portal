@@ -1,0 +1,71 @@
+import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { Observable } from "rxjs";
+import {
+  CancelWorkflowResponse,
+  LaunchDetails,
+  LaunchLogs,
+  ListRunsResponse,
+  WorkflowLaunchForm,
+  WorkflowLaunchPayload,
+  WorkflowLaunchResponse,
+} from "../interfaces/workflow.interfaces";
+
+/**
+ * Angular service for Seqera Platform workflow operations
+ */
+@Injectable({
+  providedIn: "root",
+})
+export class WorkflowApiService {
+  private readonly apiUrl = "http://localhost:3000/api/workflows";
+
+  constructor(private http: HttpClient) {}
+
+  /**
+   * Launch a new workflow
+   */
+  launchWorkflow(form: WorkflowLaunchForm): Observable<WorkflowLaunchResponse> {
+    const payload: WorkflowLaunchPayload = { launch: form };
+    return this.http.post<WorkflowLaunchResponse>(
+      `${this.apiUrl}/launch`,
+      payload
+    );
+  }
+
+  /**
+   * Cancel a running workflow
+   */
+  cancelWorkflow(runId: string): Observable<CancelWorkflowResponse> {
+    return this.http.post<CancelWorkflowResponse>(
+      `${this.apiUrl}/${runId}/cancel`,
+      {}
+    );
+  }
+
+  /**
+   * List workflow runs with pagination
+   */
+  listRuns(
+    page: number = 1,
+    pageSize: number = 20
+  ): Observable<ListRunsResponse> {
+    return this.http.get<ListRunsResponse>(`${this.apiUrl}/runs`, {
+      params: { page: page.toString(), pageSize: pageSize.toString() },
+    });
+  }
+
+  /**
+   * Get workflow logs
+   */
+  getLogs(runId: string): Observable<LaunchLogs> {
+    return this.http.get<LaunchLogs>(`${this.apiUrl}/${runId}/logs`);
+  }
+
+  /**
+   * Get workflow details
+   */
+  getDetails(runId: string): Observable<LaunchDetails> {
+    return this.http.get<LaunchDetails>(`${this.apiUrl}/${runId}/details`);
+  }
+}

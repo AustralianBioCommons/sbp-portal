@@ -7,7 +7,7 @@ import {
   UrlTree,
 } from "@angular/router";
 import { of, Subject } from "rxjs";
-import { AuthService } from "../../cores/auth.service";
+import { AuthService } from "../../cores/services/auth.service";
 
 import { Header } from "./header.component";
 

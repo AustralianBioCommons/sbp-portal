@@ -1,10 +1,11 @@
-import cors from "cors";
 import dotenv from "dotenv";
+
+// Load environment variables FIRST before any other imports
+dotenv.config();
+
+import cors from "cors";
 import express, { Express, NextFunction, Request, Response } from "express";
 import workflowRoutes from "./routes/workflows.js";
-
-// Load environment variables
-dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 3000;

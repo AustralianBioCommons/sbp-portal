@@ -3,6 +3,7 @@ import {
   WorkflowLaunchPayload,
   WorkflowLaunchResponse,
 } from "../interfaces/workflow.interfaces.js";
+import { launchSeqeraWorkflow } from "../services/seqera.service.js";
 
 /**
  * Launch a workflow on Seqera Platform
@@ -20,18 +21,13 @@ export async function launchWorkflow(req: Request, res: Response) {
       return res.status(400).json({ error: "pipeline is required" });
     }
 
-    if (!payload.launch.workspaceId) {
-      return res.status(400).json({ error: "workspaceId is required" });
-    }
+    // Launch workflow via Seqera service
+    const result = await launchSeqeraWorkflow(payload.launch);
 
-    // TODO: Import and call launchSeqeraWorkflow from services
-    // const result = await launchSeqeraWorkflow(payload);
-
-    // Placeholder response
     const response: WorkflowLaunchResponse = {
       message: "Workflow launched successfully",
-      runId: "mock-run-id-123",
-      status: "submitted",
+      runId: result.workflowId,
+      status: result.status,
       submitTime: new Date().toISOString(),
     };
 

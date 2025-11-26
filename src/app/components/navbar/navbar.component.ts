@@ -12,7 +12,7 @@ import {
 } from "@ng-icons/heroicons/outline";
 import { tablerCalendarStar } from "@ng-icons/tabler-icons";
 import { filter, map } from "rxjs/operators";
-import { AuthService } from "../../cores/auth.service";
+import { AuthService } from "../../cores/services/auth.service";
 import { ButtonComponent } from "../button/button.component";
 
 export interface NavItem {

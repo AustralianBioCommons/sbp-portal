@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ActivatedRoute } from "@angular/router";
-import { AppComponent } from "./app.component";
-import { AuthService } from "./cores/auth.service";
 import { of } from "rxjs";
+import { AppComponent } from "./app.component";
+import { AuthService } from "./cores/services/auth.service";
 
 describe("AppComponent", () => {
   let fixture: ComponentFixture<AppComponent>;
@@ -173,9 +173,9 @@ describe("AppComponent", () => {
   it("handles search functionality", () => {
     const consoleLogSpy = spyOn(console, "log");
     const searchTerm = "test search";
-    
+
     component.onSearch(searchTerm);
-    
+
     expect(consoleLogSpy).toHaveBeenCalledWith("Search term:", searchTerm);
   });
 

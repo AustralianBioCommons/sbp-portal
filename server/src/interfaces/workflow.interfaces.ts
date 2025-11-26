@@ -3,15 +3,10 @@
  */
 export interface WorkflowLaunchForm {
   pipeline: string;
-  workspaceId: string;
-  computeEnvId: string;
-  workDir: string;
-  runName: string;
-  revision: string;
-  configProfiles: string[];
-  paramsText: string;
-  preRunScript: string;
-  resume: boolean;
+  revision?: string;
+  configProfiles?: string[];
+  runName?: string;
+  paramsText?: string;
 }
 
 /**
