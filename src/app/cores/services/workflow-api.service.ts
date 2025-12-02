@@ -24,9 +24,17 @@ export class WorkflowApiService {
 
   /**
    * Launch a new workflow
+   * @param form - Workflow launch form data
+   * @param datasetId - Optional dataset ID to attach to the workflow
    */
-  launchWorkflow(form: WorkflowLaunchForm): Observable<WorkflowLaunchResponse> {
-    const payload: WorkflowLaunchPayload = { launch: form };
+  launchWorkflow(
+    form: WorkflowLaunchForm,
+    datasetId?: string
+  ): Observable<WorkflowLaunchResponse> {
+    const payload: WorkflowLaunchPayload & { datasetId?: string } = {
+      launch: form,
+      ...(datasetId && { datasetId }),
+    };
     return this.http.post<WorkflowLaunchResponse>(
       `${this.apiUrl}/launch`,
       payload

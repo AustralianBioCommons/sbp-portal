@@ -28,6 +28,7 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/services/auth.service";
+import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
@@ -76,6 +77,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   public schemaLoader = inject(SchemaLoaderService);
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
+  // Dataset upload service
+  private datasetUploadService = inject(DatasetUploadService);
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
@@ -273,7 +276,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           take(1)
         )
         .subscribe(() => {
-          console.log("Auth service ready, starting schema load...");
           this.loadInputSchema();
         })
     );
@@ -319,7 +321,55 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     }
 
     const formData = this.getFormData();
-    this.workflowSubmission.submitWorkflow(formData);
+
+    console.log("Starting workflow submission with dataset upload...");
+
+    // Show loading state
+    this.workflowSubmission.isSubmitting.set(true);
+
+    // Step 1: Upload dataset first
+    this.datasetUploadService
+      .uploadDataset({
+        formData: formData,
+      })
+      .subscribe({
+        next: (response) => {
+          console.log("Dataset uploaded successfully:", response);
+          const datasetId = response.datasetId;
+
+          if (!datasetId) {
+            console.error("No dataset ID returned from upload");
+            this.workflowSubmission.isSubmitting.set(false);
+            alert("Failed to get dataset ID from upload");
+            return;
+          }
+
+          // Step 2: Launch workflow with the dataset ID (DISABLED FOR TESTING)
+          console.log("Dataset upload complete. Dataset ID:", datasetId);
+          console.log("Workflow submission is currently disabled for testing");
+
+          // Hide loading state
+          this.workflowSubmission.isSubmitting.set(false);
+
+          // Show success dialog for dataset upload only
+          this.workflowSubmission.successDialogData.set({
+            runId: datasetId,
+            status: "Dataset uploaded successfully",
+          });
+          this.workflowSubmission.showSuccessDialog.set(true);
+
+          // TODO: Uncomment to enable workflow submission
+          // this.workflowSubmission.submitWorkflowWithDataset(formData, datasetId);
+        },
+        error: (error) => {
+          console.error("Error uploading dataset:", error);
+          // Hide loading state
+          this.workflowSubmission.isSubmitting.set(false);
+          alert(
+            `Failed to upload dataset: ${error.message || "Unknown error"}`
+          );
+        },
+      });
   }
 
   // Navigate to home page (delegates to service)
@@ -460,7 +510,53 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   // Get current form data for submission
   getFormData(): Record<string, unknown> {
-    return this.formData();
+    // Get current form data from UI fields
+    const currentData = this.formData();
+
+    // Get optional fields with their default values
+    const optionalFields = this.schemaLoader.optionalInputFields();
+    const optionalDefaults: Record<string, unknown> = {};
+
+    optionalFields.forEach((field) => {
+      // Only add if not already in form data
+      if (!(field.name in currentData)) {
+        if (field.default !== undefined) {
+          optionalDefaults[field.name] = field.default;
+        } else {
+          // Use type-based defaults
+          switch (field.type) {
+            case "string":
+              optionalDefaults[field.name] = "";
+              break;
+            case "number":
+              optionalDefaults[field.name] = field.validation?.min || 0;
+              break;
+            case "boolean":
+              optionalDefaults[field.name] = false;
+              break;
+            case "array":
+              optionalDefaults[field.name] = [];
+              break;
+            case "object":
+              optionalDefaults[field.name] = {};
+              break;
+            default:
+              optionalDefaults[field.name] = "";
+          }
+        }
+      }
+    });
+
+    // Add pipeline URL for de-novo-design workflow
+    const pipelineUrl =
+      "https://github.com/Australian-Structural-Biology-Computing/bindflow.git";
+
+    // Merge current data with optional defaults and pipeline
+    return {
+      ...optionalDefaults,
+      ...currentData,
+      pipeline: pipelineUrl,
+    };
   }
 
   // Form summary for step 3

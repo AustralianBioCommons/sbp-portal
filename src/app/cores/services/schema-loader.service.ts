@@ -20,6 +20,7 @@ export class SchemaLoaderService {
   inputSchemaData = signal<ParsedInputSchema | null>(null);
   inputSchemaFields = signal<InputSchemaField[]>([]);
   requiredInputFields = signal<InputSchemaField[]>([]);
+  optionalInputFields = signal<InputSchemaField[]>([]);
 
   // Table rows for input configuration
   inputRows = signal<InputRow[]>([]);
@@ -36,12 +37,8 @@ export class SchemaLoaderService {
     onSuccess?: (parsedSchema: ParsedInputSchema) => void,
     onError?: (error: unknown) => void
   ): void {
-    console.log("Fetching input schema from:", schemaUrl);
-
     this.inputSchemaService.fetchInputSchema(schemaUrl).subscribe({
       next: (rawSchema) => {
-        console.log("Raw input schema received:", rawSchema);
-
         // Type-safe access to schema properties
         const items = rawSchema.items as Record<string, unknown> | undefined;
         const properties = items?.properties as
@@ -77,11 +74,9 @@ export class SchemaLoaderService {
               this.inputSchemaService.getRequiredFields(parsedSchema);
             this.requiredInputFields.set(requiredFields);
 
-            console.log("Schema loaded successfully:", {
-              totalFields: allFields.length,
-              requiredFields: requiredFields.length,
-              sections: parsedSchema.sections.length,
-            });
+            // Get optional fields (non-required fields)
+            const optionalFields = allFields.filter((field) => !field.required);
+            this.optionalInputFields.set(optionalFields);
 
             // Call success callback
             if (onSuccess) onSuccess(parsedSchema);
@@ -128,8 +123,6 @@ export class SchemaLoaderService {
 
       this.inputRows.update((rows) => [...rows, newRow]);
       this.nextRowId.update((id) => id + 1);
-
-      console.log("Default row initialized:", rowId);
 
       // Call completion callback
       if (onComplete) onComplete();
@@ -194,10 +187,25 @@ export class SchemaLoaderService {
 
   /**
    * Get the first row's values (since we only use single row)
+   * Includes both required and optional fields with their default values
    */
   getFirstRowValues(): Record<string, unknown> {
     const rows = this.inputRows();
-    return rows.length > 0 ? rows[0].values : {};
+    if (rows.length === 0) {
+      return {};
+    }
+
+    const rowValues = rows[0].values;
+
+    // Add optional fields with their default values if not already present
+    const optionalFields = this.optionalInputFields();
+    optionalFields.forEach((field) => {
+      if (!(field.name in rowValues)) {
+        rowValues[field.name] = this.getDefaultValueForField(field);
+      }
+    });
+
+    return rowValues;
   }
 
   /**
@@ -207,6 +215,7 @@ export class SchemaLoaderService {
     this.inputSchemaData.set(null);
     this.inputSchemaFields.set([]);
     this.requiredInputFields.set([]);
+    this.optionalInputFields.set([]);
     this.inputRows.set([]);
     this.nextRowId.set(1);
   }

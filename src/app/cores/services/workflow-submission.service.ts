@@ -25,6 +25,20 @@ export class WorkflowSubmissionService {
     formData: Record<string, unknown>,
     onError?: (error: Error) => void
   ): void {
+    this.submitWorkflowWithDataset(formData, undefined, onError);
+  }
+
+  /**
+   * Submit workflow with form data and optional dataset ID
+   * @param formData - The form data to submit
+   * @param datasetId - Optional dataset ID to attach to the workflow
+   * @param onError - Optional error handler
+   */
+  submitWorkflowWithDataset(
+    formData: Record<string, unknown>,
+    datasetId?: string,
+    onError?: (error: Error) => void
+  ): void {
     // Construct the workflow launch form matching the working Next.js implementation
     const launchForm: WorkflowLaunchForm = {
       pipeline:
@@ -39,12 +53,15 @@ export class WorkflowSubmissionService {
     };
 
     console.log("Submitting workflow:", launchForm);
+    if (datasetId) {
+      console.log("With dataset ID:", datasetId);
+    }
 
     // Show loading state
     this.isSubmitting.set(true);
 
-    // Call the API service
-    this.workflowApiService.launchWorkflow(launchForm).subscribe({
+    // Call the API service with dataset ID
+    this.workflowApiService.launchWorkflow(launchForm, datasetId).subscribe({
       next: (response) => {
         console.log("Workflow launched successfully:", response);
         // Hide loading state

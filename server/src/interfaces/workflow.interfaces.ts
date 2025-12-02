@@ -143,3 +143,24 @@ export interface LaunchDetails {
   configFiles: string[];
   params: Record<string, string>;
 }
+
+/**
+ * Response from uploading a dataset
+ */
+export interface DatasetUploadResponse {
+  success: boolean;
+  datasetId?: string;
+  message?: string;
+}
+
+/**
+ * Response from creating a dataset
+ */
+export interface CreateDatasetResponse {
+  dataset: {
+    id: string;
+    name: string;
+    description: string;
+    [key: string]: unknown;
+  };
+}

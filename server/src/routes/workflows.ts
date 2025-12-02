@@ -4,6 +4,7 @@ import { getDetails } from "../controllers/get-details.controller.js";
 import { getLogs } from "../controllers/get-logs.controller.js";
 import { launchWorkflow } from "../controllers/launch-workflow.controller.js";
 import { listRuns } from "../controllers/list-runs.controller.js";
+import { uploadDatasetController } from "../controllers/upload-dataset.controller.js";
 
 const router = Router();
 
@@ -36,5 +37,11 @@ router.get("/:runId/logs", getLogs);
  * Get detailed information about a workflow run
  */
 router.get("/:runId/details", getDetails);
+
+/**
+ * POST /api/workflows/datasets/upload
+ * Upload dataset from form data as CSV to Seqera Platform
+ */
+router.post("/datasets/upload", uploadDatasetController);
 
 export default router;

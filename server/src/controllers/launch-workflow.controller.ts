@@ -3,7 +3,7 @@ import {
   WorkflowLaunchPayload,
   WorkflowLaunchResponse,
 } from "../interfaces/workflow.interfaces.js";
-import { launchSeqeraWorkflow } from "../services/seqera.service.js";
+import { launchSeqeraWorkflow } from "../services/launch.service.js";
 
 /**
  * Launch a workflow on Seqera Platform
@@ -11,6 +11,7 @@ import { launchSeqeraWorkflow } from "../services/seqera.service.js";
 export async function launchWorkflow(req: Request, res: Response) {
   try {
     const payload: WorkflowLaunchPayload = req.body;
+    const { datasetId } = req.body; // Extract optional datasetId
 
     // Validate required fields
     if (!payload.launch) {
@@ -22,7 +23,7 @@ export async function launchWorkflow(req: Request, res: Response) {
     }
 
     // Launch workflow via Seqera service
-    const result = await launchSeqeraWorkflow(payload.launch);
+    const result = await launchSeqeraWorkflow(payload.launch, datasetId);
 
     const response: WorkflowLaunchResponse = {
       message: "Workflow launched successfully",
