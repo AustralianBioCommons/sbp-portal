@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { BehaviorSubject, of } from "rxjs";
-import { AuthService } from "../../cores/services/auth.service";
+import { AuthService } from "../../cores/auth.service";
 
 import { environment } from "../../../environments/environment";
 import { Login } from "./login.component";

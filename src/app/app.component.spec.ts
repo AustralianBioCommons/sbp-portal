@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ActivatedRoute } from "@angular/router";
 import { of } from "rxjs";
 import { AppComponent } from "./app.component";
-import { AuthService } from "./cores/services/auth.service";
+import { AuthService } from "./coress/auth.service";
 
 describe("AppComponent", () => {
   let fixture: ComponentFixture<AppComponent>;

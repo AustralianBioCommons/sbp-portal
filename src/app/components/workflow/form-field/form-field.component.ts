@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
-import { InputSchemaField } from "../../../cores/services/input-schema.service";
+import { InputSchemaField } from "../../../cores/input-schema.service";
 
 @Component({
   selector: "app-form-field",

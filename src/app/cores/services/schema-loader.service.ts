@@ -3,7 +3,7 @@ import {
   InputSchemaField,
   InputSchemaService,
   ParsedInputSchema,
-} from "./input-schema.service";
+} from "../input-schema.service";
 
 export interface InputRow {
   id: string;

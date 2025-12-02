@@ -6,7 +6,7 @@ import { DialogComponent } from "./components/dialog/dialog.component";
 import { FooterSectionsComponent } from "./components/footer/footer.component";
 import { Header } from "./components/header/header.component";
 import { LoadingComponent } from "./components/loading/loading.component";
-import { AuthService } from "./cores/services/auth.service";
+import { AuthService } from "./cores/auth.service";
 
 @Component({
   selector: "app-root",

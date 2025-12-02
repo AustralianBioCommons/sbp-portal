@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { InputSchemaField } from "../../../cores/services/input-schema.service";
+import { InputSchemaField } from "../../../cores/input-schema.service";
 import { FormFieldComponent } from "./form-field.component";
 
 describe("FormFieldComponent", () => {

@@ -5,7 +5,7 @@ import { provideAnimations } from "@angular/platform-browser/animations";
 import { provideRouter } from "@angular/router";
 import { authHttpInterceptorFn, provideAuth0 } from "@auth0/auth0-angular";
 import { AppComponent } from "./app/app.component";
-import { authGuard } from "./app/cores/services/auth.guard";
+import { authGuard } from "./app/cores/auth.guard";
 import { Home } from "./app/pages/home/home";
 import { JobsComponent } from "./app/pages/jobs/jobs";
 import { NotFoundComponent } from "./app/pages/not-found/not-found";

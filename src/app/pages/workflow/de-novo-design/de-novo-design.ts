@@ -27,7 +27,7 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
-import { AuthService } from "../../../cores/services/auth.service";
+import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";

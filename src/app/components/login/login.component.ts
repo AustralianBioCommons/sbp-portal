@@ -6,7 +6,7 @@ import {
   heroUser,
 } from "@ng-icons/heroicons/outline";
 import { environment } from "../../../environments/environment";
-import { AuthService } from "../../cores/services/auth.service";
+import { AuthService } from "../../cores/auth.service";
 
 @Component({
   selector: "app-login",
