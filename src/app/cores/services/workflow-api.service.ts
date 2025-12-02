@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import {
   CancelWorkflowResponse,
@@ -19,8 +19,7 @@ import {
 })
 export class WorkflowApiService {
   private readonly apiUrl = "http://localhost:3000/api/workflows";
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   /**
    * Launch a new workflow

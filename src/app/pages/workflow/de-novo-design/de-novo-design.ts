@@ -254,16 +254,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   private subscription = new Subscription();
 
   ngOnInit() {
-    console.log("NovoDesignComponent ngOnInit called");
-    console.log("Navigation context:", {
-      currentUrl: window.location.href,
-      timestamp: new Date().toISOString(),
-    });
-    console.log("Services status:", {
-      authService: !!this.auth,
-      schemaLoader: !!this.schemaLoader,
-    });
-
     // Wait for Auth0 to initialize before making HTTP requests
     // Use take(1) and filter to only react once when loading is complete
     this.subscription.add(
@@ -293,7 +283,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   loadInputSchema() {
     this.schemaLoader.loadInputSchema(
       this.inputSchemaUrl,
-      (parsedSchema) => {
+      () => {
         // Success callback: initialize form data
         const defaultValues = this.schemaLoader.generateDefaultValues();
         this.initializeFormData(defaultValues);
