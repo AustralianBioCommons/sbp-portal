@@ -43,7 +43,7 @@ export class WorkflowSubmissionService {
     const launchForm: WorkflowLaunchForm = {
       pipeline:
         (formData.pipeline as string) || "https://github.com/nextflow-io/hello",
-      revision: (formData.revision as string) || "master",
+      revision: (formData.revision as string) || "main",
       configProfiles: (formData.configProfiles as string[]) || [],
       runName: (formData.runName as string) || "default-name",
       // Convert all form data to paramsText as JSON string

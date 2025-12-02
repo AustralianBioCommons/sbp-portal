@@ -28,7 +28,6 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/auth.service";
-import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
@@ -77,8 +76,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   public schemaLoader = inject(SchemaLoaderService);
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
-  // Dataset upload service
-  private datasetUploadService = inject(DatasetUploadService);
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
@@ -322,54 +319,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     const formData = this.getFormData();
 
-    console.log("Starting workflow submission with dataset upload...");
+    console.log("Submitting workflow...");
 
-    // Show loading state
-    this.workflowSubmission.isSubmitting.set(true);
-
-    // Step 1: Upload dataset first
-    this.datasetUploadService
-      .uploadDataset({
-        formData: formData,
-      })
-      .subscribe({
-        next: (response) => {
-          console.log("Dataset uploaded successfully:", response);
-          const datasetId = response.datasetId;
-
-          if (!datasetId) {
-            console.error("No dataset ID returned from upload");
-            this.workflowSubmission.isSubmitting.set(false);
-            alert("Failed to get dataset ID from upload");
-            return;
-          }
-
-          // Step 2: Launch workflow with the dataset ID (DISABLED FOR TESTING)
-          console.log("Dataset upload complete. Dataset ID:", datasetId);
-          console.log("Workflow submission is currently disabled for testing");
-
-          // Hide loading state
-          this.workflowSubmission.isSubmitting.set(false);
-
-          // Show success dialog for dataset upload only
-          this.workflowSubmission.successDialogData.set({
-            runId: datasetId,
-            status: "Dataset uploaded successfully",
-          });
-          this.workflowSubmission.showSuccessDialog.set(true);
-
-          // TODO: Uncomment to enable workflow submission
-          // this.workflowSubmission.submitWorkflowWithDataset(formData, datasetId);
-        },
-        error: (error) => {
-          console.error("Error uploading dataset:", error);
-          // Hide loading state
-          this.workflowSubmission.isSubmitting.set(false);
-          alert(
-            `Failed to upload dataset: ${error.message || "Unknown error"}`
-          );
-        },
-      });
+    // Submit workflow directly without dataset upload
+    this.workflowSubmission.submitWorkflow(formData);
   }
 
   // Navigate to home page (delegates to service)
