@@ -28,25 +28,24 @@ export interface Step {
           widthClass="w-full"
           colorClasses="flex items-center gap-2 p-2 border transition-colors disabled:opacity-60 disabled:cursor-not-allowed {{
             isStepInvalid(s.id)
-              ? 'border-red-500 bg-red-50 text-red-700'
+              ? 'border-red-500 bg-red-500'
               : currentStep === s.id
-              ? 'border-blue-500 bg-white text-primary'
+              ? 'border-blue-500 bg-white'
               : currentStep !== s.id && isStepComplete(s.id)
-              ? 'border-teal-500 bg-teal-500/5 text-gray-700'
-              : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
+              ? 'border-teal-500 bg-teal-500/5'
+              : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
           }}"
         >
           <span
-            class="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded-full"
+            class="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded-full text-white"
             [ngClass]="{
-              'bg-blue-500 text-white':
-                currentStep === s.id && !isStepInvalid(s.id),
-              'bg-red-500 text-white': isStepInvalid(s.id),
-              'bg-teal-500 text-white':
+              'bg-red-500': isStepInvalid(s.id),
+              'bg-blue-500': currentStep === s.id && !isStepInvalid(s.id),
+              'bg-teal-500':
                 isStepComplete(s.id) &&
                 currentStep !== s.id &&
                 !isStepInvalid(s.id),
-              'bg-white border border-gray-200 text-gray-600':
+              'bg-white border border-gray-200 !text-gray-600':
                 !isStepComplete(s.id) &&
                 currentStep !== s.id &&
                 !isStepInvalid(s.id)
@@ -55,7 +54,7 @@ export interface Step {
             @if (isStepInvalid(s.id)) { ! } @else if (isStepComplete(s.id) &&
             currentStep !== s.id) { ✓ } @else { {{ s.id }} }
           </span>
-          <span class="text-sm">{{ s.title }}</span>
+          <span class="text-sm text-primary">{{ s.title }}</span>
         </app-button>
       </li>
       } @empty {

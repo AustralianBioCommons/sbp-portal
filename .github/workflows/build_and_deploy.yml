@@ -32,6 +32,11 @@ jobs:
           AWS_ROLE_FRONTEND: ${{ secrets.AWS_ROLE_FRONTEND }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_DEV_FRONTEND_SECRET_NAME: ${{ secrets.AWS_DEV_FRONTEND_SECRET_NAME }}
+          SEQERA_API_URL: ${{ secrets.SEQERA_API_URL }}
+          SEQERA_ACCESS_TOKEN: ${{ secrets.SEQERA_ACCESS_TOKEN }}
+          COMPUTE_ID: ${{ secrets.COMPUTE_ID }}
+          WORK_DIR: ${{ secrets.WORK_DIR }}
+          WORK_SPACE: ${{ secrets.WORK_SPACE }}
         run: |
           set -euo pipefail
           if [ -z "${AWS_PORTAL_BUILD_BUCKET}" ]; then
@@ -48,6 +53,26 @@ jobs:
           fi
           if [ -z "${AWS_DEV_FRONTEND_SECRET_NAME}" ]; then
             echo "Missing required secret AWS_DEV_FRONTEND_SECRET_NAME" >&2
+            exit 1
+          fi
+          if [ -z "${SEQERA_API_URL}" ]; then
+            echo "Missing required secret SEQERA_API_URL" >&2
+            exit 1
+          fi
+          if [ -z "${SEQERA_ACCESS_TOKEN}" ]; then
+            echo "Missing required secret SEQERA_ACCESS_TOKEN" >&2
+            exit 1
+          fi
+          if [ -z "${COMPUTE_ID}" ]; then
+            echo "Missing required secret COMPUTE_ID" >&2
+            exit 1
+          fi
+          if [ -z "${WORK_DIR}" ]; then
+            echo "Missing required secret WORK_DIR" >&2
+            exit 1
+          fi
+          if [ -z "${WORK_SPACE}" ]; then
+            echo "Missing required secret WORK_SPACE" >&2
             exit 1
           fi
 
@@ -80,6 +105,32 @@ jobs:
           JS
         env:
           DEV_SUFFIX: ${{ steps.dev_version.outputs.suffix }}
+
+      - name: Install server dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Create server .env file
+        working-directory: ./server
+        env:
+          SEQERA_API_URL: ${{ secrets.SEQERA_API_URL }}
+          SEQERA_ACCESS_TOKEN: ${{ secrets.SEQERA_ACCESS_TOKEN }}
+          COMPUTE_ID: ${{ secrets.COMPUTE_ID }}
+          WORK_DIR: ${{ secrets.WORK_DIR }}
+          WORK_SPACE: ${{ secrets.WORK_SPACE }}
+        run: |
+          set -euo pipefail
+          echo "NODE_ENV=production" > .env
+          echo "PORT=3000" >> .env
+          echo "SEQERA_API_URL=${SEQERA_API_URL}" >> .env
+          echo "SEQERA_ACCESS_TOKEN=${SEQERA_ACCESS_TOKEN}" >> .env
+          echo "COMPUTE_ID=${COMPUTE_ID}" >> .env
+          echo "WORK_DIR=${WORK_DIR}" >> .env
+          echo "WORK_SPACE=${WORK_SPACE}" >> .env
+
+      - name: Build server
+        working-directory: ./server
+        run: npm run build
 
       - name: Build production bundle
         run: npx ng build --configuration production --output-path dist/sbp-portal-prod

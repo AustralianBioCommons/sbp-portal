@@ -1,18 +1,18 @@
-import { Component, inject, signal } from "@angular/core";
-import { AuthService } from "./cores/auth.service";
 import { CommonModule } from "@angular/common";
+import { Component, inject, signal } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { AlertComponent } from "./components/alert/alert.component";
 import { DialogComponent } from "./components/dialog/dialog.component";
-import { Header } from "./components/header/header.component";
 import { FooterSectionsComponent } from "./components/footer/footer.component";
+import { Header } from "./components/header/header.component";
 import { LoadingComponent } from "./components/loading/loading.component";
+import { AuthService } from "./cores/auth.service";
 
 @Component({
   selector: "app-root",
   standalone: true,
   host: {
-    class: "block w-full min-h-screen bg-bg-primary text-text-primary"
+    class: "block w-full min-h-screen bg-bg-primary text-text-primary",
   },
   imports: [
     CommonModule,
@@ -21,10 +21,10 @@ import { LoadingComponent } from "./components/loading/loading.component";
     DialogComponent,
     Header,
     FooterSectionsComponent,
-    LoadingComponent
+    LoadingComponent,
   ],
   templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.scss"]
+  styleUrls: ["./app.component.scss"],
 })
 export class AppComponent {
   public auth = inject(AuthService);
