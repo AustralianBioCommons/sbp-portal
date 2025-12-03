@@ -10,6 +10,7 @@ import {
   WorkflowLaunchPayload,
   WorkflowLaunchResponse,
 } from "../interfaces/workflow.interfaces";
+import { environment } from "../../../environments/environment";
 
 /**
  * Angular service for Seqera Platform workflow operations
@@ -18,7 +19,7 @@ import {
   providedIn: "root",
 })
 export class WorkflowApiService {
-  private readonly apiUrl = "http://localhost:3000/api/workflows";
+  private readonly apiUrl = `${environment.apiBaseUrl}/api/workflows`;
   private http = inject(HttpClient);
 
   /**
