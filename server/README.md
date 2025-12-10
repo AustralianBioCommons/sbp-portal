@@ -54,6 +54,22 @@ Required entries in `.env`:
 - `PORT` — (Optional) uvicorn port when running `python -m app.main`
 - `UVICORN_RELOAD` — (Optional) set to `true` to enable reload when running via `python -m app.main`
 
+## Containerization
+
+1. Build the image from the repository root (the Docker context is the `server` folder):
+
+   ```bash
+   docker build -t sbp-portal-backend ./server
+   ```
+
+2. Run the container, passing your `.env` file (or explicit `-e` overrides) so the API can reach Seqera:
+
+   ```bash
+   docker run --rm -p 3000:3000 --env-file server/.env sbp-portal-backend
+   ```
+
+   Override `PORT` or uvicorn flags in the env file if you need different bindings. Any value defined in `.env` becomes available to the app inside the container.
+
 ## Notes
 
 - Requests fail fast with `500` if mandatory environment variables are missing.
