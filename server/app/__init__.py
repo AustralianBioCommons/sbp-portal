@@ -1,1 +1,0 @@
-"""SBP Portal Python backend."""

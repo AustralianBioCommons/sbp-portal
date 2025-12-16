@@ -106,32 +106,6 @@ jobs:
         env:
           DEV_SUFFIX: ${{ steps.dev_version.outputs.suffix }}
 
-      - name: Install server dependencies
-        working-directory: ./server
-        run: npm ci
-
-      - name: Create server .env file
-        working-directory: ./server
-        env:
-          SEQERA_API_URL: ${{ secrets.SEQERA_API_URL }}
-          SEQERA_ACCESS_TOKEN: ${{ secrets.SEQERA_ACCESS_TOKEN }}
-          COMPUTE_ID: ${{ secrets.COMPUTE_ID }}
-          WORK_DIR: ${{ secrets.WORK_DIR }}
-          WORK_SPACE: ${{ secrets.WORK_SPACE }}
-        run: |
-          set -euo pipefail
-          echo "NODE_ENV=production" > .env
-          echo "PORT=3000" >> .env
-          echo "SEQERA_API_URL=${SEQERA_API_URL}" >> .env
-          echo "SEQERA_ACCESS_TOKEN=${SEQERA_ACCESS_TOKEN}" >> .env
-          echo "COMPUTE_ID=${COMPUTE_ID}" >> .env
-          echo "WORK_DIR=${WORK_DIR}" >> .env
-          echo "WORK_SPACE=${WORK_SPACE}" >> .env
-
-      - name: Build server
-        working-directory: ./server
-        run: npm run build
-
       - name: Build production bundle
         run: npx ng build --configuration production --output-path dist/sbp-portal-prod
 

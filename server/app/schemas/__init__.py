@@ -1,1 +1,0 @@
-"""Shared response/request schemas."""
