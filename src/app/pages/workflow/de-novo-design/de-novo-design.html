@@ -308,7 +308,7 @@
 
 <!-- Success Dialog -->
 <app-dialog
-  [isOpen]="true"
+  [isOpen]="workflowSubmission.showSuccessDialog()"
   [title]="'Your workflow is submitted!'"
   [message]="'Run ID: ' + (workflowSubmission.successDialogData()?.runId || 'N/A') + '\nStatus: ' + (workflowSubmission.successDialogData()?.status || 'N/A')"
   [confirmText]="'View Jobs'"
