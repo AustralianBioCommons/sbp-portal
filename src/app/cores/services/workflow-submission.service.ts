@@ -39,20 +39,23 @@ export class WorkflowSubmissionService {
     datasetId?: string,
     onError?: (error: Error) => void
   ): void {
-    // Construct the workflow launch form matching the working Next.js implementation
-    const launchForm: WorkflowLaunchForm = {
+    // Generate a random run name with timestamp and random string
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const randomRunName = `run-${timestamp}-${randomStr}`;
+
+    // Construct the launch configuration
+    const launch = {
       pipeline:
         (formData.pipeline as string) || "https://github.com/nextflow-io/hello",
-      revision: (formData.revision as string) || "main",
-      configProfiles: (formData.configProfiles as string[]) || [],
-      runName: (formData.runName as string) || "default-name",
-      // Convert all form data to paramsText as JSON string
-      paramsText: JSON.stringify({
-        ...formData,
-      }),
+      revision: (formData.revision as string) || "dev",
+      configProfiles: (formData.configProfiles as string[]) || ["singularity"],
+      runName: (formData.runName as string) || randomRunName,
+      paramsText: null as string | null,
     };
 
-    console.log("Submitting workflow:", launchForm);
+    console.log("Submitting workflow with launch config:", launch);
+    console.log("Form data:", formData);
     if (datasetId) {
       console.log("With dataset ID:", datasetId);
     }
@@ -60,8 +63,8 @@ export class WorkflowSubmissionService {
     // Show loading state
     this.isSubmitting.set(true);
 
-    // Call the API service with dataset ID
-    this.workflowApiService.launchWorkflow(launchForm, datasetId).subscribe({
+    // Call the API service with separate launch and formData
+    this.workflowApiService.launchWorkflow(launch, formData, datasetId).subscribe({
       next: (response) => {
         console.log("Workflow launched successfully:", response);
         // Hide loading state

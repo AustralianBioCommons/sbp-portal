@@ -28,6 +28,7 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/auth.service";
+import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
@@ -76,6 +77,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   public schemaLoader = inject(SchemaLoaderService);
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
+  // Dataset upload service
+  private datasetUploadService = inject(DatasetUploadService);
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
@@ -309,10 +312,46 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     const formData = this.getFormData();
 
-    console.log("Submitting workflow...");
+    console.log("Starting workflow submission with dataset upload...");
 
-    // Submit workflow directly without dataset upload
-    this.workflowSubmission.submitWorkflow(formData);
+    this.workflowSubmission.isSubmitting.set(true);
+
+    this.datasetUploadService
+      .uploadDataset({
+        formData,
+      })
+      .subscribe({
+        next: (response) => {
+          const datasetId = response.datasetId;
+          console.log("Dataset upload response:", response);
+
+          if (!datasetId) {
+            console.error("Dataset upload succeeded but no datasetId returned");
+            this.workflowSubmission.isSubmitting.set(false);
+            alert("Dataset upload succeeded but no dataset ID was returned.");
+            return;
+          }
+
+          this.workflowSubmission.submitWorkflowWithDataset(
+            formData,
+            datasetId,
+            (error) => {
+              console.error("Workflow launch failed after dataset upload", error);
+              this.workflowSubmission.isSubmitting.set(false);
+              alert(
+                `Workflow launch failed after dataset upload: ${
+                  error.message || "Unknown error"
+                }`
+              );
+            }
+          );
+        },
+        error: (error) => {
+          console.error("Dataset upload failed", error);
+          this.workflowSubmission.isSubmitting.set(false);
+          alert(`Failed to upload dataset: ${error.message || "Unknown error"}`);
+        },
+      });
   }
 
   // Refresh the page to submit a new job
