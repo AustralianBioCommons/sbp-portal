@@ -315,9 +315,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.workflowSubmission.submitWorkflow(formData);
   }
 
-  // Navigate to home page (delegates to service)
-  goToHome() {
-    this.workflowSubmission.goToHome();
+  // Refresh the page to submit a new job
+  submitNewJob() {
+    window.location.reload();
   }
 
   // Navigate to jobs page (delegates to service)

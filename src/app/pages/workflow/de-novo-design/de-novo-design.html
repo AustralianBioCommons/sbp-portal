@@ -308,11 +308,11 @@
 
 <!-- Success Dialog -->
 <app-dialog
-  [isOpen]="workflowSubmission.showSuccessDialog()"
+  [isOpen]="true"
   [title]="'Your workflow is submitted!'"
   [message]="'Run ID: ' + (workflowSubmission.successDialogData()?.runId || 'N/A') + '\nStatus: ' + (workflowSubmission.successDialogData()?.status || 'N/A')"
-  [confirmText]="'Go to Jobs'"
-  [cancelText]="'Back to Home'"
+  [confirmText]="'View Jobs'"
+  [cancelText]="'New Job'"
   (confirmed)="goToJobs()"
-  (cancelled)="goToHome()"
+  (cancelled)="submitNewJob()"
 ></app-dialog>
