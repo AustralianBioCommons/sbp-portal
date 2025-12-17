@@ -2,7 +2,6 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import {
-  WorkflowLaunchForm,
   WorkflowLaunchPayload,
   WorkflowLaunchResponse,
 } from "../interfaces/workflow.interfaces";

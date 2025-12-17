@@ -1,6 +1,5 @@
 import { inject, Injectable, signal } from "@angular/core";
 import { Router } from "@angular/router";
-import { WorkflowLaunchForm } from "../interfaces/workflow.interfaces";
 import { WorkflowApiService } from "./workflow-api.service";
 
 @Injectable({
