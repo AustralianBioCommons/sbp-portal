@@ -104,10 +104,12 @@
           title="Input Configuration"
           description="Configure input parameters based on the workflow schema."
         >
-          @if (inputSchemaData() && inputSchemaFields().length > 0) {
+          @if (schemaLoader.inputSchemaData() &&
+          schemaLoader.inputSchemaFields().length > 0) {
           <div class="mt-4">
             <div class="space-y-4">
-              @for (row of inputRows(); track row.id; let i = $index) {
+              @for (row of schemaLoader.inputRows(); track row.id; let i =
+              $index) {
               <div
                 class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
               >
@@ -120,7 +122,8 @@
                 <div
                   class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
-                  @for (field of requiredInputFields(); track field.name) {
+                  @for (field of schemaLoader.requiredInputFields(); track
+                  field.name) {
                   <app-form-field
                     [field]="field"
                     [value]="getRowValue(row.id, field.name)"
@@ -218,7 +221,7 @@
             [selectedTool]="selectedToolLabel()"
             [hasParameters]="selectedToolHasParams()"
             [summaryItems]="formSummary()"
-            [requiredFieldCount]="requiredInputFields().length"
+            [requiredFieldCount]="schemaLoader.requiredInputFields().length"
             [isValid]="isFormValid()"
           ></app-configuration-summary>
         </app-step-content>
@@ -297,3 +300,19 @@
     </div>
   </div>
 </section>
+
+<!-- Loading Overlay -->
+@if (workflowSubmission.isSubmitting()) {
+<app-loading></app-loading>
+}
+
+<!-- Success Dialog -->
+<app-dialog
+  [isOpen]="workflowSubmission.showSuccessDialog()"
+  [title]="'Your workflow is submitted!'"
+  [message]="'Run ID: ' + (workflowSubmission.successDialogData()?.runId || 'N/A') + '\nStatus: ' + (workflowSubmission.successDialogData()?.status || 'N/A')"
+  [confirmText]="'View Jobs'"
+  [cancelText]="'New Job'"
+  (confirmed)="goToJobs()"
+  (cancelled)="submitNewJob()"
+></app-dialog>
