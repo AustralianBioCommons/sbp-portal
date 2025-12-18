@@ -46,7 +46,7 @@ export class WorkflowSubmissionService {
     // Construct the launch configuration
     const launch = {
       pipeline:
-        (formData.pipeline as string) || "https://github.com/nextflow-io/hello",
+        (formData.pipeline as string),
       revision: (formData.revision as string) || "dev",
       configProfiles: (formData.configProfiles as string[]) || ["singularity"],
       runName: (formData.runName as string) || randomRunName,

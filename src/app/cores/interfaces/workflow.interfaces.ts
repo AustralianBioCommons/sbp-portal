@@ -13,13 +13,7 @@ export interface WorkflowLaunchForm {
  * Workflow launch payload
  */
 export interface WorkflowLaunchPayload {
-  launch: {
-    pipeline: string;
-    revision?: string;
-    configProfiles?: string[];
-    runName?: string;
-    paramsText?: string | null;
-  };
+  launch: WorkflowLaunchForm;
   formData: Record<string, unknown>;
 }
 
