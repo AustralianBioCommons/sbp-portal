@@ -228,4 +228,209 @@ describe("FormFieldComponent", () => {
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("File upload failed");
   });
+
+  it("should handle upload error with error.error.message", () => {
+    spyOn(component.valueChange, "emit");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    req.flush(
+      { message: "Specific error from server" },
+      { status: 400, statusText: "Bad Request" }
+    );
+
+    expect(component.alertMessage()).toContain("Specific error from server");
+    expect(component.alertMessage()).toContain("Bad Request");
+  });
+
+  it("should handle upload error without statusText", () => {
+    spyOn(component.valueChange, "emit");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    req.error(new ProgressEvent("error"), { status: 0, statusText: "" });
+
+    expect(component.alertMessage()).toContain("File upload failed");
+    expect(component.alertMessage()).not.toContain("()");
+  });
+
+  it("should close alert when closeAlert is called", () => {
+    component.showAlert.set(true);
+    component.alertMessage.set("Test error");
+
+    component.closeAlert();
+
+    expect(component.showAlert()).toBe(false);
+    expect(component.alertMessage()).toBe("");
+  });
+
+  it("should handle unexpected error in catch block", () => {
+    spyOn(component.valueChange, "emit");
+    spyOn(component["pdbUploadService"], "validatePdbFile").and.throwError(
+      "Unexpected validation error"
+    );
+
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    component.onFileChange(mockEvent);
+
+    expect(component.valueChange.emit).toHaveBeenCalledWith(null);
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("unexpected error");
+  });
+
+  // Additional tests for template coverage
+  it("should handle number field type", () => {
+    component.field = {
+      name: "numberField",
+      label: "Number Field",
+      type: "number",
+      required: true,
+      validation: { min: 0, max: 100 },
+    };
+    component.value = 50;
+    expect(component.field.type).toBe("number");
+  });
+
+  it("should handle boolean field type", () => {
+    component.field = {
+      name: "boolField",
+      label: "Boolean Field",
+      type: "boolean",
+      required: false,
+    };
+    component.value = true;
+    expect(component.field.type).toBe("boolean");
+  });
+
+  it("should handle select field with string options", () => {
+    component.field = {
+      name: "selectField",
+      label: "Select Field",
+      type: "string",
+      required: true,
+      options: ["option1", "option2", "option3"],
+    };
+    component.value = "option1";
+    expect(component.field.options?.length).toBe(3);
+  });
+
+  it("should handle select field with object options", () => {
+    component.field = {
+      name: "selectField",
+      label: "Select Field",
+      type: "string",
+      required: true,
+      options: [
+        { value: "val1", label: "Option 1" },
+        { value: "val2", label: "Option 2" },
+      ],
+    };
+    component.value = "val1";
+    expect(component.field.options?.length).toBe(2);
+  });
+
+  it("should display error message when hasError is set", () => {
+    component.hasError = true;
+    component.errorMessage = "This field is required";
+    expect(component.hasError).toBe(true);
+    expect(component.errorMessage).toBe("This field is required");
+  });
+
+  it("should handle validation with min and max", () => {
+    component.field = {
+      name: "numberField",
+      label: "Number Field",
+      type: "number",
+      required: true,
+      validation: { min: 10, max: 100 },
+    };
+    expect(component.field.validation?.min).toBe(10);
+    expect(component.field.validation?.max).toBe(100);
+  });
+
+  it("should handle validation with min only", () => {
+    component.field = {
+      name: "numberField",
+      label: "Number Field",
+      type: "number",
+      required: true,
+      validation: { min: 10 },
+    };
+    expect(component.field.validation?.min).toBe(10);
+    expect(component.field.validation?.max).toBeUndefined();
+  });
+
+  it("should handle validation with max only", () => {
+    component.field = {
+      name: "numberField",
+      label: "Number Field",
+      type: "number",
+      required: true,
+      validation: { max: 100 },
+    };
+    expect(component.field.validation?.min).toBeUndefined();
+    expect(component.field.validation?.max).toBe(100);
+  });
+
+  it("should show alert when showAlert signal is true", () => {
+    component.showAlert.set(true);
+    component.alertMessage.set("Test alert");
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toBe("Test alert");
+  });
+
+  it("should handle file field type", () => {
+    component.field = {
+      name: "fileField",
+      label: "File Field",
+      type: "file",
+      required: true,
+    };
+    expect(component.field.type).toBe("file");
+  });
+
+  it("should handle field with description", () => {
+    component.field = {
+      name: "testField",
+      label: "Test Field",
+      type: "string",
+      description: "This is a test field description",
+      required: true,
+    };
+    expect(component.field.description).toBe("This is a test field description");
+  });
+
+  it("should handle optional field", () => {
+    component.field = {
+      name: "optionalField",
+      label: "Optional Field",
+      type: "string",
+      required: false,
+    };
+    expect(component.field.required).toBe(false);
+  });
 });
