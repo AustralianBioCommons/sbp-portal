@@ -332,11 +332,22 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             return;
           }
 
+          // Add pipeline URL for workflow submission
+          const pipelineUrl =
+            "https://github.com/Australian-Structural-Biology-Computing/bindflow.git";
+          const workflowFormData = {
+            ...formData,
+            pipeline: pipelineUrl
+          };
+
           this.workflowSubmission.submitWorkflowWithDataset(
-            formData,
+            workflowFormData,
             datasetId,
             (error) => {
-              console.error("Workflow launch failed after dataset upload", error);
+              console.error(
+                "Workflow launch failed after dataset upload",
+                error
+              );
               this.workflowSubmission.isSubmitting.set(false);
               alert(
                 `Workflow launch failed after dataset upload: ${
@@ -529,15 +540,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Add pipeline URL for de-novo-design workflow
-    const pipelineUrl =
-      "https://github.com/Australian-Structural-Biology-Computing/bindflow.git";
-
-    // Merge current data with optional defaults and pipeline
+    // Merge current data with optional defaults (without pipeline)
     return {
       ...optionalDefaults,
-      ...currentData,
-      pipeline: pipelineUrl,
+      ...currentData
     };
   }
 

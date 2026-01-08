@@ -1,6 +1,7 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { Component, EventEmitter, inject, Input, Output } from "@angular/core";
 import { InputSchemaField } from "../../../cores/input-schema.service";
+import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 
 @Component({
   selector: "app-form-field",
@@ -168,9 +169,11 @@ import { InputSchemaField } from "../../../cores/input-schema.service";
       </div>
       }
     </div>
-  `,
+  `
 })
 export class FormFieldComponent {
+  private pdbUploadService = inject(PdbUploadService);
+
   @Input({ required: true }) field!: InputSchemaField;
   @Input() value: unknown = "";
   @Input() hasError = false;
@@ -194,7 +197,47 @@ export class FormFieldComponent {
   onFileChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
-    this.valueChange.emit(file?.name || "");
+
+    if (!file) {
+      this.valueChange.emit(null);
+      return;
+    }
+
+    // Validate the file using the service
+    const validation = this.pdbUploadService.validatePdbFile(file);
+
+    if (!validation.valid) {
+      // If validation fails, emit null and show error
+      console.error("File validation failed:", validation.error);
+      alert(`File validation failed: ${validation.error}`);
+      this.valueChange.emit(null);
+      return;
+    }
+
+    // Upload the PDB file to the backend
+    console.log("Uploading PDB file:", file.name);
+    this.pdbUploadService
+      .uploadPdbFile({
+        file,
+        metadata: {
+          fieldName: this.field.name,
+          uploadedAt: new Date().toISOString()
+        }
+      })
+      .subscribe({
+        next: (response) => {
+          console.log("PDB file uploaded successfully:", response);
+          // Emit the file URL or file ID from the backend response
+          this.valueChange.emit(
+            response.fileUrl || response.fileName || file.name
+          );
+        },
+        error: (error) => {
+          console.error("PDB file upload failed:", error);
+          alert(`File upload failed: ${error.message || "Unknown error"}`);
+          this.valueChange.emit(null);
+        }
+      });
   }
 
   getInputClasses(): string {
