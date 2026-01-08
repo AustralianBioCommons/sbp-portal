@@ -12,6 +12,7 @@ import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 
 import { filter, Subscription, take } from "rxjs";
+import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
@@ -49,6 +50,7 @@ type StepItem = Step;
   imports: [
     CommonModule,
     FormsModule,
+    AlertComponent,
     ButtonComponent,
     DialogComponent,
     LoadingComponent,
@@ -79,6 +81,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   public workflowSubmission = inject(WorkflowSubmissionService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
+
+  // Alert state
+  showAlert = signal(false);
+  alertMessage = signal("");
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
@@ -328,7 +334,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           if (!datasetId) {
             console.error("Dataset upload succeeded but no datasetId returned");
             this.workflowSubmission.isSubmitting.set(false);
-            alert("Dataset upload succeeded but no dataset ID was returned.");
+            this.showError(
+              "Dataset upload succeeded but no dataset ID was returned."
+            );
             return;
           }
 
@@ -349,7 +357,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
                 error
               );
               this.workflowSubmission.isSubmitting.set(false);
-              alert(
+              this.showError(
                 `Workflow launch failed after dataset upload: ${
                   error.message || "Unknown error"
                 }`
@@ -360,8 +368,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error("Dataset upload failed", error);
           this.workflowSubmission.isSubmitting.set(false);
-          alert(`Failed to upload dataset: ${error.message || "Unknown error"}`);
-        },
+          this.showError(
+            `Failed to upload dataset: ${error.message || "Unknown error"}`
+          );
+        }
       });
   }
 
@@ -379,6 +389,16 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   loginWithReturnUrl() {
     const currentUrl = window.location.pathname + window.location.search;
     this.auth.login(currentUrl);
+  }
+
+  closeAlert(): void {
+    this.showAlert.set(false);
+    this.alertMessage.set("");
+  }
+
+  private showError(message: string): void {
+    this.alertMessage.set(message);
+    this.showAlert.set(true);
   }
 
   // Initialize form data with default values from schema

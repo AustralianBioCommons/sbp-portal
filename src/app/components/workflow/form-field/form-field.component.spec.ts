@@ -104,7 +104,6 @@ describe("FormFieldComponent", () => {
 
   it("should handle file change event with non-PDB file", () => {
     spyOn(component.valueChange, "emit");
-    spyOn(window, "alert");
     const mockFile = new File(["test"], "test.txt", { type: "text/plain" });
     const mockEvent = {
       target: { files: [mockFile] },
@@ -112,9 +111,8 @@ describe("FormFieldComponent", () => {
 
     component.onFileChange(mockEvent);
     expect(component.valueChange.emit).toHaveBeenCalledWith(null);
-    expect(window.alert).toHaveBeenCalledWith(
-      "File validation failed: File must have .pdb extension"
-    );
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("File must have .pdb extension");
   });
 
   it("should handle file change event with no file", () => {
@@ -209,7 +207,6 @@ describe("FormFieldComponent", () => {
 
   it("should handle upload error for valid PDB file", () => {
     spyOn(component.valueChange, "emit");
-    spyOn(window, "alert");
     const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
       type: "chemical/x-pdb",
     });
@@ -228,6 +225,7 @@ describe("FormFieldComponent", () => {
     );
 
     expect(component.valueChange.emit).toHaveBeenCalledWith(null);
-    expect(window.alert).toHaveBeenCalled();
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("File upload failed");
   });
 });

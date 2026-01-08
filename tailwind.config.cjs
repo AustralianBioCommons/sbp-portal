@@ -20,6 +20,8 @@ module.exports = {
           medium: "#cbd5e0",
           dark: "#8c9aacff",
         },
+        success: "#10b981",
+        error: "#ef4444",
       },
       borderRadius: {
         "DEFAULT-10": "10px",
