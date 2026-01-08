@@ -30,15 +30,12 @@ export class PdbUploadService {
   uploadPdbFile(request: PdbUploadRequest): Observable<PdbUploadResponse> {
     const formData = new FormData();
     formData.append("file", request.file);
-    
+
     if (request.metadata) {
       formData.append("metadata", JSON.stringify(request.metadata));
     }
 
-    return this.http.post<PdbUploadResponse>(
-      `${this.apiUrl}/upload`,
-      formData
-    );
+    return this.http.post<PdbUploadResponse>(`${this.apiUrl}/upload`, formData);
   }
 
   /**
@@ -66,7 +63,7 @@ export class PdbUploadService {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = (e) => reject(new Error("Failed to read file"));
+      reader.onerror = () => reject(new Error("Failed to read file"));
       reader.readAsText(file);
     });
   }

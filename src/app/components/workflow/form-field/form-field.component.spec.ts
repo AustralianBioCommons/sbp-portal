@@ -1,11 +1,18 @@
 import { NO_ERRORS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { provideHttpClient } from "@angular/common/http";
+import {
+  provideHttpClientTesting,
+  HttpTestingController,
+} from "@angular/common/http/testing";
 import { InputSchemaField } from "../../../cores/input-schema.service";
 import { FormFieldComponent } from "./form-field.component";
+import { environment } from "../../../../environments/environment";
 
 describe("FormFieldComponent", () => {
   let component: FormFieldComponent;
   let fixture: ComponentFixture<FormFieldComponent>;
+  let httpMock: HttpTestingController;
 
   const mockStringField: InputSchemaField = {
     name: "testField",
@@ -19,15 +26,21 @@ describe("FormFieldComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FormFieldComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(FormFieldComponent);
     component = fixture.componentInstance;
+    httpMock = TestBed.inject(HttpTestingController);
 
     // Set required inputs
     component.field = mockStringField;
     component.value = "";
+  });
+
+  afterEach(() => {
+    httpMock.verify();
   });
 
   it("should create", () => {
@@ -89,15 +102,19 @@ describe("FormFieldComponent", () => {
     expect(classes).toContain("file:bg-red-100 file:text-red-700");
   });
 
-  it("should handle file change event", () => {
+  it("should handle file change event with non-PDB file", () => {
     spyOn(component.valueChange, "emit");
+    spyOn(window, "alert");
     const mockFile = new File(["test"], "test.txt", { type: "text/plain" });
     const mockEvent = {
       target: { files: [mockFile] },
     } as unknown as Event;
 
     component.onFileChange(mockEvent);
-    expect(component.valueChange.emit).toHaveBeenCalledWith("test.txt");
+    expect(component.valueChange.emit).toHaveBeenCalledWith(null);
+    expect(window.alert).toHaveBeenCalledWith(
+      "File validation failed: File must have .pdb extension"
+    );
   });
 
   it("should handle file change event with no file", () => {
@@ -107,6 +124,110 @@ describe("FormFieldComponent", () => {
     } as unknown as Event;
 
     component.onFileChange(mockEvent);
-    expect(component.valueChange.emit).toHaveBeenCalledWith("");
+    expect(component.valueChange.emit).toHaveBeenCalledWith(null);
+  });
+
+  it("should successfully upload a valid PDB file", () => {
+    spyOn(component.valueChange, "emit");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    const mockResponse = {
+      message: "File uploaded successfully",
+      success: true,
+      fileUrl: "https://example.com/test.pdb",
+      fileName: "test.pdb",
+    };
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    expect(req.request.method).toBe("POST");
+    req.flush(mockResponse);
+
+    expect(component.valueChange.emit).toHaveBeenCalledWith(
+      mockResponse.fileUrl
+    );
+  });
+
+  it("should use fileName when fileUrl is not available", () => {
+    spyOn(component.valueChange, "emit");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    const mockResponse = {
+      message: "File uploaded successfully",
+      success: true,
+      fileName: "test.pdb",
+    };
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    req.flush(mockResponse);
+
+    expect(component.valueChange.emit).toHaveBeenCalledWith(
+      mockResponse.fileName
+    );
+  });
+
+  it("should use file name when neither fileUrl nor fileName is available", () => {
+    spyOn(component.valueChange, "emit");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "original.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    const mockResponse = {
+      message: "File uploaded successfully",
+      success: true,
+    };
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    req.flush(mockResponse);
+
+    expect(component.valueChange.emit).toHaveBeenCalledWith("original.pdb");
+  });
+
+  it("should handle upload error for valid PDB file", () => {
+    spyOn(component.valueChange, "emit");
+    spyOn(window, "alert");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    req.flush(
+      { message: "Upload failed" },
+      { status: 500, statusText: "Server Error" }
+    );
+
+    expect(component.valueChange.emit).toHaveBeenCalledWith(null);
+    expect(window.alert).toHaveBeenCalled();
   });
 });
