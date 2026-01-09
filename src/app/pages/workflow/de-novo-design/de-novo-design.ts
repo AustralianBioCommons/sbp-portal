@@ -12,6 +12,7 @@ import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 
 import { filter, Subscription, take } from "rxjs";
+import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
@@ -49,6 +50,7 @@ type StepItem = Step;
   imports: [
     CommonModule,
     FormsModule,
+    AlertComponent,
     ButtonComponent,
     DialogComponent,
     LoadingComponent,
@@ -79,6 +81,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   public workflowSubmission = inject(WorkflowSubmissionService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
+
+  // Alert state
+  showAlert = signal(false);
+  alertMessage = signal("");
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
@@ -289,10 +295,23 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       () => {
         // Success callback: initialize form data
         const defaultValues = this.schemaLoader.generateDefaultValues();
+        
+        // Add default URLs for settings fields
+        defaultValues.settings_filters = "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_filters.json";
+        defaultValues.settings_advanced = "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_4stage_multimer.json";
+        
         this.initializeFormData(defaultValues);
 
         // Initialize table with one default row
         this.schemaLoader.initializeDefaultRow(() => {
+          // After row is created, update it with default URLs
+          const rows = this.schemaLoader.inputRows();
+          if (rows.length > 0) {
+            const firstRowId = rows[0].id;
+            this.schemaLoader.updateRowValue(firstRowId, "settings_filters", defaultValues.settings_filters);
+            this.schemaLoader.updateRowValue(firstRowId, "settings_advanced", defaultValues.settings_advanced);
+          }
+          
           // After row is created, sync to form data
           this.syncRowsToFormData();
           this.validateAllRows();
@@ -328,17 +347,30 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           if (!datasetId) {
             console.error("Dataset upload succeeded but no datasetId returned");
             this.workflowSubmission.isSubmitting.set(false);
-            alert("Dataset upload succeeded but no dataset ID was returned.");
+            this.showError(
+              "Dataset upload succeeded but no dataset ID was returned."
+            );
             return;
           }
 
+          // Add pipeline URL for workflow submission
+          const pipelineUrl =
+            "https://github.com/Australian-Structural-Biology-Computing/bindflow.git";
+          const workflowFormData = {
+            ...formData,
+            pipeline: pipelineUrl
+          };
+
           this.workflowSubmission.submitWorkflowWithDataset(
-            formData,
+            workflowFormData,
             datasetId,
             (error) => {
-              console.error("Workflow launch failed after dataset upload", error);
+              console.error(
+                "Workflow launch failed after dataset upload",
+                error
+              );
               this.workflowSubmission.isSubmitting.set(false);
-              alert(
+              this.showError(
                 `Workflow launch failed after dataset upload: ${
                   error.message || "Unknown error"
                 }`
@@ -349,8 +381,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error("Dataset upload failed", error);
           this.workflowSubmission.isSubmitting.set(false);
-          alert(`Failed to upload dataset: ${error.message || "Unknown error"}`);
-        },
+          this.showError(
+            `Failed to upload dataset: ${error.message || "Unknown error"}`
+          );
+        }
       });
   }
 
@@ -368,6 +402,16 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   loginWithReturnUrl() {
     const currentUrl = window.location.pathname + window.location.search;
     this.auth.login(currentUrl);
+  }
+
+  closeAlert(): void {
+    this.showAlert.set(false);
+    this.alertMessage.set("");
+  }
+
+  private showError(message: string): void {
+    this.alertMessage.set(message);
+    this.showAlert.set(true);
   }
 
   // Initialize form data with default values from schema
@@ -529,15 +573,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Add pipeline URL for de-novo-design workflow
-    const pipelineUrl =
-      "https://github.com/Australian-Structural-Biology-Computing/bindflow.git";
-
-    // Merge current data with optional defaults and pipeline
+    // Merge current data with optional defaults (without pipeline)
     return {
       ...optionalDefaults,
-      ...currentData,
-      pipeline: pipelineUrl,
+      ...currentData
     };
   }
 
@@ -547,7 +586,15 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     const fields = this.schemaLoader.inputSchemaFields();
     const summary: { label: string; value: string; fieldName: string }[] = [];
 
+    // Fields to exclude from summary
+    const excludedFields = ["settings_filters", "settings_advanced"];
+
     fields.forEach((field) => {
+      // Skip excluded fields
+      if (excludedFields.includes(field.name)) {
+        return;
+      }
+
       const value = data[field.name];
       if (value !== undefined && value !== null && value !== "") {
         let displayValue = String(value);
@@ -597,7 +644,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   private syncRowsToFormData(): void {
     const rowValues = this.schemaLoader.getFirstRowValues();
     if (Object.keys(rowValues).length > 0) {
-      this.formData.set(rowValues);
+      // Preserve existing formData (like default URLs) and merge with row values
+      const currentData = this.formData();
+      this.formData.set({ ...currentData, ...rowValues });
       this.validateForm();
     }
   }

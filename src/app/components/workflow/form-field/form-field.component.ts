@@ -1,13 +1,31 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  Output,
+  signal
+} from "@angular/core";
 import { InputSchemaField } from "../../../cores/input-schema.service";
+import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
+import { AlertComponent } from "../../alert/alert.component";
 
 @Component({
   selector: "app-form-field",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AlertComponent],
   template: `
     <div class="space-y-2">
+      <!-- Error Alert -->
+      @if (showAlert()) {
+      <app-alert
+        [type]="'error'"
+        [message]="alertMessage()"
+        [dismissible]="true"
+        (dismissed)="closeAlert()"
+      ></app-alert>
+      }
       <!-- Field Label -->
       <label [for]="fieldId" class="block text-sm font-medium text-gray-700">
         {{ field.label || field.name }}
@@ -168,9 +186,15 @@ import { InputSchemaField } from "../../../cores/input-schema.service";
       </div>
       }
     </div>
-  `,
+  `
 })
 export class FormFieldComponent {
+  private pdbUploadService = inject(PdbUploadService);
+
+  // Alert state
+  showAlert = signal(false);
+  alertMessage = signal("");
+
   @Input({ required: true }) field!: InputSchemaField;
   @Input() value: unknown = "";
   @Input() hasError = false;
@@ -181,6 +205,16 @@ export class FormFieldComponent {
 
   get fieldId(): string {
     return `field-${this.field.name}`;
+  }
+
+  closeAlert(): void {
+    this.showAlert.set(false);
+    this.alertMessage.set("");
+  }
+
+  private showError(message: string): void {
+    this.alertMessage.set(message);
+    this.showAlert.set(true);
   }
 
   onValueChange(newValue: unknown): void {
@@ -194,7 +228,64 @@ export class FormFieldComponent {
   onFileChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
-    this.valueChange.emit(file?.name || "");
+
+    if (!file) {
+      this.valueChange.emit(null);
+      return;
+    }
+
+    try {
+      // Validate the file using the service
+      const validation = this.pdbUploadService.validatePdbFile(file);
+
+      if (!validation.valid) {
+        // If validation fails, emit null and show error
+        console.error("File validation failed:", validation.error);
+        this.showError(`${validation.error}`);
+        this.valueChange.emit(null);
+        return;
+      }
+
+      // Upload the PDB file to the backend
+      console.log("Uploading PDB file:", file.name);
+      this.pdbUploadService
+        .uploadPdbFile({
+          file,
+          metadata: {
+            fieldName: this.field.name,
+            uploadedAt: new Date().toISOString()
+          }
+        })
+        .subscribe({
+          next: (response) => {
+            console.log("PDB file uploaded successfully:", response);
+            // Emit the file URL or file ID from the backend response
+            this.valueChange.emit(
+              response.fileUrl || response.fileName || file.name
+            );
+          },
+          error: (error) => {
+            console.error("PDB file upload failed:", error);
+            const errorMessage =
+              error?.error?.message ||
+              error?.message ||
+              "Unknown error occurred";
+            const statusText = error?.statusText
+              ? ` (${error.statusText})`
+              : "";
+            this.showError(
+              `File upload failed: ${errorMessage}${statusText}. Please try again or contact support if the problem persists.`
+            );
+            this.valueChange.emit(null);
+          }
+        });
+    } catch (error) {
+      console.error("Unexpected error during file upload:", error);
+      this.showError(
+        "An unexpected error occurred while processing the file. Please try again or contact support."
+      );
+      this.valueChange.emit(null);
+    }
   }
 
   getInputClasses(): string {

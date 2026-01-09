@@ -1,4 +1,14 @@
 <section class="de-novo-design-bg">
+  <!-- Error Alert -->
+  @if (showAlert()) {
+  <app-alert
+    [type]="'error'"
+    [message]="alertMessage()"
+    [dismissible]="true"
+    (dismissed)="closeAlert()"
+  ></app-alert>
+  }
+
   <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Browser-style Tabs attached to container -->
     <nav class="flex justify-center" aria-label="Tabs">
