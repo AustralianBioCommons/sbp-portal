@@ -295,10 +295,23 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       () => {
         // Success callback: initialize form data
         const defaultValues = this.schemaLoader.generateDefaultValues();
+        
+        // Add default URLs for settings fields
+        defaultValues.settings_filters = "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_filters.json";
+        defaultValues.settings_advanced = "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_4stage_multimer.json";
+        
         this.initializeFormData(defaultValues);
 
         // Initialize table with one default row
         this.schemaLoader.initializeDefaultRow(() => {
+          // After row is created, update it with default URLs
+          const rows = this.schemaLoader.inputRows();
+          if (rows.length > 0) {
+            const firstRowId = rows[0].id;
+            this.schemaLoader.updateRowValue(firstRowId, "settings_filters", defaultValues.settings_filters);
+            this.schemaLoader.updateRowValue(firstRowId, "settings_advanced", defaultValues.settings_advanced);
+          }
+          
           // After row is created, sync to form data
           this.syncRowsToFormData();
           this.validateAllRows();
@@ -573,7 +586,15 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     const fields = this.schemaLoader.inputSchemaFields();
     const summary: { label: string; value: string; fieldName: string }[] = [];
 
+    // Fields to exclude from summary
+    const excludedFields = ["settings_filters", "settings_advanced"];
+
     fields.forEach((field) => {
+      // Skip excluded fields
+      if (excludedFields.includes(field.name)) {
+        return;
+      }
+
       const value = data[field.name];
       if (value !== undefined && value !== null && value !== "") {
         let displayValue = String(value);
@@ -623,7 +644,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   private syncRowsToFormData(): void {
     const rowValues = this.schemaLoader.getFirstRowValues();
     if (Object.keys(rowValues).length > 0) {
-      this.formData.set(rowValues);
+      // Preserve existing formData (like default URLs) and merge with row values
+      const currentData = this.formData();
+      this.formData.set({ ...currentData, ...rowValues });
       this.validateForm();
     }
   }

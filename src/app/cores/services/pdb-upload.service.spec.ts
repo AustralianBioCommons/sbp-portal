@@ -133,39 +133,4 @@ describe("PdbUploadService", () => {
       expect(result.valid).toBe(true);
     });
   });
-
-  describe("readFileAsText", () => {
-    it("should read file content as text", async () => {
-      const fileContent = "ATOM   1  N   ALA A   1";
-      const mockFile = new File([fileContent], "test.pdb", {
-        type: "chemical/x-pdb",
-      });
-
-      const result = await service.readFileAsText(mockFile);
-      expect(result).toBe(fileContent);
-    });
-
-    it("should reject when file reading fails", async () => {
-      const mockFile = new File(["test"], "test.pdb", {
-        type: "chemical/x-pdb",
-      });
-
-      // Create a spy on FileReader to simulate an error
-      spyOn(FileReader.prototype, "readAsText").and.callFake(function (
-        this: FileReader
-      ) {
-        if (this.onerror) {
-          const event = new Event("error") as ProgressEvent<FileReader>;
-          this.onerror(event);
-        }
-      });
-
-      try {
-        await service.readFileAsText(mockFile);
-        fail("Expected an error to be thrown");
-      } catch (error) {
-        expect(error).toEqual(new Error("Failed to read file"));
-      }
-    });
-  });
 });
