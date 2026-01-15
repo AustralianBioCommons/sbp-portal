@@ -17,10 +17,10 @@ import { AlertComponent } from "../../alert/alert.component";
   imports: [CommonModule, AlertComponent],
   template: `
     <div class="space-y-2">
-      <!-- Error Alert -->
+      <!-- Alert (Error or Success) -->
       @if (showAlert()) {
       <app-alert
-        [type]="'error'"
+        [type]="alertType()"
         [message]="alertMessage()"
         [dismissible]="true"
         (dismissed)="closeAlert()"
@@ -194,6 +194,7 @@ export class FormFieldComponent {
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
+  alertType = signal<'error' | 'success' | 'warning' | 'info'>('error');
 
   @Input({ required: true }) field!: InputSchemaField;
   @Input() value: unknown = "";
@@ -214,6 +215,13 @@ export class FormFieldComponent {
 
   private showError(message: string): void {
     this.alertMessage.set(message);
+    this.alertType.set('error');
+    this.showAlert.set(true);
+  }
+
+  private showSuccess(message: string): void {
+    this.alertMessage.set(message);
+    this.alertType.set('success');
     this.showAlert.set(true);
   }
 
@@ -258,7 +266,7 @@ export class FormFieldComponent {
         })
         .subscribe({
           next: (response) => {
-            console.log("PDB file uploaded successfully:", response);
+            this.showSuccess(`File "${file.name}" uploaded successfully!`);
             // Emit the file URL or file ID from the backend response
             this.valueChange.emit(
               response.fileUrl || response.fileName || file.name
