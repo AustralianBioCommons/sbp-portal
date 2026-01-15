@@ -152,6 +152,9 @@ describe("FormFieldComponent", () => {
     expect(component.valueChange.emit).toHaveBeenCalledWith(
       mockResponse.fileUrl
     );
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertType()).toBe('success');
+    expect(component.alertMessage()).toContain('uploaded successfully');
   });
 
   it("should use fileName when fileUrl is not available", () => {
@@ -226,6 +229,7 @@ describe("FormFieldComponent", () => {
 
     expect(component.valueChange.emit).toHaveBeenCalledWith(null);
     expect(component.showAlert()).toBe(true);
+    expect(component.alertType()).toBe('error');
     expect(component.alertMessage()).toContain("File upload failed");
   });
 
