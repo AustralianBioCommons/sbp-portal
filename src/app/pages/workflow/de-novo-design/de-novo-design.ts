@@ -608,6 +608,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           displayValue = value.join(", ");
         } else if (typeof value === "object") {
           displayValue = JSON.stringify(value);
+        } else if (typeof value === "string" && value.startsWith("s3://")) {
+          // Extract filename from S3 URI (e.g., s3://bucket/input/20260129_123456_protein.pdb -> 20260129_123456_protein.pdb)
+          const parts = value.split("/");
+          displayValue = parts[parts.length - 1];
         }
 
         summary.push({

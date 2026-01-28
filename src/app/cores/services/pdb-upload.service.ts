@@ -11,8 +11,9 @@ export interface PdbUploadRequest {
 export interface PdbUploadResponse {
   message: string;
   success: boolean;
-  fileId?: string;
-  fileName?: string;
+  fileId: string;
+  fileName: string;
+  s3Uri: string;
   fileUrl?: string;
   details?: unknown;
 }
