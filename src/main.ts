@@ -41,7 +41,9 @@ bootstrapApplication(AppComponent, {
       httpInterceptor: {
         allowedList: [
           // If apiBaseUrl is configured, use it; otherwise use relative paths pattern
-          environment.apiBaseUrl || `${window.location.origin}/api/*`,
+          environment.apiBaseUrl
+            ? `${environment.apiBaseUrl}/api/*`
+            : `${window.location.origin}/api/*`,
         ],
       },
     }),
