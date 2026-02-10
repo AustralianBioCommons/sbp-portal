@@ -35,6 +35,24 @@ export interface JobListQueryParams {
   offset?: number;
 }
 
+export interface CancelJobResponse {
+  message: string;
+  runId: string;
+  status: string;
+}
+
+export interface DeleteJobResponse {
+  runId: string;
+  deleted: boolean;
+  cancelledBeforeDelete: boolean;
+  message: string;
+}
+
+export interface BulkDeleteJobsResponse {
+  deleted: string[];
+  failed: Record<string, string>;
+}
+
 /**
  * Service for fetching workflow jobs from the backend API
  */
@@ -42,7 +60,8 @@ export interface JobListQueryParams {
   providedIn: "root",
 })
 export class JobsService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/api/workflows/jobs`;
+  private readonly jobsUrl = `${environment.apiBaseUrl}/api/workflows/jobs`;
+  private readonly workflowsUrl = `${environment.apiBaseUrl}/api/workflows`;
   private http = inject(HttpClient);
 
   /**
@@ -70,6 +89,26 @@ export class JobsService {
       }
     }
 
-    return this.http.get<JobListResponse>(this.apiUrl, { params: httpParams });
+    return this.http.get<JobListResponse>(this.jobsUrl, { params: httpParams });
+  }
+
+  cancelJob(runId: string): Observable<CancelJobResponse> {
+    return this.http.post<CancelJobResponse>(
+      `${this.workflowsUrl}/${encodeURIComponent(runId)}/cancel`,
+      {}
+    );
+  }
+
+  deleteJob(runId: string): Observable<DeleteJobResponse> {
+    return this.http.delete<DeleteJobResponse>(
+      `${this.jobsUrl}/${encodeURIComponent(runId)}`
+    );
+  }
+
+  bulkDeleteJobs(runIds: string[]): Observable<BulkDeleteJobsResponse> {
+    return this.http.post<BulkDeleteJobsResponse>(
+      `${this.jobsUrl}/bulk-delete`,
+      { runIds }
+    );
   }
 }

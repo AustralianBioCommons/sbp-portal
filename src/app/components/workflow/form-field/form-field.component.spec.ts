@@ -137,6 +137,7 @@ describe("FormFieldComponent", () => {
     const mockResponse = {
       message: "File uploaded successfully",
       success: true,
+      s3Uri: "s3://example-bucket/test.pdb",
       fileUrl: "https://example.com/test.pdb",
       fileName: "test.pdb",
     };
@@ -149,15 +150,68 @@ describe("FormFieldComponent", () => {
     expect(req.request.method).toBe("POST");
     req.flush(mockResponse);
 
+    expect(component.valueChange.emit).toHaveBeenCalledWith(mockResponse.s3Uri);
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertType()).toBe("success");
+    expect(component.alertMessage()).toContain("uploaded successfully");
+  });
+
+  it("should use fileUrl when s3Uri is not available", () => {
+    spyOn(component.valueChange, "emit");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    const mockResponse = {
+      message: "File uploaded successfully",
+      success: true,
+      fileUrl: "https://example.com/test.pdb",
+      fileName: "test.pdb",
+    };
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    req.flush(mockResponse);
+
     expect(component.valueChange.emit).toHaveBeenCalledWith(
       mockResponse.fileUrl
     );
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertType()).toBe('success');
-    expect(component.alertMessage()).toContain('uploaded successfully');
   });
 
-  it("should use fileName when fileUrl is not available", () => {
+  it("should use fileId when s3Uri and fileUrl are not available", () => {
+    spyOn(component.valueChange, "emit");
+    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
+      type: "chemical/x-pdb",
+    });
+    const mockEvent = {
+      target: { files: [mockFile] },
+    } as unknown as Event;
+
+    const mockResponse = {
+      message: "File uploaded successfully",
+      success: true,
+      fileId: "file-123",
+    };
+
+    component.onFileChange(mockEvent);
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+    );
+    req.flush(mockResponse);
+
+    expect(component.valueChange.emit).toHaveBeenCalledWith(
+      mockResponse.fileId
+    );
+  });
+
+  it("should use fileName when s3Uri, fileUrl, and fileId are not available", () => {
     spyOn(component.valueChange, "emit");
     const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
       type: "chemical/x-pdb",
@@ -184,7 +238,7 @@ describe("FormFieldComponent", () => {
     );
   });
 
-  it("should use file name when neither fileUrl nor fileName is available", () => {
+  it("should use file name when no identifiers are available", () => {
     spyOn(component.valueChange, "emit");
     const mockFile = new File(["ATOM   1  N   ALA A   1"], "original.pdb", {
       type: "chemical/x-pdb",

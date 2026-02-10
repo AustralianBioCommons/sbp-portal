@@ -27,6 +27,8 @@ export class JobsComponent implements OnInit {
   selectedJobs = signal<string[]>([]);
   showDeleteDialog = signal(false);
   showStatusDropdown = signal(false);
+  actionLoading = signal<Record<string, boolean>>({});
+  bulkDeleting = signal(false);
 
   // Filter and pagination state
   searchQuery = signal<string>("");
@@ -186,6 +188,21 @@ export class JobsComponent implements OnInit {
     }
   }
 
+  isCancelable(status: string): boolean {
+    return status === "In progress" || status === "In queue";
+  }
+
+  isActionLoading(jobId: string): boolean {
+    return Boolean(this.actionLoading()[jobId]);
+  }
+
+  private setActionLoading(jobId: string, loading: boolean): void {
+    this.actionLoading.update((current) => ({
+      ...current,
+      [jobId]: loading
+    }));
+  }
+
   /**
    * Toggle selection for a single job
    */
@@ -238,6 +255,11 @@ export class JobsComponent implements OnInit {
     this.showDeleteDialog.set(true);
   }
 
+  openDeleteDialogFor(jobId: string): void {
+    this.selectedJobs.set([jobId]);
+    this.showDeleteDialog.set(true);
+  }
+
   /**
    * Close delete confirmation dialog
    */
@@ -263,16 +285,49 @@ export class JobsComponent implements OnInit {
    * Confirm and delete selected jobs
    */
   confirmDelete(): void {
-    // TODO: Implement actual delete API call
-    console.log("Deleting jobs:", this.selectedJobs());
-    this.error.set(
-      "Delete functionality will be implemented when the backend API is ready."
-    );
+    const runIds = this.selectedJobs();
+    if (runIds.length === 0) {
+      this.closeDeleteDialog();
+      return;
+    }
 
-    // After successful delete:
-    // this.selectedJobs.set([]);
-    // this.loadJobs();
+    this.bulkDeleting.set(true);
+    this.jobsService.bulkDeleteJobs(runIds).subscribe({
+      next: (response) => {
+        if (Object.keys(response.failed || {}).length > 0) {
+          const failedCount = Object.keys(response.failed).length;
+          this.error.set(
+            `Failed to delete ${failedCount} job${failedCount > 1 ? "s" : ""}.`
+          );
+        }
+        this.selectedJobs.set([]);
+        this.loadJobs();
+        this.bulkDeleting.set(false);
+        this.closeDeleteDialog();
+      },
+      error: (err) => {
+        console.error("Error deleting jobs:", err);
+        this.error.set("Failed to delete jobs. Please try again.");
+        this.bulkDeleting.set(false);
+        this.closeDeleteDialog();
+      }
+    });
+  }
 
-    this.closeDeleteDialog();
+  cancelJob(job: JobListItem): void {
+    if (!this.isCancelable(job.status)) return;
+
+    this.setActionLoading(job.id, true);
+    this.jobsService.cancelJob(job.id).subscribe({
+      next: () => {
+        this.setActionLoading(job.id, false);
+        this.loadJobs();
+      },
+      error: (err) => {
+        console.error("Error cancelling job:", err);
+        this.error.set("Failed to cancel job. Please try again.");
+        this.setActionLoading(job.id, false);
+      }
+    });
   }
 }

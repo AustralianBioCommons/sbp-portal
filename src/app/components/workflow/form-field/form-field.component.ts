@@ -267,9 +267,13 @@ export class FormFieldComponent {
         .subscribe({
           next: (response) => {
             this.showSuccess(`File "${file.name}" uploaded successfully!`);
-            // Emit the file URL or file ID from the backend response
+            // Emit the S3 URI (preferred), otherwise fall back to other identifiers
             this.valueChange.emit(
-              response.fileUrl || response.fileName || file.name
+              response.s3Uri ||
+                response.fileUrl ||
+                response.fileId ||
+                response.fileName ||
+                file.name
             );
           },
           error: (error) => {
