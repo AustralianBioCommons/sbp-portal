@@ -29,6 +29,7 @@ export class JobsComponent implements OnInit {
   showStatusDropdown = signal(false);
   actionLoading = signal<Record<string, boolean>>({});
   bulkDeleting = signal(false);
+  openActionMenuId = signal<string | null>(null);
 
   // Filter and pagination state
   searchQuery = signal<string>("");
@@ -281,6 +282,18 @@ export class JobsComponent implements OnInit {
     this.showStatusDropdown.set(false);
   }
 
+  toggleActionMenu(jobId: string): void {
+    this.openActionMenuId.update((current) => (current === jobId ? null : jobId));
+  }
+
+  closeActionMenu(): void {
+    this.openActionMenuId.set(null);
+  }
+
+  isActionMenuOpen(jobId: string): boolean {
+    return this.openActionMenuId() === jobId;
+  }
+
   /**
    * Confirm and delete selected jobs
    */
@@ -329,5 +342,15 @@ export class JobsComponent implements OnInit {
         this.setActionLoading(job.id, false);
       }
     });
+  }
+
+  viewJobDetails(job: JobListItem): void {
+    this.closeActionMenu();
+    this.error.set(`Job details for "${job.jobName}" are not available yet.`);
+  }
+
+  resumeJob(job: JobListItem): void {
+    this.closeActionMenu();
+    this.error.set(`Resume is not supported for "${job.jobName}" yet.`);
   }
 }

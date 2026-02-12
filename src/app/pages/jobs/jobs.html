@@ -2,16 +2,16 @@
   class="min-h-screen bg-gray-50 py-8"
   role="button"
   tabindex="0"
-  (click)="closeStatusDropdown()"
-  (keydown.enter)="closeStatusDropdown()"
-  (keydown.space)="closeStatusDropdown()"
+  (click)="closeStatusDropdown(); closeActionMenu()"
+  (keydown.enter)="closeStatusDropdown(); closeActionMenu()"
+  (keydown.space)="closeStatusDropdown(); closeActionMenu()"
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Page Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Workflow Jobs</h1>
+      <h1 class="text-3xl font-bold text-gray-900">My Jobs</h1>
       <p class="mt-2 text-sm text-gray-600">
-        View and manage your submitted workflow runs
+        View and manage my submitted workflow runs
       </p>
     </div>
 
@@ -52,7 +52,7 @@
           </div>
 
           <!-- Status Filters Dropdown -->
-          <div class="relative" (mousedown)="$event.stopPropagation()">
+          <div class="relative" (mousedown)="$event.stopPropagation()" (click)="$event.stopPropagation()">
             <button
               type="button"
               (click)="toggleStatusDropdown()"
@@ -147,7 +147,7 @@
     <!-- Jobs Table -->
     @if (!loading()) {
       <div
-        class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden"
+        class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-visible"
       >
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <div class="flex items-center gap-4">
@@ -181,7 +181,7 @@
             </button>
           }
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-visible">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
@@ -279,23 +279,43 @@
                       {{ job.score !== null ? job.score.toFixed(3) : "—" }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div class="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          (click)="cancelJob(job)"
-                          [disabled]="!isCancelable(job.status) || isActionLoading(job.id) || bulkDeleting()"
-                          class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Cancel
+                      <div class="relative inline-flex items-center justify-end">
+                        <button type="button" (click)="toggleActionMenu(job.id); $event.stopPropagation()"
+                          (mousedown)="$event.stopPropagation()"
+                          class="inline-flex items-center justify-center h-5 w-5 rounded text-blue-600 hover:text-blue-700 hover:border hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          aria-label="Job actions">
+                          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              d="M6 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm5 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm5 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
+                          </svg>
                         </button>
-                        <button
-                          type="button"
-                          (click)="openDeleteDialogFor(job.id)"
-                          [disabled]="isActionLoading(job.id) || bulkDeleting()"
-                          class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Delete
-                        </button>
+                        @if (isActionMenuOpen(job.id)) {
+                        <div class="absolute right-0 mt-2 w-52 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                          (click)="$event.stopPropagation()" (mousedown)="$event.stopPropagation()">
+                          <div class="flex flex-col py-1">
+                            <button type="button" (click)="viewJobDetails(job)"
+                              class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                              View job details
+                            </button>
+                            <button type="button" (click)="cancelJob(job); closeActionMenu()"
+                              [disabled]="!isCancelable(job.status) || isActionLoading(job.id) || bulkDeleting()"
+                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Stop
+                                </button>
+                                <button type="button" (click)="openDeleteDialogFor(job.id); closeActionMenu()"
+                                  [disabled]="isActionLoading(job.id) || bulkDeleting()"
+                                class="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Delete
+                              </button>
+                              <button type="button" (click)="resumeJob(job)"
+                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                Resume
+                              </button>
+                              </div>
+                              </div>
+                              }
                       </div>
                     </td>
                   </tr>
