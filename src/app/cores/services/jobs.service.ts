@@ -60,8 +60,7 @@ export interface BulkDeleteJobsResponse {
   providedIn: "root",
 })
 export class JobsService {
-  private readonly jobsUrl = `${environment.apiBaseUrl}/api/workflows/jobs`;
-  private readonly workflowsUrl = `${environment.apiBaseUrl}/api/workflows`;
+  private readonly jobsUrl = `${environment.apiBaseUrl}/api/jobs`;
   private http = inject(HttpClient);
 
   /**
@@ -94,7 +93,7 @@ export class JobsService {
 
   cancelJob(runId: string): Observable<CancelJobResponse> {
     return this.http.post<CancelJobResponse>(
-      `${this.workflowsUrl}/${encodeURIComponent(runId)}/cancel`,
+      `${this.jobsUrl}/${encodeURIComponent(runId)}/cancel`,
       {}
     );
   }
