@@ -1,4 +1,6 @@
 import { TestBed, fakeAsync, tick } from "@angular/core/testing";
+import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
 import { BehaviorSubject, of } from "rxjs";
@@ -41,6 +43,8 @@ describe("AuthService", () => {
 
     TestBed.configureTestingModule({
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         AuthService,
         { provide: Auth0Service, useValue: mockAuth0Service },
         { provide: Router, useValue: mockRouter },

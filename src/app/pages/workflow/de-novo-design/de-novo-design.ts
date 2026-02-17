@@ -68,6 +68,8 @@ type StepItem = Step;
   styleUrls: ["./de-novo-design.scss"],
 })
 export class DeNovoDesignComponent implements OnInit, OnDestroy {
+  private readonly availableToolId: ToolChip["id"] = "bindcraft";
+
   // // Make Object available in template
   Object = Object;
 
@@ -121,9 +123,19 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       label: "BindCraft",
     },
   ];
+  readonly unavailableToolLabels: string[] = this.tools
+    .filter((tool) => tool.id !== this.availableToolId)
+    .map((tool) => tool.label);
   selectedTool = signal<ToolChip["id"]>("bindcraft");
   isToolSelected = (id: ToolChip["id"]) => this.selectedTool() === id;
+  isToolAvailable = (id: ToolChip["id"]) => id === this.availableToolId;
   selectTool(id: ToolChip["id"]) {
+    if (!this.isToolAvailable(id)) {
+      const label = this.tools.find((tool) => tool.id === id)?.label ?? id;
+      this.showError(`${label} is not available yet. Please use BindCraft.`);
+      this.selectedTool.set(this.availableToolId);
+      return;
+    }
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
@@ -353,12 +365,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             return;
           }
 
-          // Add pipeline URL for workflow submission
-          const pipelineUrl =
-            "https://github.com/Australian-Structural-Biology-Computing/bindflow.git";
           const workflowFormData = {
             ...formData,
-            pipeline: pipelineUrl
+            tool: this.selectedToolLabel(),
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(

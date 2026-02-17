@@ -2,8 +2,7 @@
  * Workflow form data
  */
 export interface WorkflowLaunchForm {
-  pipeline: string;
-  revision?: string;
+  tool: string;
   configProfiles?: string[];
   runName?: string;
   paramsText?: string;

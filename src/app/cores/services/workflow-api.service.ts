@@ -25,8 +25,7 @@ export class WorkflowApiService {
    */
   launchWorkflow(
     launch: {
-      pipeline: string;
-      revision?: string;
+      tool: string;
       configProfiles?: string[];
       runName?: string;
       paramsText?: string | null;
