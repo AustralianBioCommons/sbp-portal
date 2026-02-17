@@ -37,6 +37,7 @@ export class JobsComponent implements OnInit {
   selectedStatuses = signal<string[]>([]);
   currentPage = signal<number>(1);
   pageSize = signal<number>(50);
+  scoreSortDirection = signal<"none" | "asc" | "desc">("none");
 
   // Available status options
   statusOptions = ["Completed", "Failed", "Stopped", "In progress", "In queue"];
@@ -68,7 +69,7 @@ export class JobsComponent implements OnInit {
 
     this.jobsService.listJobs(params).subscribe({
       next: (response) => {
-        this.jobs.set(response.jobs);
+        this.jobs.set(this.sortJobsByScore(response.jobs));
         this.total.set(response.total);
         this.loading.set(false);
       },
@@ -167,6 +168,31 @@ export class JobsComponent implements OnInit {
    */
   formatDate(dateString: string): string {
     return formatDateTimeForJobs(dateString);
+  }
+
+  toggleScoreSort(): void {
+    const current = this.scoreSortDirection();
+    const next = current === "none" ? "desc" : current === "desc" ? "asc" : "none";
+    this.scoreSortDirection.set(next);
+    this.jobs.set(this.sortJobsByScore(this.jobs()));
+  }
+
+  private sortJobsByScore(jobs: JobListItem[]): JobListItem[] {
+    const direction = this.scoreSortDirection();
+    if (direction === "none") {
+      return [...jobs];
+    }
+
+    return [...jobs].sort((a, b) => {
+      const aScore = a.score;
+      const bScore = b.score;
+
+      if (aScore === null && bScore === null) return 0;
+      if (aScore === null) return 1;
+      if (bScore === null) return -1;
+
+      return direction === "asc" ? aScore - bScore : bScore - aScore;
+    });
   }
 
   /**
