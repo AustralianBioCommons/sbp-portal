@@ -13,6 +13,7 @@ export interface JobListItem {
   status: string;
   submittedAt: string;
   score: number | null;
+  finalDesignCount?: number | null;
 }
 
 /**

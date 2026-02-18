@@ -159,7 +159,7 @@
           <div>
             <h2 class="text-lg font-medium text-gray-900">All jobs</h2>
             <p class="text-sm font-normal text-gray-500">
-              Total {{ total() }} jobs
+              Total {{ total() }} jobs • {{ totalFinalDesigns }} final designs
             </p>
           </div>
           @if (selectedJobs().length > 0) {
@@ -225,7 +225,7 @@
                 >
                   <button type="button" (click)="toggleScoreSort()"
                     class="inline-flex items-center gap-1 text-xs font-semibold text-gray-800 hover:text-blue-700 focus:outline-none">
-                    Score
+                    Max score
                     @if (scoreSortDirection() === "asc") {
                     <span aria-hidden="true">▲</span>
                     } @else if (scoreSortDirection() === "desc") {
@@ -295,7 +295,14 @@
                       {{ formatDate(job.submittedAt) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {{ job.score !== null ? job.score.toFixed(3) : "—" }}
+                      @if (job.score !== null) {
+                        {{ job.score.toFixed(3) }}
+                        @if (job.finalDesignCount !== null && job.finalDesignCount !== undefined) {
+                          <span class="text-xs text-gray-500">({{ job.finalDesignCount }} designs)</span>
+                        }
+                      } @else {
+                        —
+                      }
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div class="relative inline-flex items-center justify-end">

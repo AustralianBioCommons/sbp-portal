@@ -69,7 +69,15 @@ export class JobsComponent implements OnInit {
 
     this.jobsService.listJobs(params).subscribe({
       next: (response) => {
-        this.jobs.set(this.sortJobsByScore(response.jobs));
+        const normalizedJobs = response.jobs.map((job) => {
+          const rawJob = job as JobListItem & { final_design_count?: number | null };
+          return {
+            ...job,
+            finalDesignCount:
+              rawJob.finalDesignCount ?? rawJob.final_design_count ?? null
+          };
+        });
+        this.jobs.set(this.sortJobsByScore(normalizedJobs));
         this.total.set(response.total);
         this.loading.set(false);
       },
@@ -161,6 +169,13 @@ export class JobsComponent implements OnInit {
    */
   get hasNextPage(): boolean {
     return this.currentPage() < this.totalPages;
+  }
+
+  get totalFinalDesigns(): number {
+    return this.jobs().reduce(
+      (sum, job) => sum + (job.finalDesignCount ?? 0),
+      0
+    );
   }
 
   /**
