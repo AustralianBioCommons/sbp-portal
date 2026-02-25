@@ -393,9 +393,4 @@ export class JobsComponent implements OnInit {
     this.closeActionMenu();
     this.error.set(`Job details for "${job.jobName}" are not available yet.`);
   }
-
-  resumeJob(job: JobListItem): void {
-    this.closeActionMenu();
-    this.error.set(`Resume is not supported for "${job.jobName}" yet.`);
-  }
 }
