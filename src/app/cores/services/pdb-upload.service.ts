@@ -14,6 +14,7 @@ export interface PdbUploadResponse {
   fileId?: string;
   fileName?: string;
   fileUrl?: string;
+  s3Uri?: string;
   details?: unknown;
 }
 

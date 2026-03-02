@@ -1,7 +1,9 @@
 import { Injectable, inject } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { BehaviorSubject, Observable } from "rxjs";
+import { BehaviorSubject, Observable, take } from "rxjs";
+import { environment } from "../../environments/environment";
 
 interface AuthError {
   error?: string;
@@ -14,7 +16,9 @@ interface AuthError {
 })
 export class AuthService {
   private auth0 = inject(Auth0Service);
+  private http = inject(HttpClient);
   private router = inject(Router);
+  private hasSyncedCurrentUser = false;
 
   // Banner state
   private bannerMessageSubject = new BehaviorSubject<string | null>(null);
@@ -89,6 +93,7 @@ export class AuthService {
     // Monitor successful authentication
     this.auth0.isAuthenticated$.subscribe((isAuthenticated) => {
       if (isAuthenticated) {
+        this.syncCurrentUserToBackend();
         // Show success banner only if there are no current errors
         this.auth0.error$.pipe().subscribe((currentError) => {
           if (!currentError) {
@@ -97,6 +102,7 @@ export class AuthService {
           }
         });
       } else {
+        this.hasSyncedCurrentUser = false;
         // Clear banner when not authenticated (only if it's not an error banner being shown)
         if (this.bannerTypeSubject.value !== "error") {
           this.clearBanner();
@@ -253,5 +259,23 @@ export class AuthService {
         this.router.navigateByUrl(appState.target);
       }
     });
+  }
+
+  private syncCurrentUserToBackend(): void {
+    if (this.hasSyncedCurrentUser) {
+      return;
+    }
+    const base = environment.apiBaseUrl || window.location.origin;
+    this.http
+      .post<{ message: string; userId: string }>(`${base}/api/workflows/me/sync`, {})
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.hasSyncedCurrentUser = true;
+        },
+        error: (err) => {
+          console.warn("User sync failed", err);
+        },
+      });
   }
 }

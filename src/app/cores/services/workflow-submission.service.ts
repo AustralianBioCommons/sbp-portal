@@ -45,9 +45,7 @@ export class WorkflowSubmissionService {
 
     // Construct the launch configuration
     const launch = {
-      pipeline:
-        (formData.pipeline as string),
-      revision: (formData.revision as string) || "dev",
+      tool: (formData.tool as string) || "BindCraft",
       configProfiles: (formData.configProfiles as string[]) || ["singularity"],
       runName: (formData.runName as string) || randomRunName,
       paramsText: null as string | null,
