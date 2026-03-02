@@ -30,6 +30,7 @@
     "@ng-icons/lucide": "^32.2.0",
     "@ng-icons/simple-icons": "^32.2.0",
     "@ng-icons/tabler-icons": "^32.2.0",
+    "date-fns": "^4.1.0",
     "playwright": "^1.56.0",
     "rxjs": "~7.8.0",
     "zone.js": "~0.15.1"
