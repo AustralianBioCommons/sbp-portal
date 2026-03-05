@@ -48,6 +48,7 @@ describe("BinderDesignComponent", () => {
       expect(motifWorkflow).toBeDefined();
       expect(motifWorkflow?.label).toBe("Motif Scaffolding");
       expect(motifWorkflow?.href).toBe("/motif-scaffolding");
+      expect(motifWorkflow?.disabled).toBeTrue();
     });
 
     it("workflows should contain partial diffusion workflow", () => {
@@ -57,6 +58,7 @@ describe("BinderDesignComponent", () => {
       expect(partialWorkflow).toBeDefined();
       expect(partialWorkflow?.label).toBe("Partial Diffusion");
       expect(partialWorkflow?.href).toBe("/partial-diffusion");
+      expect(partialWorkflow?.disabled).toBeTrue();
     });
 
     it("should have all workflows with required properties", () => {
@@ -83,7 +85,7 @@ describe("BinderDesignComponent", () => {
       );
       expect(bindCraftTool).toBeDefined();
       expect(bindCraftTool?.id).toBe("bindcraft");
-      expect(bindCraftTool?.href).toBe("/tools/bindcraft");
+      expect(bindCraftTool?.href).toBe("/de-novo-design");
     });
 
     it("tools should contain RFdiffusion tool", () => {
@@ -93,6 +95,7 @@ describe("BinderDesignComponent", () => {
       expect(rfdiffusionTool).toBeDefined();
       expect(rfdiffusionTool?.id).toBe("rfdiffusion");
       expect(rfdiffusionTool?.href).toBe("/tools/rfdiffusion");
+      expect(rfdiffusionTool?.disabled).toBeTrue();
     });
 
     it("tools should contain BoltzGen tool", () => {
@@ -100,6 +103,7 @@ describe("BinderDesignComponent", () => {
       expect(boltzGenTool).toBeDefined();
       expect(boltzGenTool?.id).toBe("boltzgen");
       expect(boltzGenTool?.href).toBe("/tools/boltzgen");
+      expect(boltzGenTool?.disabled).toBeTrue();
     });
     it("should have all tools with required properties", () => {
       component.tools.forEach((tool) => {
@@ -208,7 +212,7 @@ describe("BinderDesignComponent", () => {
 
     describe("navigateToWorkflow", () => {
       it("should navigate to the specified workflow", () => {
-        const workflowId = "motif-scaffolding";
+        const workflowId = "de-novo-design";
 
         component.navigateToWorkflow(workflowId);
 
@@ -222,11 +226,7 @@ describe("BinderDesignComponent", () => {
       });
 
       it("should handle navigation to each workflow", () => {
-        const workflowIds = [
-          "de-novo-design",
-          "motif-scaffolding",
-          "partial-diffusion",
-        ];
+        const workflowIds = ["de-novo-design"];
 
         workflowIds.forEach((workflowId) => {
           component.navigateToWorkflow(workflowId);
@@ -236,16 +236,23 @@ describe("BinderDesignComponent", () => {
 
         expect(mockRouter.navigate).toHaveBeenCalledTimes(workflowIds.length);
       });
+
+      it("should not navigate for disabled workflows", () => {
+        component.navigateToWorkflow("motif-scaffolding");
+        component.navigateToWorkflow("partial-diffusion");
+
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
+      });
     });
 
     describe("navigateToTool", () => {
       it("should navigate to the specified tool", () => {
-        const toolId = "rfdiffusion";
+        const toolId = "bindcraft";
 
         component.navigateToTool(toolId);
 
         // Check router navigation was called
-        expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools", toolId]);
+        expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
 
         // Check console log
         expect(console.log).toHaveBeenCalledWith(
@@ -254,15 +261,22 @@ describe("BinderDesignComponent", () => {
       });
 
       it("should handle navigation to each tool", () => {
-        const toolIds = ["bindcraft", "rfdiffusion", "boltzgen"];
+        const toolIds = ["bindcraft"];
 
         toolIds.forEach((toolId) => {
           component.navigateToTool(toolId);
 
-          expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools", toolId]);
+          expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
         });
 
         expect(mockRouter.navigate).toHaveBeenCalledTimes(toolIds.length);
+      });
+
+      it("should not navigate for disabled tools", () => {
+        component.navigateToTool("rfdiffusion");
+        component.navigateToTool("boltzgen");
+
+        expect(mockRouter.navigate).not.toHaveBeenCalled();
       });
     });
 

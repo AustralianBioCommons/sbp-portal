@@ -14,16 +14,28 @@ export class BinderDesignComponent {
 
   // Navigation methods
   navigateToWorkflow(workflowId: string) {
-    console.log(`Navigating to workflow: ${workflowId}`);
+    const workflow = this.workflows.find((item) => item.id === workflowId);
+    if (!workflow || workflow.disabled) {
+      return;
+    }
 
-    // Navigate to the workflow route
+    console.log(`Navigating to workflow: ${workflowId}`);
     this.router.navigate([`/${workflowId}`]);
   }
 
   navigateToTool(toolId: string) {
+    const tool = this.tools.find((item) => item.id === toolId);
+    if (!tool || tool.disabled) {
+      return;
+    }
+
     console.log(`Navigating to tool: ${toolId}`);
 
-    // Navigate to the tool route
+    if (toolId === "bindcraft") {
+      this.router.navigate(["/de-novo-design"]);
+      return;
+    }
+
     this.router.navigate(["/tools", toolId]);
   }
 
@@ -42,11 +54,13 @@ export class BinderDesignComponent {
       id: "motif-scaffolding",
       label: "Motif Scaffolding",
       href: "/motif-scaffolding",
+      disabled: true,
     },
     {
       id: "partial-diffusion",
       label: "Partial Diffusion",
       href: "/partial-diffusion",
+      disabled: true,
     },
   ];
 
@@ -55,17 +69,19 @@ export class BinderDesignComponent {
     {
       id: "bindcraft",
       label: "BindCraft",
-      href: "/tools/bindcraft",
+      href: "/de-novo-design",
     },
     {
       id: "rfdiffusion",
       label: "RFdiffusion",
       href: "/tools/rfdiffusion",
+      disabled: true,
     },
     {
       id: "boltzgen",
       label: "BoltzGen",
       href: "/tools/boltzgen",
+      disabled: true,
     },
   ];
 
