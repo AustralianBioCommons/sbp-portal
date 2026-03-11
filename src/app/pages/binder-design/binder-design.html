@@ -32,6 +32,7 @@
           widthClass="w-auto"
           borderRadius="rounded-3xl"
           colorClasses="!px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 !bg-white !text-blue-900 hover:!text-gray-700"
+          [disabled]="workflow.disabled"
           (click)="navigateToWorkflow(workflow.id)"
         >
           {{ workflow.label }}
@@ -50,6 +51,7 @@
           widthClass="w-auto"
           borderRadius="rounded-3xl"
           colorClasses="!px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 !bg-white !text-blue-900 hover:!text-gray-700"
+          [disabled]="tool.disabled"
           (click)="navigateToTool(tool.id)"
         >
           {{ tool.label }}
