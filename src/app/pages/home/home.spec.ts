@@ -147,6 +147,27 @@ describe("Home", () => {
     });
   });
 
+  describe("structure prediction rendering", () => {
+    it("should render structure prediction content when tab is active", () => {
+      component.activeTab.set("structure-prediction");
+      fixture.detectChanges();
+
+      const title = fixture.nativeElement.querySelector("h1");
+      expect(title?.textContent).toContain("Structure Prediction");
+    });
+
+    it("should apply structure prediction background class", () => {
+      component.activeTab.set("structure-prediction");
+      fixture.detectChanges();
+
+      const container = fixture.nativeElement.querySelector(".min-h-screen");
+      expect(container?.classList.contains("structure-prediction-bg")).toBe(
+        true
+      );
+      expect(container?.classList.contains("bg-gray-50")).toBe(false);
+    });
+  });
+
   describe("tabs data validation", () => {
     it("should have all required tab properties", () => {
       component.tabs.forEach((tab) => {
