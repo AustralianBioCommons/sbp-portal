@@ -2,6 +2,7 @@ import { Component, signal, inject, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ActivatedRoute } from "@angular/router";
 import { BinderDesignComponent } from "../binder-design/binder-design";
+import { StructurePredictionComponent } from "../structure-prediction/structure-prediction";
 
 export interface TabItem {
   id: string;
@@ -11,7 +12,7 @@ export interface TabItem {
 
 @Component({
   selector: "app-home",
-  imports: [CommonModule, BinderDesignComponent],
+  imports: [CommonModule, BinderDesignComponent, StructurePredictionComponent],
   templateUrl: "./home.html",
   styleUrl: "./home.scss",
 })

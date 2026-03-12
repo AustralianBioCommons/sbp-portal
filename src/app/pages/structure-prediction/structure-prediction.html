@@ -1,0 +1,63 @@
+<!-- Structure Prediction Content -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+  <div class="space-y-12">
+    <!-- Page Title -->
+    <div class="text-center">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        Structure Prediction
+      </h1>
+      <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        AlphaFold2 brought about a revolution in structural biology by enabling
+        high quality predictions of protein structure using evolutionary
+        information extracted from multiple sequence alignments. Predicted
+        structures can be used to inform downstream biological hypothesis by
+        providing a direct representation of functional sites as well as
+        uncovering homologous relationships with highly divergent ancestors. AI
+        models have since been extended to support diverse molecular classes
+        including nucleotides, small-molecules and post-translational
+        modifications as well as providing the ability to apply implicit
+        prediction constraints.
+      </p>
+    </div>
+
+    <!-- Pre-config Workflows Section -->
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900 mb-6">
+        Pre-config Workflows
+      </h2>
+      <div class="flex flex-wrap gap-3">
+        @for (workflow of workflows; track workflow.id) {
+        <app-button
+          variant="secondary"
+          widthClass="w-auto"
+          borderRadius="rounded-3xl"
+          colorClasses="!px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 !bg-white !text-blue-900 hover:!text-gray-700"
+          [disabled]="workflow.disabled"
+          (click)="navigateToWorkflow(workflow.id)"
+        >
+          {{ workflow.label }}
+        </app-button>
+        }
+      </div>
+    </div>
+
+    <!-- Tools Section -->
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900 mb-6">Tools</h2>
+      <div class="flex flex-wrap gap-3">
+        @for (tool of tools; track tool.id) {
+        <app-button
+          variant="secondary"
+          widthClass="w-auto"
+          borderRadius="rounded-3xl"
+          colorClasses="!px-6 !py-3 text-sm font-medium shadow-md hover:translate-y-0.5 !border-0 !bg-white !text-blue-900 hover:!text-gray-700"
+          [disabled]="tool.disabled"
+          (click)="navigateToTool(tool.id)"
+        >
+          {{ tool.label }}
+        </app-button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

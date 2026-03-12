@@ -78,3 +78,12 @@
   background-position: top center;
   background-attachment: fixed;
 }
+
+// Structure Prediction background image (reuse Binder Design)
+.structure-prediction-bg {
+  background-image: url("/assets/binder-design.png");
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: top center;
+  background-attachment: fixed;
+}
