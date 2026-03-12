@@ -1,8 +1,9 @@
 <!-- Themes Page Container -->
 <div
   class="min-h-screen"
-  [class.bg-gray-50]="!isActiveTab('binder-design')"
+  [class.bg-gray-50]="!isActiveTab('binder-design') && !isActiveTab('structure-prediction')"
   [class.binder-design-bg]="isActiveTab('binder-design')"
+  [class.structure-prediction-bg]="isActiveTab('structure-prediction')"
 >
   <!-- Content Section -->
   <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -14,9 +15,16 @@
     </div>
     }
 
+    <!-- Structure Prediction Tab -->
+    @if (isActiveTab('structure-prediction')) {
+    <div>
+      <app-structure-prediction></app-structure-prediction>
+    </div>
+    }
+
     <!-- Dynamic Tabs (excluding binder-design) -->
     @for (tab of tabs; track tab.id) {
-    @if (tab.id !== 'binder-design' && isActiveTab(tab.id)) {
+    @if (tab.id !== 'binder-design' && tab.id !== 'structure-prediction' && isActiveTab(tab.id)) {
     <div class="space-y-6">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 class="text-2xl font-semibold text-gray-900 mb-4">
