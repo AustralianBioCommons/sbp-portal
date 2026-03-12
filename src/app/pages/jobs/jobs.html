@@ -304,9 +304,9 @@
                         —
                       }
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <td class="relative overflow-visible px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div class="relative inline-flex items-center justify-end">
-                        <button type="button" (click)="toggleActionMenu(job.id); $event.stopPropagation()"
+                        <button type="button" (click)="toggleActionMenu(job.id, $any($event.currentTarget)); $event.stopPropagation()"
                           (mousedown)="$event.stopPropagation()"
                           class="inline-flex items-center justify-center h-5 w-5 rounded text-blue-600 hover:text-blue-700 hover:border hover:border-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           aria-label="Job actions">
@@ -316,28 +316,15 @@
                           </svg>
                         </button>
                         @if (isActionMenuOpen(job.id)) {
-                        <div class="absolute right-0 mt-2 w-52 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
-                          (mousedown)="$event.stopPropagation()">
-                          <div class="flex flex-col py-1">
-                            <button type="button" (click)="viewJobDetails(job)"
-                              class="w-full text-left px-4 py-2 text-sm text-blue-900 hover:text-blue-800 hover:bg-gray-100">
-                              View job details
-                            </button>
-                            <button type="button" (click)="cancelJob(job); closeActionMenu()"
-                              [disabled]="!isCancelable(job.status) || isActionLoading(job.id) || bulkDeleting()"
-                                class="w-full text-left px-4 py-2 text-sm text-blue-900 hover:text-blue-800 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Stop
-                                </button>
-                              <button type="button" (click)="openDeleteDialogFor(job.id); closeActionMenu()"
-                                  [disabled]="isActionLoading(job.id) || bulkDeleting()"
-                                class="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Delete
-                              </button>
-                              </div>
-                              </div>
-                              }
+                          <app-jobs-action-menu
+                            [menuStyle]="actionMenuStyle()"
+                            [cancelDisabled]="!isCancelable(job.status) || isActionLoading(job.id) || bulkDeleting()"
+                            [deleteDisabled]="isActionLoading(job.id) || bulkDeleting()"
+                            (view)="viewJobDetails(job)"
+                            (cancel)="cancelJob(job); closeActionMenu()"
+                            (delete)="openDeleteDialogFor(job.id); closeActionMenu()"
+                          />
+                        }
                       </div>
                     </td>
                   </tr>

@@ -1,6 +1,7 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject, OnInit, signal } from "@angular/core";
+import { Component, HostListener, inject, OnInit, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import {
   JobListItem,
   JobListQueryParams,
@@ -11,7 +12,7 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 @Component({
   selector: "app-jobs",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, JobsActionMenuComponent],
   templateUrl: "./jobs.html"
 })
 export class JobsComponent implements OnInit {
@@ -31,6 +32,7 @@ export class JobsComponent implements OnInit {
   actionLoading = signal<Record<string, boolean>>({});
   bulkDeleting = signal(false);
   openActionMenuId = signal<string | null>(null);
+  actionMenuStyle = signal<Record<string, string>>({});
 
   // Filter and pagination state
   searchQuery = signal<string>("");
@@ -327,16 +329,55 @@ export class JobsComponent implements OnInit {
     this.showStatusDropdown.set(false);
   }
 
-  toggleActionMenu(jobId: string): void {
-    this.openActionMenuId.update((current) => (current === jobId ? null : jobId));
+  toggleActionMenu(jobId: string, trigger?: HTMLElement | null): void {
+    if (this.openActionMenuId() === jobId) {
+      this.closeActionMenu();
+      return;
+    }
+
+    if (trigger) {
+      this.actionMenuStyle.set(this.getActionMenuStyle(trigger));
+    }
+
+    this.openActionMenuId.set(jobId);
   }
 
   closeActionMenu(): void {
     this.openActionMenuId.set(null);
+    this.actionMenuStyle.set({});
   }
 
   isActionMenuOpen(jobId: string): boolean {
     return this.openActionMenuId() === jobId;
+  }
+
+  @HostListener("window:scroll")
+  @HostListener("window:resize")
+  onViewportChange(): void {
+    if (this.openActionMenuId()) {
+      this.closeActionMenu();
+    }
+  }
+
+  private getActionMenuStyle(trigger: HTMLElement): Record<string, string> {
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = 208;
+    const menuHeight = 140;
+    const viewportPadding = 8;
+
+    const left = Math.max(
+      viewportPadding,
+      Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+    );
+
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpwards = spaceBelow < menuHeight + viewportPadding && rect.top > menuHeight;
+    const top = openUpwards ? rect.top - menuHeight - viewportPadding : rect.bottom + viewportPadding;
+
+    return {
+      left: `${left}px`,
+      top: `${Math.max(viewportPadding, top)}px`
+    };
   }
 
   /**
