@@ -14,14 +14,14 @@ import { Component, input, output } from "@angular/core";
       <div class="flex flex-col py-1">
         <button
           type="button"
-          (click)="view.emit()"
+          (click)="viewRequested.emit()"
           class="w-full px-4 py-2 text-left text-sm text-blue-900 hover:bg-gray-100 hover:text-blue-800"
         >
           View job details
         </button>
         <button
           type="button"
-          (click)="cancel.emit()"
+          (click)="cancelRequested.emit()"
           [disabled]="cancelDisabled()"
           class="w-full px-4 py-2 text-left text-sm text-blue-900 hover:bg-gray-100 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -29,7 +29,7 @@ import { Component, input, output } from "@angular/core";
         </button>
         <button
           type="button"
-          (click)="delete.emit()"
+          (click)="deleteRequested.emit()"
           [disabled]="deleteDisabled()"
           class="w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -44,7 +44,7 @@ export class JobsActionMenuComponent {
   cancelDisabled = input(false);
   deleteDisabled = input(false);
 
-  view = output<void>();
-  cancel = output<void>();
-  delete = output<void>();
+  viewRequested = output<void>();
+  cancelRequested = output<void>();
+  deleteRequested = output<void>();
 }

@@ -29,18 +29,18 @@ describe("JobsActionMenuComponent", () => {
   });
 
   it("should emit actions when buttons are clicked", () => {
-    spyOn(component.view, "emit");
-    spyOn(component.cancel, "emit");
-    spyOn(component.delete, "emit");
+    spyOn(component.viewRequested, "emit");
+    spyOn(component.cancelRequested, "emit");
+    spyOn(component.deleteRequested, "emit");
 
     const buttons = fixture.debugElement.queryAll(By.css("button"));
     buttons[0].nativeElement.click();
     buttons[1].nativeElement.click();
     buttons[2].nativeElement.click();
 
-    expect(component.view.emit).toHaveBeenCalled();
-    expect(component.cancel.emit).toHaveBeenCalled();
-    expect(component.delete.emit).toHaveBeenCalled();
+    expect(component.viewRequested.emit).toHaveBeenCalled();
+    expect(component.cancelRequested.emit).toHaveBeenCalled();
+    expect(component.deleteRequested.emit).toHaveBeenCalled();
   });
 
   it("should disable stop and delete actions when configured", () => {

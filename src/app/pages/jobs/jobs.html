@@ -320,9 +320,9 @@
                             [menuStyle]="actionMenuStyle()"
                             [cancelDisabled]="!isCancelable(job.status) || isActionLoading(job.id) || bulkDeleting()"
                             [deleteDisabled]="isActionLoading(job.id) || bulkDeleting()"
-                            (view)="viewJobDetails(job)"
-                            (cancel)="cancelJob(job); closeActionMenu()"
-                            (delete)="openDeleteDialogFor(job.id); closeActionMenu()"
+                            (viewRequested)="viewJobDetails(job)"
+                            (cancelRequested)="cancelJob(job); closeActionMenu()"
+                            (deleteRequested)="openDeleteDialogFor(job.id); closeActionMenu()"
                           />
                         }
                       </div>
