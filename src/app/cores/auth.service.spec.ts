@@ -74,7 +74,11 @@ describe("AuthService", () => {
 
   it("should call Auth0 loginWithRedirect when login is called", () => {
     service.login();
-    expect(mockAuth0Service.loginWithRedirect).toHaveBeenCalled();
+    expect(mockAuth0Service.loginWithRedirect).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        appState: jasmine.objectContaining({ target: jasmine.any(String) }),
+      })
+    );
   });
 
   it("should call Auth0 loginWithRedirect with returnUrl when provided", () => {

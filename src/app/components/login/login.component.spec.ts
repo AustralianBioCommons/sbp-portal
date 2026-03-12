@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
+import { Router } from "@angular/router";
 import { BehaviorSubject, of } from "rxjs";
 import { AuthService } from "../../cores/auth.service";
 
@@ -10,6 +11,7 @@ describe("Login", () => {
   let component: Login;
   let fixture: ComponentFixture<Login>;
   let mockAuthService: jasmine.SpyObj<AuthService>;
+  let mockRouter: Pick<Router, "url">;
   let isAuthenticatedSubject: BehaviorSubject<boolean>;
   let userSubject: BehaviorSubject<{ email?: string } | null>;
   let windowOpenSpy: jasmine.Spy;
@@ -30,9 +32,16 @@ describe("Login", () => {
       error$: of(null),
     });
 
+    mockRouter = {
+      url: "/themes?tab=structure-prediction",
+    };
+
     await TestBed.configureTestingModule({
       imports: [Login],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: Router, useValue: mockRouter },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Login);
@@ -46,9 +55,11 @@ describe("Login", () => {
     expect(component).toBeTruthy();
   });
 
-  it("should call auth service login when login is triggered", () => {
+  it("should call auth service login with current url when login is triggered", () => {
     component.login();
-    expect(mockAuthService.login).toHaveBeenCalled();
+    expect(mockAuthService.login).toHaveBeenCalledWith(
+      "/themes?tab=structure-prediction"
+    );
   });
 
   it("should render the login button when the user is not authenticated", async () => {

@@ -15,6 +15,7 @@ interface AuthError {
   providedIn: "root",
 })
 export class AuthService {
+  private static readonly RETURN_URL_KEY = "sbp.returnUrl";
   private auth0 = inject(Auth0Service);
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -154,10 +155,16 @@ export class AuthService {
     // Clear any banner when user clicks login
     this.clearBanner();
 
-    const redirectOptions: { appState?: { target: string } } = {};
-    if (returnUrl) {
-      redirectOptions.appState = { target: returnUrl };
-    }
+    const currentUrl =
+      window.location.pathname + window.location.search + window.location.hash;
+    const target = returnUrl || currentUrl || this.router.url || "/themes";
+
+    // Persist return URL as a fallback if Auth0 appState is unavailable on callback.
+    sessionStorage.setItem(AuthService.RETURN_URL_KEY, target);
+
+    const redirectOptions: { appState?: { target: string } } = {
+      appState: { target },
+    };
 
     this.auth0.loginWithRedirect(redirectOptions);
   }
@@ -253,10 +260,21 @@ export class AuthService {
    * Handle authentication callback and redirect to target URL
    */
   private handleAuthCallback(): void {
+    const isAuthCallback =
+      window.location.search.includes("code=") ||
+      window.location.search.includes("error=") ||
+      window.location.search.includes("state=");
+
     this.auth0.appState$.subscribe((appState) => {
-      if (appState?.target) {
-        // Redirect to the target URL that was stored before login
-        this.router.navigateByUrl(appState.target);
+      const fallbackTarget = isAuthCallback
+        ? sessionStorage.getItem(AuthService.RETURN_URL_KEY)
+        : null;
+      const target = appState?.target || fallbackTarget;
+
+      if (target) {
+        // Redirect to the target URL that was stored before login.
+        this.router.navigateByUrl(target);
+        sessionStorage.removeItem(AuthService.RETURN_URL_KEY);
       }
     });
   }
