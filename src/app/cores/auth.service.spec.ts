@@ -1,10 +1,14 @@
 import { TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
-import { provideHttpClientTesting } from "@angular/common/http/testing";
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from "@angular/common/http/testing";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
 import { BehaviorSubject, of } from "rxjs";
 import { AuthService } from "./auth.service";
+import { environment } from "../../environments/environment";
 
 interface TestAuthError {
   error?: string;
@@ -21,8 +25,10 @@ describe("AuthService", () => {
   let isLoadingSubject: BehaviorSubject<boolean>;
   let appStateSubject: BehaviorSubject<{ target?: string } | null>;
   let mockRouter: jasmine.SpyObj<Router>;
+  let httpTestingController: HttpTestingController;
 
   beforeEach(() => {
+    sessionStorage.clear();
     errorSubject = new BehaviorSubject<TestAuthError | null>(null);
     isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     isLoadingSubject = new BehaviorSubject<boolean>(true);
@@ -51,6 +57,12 @@ describe("AuthService", () => {
       ],
     });
     service = TestBed.inject(AuthService);
+    httpTestingController = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpTestingController.verify();
+    sessionStorage.clear();
   });
 
   it("should be created", () => {
@@ -74,7 +86,11 @@ describe("AuthService", () => {
 
   it("should call Auth0 loginWithRedirect when login is called", () => {
     service.login();
-    expect(mockAuth0Service.loginWithRedirect).toHaveBeenCalled();
+    expect(mockAuth0Service.loginWithRedirect).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        appState: jasmine.objectContaining({ target: jasmine.any(String) }),
+      })
+    );
   });
 
   it("should call Auth0 loginWithRedirect with returnUrl when provided", () => {
@@ -369,6 +385,11 @@ describe("AuthService", () => {
       // Simulate successful authentication
       isAuthenticatedSubject.next(true);
 
+      const syncRequest = httpTestingController.expectOne(
+        `${environment.apiBaseUrl}/api/workflows/me/sync`
+      );
+      syncRequest.flush({ message: "synced", userId: "user-1" });
+
       service.bannerMessage$.subscribe((message) => {
         if (message) {
           expect(message).toBe("Login successful!");
@@ -422,6 +443,23 @@ describe("AuthService", () => {
 
       expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(targetUrl);
     });
+
+    it("should fallback to session storage for auth callback navigation", () => {
+      const originalUrl = window.location.pathname + window.location.search;
+      const targetUrl = "/protected?tab=results";
+
+      sessionStorage.setItem("sbp.returnUrl", targetUrl);
+      history.replaceState({}, "", "/callback?code=test-auth-code");
+      mockRouter.navigateByUrl.calls.reset();
+
+      service = TestBed.runInInjectionContext(() => new AuthService());
+
+      appStateSubject.next(null);
+
+      expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(targetUrl);
+      expect(sessionStorage.getItem("sbp.returnUrl")).toBeNull();
+      history.replaceState({}, "", originalUrl);
+    });
   });
 
   describe("Loading State Management", () => {
@@ -463,5 +501,80 @@ describe("AuthService", () => {
       tick(500);
       expect(service.isLoading).toBeFalse();
     }));
+  });
+
+  describe("Current user sync", () => {
+    it("should sync the current user only once per authenticated session", () => {
+      isAuthenticatedSubject.next(true);
+
+      const firstRequest = httpTestingController.expectOne(
+        `${environment.apiBaseUrl}/api/workflows/me/sync`
+      );
+      firstRequest.flush({ message: "synced", userId: "user-1" });
+
+      isAuthenticatedSubject.next(true);
+      httpTestingController.expectNone(
+        `${environment.apiBaseUrl}/api/workflows/me/sync`
+      );
+      expect(service.currentBannerMessage).toBe("Login successful!");
+    });
+
+    it("should allow syncing again after logout resets the session state", () => {
+      isAuthenticatedSubject.next(true);
+
+      const firstRequest = httpTestingController.expectOne(
+        `${environment.apiBaseUrl}/api/workflows/me/sync`
+      );
+      firstRequest.flush({ message: "synced", userId: "user-1" });
+
+      isAuthenticatedSubject.next(false);
+      isAuthenticatedSubject.next(true);
+
+      const secondRequest = httpTestingController.expectOne(
+        `${environment.apiBaseUrl}/api/workflows/me/sync`
+      );
+      secondRequest.flush({ message: "synced-again", userId: "user-1" });
+      expect(service.currentBannerMessage).toBe("Login successful!");
+    });
+
+    it("should not mark the current user as synced when backend sync fails", () => {
+      const warnSpy = spyOn(console, "warn");
+
+      isAuthenticatedSubject.next(true);
+
+      const failedRequest = httpTestingController.expectOne(
+        `${environment.apiBaseUrl}/api/workflows/me/sync`
+      );
+      failedRequest.flush(
+        { message: "failed" },
+        { status: 500, statusText: "Server Error" }
+      );
+
+      expect(warnSpy).toHaveBeenCalled();
+
+      isAuthenticatedSubject.next(true);
+
+      const retryRequest = httpTestingController.expectOne(
+        `${environment.apiBaseUrl}/api/workflows/me/sync`
+      );
+      retryRequest.flush({ message: "synced", userId: "user-1" });
+      expect(warnSpy).toHaveBeenCalled();
+    });
+
+    it("should fallback to the window origin when apiBaseUrl is not configured", () => {
+      const originalApiBaseUrl = environment.apiBaseUrl;
+      environment.apiBaseUrl = "";
+
+      isAuthenticatedSubject.next(true);
+
+      const syncRequest = httpTestingController.expectOne(
+        `${window.location.origin}/api/workflows/me/sync`
+      );
+      syncRequest.flush({ message: "synced", userId: "user-1" });
+
+      expect(service.currentBannerMessage).toBe("Login successful!");
+
+      environment.apiBaseUrl = originalApiBaseUrl;
+    });
   });
 });
