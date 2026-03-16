@@ -1,5 +1,5 @@
 import { CommonModule, NgStyle } from "@angular/common";
-import { Component, input, output } from "@angular/core";
+import { Component, ElementRef, input, output, ViewChild } from "@angular/core";
 
 @Component({
   selector: "app-jobs-action-menu",
@@ -7,6 +7,7 @@ import { Component, input, output } from "@angular/core";
   imports: [CommonModule, NgStyle],
   template: `
     <div
+      #menuContainer
       class="fixed z-30 w-52 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
       [ngStyle]="menuStyle()"
       (mousedown)="$event.stopPropagation()"
@@ -47,4 +48,6 @@ export class JobsActionMenuComponent {
   viewRequested = output<void>();
   cancelRequested = output<void>();
   deleteRequested = output<void>();
+
+  @ViewChild("menuContainer") menuContainer!: ElementRef<HTMLElement>;
 }

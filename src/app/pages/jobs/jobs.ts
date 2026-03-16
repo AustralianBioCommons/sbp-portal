@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject, NgZone, OnDestroy, OnInit, signal } from "@angular/core";
+import { Component, HostListener, inject, OnInit, signal, ViewChild } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import {
@@ -19,6 +19,9 @@ export class JobsComponent implements OnInit, OnDestroy {
   private jobsService = inject(JobsService);
   private ngZone = inject(NgZone);
   private viewportListeners: (() => void)[] = [];
+
+  @ViewChild(JobsActionMenuComponent)
+  private actionMenu?: JobsActionMenuComponent;
 
   // Expose Math to template
   Math = Math;
@@ -337,16 +340,21 @@ export class JobsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.openActionMenuId()) {
-      this.closeActionMenu();
-    }
+    // Render the menu hidden with safe initial positioning so its real dimensions can be measured
+    this.actionMenuStyle.set({ visibility: "hidden", left: "0px", top: "0px" });
+    this.openActionMenuId.set(jobId);
 
     if (trigger) {
-      this.actionMenuStyle.set(this.getActionMenuStyle(trigger));
+      const capturedTrigger = trigger;
+      setTimeout(() => {
+        const menuEl = this.actionMenu?.menuContainer?.nativeElement;
+        if (menuEl) {
+          this.actionMenuStyle.set(this.getActionMenuStyle(capturedTrigger, menuEl));
+        } else {
+          this.closeActionMenu();
+        }
+      }, 0);
     }
-
-    this.openActionMenuId.set(jobId);
-    this.registerViewportListeners();
   }
 
   closeActionMenu(): void {
@@ -367,31 +375,11 @@ export class JobsComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.unregisterViewportListeners();
-  }
-
-  private registerViewportListeners(): void {
-    this.ngZone.runOutsideAngular(() => {
-      const handler = () => this.onViewportChange();
-      window.addEventListener("scroll", handler, { passive: true });
-      window.addEventListener("resize", handler, { passive: true });
-      this.viewportListeners = [
-        () => window.removeEventListener("scroll", handler),
-        () => window.removeEventListener("resize", handler)
-      ];
-    });
-  }
-
-  private unregisterViewportListeners(): void {
-    this.viewportListeners.forEach((fn) => fn());
-    this.viewportListeners = [];
-  }
-
-  private getActionMenuStyle(trigger: HTMLElement): Record<string, string> {
+  private getActionMenuStyle(trigger: HTMLElement, menuEl: HTMLElement): Record<string, string> {
     const rect = trigger.getBoundingClientRect();
-    const menuWidth = 208;
-    const menuHeight = 140;
+    const menuRect = menuEl.getBoundingClientRect();
+    const menuWidth = menuRect.width;
+    const menuHeight = menuRect.height;
     const viewportPadding = 8;
 
     const left = Math.max(
