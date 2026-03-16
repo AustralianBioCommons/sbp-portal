@@ -15,8 +15,10 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
   imports: [CommonModule, FormsModule, JobsActionMenuComponent],
   templateUrl: "./jobs.html"
 })
-export class JobsComponent implements OnInit {
+export class JobsComponent implements OnInit, OnDestroy {
   private jobsService = inject(JobsService);
+  private ngZone = inject(NgZone);
+  private viewportListeners: (() => void)[] = [];
 
   @ViewChild(JobsActionMenuComponent)
   private actionMenu?: JobsActionMenuComponent;
@@ -358,17 +360,18 @@ export class JobsComponent implements OnInit {
   closeActionMenu(): void {
     this.openActionMenuId.set(null);
     this.actionMenuStyle.set({});
+    this.unregisterViewportListeners();
   }
 
   isActionMenuOpen(jobId: string): boolean {
     return this.openActionMenuId() === jobId;
   }
 
-  @HostListener("window:scroll")
-  @HostListener("window:resize")
   onViewportChange(): void {
     if (this.openActionMenuId()) {
-      this.closeActionMenu();
+      this.ngZone.run(() => {
+        this.closeActionMenu();
+      });
     }
   }
 
