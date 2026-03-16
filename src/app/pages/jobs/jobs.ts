@@ -1,5 +1,13 @@
 import { CommonModule } from "@angular/common";
-import { Component, HostListener, inject, OnInit, signal, ViewChild } from "@angular/core";
+import {
+  Component,
+  inject,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  signal,
+  ViewChild
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import {
@@ -51,6 +59,10 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadJobs();
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterViewportListeners();
   }
 
   /**
@@ -373,6 +385,11 @@ export class JobsComponent implements OnInit, OnDestroy {
         this.closeActionMenu();
       });
     }
+  }
+
+  private unregisterViewportListeners(): void {
+    this.viewportListeners.forEach((removeListener) => removeListener());
+    this.viewportListeners = [];
   }
 
   private getActionMenuStyle(trigger: HTMLElement, menuEl: HTMLElement): Record<string, string> {
