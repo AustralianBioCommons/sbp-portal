@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, HostListener, inject, OnInit, signal } from "@angular/core";
+import { Component, HostListener, inject, OnInit, signal, ViewChild } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import {
@@ -17,6 +17,9 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 })
 export class JobsComponent implements OnInit {
   private jobsService = inject(JobsService);
+
+  @ViewChild(JobsActionMenuComponent)
+  private actionMenu?: JobsActionMenuComponent;
 
   // Expose Math to template
   Math = Math;
@@ -335,11 +338,21 @@ export class JobsComponent implements OnInit {
       return;
     }
 
-    if (trigger) {
-      this.actionMenuStyle.set(this.getActionMenuStyle(trigger));
-    }
-
+    // Render the menu hidden with safe initial positioning so its real dimensions can be measured
+    this.actionMenuStyle.set({ visibility: "hidden", left: "0px", top: "0px" });
     this.openActionMenuId.set(jobId);
+
+    if (trigger) {
+      const capturedTrigger = trigger;
+      setTimeout(() => {
+        const menuEl = this.actionMenu?.menuContainer?.nativeElement;
+        if (menuEl) {
+          this.actionMenuStyle.set(this.getActionMenuStyle(capturedTrigger, menuEl));
+        } else {
+          this.closeActionMenu();
+        }
+      }, 0);
+    }
   }
 
   closeActionMenu(): void {
@@ -359,10 +372,11 @@ export class JobsComponent implements OnInit {
     }
   }
 
-  private getActionMenuStyle(trigger: HTMLElement): Record<string, string> {
+  private getActionMenuStyle(trigger: HTMLElement, menuEl: HTMLElement): Record<string, string> {
     const rect = trigger.getBoundingClientRect();
-    const menuWidth = 208;
-    const menuHeight = 140;
+    const menuRect = menuEl.getBoundingClientRect();
+    const menuWidth = menuRect.width;
+    const menuHeight = menuRect.height;
     const viewportPadding = 8;
 
     const left = Math.max(

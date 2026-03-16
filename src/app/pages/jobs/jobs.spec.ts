@@ -1,6 +1,7 @@
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
+import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import { JobsComponent } from "./jobs";
 import {
   JobListItem,
@@ -260,7 +261,7 @@ describe("JobsComponent", () => {
     expect(component.showStatusDropdown()).toBeFalse();
   });
 
-  it("should open the action menu with viewport-aware style", () => {
+  it("should open the action menu with viewport-aware style", fakeAsync(() => {
     const trigger = {
       getBoundingClientRect: () => ({
         right: 300,
@@ -270,15 +271,23 @@ describe("JobsComponent", () => {
     } as HTMLElement;
 
     component.toggleActionMenu(mockJob.id, trigger);
+    fixture.detectChanges();
+
+    const menuComponent = fixture.debugElement.query(By.directive(JobsActionMenuComponent)).componentInstance as JobsActionMenuComponent;
+    spyOn(menuComponent.menuContainer.nativeElement, "getBoundingClientRect").and.returnValue(
+      { width: 208, height: 140, top: 0, left: 0, right: 208, bottom: 140 } as DOMRect
+    );
+
+    tick(0);
 
     expect(component.isActionMenuOpen(mockJob.id)).toBeTrue();
     expect(component.actionMenuStyle()).toEqual({
       left: "92px",
       top: "208px",
     });
-  });
+  }));
 
-  it("should position the action menu upwards when there is not enough space below", () => {
+  it("should position the action menu upwards when there is not enough space below", fakeAsync(() => {
     spyOnProperty(window, "innerHeight", "get").and.returnValue(240);
     const trigger = {
       getBoundingClientRect: () => ({
@@ -289,14 +298,22 @@ describe("JobsComponent", () => {
     } as HTMLElement;
 
     component.toggleActionMenu(mockJob.id, trigger);
+    fixture.detectChanges();
+
+    const menuComponent = fixture.debugElement.query(By.directive(JobsActionMenuComponent)).componentInstance as JobsActionMenuComponent;
+    spyOn(menuComponent.menuContainer.nativeElement, "getBoundingClientRect").and.returnValue(
+      { width: 208, height: 140, top: 0, left: 0, right: 208, bottom: 140 } as DOMRect
+    );
+
+    tick(0);
 
     expect(component.actionMenuStyle()).toEqual({
       left: "72px",
       top: "52px",
     });
-  });
+  }));
 
-  it("should clamp the action menu horizontally within the viewport", () => {
+  it("should clamp the action menu horizontally within the viewport", fakeAsync(() => {
     spyOnProperty(window, "innerWidth", "get").and.returnValue(220);
     const trigger = {
       getBoundingClientRect: () => ({
@@ -307,9 +324,17 @@ describe("JobsComponent", () => {
     } as HTMLElement;
 
     component.toggleActionMenu(mockJob.id, trigger);
+    fixture.detectChanges();
+
+    const menuComponent = fixture.debugElement.query(By.directive(JobsActionMenuComponent)).componentInstance as JobsActionMenuComponent;
+    spyOn(menuComponent.menuContainer.nativeElement, "getBoundingClientRect").and.returnValue(
+      { width: 208, height: 140, top: 0, left: 0, right: 208, bottom: 140 } as DOMRect
+    );
+
+    tick(0);
 
     expect(component.actionMenuStyle().left).toBe("8px");
-  });
+  }));
 
   it("should close the action menu when toggling the same job again", () => {
     component.openActionMenuId.set(mockJob.id);
