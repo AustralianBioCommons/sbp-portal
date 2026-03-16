@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, HostListener, inject, OnInit, signal } from "@angular/core";
+import { Component, inject, NgZone, OnDestroy, OnInit, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import {
@@ -15,8 +15,10 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
   imports: [CommonModule, FormsModule, JobsActionMenuComponent],
   templateUrl: "./jobs.html"
 })
-export class JobsComponent implements OnInit {
+export class JobsComponent implements OnInit, OnDestroy {
   private jobsService = inject(JobsService);
+  private ngZone = inject(NgZone);
+  private viewportListeners: (() => void)[] = [];
 
   // Expose Math to template
   Math = Math;
@@ -335,28 +337,55 @@ export class JobsComponent implements OnInit {
       return;
     }
 
+    if (this.openActionMenuId()) {
+      this.closeActionMenu();
+    }
+
     if (trigger) {
       this.actionMenuStyle.set(this.getActionMenuStyle(trigger));
     }
 
     this.openActionMenuId.set(jobId);
+    this.registerViewportListeners();
   }
 
   closeActionMenu(): void {
     this.openActionMenuId.set(null);
     this.actionMenuStyle.set({});
+    this.unregisterViewportListeners();
   }
 
   isActionMenuOpen(jobId: string): boolean {
     return this.openActionMenuId() === jobId;
   }
 
-  @HostListener("window:scroll")
-  @HostListener("window:resize")
   onViewportChange(): void {
     if (this.openActionMenuId()) {
-      this.closeActionMenu();
+      this.ngZone.run(() => {
+        this.closeActionMenu();
+      });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.unregisterViewportListeners();
+  }
+
+  private registerViewportListeners(): void {
+    this.ngZone.runOutsideAngular(() => {
+      const handler = () => this.onViewportChange();
+      window.addEventListener("scroll", handler, { passive: true });
+      window.addEventListener("resize", handler, { passive: true });
+      this.viewportListeners = [
+        () => window.removeEventListener("scroll", handler),
+        () => window.removeEventListener("resize", handler)
+      ];
+    });
+  }
+
+  private unregisterViewportListeners(): void {
+    this.viewportListeners.forEach((fn) => fn());
+    this.viewportListeners = [];
   }
 
   private getActionMenuStyle(trigger: HTMLElement): Record<string, string> {
