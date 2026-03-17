@@ -28,7 +28,7 @@ import { AlertComponent } from "../../alert/alert.component";
       }
       <!-- Field Label -->
       <label [for]="fieldId" class="block text-sm font-medium text-gray-700">
-        {{ field.label || field.name }}
+        {{ getDisplayFieldLabel() }}
         @if (field.required) {
         <span class="text-red-500 ml-1">*</span>
         } @if (field.description) {
@@ -50,7 +50,7 @@ import { AlertComponent } from "../../alert/alert.component";
           <div
             class="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-lg px-3 py-2 mt-1 left-0 min-w-[200px] max-w-[300px] shadow-lg"
           >
-            <div class="font-medium">{{ field.label || field.name }}</div>
+            <div class="font-medium">{{ getDisplayFieldLabel() }}</div>
             <div class="text-gray-300 mt-1">{{ field.description }}</div>
             <div class="text-gray-400 text-xs mt-2">
               Type: {{ field.type }}
@@ -142,7 +142,7 @@ import { AlertComponent } from "../../alert/alert.component";
           (change)="onValueChange($any($event.target).value)"
           (blur)="onBlur()"
         >
-          <option value="">Select {{ field.label || field.name }}</option>
+          <option value="">Select {{ getDisplayFieldLabel() }}</option>
           @for (option of field.options; track option) { @if (typeof option ===
           'string') {
           <option [value]="option">{{ option }}</option>
@@ -206,6 +206,11 @@ export class FormFieldComponent {
 
   get fieldId(): string {
     return `field-${this.field.name}`;
+  }
+
+  getDisplayFieldLabel(): string {
+    const label = this.field.label || this.field.name;
+    return label.replace(/\bPdb\b/g, "PDB");
   }
 
   closeAlert(): void {
