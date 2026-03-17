@@ -1,8 +1,10 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
+import { DomSanitizer } from "@angular/platform-browser";
 import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
 import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
+import { ResultsService } from "../../cores/services/results.service";
 import { JobsComponent } from "./jobs";
 import {
   JobListItem,
@@ -14,6 +16,8 @@ describe("JobsComponent", () => {
   let component: JobsComponent;
   let fixture: ComponentFixture<JobsComponent>;
   let mockJobsService: jasmine.SpyObj<JobsService>;
+  let mockResultsService: jasmine.SpyObj<ResultsService>;
+  let sanitizer: DomSanitizer;
 
   const mockJob: JobListItem = {
     id: "job-1",
@@ -54,6 +58,10 @@ describe("JobsComponent", () => {
       "cancelJob",
       "bulkDeleteJobs",
     ]);
+    mockResultsService = jasmine.createSpyObj("ResultsService", [
+      "getJobReportResourceUrl",
+      "getJobSettingParams",
+    ]);
     mockJobsService.listJobs.and.returnValue(of(mockResponse));
     mockJobsService.cancelJob.and.returnValue(
       of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" })
@@ -61,11 +69,21 @@ describe("JobsComponent", () => {
     mockJobsService.bulkDeleteJobs.and.returnValue(
       of({ deleted: [mockJob.id], failed: {} })
     );
-
     await TestBed.configureTestingModule({
       imports: [JobsComponent],
-      providers: [{ provide: JobsService, useValue: mockJobsService }],
+      providers: [
+        { provide: JobsService, useValue: mockJobsService },
+        { provide: ResultsService, useValue: mockResultsService },
+      ],
     }).compileComponents();
+
+    sanitizer = TestBed.inject(DomSanitizer);
+    mockResultsService.getJobReportResourceUrl.and.returnValue(
+      of(sanitizer.bypassSecurityTrustResourceUrl("https://example.test/report.html"))
+    );
+    mockResultsService.getJobSettingParams.and.returnValue(
+      of({ runId: mockJob.id, settingParams: { binder_name: "PDL1" } })
+    );
 
     fixture = TestBed.createComponent(JobsComponent);
     component = fixture.componentInstance;

@@ -57,11 +57,24 @@ export class WorkflowSubmissionService {
       console.log("With dataset ID:", datasetId);
     }
 
+    const normalizedDatasetId = datasetId?.trim();
+    if (!normalizedDatasetId) {
+      const error = new Error("datasetId is required to launch workflow.");
+      if (onError) {
+        onError(error);
+      } else {
+        alert(`Failed to launch workflow: ${error.message}`);
+      }
+      return;
+    }
+
     // Show loading state
     this.isSubmitting.set(true);
 
     // Call the API service with separate launch and formData
-    this.workflowApiService.launchWorkflow(launch, formData, datasetId).subscribe({
+    this.workflowApiService
+      .launchWorkflow(launch, formData, normalizedDatasetId)
+      .subscribe({
       next: (response) => {
         console.log("Workflow launched successfully:", response);
         // Hide loading state
@@ -88,7 +101,7 @@ export class WorkflowSubmissionService {
           );
         }
       },
-    });
+      });
   }
 
   /**

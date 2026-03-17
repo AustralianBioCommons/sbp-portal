@@ -1,0 +1,54 @@
+import { HttpClient } from "@angular/common/http";
+import { inject, Injectable } from "@angular/core";
+import { DomSanitizer, SafeResourceUrl } from "@angular/platform-browser";
+import { map, Observable } from "rxjs";
+import { environment } from "../../../environments/environment";
+
+interface ResultReportPreviewResponse {
+  runId: string;
+  url: string;
+}
+
+export interface ResultSettingParamsResponse {
+  runId: string;
+  settingParams: Record<string, unknown> | null;
+}
+
+@Injectable({
+  providedIn: "root",
+})
+export class ResultsService {
+  private readonly resultsUrl = `${environment.apiBaseUrl}/api/results`;
+  private http = inject(HttpClient);
+  private sanitizer = inject(DomSanitizer);
+
+  getJobReportUrl(runId: string): string {
+    return `${this.resultsUrl}/${encodeURIComponent(runId)}/report`;
+  }
+
+  getJobSettingParams(runId: string): Observable<ResultSettingParamsResponse> {
+    return this.http.get<ResultSettingParamsResponse>(
+      `${this.resultsUrl}/${encodeURIComponent(runId)}/settingParams`
+    );
+  }
+
+  getSafeReportResourceUrl(reportUrl: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(reportUrl);
+  }
+
+  getJobReportResourceUrl(runId: string): Observable<SafeResourceUrl> {
+    return this.http
+      .post<ResultReportPreviewResponse>(
+        `${this.getJobReportUrl(runId)}/preview`,
+        {}
+      )
+      .pipe(
+        map((response) => {
+          const reportUrl = response.url.startsWith("http")
+            ? response.url
+            : `${environment.apiBaseUrl}${response.url}`;
+          return this.getSafeReportResourceUrl(reportUrl);
+        })
+      );
+  }
+}
