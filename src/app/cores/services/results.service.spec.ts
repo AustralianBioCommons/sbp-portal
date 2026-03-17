@@ -109,4 +109,21 @@ describe("ResultsService", () => {
       url: "/api/results/job%2F1/report?token=test-token",
     });
   });
+
+  it("should preserve absolute preview report URL", () => {
+    service.getJobReportResourceUrl("job/1").subscribe((response) => {
+      expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
+        "https://reports.example.test/job-1/report.html"
+      );
+    });
+
+    const previewReq = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/report/preview`
+    );
+    expect(previewReq.request.method).toBe("POST");
+    previewReq.flush({
+      runId: "job/1",
+      url: "https://reports.example.test/job-1/report.html",
+    });
+  });
 });

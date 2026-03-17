@@ -377,4 +377,118 @@ describe("JobResultsComponent", () => {
     expect(files[0]).toBe("queued_job_summary.json");
     expect(citations[0]).toBe("Workflow methods and generated outputs.");
   });
+
+  it("should normalize logs from entries when formatted entries are not available", () => {
+    const lines = (component as any).normalizeLogsResponse({
+      runId: mockJob.id,
+      entries: ["  first  ", "", " second"],
+      formattedEntries: [],
+      logs: null,
+    });
+
+    expect(lines).toEqual(["first", "second"]);
+  });
+
+  it("should normalize logs from string fallback when entries are missing", () => {
+    const lines = (component as any).normalizeLogsResponse({
+      runId: mockJob.id,
+      logs: "line 1\n\n line 2 ",
+    });
+
+    expect(lines).toEqual(["line 1", "line 2"]);
+  });
+
+  it("should normalize logs from array fallback", () => {
+    const lines = (component as any).normalizeLogs([" a ", "", "b "]);
+    expect(lines).toEqual(["a", "b"]);
+  });
+
+  it("should return empty normalized logs for nullish input", () => {
+    const lines = (component as any).normalizeLogs(null);
+    expect(lines).toEqual([]);
+  });
+
+  it("should normalize settings labels and schema details", () => {
+    const items = (component as any).normalizeSettings({
+      _internal: "ignore",
+      settings_filters: "ignore",
+      simple_key: "value",
+      schema_key: {
+        label: "Schema Label",
+        value: 7,
+        description: "desc",
+        helpText: "help",
+        placeholder: "placeholder",
+        required: true,
+        validation: {
+          min: 1,
+          max: 10,
+          minLength: 2,
+          maxLength: 20,
+          pattern: "^[A-Z]+$",
+          format: "uri",
+        },
+      },
+    });
+
+    expect(items.length).toBe(2);
+    expect(items[0].label).toBe("Simple Key");
+    expect(items[0].value).toBe("value");
+    expect(items[1].label).toBe("Schema Label");
+    expect(items[1].value).toBe("7");
+    expect(items[1].details).toContain("desc");
+    expect(items[1].details).toContain("Help: help");
+    expect(items[1].details).toContain("Placeholder: placeholder");
+    expect(items[1].details).toContain("Required");
+    expect(items[1].details).toContain("Min: 1");
+    expect(items[1].details).toContain("Max: 10");
+    expect(items[1].details).toContain("Min length: 2");
+    expect(items[1].details).toContain("Max length: 20");
+    expect(items[1].details).toContain("Pattern: ^[A-Z]+$");
+    expect(items[1].details).toContain("Format: uri");
+  });
+
+  it("should return empty settings for null setting params", () => {
+    const items = (component as any).normalizeSettings(null);
+    expect(items).toEqual([]);
+  });
+
+  it("should format setting label edge cases", () => {
+    expect((component as any).formatSettingLabel("___")).toBe("___");
+    expect((component as any).formatSettingLabel("starting-pdb_file")).toBe(
+      "Starting Pdb File"
+    );
+  });
+
+  it("should format setting value branches including stringify fallback", () => {
+    expect((component as any).formatSettingValue(undefined)).toBe("N/A");
+    expect((component as any).formatSettingValue("   ")).toBe("N/A");
+    expect((component as any).formatSettingValue(10)).toBe("10");
+    expect((component as any).formatSettingValue(true)).toBe("true");
+    expect((component as any).formatSettingValue({ a: 1 })).toBe('{"a":1}');
+
+    const circular: Record<string, unknown> = {};
+    circular["self"] = circular;
+    expect((component as any).formatSettingValue(circular)).toBe(
+      "[object Object]"
+    );
+  });
+
+  it("should return empty validation details when no validation is provided", () => {
+    expect((component as any).formatValidationDetails(undefined)).toEqual([]);
+  });
+
+  it("should reset logs without loading when opening logs tab without a selected job", () => {
+    component.isOpen = true;
+    component.job = null;
+    component.logsItems.set(["existing"]);
+    component.logsError.set("error");
+
+    component.setActiveTab("logs");
+
+    expect(component.logsItems()).toEqual([]);
+    expect(component.logsError()).toBeNull();
+    expect(component.logsLoading()).toBeFalse();
+    expect(resultsService.getJobLogs).not.toHaveBeenCalled();
+  });
 });
