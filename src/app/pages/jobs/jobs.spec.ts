@@ -1,6 +1,7 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
+import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import { JobsComponent } from "./jobs";
 import {
@@ -128,6 +129,21 @@ describe("JobsComponent", () => {
     expect(loadJobsSpy).toHaveBeenCalled();
   });
 
+  it("should include search and selected statuses when loading jobs", () => {
+    component.searchQuery.set("binder");
+    component.selectedStatuses.set(["Completed", "Failed"]);
+    component.currentPage.set(2);
+
+    component.loadJobs();
+
+    expect(mockJobsService.listJobs).toHaveBeenCalledWith({
+      limit: 50,
+      offset: 50,
+      search: "binder",
+      status: ["Completed", "Failed"],
+    });
+  });
+
   it("should toggle statuses and report selection state", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
 
@@ -249,6 +265,28 @@ describe("JobsComponent", () => {
     expect(component.showDeleteDialog()).toBeTrue();
   });
 
+  it("should manage job details dialog visibility and tab state", () => {
+    component.viewJobDetails(mockJob);
+
+    expect(component.showJobDetailsDialog()).toBeTrue();
+    expect(component.selectedJobDetails()).toEqual(mockJob);
+
+    component.closeJobDetailsDialog();
+    expect(component.showJobDetailsDialog()).toBeFalse();
+    expect(component.selectedJobDetails()).toBeNull();
+  });
+
+  it("should clean up viewport listeners on destroy", () => {
+    const cleanupSpy = jasmine.createSpy("cleanup");
+    (component as unknown as { viewportListeners: Array<() => void> }).viewportListeners = [
+      cleanupSpy,
+    ];
+
+    component.ngOnDestroy();
+
+    expect(cleanupSpy).toHaveBeenCalled();
+  });
+
   it("should toggle and close the status dropdown", () => {
     component.toggleStatusDropdown();
     expect(component.showStatusDropdown()).toBeTrue();
@@ -360,6 +398,15 @@ describe("JobsComponent", () => {
     ).toBeTruthy();
   });
 
+  it("should render the job details dialog when viewing job details", async () => {
+    component.viewJobDetails(mockJob);
+    await detectComponentChanges();
+
+    expect(
+      fixture.debugElement.query(By.directive(JobResultsComponent))
+    ).toBeTruthy();
+  });
+
   it("should close the menu when the viewport changes", () => {
     component.openActionMenuId.set(mockJob.id);
     component.actionMenuStyle.set({ left: "10px", top: "20px" });
@@ -375,6 +422,48 @@ describe("JobsComponent", () => {
 
     expect(component.openActionMenuId()).toBeNull();
     expect(component.actionMenuStyle()).toEqual({});
+  });
+
+  it("should open delete confirmation from the job details dialog", () => {
+    component.viewJobDetails(mockJob);
+
+    component.deleteSelectedJobFromDetails();
+
+    expect(component.selectedJobs()).toEqual([mockJob.id]);
+    expect(component.showDeleteDialog()).toBeTrue();
+    expect(component.showJobDetailsDialog()).toBeFalse();
+  });
+
+  it("should ignore delete and download requests when no job details are selected", () => {
+    component.deleteSelectedJobFromDetails();
+    component.downloadSelectedJobFiles();
+
+    expect(component.showDeleteDialog()).toBeFalse();
+  });
+
+  it("should download the selected job details package", () => {
+    const createObjectUrlSpy = spyOn(URL, "createObjectURL").and.returnValue("blob:test");
+    const revokeObjectUrlSpy = spyOn(URL, "revokeObjectURL");
+    const link = {
+      click: jasmine.createSpy("click"),
+      href: "",
+      download: ""
+    } as unknown as HTMLAnchorElement;
+    spyOn(document, "createElement").and.returnValue(link);
+    component.viewJobDetails(mockJob);
+
+    component.downloadSelectedJobFiles();
+
+    expect(createObjectUrlSpy).toHaveBeenCalled();
+    expect(link.download).toContain("example-job");
+    expect(link.click).toHaveBeenCalled();
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:test");
+  });
+
+  it("should provide fallback values for job detail helpers", () => {
+    component.viewJobDetails(secondJob);
+
+    expect(component.selectedJobDetails()).toEqual(secondJob);
   });
 
   it("should clear selection and close the delete dialog when no jobs are selected", () => {
@@ -469,8 +558,7 @@ describe("JobsComponent", () => {
     component.viewJobDetails(mockJob);
 
     expect(component.openActionMenuId()).toBeNull();
-    expect(component.error()).toBe(
-      'Job details for "Example job" are not available yet.'
-    );
+    expect(component.showJobDetailsDialog()).toBeTrue();
+    expect(component.selectedJobDetails()).toEqual(mockJob);
   });
 });

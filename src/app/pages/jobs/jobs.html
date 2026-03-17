@@ -443,6 +443,15 @@
   </div>
 </div>
 
+<!-- Job Details Dialog -->
+<app-job-results
+  [isOpen]="showJobDetailsDialog()"
+  [job]="selectedJobDetails()"
+  (closeRequested)="closeJobDetailsDialog()"
+  (deleteRequested)="deleteSelectedJobFromDetails()"
+  (downloadRequested)="downloadSelectedJobFiles()"
+></app-job-results>
+
 <!-- Delete Confirmation Dialog -->
 @if (showDeleteDialog()) {
   <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
