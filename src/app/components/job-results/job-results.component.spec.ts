@@ -4,7 +4,21 @@ import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
 import { JobResultsComponent } from "./job-results.component";
 import { JobListItem } from "../../cores/services/jobs.service";
-import { ResultsService } from "../../cores/services/results.service";
+import {
+  ResultLogsResponse,
+  ResultsService,
+} from "../../cores/services/results.service";
+
+type JobResultsPrivateApi = {
+  normalizeLogsResponse: (response: ResultLogsResponse) => string[];
+  normalizeLogs: (logs: string | string[] | null | undefined) => string[];
+  normalizeSettings: (
+    settingParams: Record<string, unknown> | null | undefined
+  ) => Array<{ label: string; value: string; details: string[] }>;
+  formatSettingLabel: (key: string) => string;
+  formatSettingValue: (value: unknown) => string;
+  formatValidationDetails: (validation: Record<string, unknown> | undefined) => string[];
+};
 
 describe("JobResultsComponent", () => {
   let component: JobResultsComponent;
@@ -379,7 +393,8 @@ describe("JobResultsComponent", () => {
   });
 
   it("should normalize logs from entries when formatted entries are not available", () => {
-    const lines = (component as any).normalizeLogsResponse({
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    const lines = privateApi.normalizeLogsResponse({
       runId: mockJob.id,
       entries: ["  first  ", "", " second"],
       formattedEntries: [],
@@ -390,7 +405,8 @@ describe("JobResultsComponent", () => {
   });
 
   it("should normalize logs from string fallback when entries are missing", () => {
-    const lines = (component as any).normalizeLogsResponse({
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    const lines = privateApi.normalizeLogsResponse({
       runId: mockJob.id,
       logs: "line 1\n\n line 2 ",
     });
@@ -399,17 +415,20 @@ describe("JobResultsComponent", () => {
   });
 
   it("should normalize logs from array fallback", () => {
-    const lines = (component as any).normalizeLogs([" a ", "", "b "]);
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    const lines = privateApi.normalizeLogs([" a ", "", "b "]);
     expect(lines).toEqual(["a", "b"]);
   });
 
   it("should return empty normalized logs for nullish input", () => {
-    const lines = (component as any).normalizeLogs(null);
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    const lines = privateApi.normalizeLogs(null);
     expect(lines).toEqual([]);
   });
 
   it("should normalize settings labels and schema details", () => {
-    const items = (component as any).normalizeSettings({
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    const items = privateApi.normalizeSettings({
       _internal: "ignore",
       settings_filters: "ignore",
       simple_key: "value",
@@ -449,33 +468,37 @@ describe("JobResultsComponent", () => {
   });
 
   it("should return empty settings for null setting params", () => {
-    const items = (component as any).normalizeSettings(null);
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    const items = privateApi.normalizeSettings(null);
     expect(items).toEqual([]);
   });
 
   it("should format setting label edge cases", () => {
-    expect((component as any).formatSettingLabel("___")).toBe("___");
-    expect((component as any).formatSettingLabel("starting-pdb_file")).toBe(
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    expect(privateApi.formatSettingLabel("___")).toBe("___");
+    expect(privateApi.formatSettingLabel("starting-pdb_file")).toBe(
       "Starting Pdb File"
     );
   });
 
   it("should format setting value branches including stringify fallback", () => {
-    expect((component as any).formatSettingValue(undefined)).toBe("N/A");
-    expect((component as any).formatSettingValue("   ")).toBe("N/A");
-    expect((component as any).formatSettingValue(10)).toBe("10");
-    expect((component as any).formatSettingValue(true)).toBe("true");
-    expect((component as any).formatSettingValue({ a: 1 })).toBe('{"a":1}');
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    expect(privateApi.formatSettingValue(undefined)).toBe("N/A");
+    expect(privateApi.formatSettingValue("   ")).toBe("N/A");
+    expect(privateApi.formatSettingValue(10)).toBe("10");
+    expect(privateApi.formatSettingValue(true)).toBe("true");
+    expect(privateApi.formatSettingValue({ a: 1 })).toBe('{"a":1}');
 
     const circular: Record<string, unknown> = {};
     circular["self"] = circular;
-    expect((component as any).formatSettingValue(circular)).toBe(
+    expect(privateApi.formatSettingValue(circular)).toBe(
       "[object Object]"
     );
   });
 
   it("should return empty validation details when no validation is provided", () => {
-    expect((component as any).formatValidationDetails(undefined)).toEqual([]);
+    const privateApi = component as unknown as JobResultsPrivateApi;
+    expect(privateApi.formatValidationDetails(undefined)).toEqual([]);
   });
 
   it("should reset logs without loading when opening logs tab without a selected job", () => {
