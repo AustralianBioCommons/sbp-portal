@@ -11,7 +11,10 @@ import {
 } from "@angular/core";
 import { SafeResourceUrl } from "@angular/platform-browser";
 import { JobListItem } from "../../cores/services/jobs.service";
-import { ResultsService } from "../../cores/services/results.service";
+import {
+  ResultLogsResponse,
+  ResultsService,
+} from "../../cores/services/results.service";
 import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -197,11 +200,21 @@ type JobSettingItem = { label: string; value: string; details: string[] };
                   @case ("logs") {
                     <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <h3 class="text-lg font-semibold text-slate-900">Logs</h3>
-                      <div class="mt-4 space-y-3 font-mono text-sm">
-                        @for (line of getLogs(selectedJob); track line) {
-                          <p class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-slate-700">{{ line }}</p>
-                        }
-                      </div>
+                      @if (logsError()) {
+                        <p class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                          {{ logsError() }}
+                        </p>
+                      } @else if (logsLoading()) {
+                        <p class="mt-4 text-sm text-slate-600">Loading logs...</p>
+                      } @else if (logsItems().length > 0) {
+                        <div class="mt-4 space-y-3 font-mono text-sm">
+                          @for (line of logsItems(); track line) {
+                            <p class="text-slate-700 whitespace-pre-wrap break-words">{{ line }}</p>
+                          }
+                        </div>
+                      } @else {
+                        <p class="mt-4 text-sm text-slate-600">No logs are available for this run yet.</p>
+                      }
                     </div>
                   }
                   @case ("citations") {
@@ -245,6 +258,9 @@ export class JobResultsComponent implements OnChanges {
   settingsItems = signal<JobSettingItem[]>([]);
   settingsLoading = signal(false);
   settingsError = signal<string | null>(null);
+  logsItems = signal<string[]>([]);
+  logsLoading = signal(false);
+  logsError = signal<string | null>(null);
 
   readonly tabs: Array<{ id: JobResultsTab; label: string }> = [
     { id: "results", label: "Results" },
@@ -259,11 +275,15 @@ export class JobResultsComponent implements OnChanges {
       this.activeTab.set("results");
       this.loadReport();
       this.loadSettings();
+      this.resetLogsState();
     }
   }
 
   setActiveTab(tab: JobResultsTab): void {
     this.activeTab.set(tab);
+    if (tab === "logs") {
+      this.loadLogs();
+    }
   }
 
   formatDate(dateString: string): string {
@@ -284,16 +304,6 @@ export class JobResultsComponent implements OnChanges {
       `${job.jobName.replace(/\s+/g, "_").toLowerCase()}_summary.json`,
       `${job.id}_metadata.txt`,
       `${job.id}_results_archive.zip`,
-    ];
-  }
-
-  getLogs(job: JobListItem): string[] {
-    return [
-      `Run ${job.id} submitted successfully.`,
-      `Status recorded as ${job.status}.`,
-      job.score === null
-        ? "Score has not been generated yet."
-        : `Top score recorded at ${job.score.toFixed(3)}.`,
     ];
   }
 
@@ -360,6 +370,68 @@ export class JobResultsComponent implements OnChanges {
         this.settingsError.set("Failed to load settings.");
       },
     });
+  }
+
+  private loadLogs(): void {
+    if (!this.isOpen || !this.job) {
+      this.resetLogsState();
+      return;
+    }
+
+    this.logsLoading.set(true);
+    this.logsError.set(null);
+    this.resultsService.getJobLogs(this.job.id).subscribe({
+      next: (response) => {
+        this.logsItems.set(this.normalizeLogsResponse(response));
+        this.logsLoading.set(false);
+      },
+      error: (err) => {
+        console.error("Error loading job logs:", err);
+        this.logsLoading.set(false);
+        this.logsItems.set([]);
+        this.logsError.set("Failed to load logs.");
+      },
+    });
+  }
+
+  private resetLogsState(): void {
+    this.logsItems.set([]);
+    this.logsError.set(null);
+    this.logsLoading.set(false);
+  }
+
+  private normalizeLogsResponse(response: ResultLogsResponse): string[] {
+    const formattedEntries = response.formattedEntries;
+    if (Array.isArray(formattedEntries) && formattedEntries.length > 0) {
+      return formattedEntries
+        .map((entry) => (entry.message || entry.raw || "").trim())
+        .filter((line) => line.length > 0);
+    }
+
+    if (Array.isArray(response.entries) && response.entries.length > 0) {
+      return response.entries
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+    }
+
+    return this.normalizeLogs(response.logs);
+  }
+
+  private normalizeLogs(logs: string | string[] | null | undefined): string[] {
+    if (!logs) {
+      return [];
+    }
+
+    if (Array.isArray(logs)) {
+      return logs
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+    }
+
+    return logs
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
   }
 
   private normalizeSettings(

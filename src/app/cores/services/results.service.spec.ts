@@ -57,6 +57,32 @@ describe("ResultsService", () => {
     });
   });
 
+  it("should fetch logs", () => {
+    service.getJobLogs("job/1").subscribe((response) => {
+      expect(response.formattedEntries?.length).toBe(1);
+      expect(response.formattedEntries?.[0].message).toBe("line 1");
+    });
+
+    const request = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/logs`
+    );
+    expect(request.request.method).toBe("GET");
+    request.flush({
+      runId: "job/1",
+      entries: ["line 1", "line 2"],
+      formattedEntries: [
+        {
+          index: 0,
+          raw: "line 1",
+          message: "line 1",
+          level: "INFO",
+        },
+      ],
+      logs: "line 1\nline 2",
+      lastUpdated: "2026-03-17T00:00:00Z",
+    });
+  });
+
   it("should return a trusted resource URL for the report", () => {
     const trustedUrl = service.getSafeReportResourceUrl(
       "https://example.test/report.html"

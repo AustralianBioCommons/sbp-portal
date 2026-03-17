@@ -36,6 +36,7 @@ describe("JobResultsComponent", () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getJobReportResourceUrl",
       "getJobSettingParams",
+      "getJobLogs",
     ]);
 
     await TestBed.configureTestingModule({
@@ -71,6 +72,27 @@ describe("JobResultsComponent", () => {
             validation: { max: 500 },
           },
         },
+      })
+    );
+    resultsService.getJobLogs.and.returnValue(
+      of({
+        runId: mockJob.id,
+        entries: ["raw line that should not render first"],
+        formattedEntries: [
+          {
+            index: 0,
+            raw: "Loading nextflow/25.10.3",
+            message: "Loading nextflow/25.10.3",
+            level: "INFO",
+          },
+          {
+            index: 1,
+            raw: " Loading requirement: java/jdk-17.0.2",
+            message: "Loading requirement: java/jdk-17.0.2",
+            level: "INFO",
+          },
+        ],
+        logs: "fallback line",
       })
     );
 
@@ -125,6 +147,7 @@ describe("JobResultsComponent", () => {
   it("should switch tabs and reset when inputs change", () => {
     component.setActiveTab("logs");
     expect(component.activeTab()).toBe("logs");
+    expect(resultsService.getJobLogs).toHaveBeenCalledWith(mockJob.id);
     component.job = fallbackJob;
 
     component.ngOnChanges({
@@ -197,15 +220,54 @@ describe("JobResultsComponent", () => {
     expect(component.settingsItems()).toEqual([]);
     expect(component.settingsError()).toBeNull();
     expect(component.settingsLoading()).toBeFalse();
+    expect(component.logsItems()).toEqual([]);
+    expect(component.logsError()).toBeNull();
+    expect(component.logsLoading()).toBeFalse();
   });
 
   it("should render logs tab content", () => {
     component.setActiveTab("logs");
     fixture.detectChanges();
 
+    expect(fixture.nativeElement.textContent).toContain("Loading nextflow/25.10.3");
     expect(fixture.nativeElement.textContent).toContain(
-      `Run ${mockJob.id} submitted successfully.`
+      "Loading requirement: java/jdk-17.0.2"
     );
+    expect(fixture.nativeElement.textContent).not.toContain(
+      "raw line that should not render first"
+    );
+  });
+
+  it("should handle logs fetch errors", () => {
+    resultsService.getJobLogs.and.returnValue(
+      throwError(() => new Error("logs failed"))
+    );
+
+    fixture = TestBed.createComponent(JobResultsComponent);
+    component = fixture.componentInstance;
+    component.isOpen = true;
+    component.job = mockJob;
+    component.ngOnChanges({
+      isOpen: {
+        currentValue: true,
+        previousValue: false,
+        firstChange: true,
+        isFirstChange: () => true,
+      },
+      job: {
+        currentValue: mockJob,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true,
+      },
+    });
+
+    component.setActiveTab("logs");
+    fixture.detectChanges();
+
+    expect(component.logsItems()).toEqual([]);
+    expect(component.logsError()).toBe("Failed to load logs.");
+    expect(component.logsLoading()).toBeFalse();
   });
 
   it("should stop loading when the report iframe loads", () => {
@@ -308,13 +370,11 @@ describe("JobResultsComponent", () => {
   it("should provide fallback values for helper methods", () => {
     const summaryItems = component.getSummaryItems(fallbackJob);
     const files = component.getFiles(fallbackJob);
-    const logs = component.getLogs(fallbackJob);
     const citations = component.getCitations(fallbackJob);
 
     expect(summaryItems[1].value).toBe("N/A");
     expect(summaryItems[3].value).toBe("N/A");
     expect(files[0]).toBe("queued_job_summary.json");
-    expect(logs[2]).toBe("Score has not been generated yet.");
     expect(citations[0]).toBe("Workflow methods and generated outputs.");
   });
 });

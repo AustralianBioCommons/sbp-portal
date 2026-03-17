@@ -14,6 +14,20 @@ export interface ResultSettingParamsResponse {
   settingParams: Record<string, unknown> | null;
 }
 
+export interface ResultLogsResponse {
+  runId: string;
+  logs?: string | string[] | null;
+  entries?: string[] | null;
+  formattedEntries?: Array<{
+    index: number;
+    raw: string;
+    message: string;
+    level?: string;
+    timestamp?: string;
+  }> | null;
+  lastUpdated?: string;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -29,6 +43,12 @@ export class ResultsService {
   getJobSettingParams(runId: string): Observable<ResultSettingParamsResponse> {
     return this.http.get<ResultSettingParamsResponse>(
       `${this.resultsUrl}/${encodeURIComponent(runId)}/settingParams`
+    );
+  }
+
+  getJobLogs(runId: string): Observable<ResultLogsResponse> {
+    return this.http.get<ResultLogsResponse>(
+      `${this.resultsUrl}/${encodeURIComponent(runId)}/logs`
     );
   }
 
