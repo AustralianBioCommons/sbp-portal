@@ -135,7 +135,8 @@ type JobSettingItem = { label: string; value: string; details: string[] };
                               </p>
                             }
                             <iframe
-                              class="h-[32rem] w-full bg-white"
+                              class="w-full bg-white"
+                              style="height: 500px; zoom: 0.7;"
                               [src]="reportDocumentUrl"
                               [title]="'Job report for ' + selectedJob.jobName"
                               (load)="onReportLoad()"
@@ -335,9 +336,15 @@ export class JobResultsComponent implements OnChanges {
 
     this.reportLoading.set(true);
     this.reportError.set(null);
-    this.resultsService.getJobReportResourceUrl(this.job.id).subscribe({
+    this.resultsService.getJobReport(this.job.id).subscribe({
       next: (reportResourceUrl) => {
-        this.reportUrl.set(reportResourceUrl);
+        if (reportResourceUrl) {
+          this.reportUrl.set(reportResourceUrl);
+        } else {
+          this.reportUrl.set(null);
+          this.reportError.set("No report available for this job.");
+        }
+        this.reportLoading.set(false);
       },
       error: (err) => {
         console.error("Error loading job report:", err);

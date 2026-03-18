@@ -9,6 +9,18 @@ interface ResultReportPreviewResponse {
   url: string;
 }
 
+export interface ResultDownloadItem {
+  label: string;
+  key: string;
+  url: string;
+  category: string;
+}
+
+export interface ResultReportResponse {
+  runId: string;
+  report: ResultDownloadItem | null;
+}
+
 export interface ResultSettingParamsResponse {
   runId: string;
   settingParams: Record<string, unknown> | null;
@@ -54,6 +66,22 @@ export class ResultsService {
 
   getSafeReportResourceUrl(reportUrl: string): SafeResourceUrl {
     return this.sanitizer.bypassSecurityTrustResourceUrl(reportUrl);
+  }
+
+  getJobReport(runId: string): Observable<SafeResourceUrl | null> {
+    return this.http
+      .get<ResultReportResponse>(this.getJobReportUrl(runId))
+      .pipe(
+        map((response) => {
+          if (!response.report || !response.report.url) {
+            return null;
+          }
+          const reportUrl = response.report.url.startsWith("http")
+            ? response.report.url
+            : `${environment.apiBaseUrl}${response.report.url}`;
+          return this.getSafeReportResourceUrl(reportUrl);
+        })
+      );
   }
 
   getJobReportResourceUrl(runId: string): Observable<SafeResourceUrl> {
