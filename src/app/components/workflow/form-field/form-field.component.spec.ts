@@ -63,6 +63,38 @@ describe("FormFieldComponent", () => {
     expect(component.fieldId).toBe("field-testField");
   });
 
+  it("should format Pdb as PDB in display label", () => {
+    component.field = {
+      name: "starting_pdb",
+      label: "Starting Pdb",
+      type: "string",
+      required: true,
+    };
+
+    expect(component.getDisplayFieldLabel()).toBe("Starting PDB");
+  });
+
+  it("should use field name when label is missing and format Pdb as PDB", () => {
+    component.field = {
+      name: "starting Pdb",
+      type: "string",
+      required: false,
+    } as InputSchemaField;
+
+    expect(component.getDisplayFieldLabel()).toBe("starting PDB");
+  });
+
+  it("should keep display label unchanged when no Pdb token exists", () => {
+    component.field = {
+      name: "starting_structure",
+      label: "Starting Structure",
+      type: "string",
+      required: true,
+    };
+
+    expect(component.getDisplayFieldLabel()).toBe("Starting Structure");
+  });
+
   it("should return proper input classes", () => {
     const classes = component.getInputClasses();
     expect(classes).toContain("border-gray-300");
