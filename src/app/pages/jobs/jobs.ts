@@ -11,6 +11,7 @@ import {
 import { FormsModule } from "@angular/forms";
 import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
+import { LoadingComponent } from "../../components/loading/loading.component";
 import {
   JobListItem,
   JobListQueryParams,
@@ -21,7 +22,7 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 @Component({
   selector: "app-jobs",
   standalone: true,
-  imports: [CommonModule, FormsModule, JobsActionMenuComponent, JobResultsComponent],
+  imports: [CommonModule, FormsModule, JobsActionMenuComponent, JobResultsComponent, LoadingComponent],
   templateUrl: "./jobs.html"
 })
 export class JobsComponent implements OnInit, OnDestroy {
@@ -486,32 +487,5 @@ export class JobsComponent implements OnInit, OnDestroy {
 
     this.openDeleteDialogFor(job.id);
     this.closeJobDetailsDialog();
-  }
-
-  downloadSelectedJobFiles(): void {
-    const job = this.selectedJobDetails();
-    if (!job) {
-      return;
-    }
-
-    const payload = {
-      jobId: job.id,
-      jobName: job.jobName,
-      submittedAt: job.submittedAt,
-      workflowType: job.workflowType,
-      status: job.status,
-      score: job.score,
-      finalDesignCount: job.finalDesignCount,
-      note: "File download placeholder generated from the jobs page."
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json"
-    });
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = `${job.jobName.replace(/\s+/g, "-").toLowerCase()}-files.json`;
-    link.click();
-    URL.revokeObjectURL(objectUrl);
   }
 }

@@ -10,6 +10,9 @@ import {
   signal,
 } from "@angular/core";
 import { SafeResourceUrl } from "@angular/platform-browser";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { heroArrowDownTray } from "@ng-icons/heroicons/outline";
+import { LoadingComponent } from "../loading/loading.component";
 import { JobListItem } from "../../cores/services/jobs.service";
 import {
   ResultLogsResponse,
@@ -23,224 +26,9 @@ type JobSettingItem = { label: string; value: string; details: string[] };
 @Component({
   selector: "app-job-results",
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    @if (isOpen && job; as selectedJob) {
-      <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="job-details-title" role="dialog" aria-modal="true">
-        <div class="flex min-h-screen items-center justify-center px-4 py-8">
-          <div
-            class="fixed inset-0 bg-slate-950/45"
-            role="button"
-            tabindex="0"
-            (click)="closeRequested.emit()"
-            (keydown.enter)="closeRequested.emit()"
-            (keydown.space)="closeRequested.emit()"
-          ></div>
-
-          <div class="relative w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-            <div class="px-6 py-5">
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <p class="text-xs font-semibold text-slate-500">Job name</p>
-                  <h2 id="job-details-title" class="mt-1 text-2xl font-semibold text-slate-900">
-                    {{ selectedJob.jobName }}
-                  </h2>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-900">
-                  This job
-                  <button
-                    type="button"
-                    (click)="deleteRequested.emit()"
-                    class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
-                  >
-                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Delete
-                  </button>
-                  <button
-                    type="button"
-                    (click)="downloadRequested.emit()"
-                    class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-slate-100"
-                  >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 3v12m0 0l4-4m-4 4l-4-4m-3 8.25h14" />
-                    </svg>
-                    Download all files
-                  </button>
-                  <button
-                    type="button"
-                    (click)="closeRequested.emit()"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:bg-slate-100"
-                    aria-label="Close job details"
-                  >
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div class="mt-5 grid gap-4 pb-1 sm:grid-cols-2 xl:grid-cols-4">
-                @for (item of getSummaryItems(selectedJob); track item.label) {
-                  <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500">{{ item.label }}</p>
-                    <p class="mt-2 border-b border-slate-300 pb-2 text-sm font-medium text-slate-900">
-                      {{ item.value }}
-                    </p>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <div class="border-b border-gray-200 bg-white px-6">
-              <nav class="-mb-px overflow-x-auto scrollbar-hide scroll-smooth py-1" aria-label="Job result tabs">
-                <div class="flex min-w-max justify-center gap-8">
-                  @for (tab of tabs; track tab.id) {
-                    <button
-                      type="button"
-                      (click)="setActiveTab(tab.id)"
-                      class="whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-all duration-200 hover:scale-110"
-                      [class.text-primary]="activeTab() === tab.id"
-                      [class.border-gray-800]="activeTab() === tab.id"
-                      [class.border-b-3]="activeTab() === tab.id"
-                      [class.font-semibold]="activeTab() === tab.id"
-                      [class.text-blue-900]="activeTab() !== tab.id"
-                      [class.hover:text-blue-800]="activeTab() !== tab.id"
-                      [class.hover:border-gray-300]="activeTab() !== tab.id"
-                      [class.border-transparent]="activeTab() !== tab.id"
-                    >
-                      {{ tab.label }}
-                    </button>
-                  }
-                </div>
-              </nav>
-            </div>
-
-            <div class="max-h-[60vh] overflow-y-auto bg-gray-50 px-6 py-6">
-              <div class="mx-auto w-full max-w-4xl">
-                @switch (activeTab()) {
-                  @case ("results") {
-                      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                        <h3 class="text-lg font-semibold text-slate-900">Results overview</h3>
-                        @if (reportError()) {
-                          <p class="mt-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {{ reportError() }}
-                          </p>
-                        } @else if (reportUrl(); as reportDocumentUrl) {
-                          <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
-                            @if (reportLoading()) {
-                              <p class="border-b border-slate-200 px-4 py-3 text-sm text-slate-600">
-                                Loading report...
-                              </p>
-                            }
-                            <iframe
-                              class="w-full bg-white"
-                              style="height: 500px; zoom: 0.7;"
-                              [src]="reportDocumentUrl"
-                              [title]="'Job report for ' + selectedJob.jobName"
-                              (load)="onReportLoad()"
-                              (error)="onReportError()"
-                            ></iframe>
-                          </div>
-                        } @else {
-                          <p class="mt-2 text-sm text-slate-600">No report data is available for this run yet.</p>
-                        }
-                      </div>
-                  }
-                  @case ("files") {
-                    <div class="rounded-2xl border border-slate-200 bg-white">
-                      <div class="border-b border-slate-200 px-5 py-4">
-                        <h3 class="text-lg font-semibold text-slate-900">Available files</h3>
-                        <p class="mt-1 text-sm text-slate-500">
-                          Placeholder file manifest generated from the current jobs listing view.
-                        </p>
-                      </div>
-                      <div class="divide-y divide-slate-200">
-                        @for (fileName of getFiles(selectedJob); track fileName) {
-                          <div class="flex items-center justify-between px-5 py-4">
-                            <div>
-                              <p class="text-sm font-medium text-slate-900">{{ fileName }}</p>
-                              <p class="text-xs text-slate-500">Included in the “Download all files” package.</p>
-                            </div>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
-                  @case ("settings") {
-                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <h3 class="text-lg font-semibold text-slate-900">Run settings</h3>
-                      @if (settingsError()) {
-                        <p class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                          {{ settingsError() }}
-                        </p>
-                      } @else if (settingsLoading()) {
-                        <p class="mt-4 text-sm text-slate-600">Loading settings...</p>
-                      } @else if (settingsItems().length > 0) {
-                        <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-                          @for (setting of settingsItems(); track setting.label) {
-                            <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ setting.label }}</dt>
-                              <dd class="mt-1 break-words text-sm text-slate-900">{{ setting.value }}</dd>
-                              @if (setting.details.length > 0) {
-                                <div class="mt-2 space-y-1">
-                                  @for (detail of setting.details; track detail) {
-                                    <p class="text-xs text-slate-500">{{ detail }}</p>
-                                  }
-                                </div>
-                              }
-                            </div>
-                          }
-                        </dl>
-                      } @else {
-                        <p class="mt-4 text-sm text-slate-600">No settings data is available for this run yet.</p>
-                      }
-                    </div>
-                  }
-                  @case ("logs") {
-                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <h3 class="text-lg font-semibold text-slate-900">Logs</h3>
-                      @if (logsError()) {
-                        <p class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                          {{ logsError() }}
-                        </p>
-                      } @else if (logsLoading()) {
-                        <p class="mt-4 text-sm text-slate-600">Loading logs...</p>
-                      } @else if (logsItems().length > 0) {
-                        <div class="mt-4 space-y-3 font-mono text-sm">
-                          @for (line of logsItems(); track line) {
-                            <p class="text-slate-700 whitespace-pre-wrap break-words">{{ line }}</p>
-                          }
-                        </div>
-                      } @else {
-                        <p class="mt-4 text-sm text-slate-600">No logs are available for this run yet.</p>
-                      }
-                    </div>
-                  }
-                  @case ("citations") {
-                    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                      <h3 class="text-lg font-semibold text-slate-900">Citations</h3>
-                      <p class="mt-2 text-sm text-slate-500">
-                        Cite the workflow and platform used to produce the results from this run.
-                      </p>
-                      <ul class="mt-4 space-y-3">
-                        @for (citation of getCitations(selectedJob); track citation) {
-                          <li class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                            {{ citation }}
-                          </li>
-                        }
-                      </ul>
-                    </div>
-                  }
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
-  `,
+  imports: [CommonModule, NgIconComponent, LoadingComponent],
+  templateUrl: "./job-results.component.html",
+  providers: [provideIcons({ heroArrowDownTray })]
 })
 export class JobResultsComponent implements OnChanges {
   private resultsService = inject(ResultsService);
@@ -250,12 +38,16 @@ export class JobResultsComponent implements OnChanges {
 
   @Output() closeRequested = new EventEmitter<void>();
   @Output() deleteRequested = new EventEmitter<void>();
-  @Output() downloadRequested = new EventEmitter<void>();
 
   activeTab = signal<JobResultsTab>("results");
   reportUrl = signal<SafeResourceUrl | null>(null);
   reportLoading = signal(false);
   reportError = signal<string | null>(null);
+  filesItems = signal<Array<{ label: string; url: string; category: string }>>(
+    []
+  );
+  filesLoading = signal(false);
+  filesError = signal<string | null>(null);
   settingsItems = signal<JobSettingItem[]>([]);
   settingsLoading = signal(false);
   settingsError = signal<string | null>(null);
@@ -268,13 +60,14 @@ export class JobResultsComponent implements OnChanges {
     { id: "files", label: "Files" },
     { id: "settings", label: "Settings" },
     { id: "logs", label: "Logs" },
-    { id: "citations", label: "Citations" },
+    { id: "citations", label: "Citations" }
   ];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["job"] || changes["isOpen"]) {
       this.activeTab.set("results");
       this.loadReport();
+      this.loadDownloads();
       this.loadSettings();
       this.resetLogsState();
     }
@@ -296,7 +89,10 @@ export class JobResultsComponent implements OnChanges {
       { label: "Submitted", value: this.formatDate(job.submittedAt) },
       { label: "Type", value: job.workflowType || "N/A" },
       { label: "Status", value: job.status },
-      { label: "Score", value: job.score === null ? "N/A" : job.score.toFixed(3) },
+      {
+        label: "Score",
+        value: job.score === null ? "N/A" : job.score.toFixed(3)
+      }
     ];
   }
 
@@ -304,15 +100,51 @@ export class JobResultsComponent implements OnChanges {
     return [
       `${job.jobName.replace(/\s+/g, "_").toLowerCase()}_summary.json`,
       `${job.id}_metadata.txt`,
-      `${job.id}_results_archive.zip`,
+      `${job.id}_results_archive.zip`
     ];
   }
 
   getCitations(job: JobListItem): string[] {
     return [
       `${job.workflowType || "Workflow"} methods and generated outputs.`,
-      "SBP Portal platform and supporting infrastructure.",
+      "SBP Portal platform and supporting infrastructure."
     ];
+  }
+
+  formatCategoryName(category: string): string {
+    // List of known file extensions and abbreviations that should be uppercase
+    const uppercaseWords = new Set(['pdb', 'csv', 'json', 'xml', 'html', 'pdf', 'zip', 'txt', 'tsv']);
+    
+    // Replace underscores with spaces
+    const withSpaces = category.replace(/_/g, ' ');
+    
+    // Split into words and format each
+    const words = withSpaces.split(' ');
+    const formatted = words.map(word => {
+      const lower = word.toLowerCase();
+      if (uppercaseWords.has(lower)) {
+        return word.toUpperCase();
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    });
+    
+    return formatted.join(' ');
+  }
+
+  getFilesByCategory(): Array<{ category: string; files: Array<{ label: string; url: string }> }> {
+    const grouped = new Map<string, Array<{ label: string; url: string }>>();
+    
+    this.filesItems().forEach(file => {
+      if (!grouped.has(file.category)) {
+        grouped.set(file.category, []);
+      }
+      grouped.get(file.category)!.push({ label: file.label, url: file.url });
+    });
+    
+    return Array.from(grouped.entries()).map(([category, files]) => ({
+      category: this.formatCategoryName(category),
+      files
+    }));
   }
 
   onReportLoad(): void {
@@ -351,7 +183,7 @@ export class JobResultsComponent implements OnChanges {
         this.reportLoading.set(false);
         this.reportUrl.set(null);
         this.reportError.set("Failed to load report.");
-      },
+      }
     });
   }
 
@@ -375,7 +207,37 @@ export class JobResultsComponent implements OnChanges {
         this.settingsLoading.set(false);
         this.settingsItems.set([]);
         this.settingsError.set("Failed to load settings.");
+      }
+    });
+  }
+
+  private loadDownloads(): void {
+    if (!this.isOpen || !this.job) {
+      this.filesItems.set([]);
+      this.filesError.set(null);
+      this.filesLoading.set(false);
+      return;
+    }
+
+    this.filesLoading.set(true);
+    this.filesError.set(null);
+    this.resultsService.getJobDownloads(this.job.id).subscribe({
+      next: (response) => {
+        this.filesItems.set(
+          response.downloads.map((download) => ({
+            label: download.label,
+            url: download.url,
+            category: download.category
+          }))
+        );
+        this.filesLoading.set(false);
       },
+      error: (err) => {
+        console.error("Error loading job downloads:", err);
+        this.filesLoading.set(false);
+        this.filesItems.set([]);
+        this.filesError.set("Failed to load files.");
+      }
     });
   }
 
@@ -397,7 +259,7 @@ export class JobResultsComponent implements OnChanges {
         this.logsLoading.set(false);
         this.logsItems.set([]);
         this.logsError.set("Failed to load logs.");
-      },
+      }
     });
   }
 
@@ -430,9 +292,7 @@ export class JobResultsComponent implements OnChanges {
     }
 
     if (Array.isArray(logs)) {
-      return logs
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
+      return logs.map((line) => line.trim()).filter((line) => line.length > 0);
     }
 
     return logs
@@ -449,15 +309,17 @@ export class JobResultsComponent implements OnChanges {
     }
 
     return Object.entries(settingParams)
-      .filter(([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key))
+      .filter(
+        ([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key)
+      )
       .map(([key, value]) => ({
-        ...this.normalizeSettingItem(key, value),
+        ...this.normalizeSettingItem(key, value)
       }));
   }
 
   private static readonly HIDDEN_SETTING_KEYS = new Set([
     "settings_filters",
-    "settings_advanced",
+    "settings_advanced"
   ]);
 
   private shouldHideSettingKey(key: string): boolean {
@@ -483,14 +345,14 @@ export class JobResultsComponent implements OnChanges {
       return {
         label: value.label || this.formatSettingLabel(key),
         value: this.formatSettingValue(value.value),
-        details,
+        details
       };
     }
 
     return {
       label: this.formatSettingLabel(key),
       value: this.formatSettingValue(value),
-      details: [],
+      details: []
     };
   }
 
@@ -521,7 +383,9 @@ export class JobResultsComponent implements OnChanges {
     }
   }
 
-  private formatValidationDetails(validation: Record<string, unknown> | undefined): string[] {
+  private formatValidationDetails(
+    validation: Record<string, unknown> | undefined
+  ): string[] {
     if (!validation) {
       return [];
     }
@@ -548,9 +412,7 @@ export class JobResultsComponent implements OnChanges {
     return details;
   }
 
-  private isSchemaSettingParam(
-    value: unknown
-  ): value is {
+  private isSchemaSettingParam(value: unknown): value is {
     label?: string;
     value?: unknown;
     description?: string;

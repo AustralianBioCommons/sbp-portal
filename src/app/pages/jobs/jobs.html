@@ -144,8 +144,7 @@
     @if (loading()) {
       <div class="bg-white shadow-sm rounded-lg border border-gray-200">
         <div class="px-6 py-12 text-center">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p class="mt-4 text-sm text-gray-500">Loading jobs...</p>
+          <app-loading message="Loading jobs..." [inline]="true"></app-loading>
         </div>
       </div>
     }
@@ -449,7 +448,6 @@
   [job]="selectedJobDetails()"
   (closeRequested)="closeJobDetailsDialog()"
   (deleteRequested)="deleteSelectedJobFromDetails()"
-  (downloadRequested)="downloadSelectedJobFiles()"
 ></app-job-results>
 
 <!-- Delete Confirmation Dialog -->

@@ -26,6 +26,11 @@ export interface ResultSettingParamsResponse {
   settingParams: Record<string, unknown> | null;
 }
 
+export interface ResultDownloadsResponse {
+  runId: string;
+  downloads: ResultDownloadItem[];
+}
+
 export interface ResultLogsResponse {
   runId: string;
   logs?: string | string[] | null;
@@ -61,6 +66,12 @@ export class ResultsService {
   getJobLogs(runId: string): Observable<ResultLogsResponse> {
     return this.http.get<ResultLogsResponse>(
       `${this.resultsUrl}/${encodeURIComponent(runId)}/logs`
+    );
+  }
+
+  getJobDownloads(runId: string): Observable<ResultDownloadsResponse> {
+    return this.http.get<ResultDownloadsResponse>(
+      `${this.resultsUrl}/${encodeURIComponent(runId)}/downloads`
     );
   }
 
