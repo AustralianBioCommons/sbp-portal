@@ -17,6 +17,8 @@ import {
   JobListQueryParams,
   JobsService
 } from "../../cores/services/jobs.service";
+import { EMPTY } from "rxjs";
+import { catchError } from "rxjs/operators";
 import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 
 @Component({
@@ -90,10 +92,21 @@ export class JobsComponent implements OnInit, OnDestroy {
       params.status = this.selectedStatuses();
     }
 
-    this.jobsService.listJobs(params).subscribe({
-      next: (response) => {
+    this.jobsService
+      .listJobs(params)
+      .pipe(
+        catchError((err) => {
+          console.error("Error loading jobs:", err);
+          this.error.set("Failed to load jobs. Please try again.");
+          this.loading.set(false);
+          return EMPTY;
+        })
+      )
+      .subscribe((response) => {
         const normalizedJobs = response.jobs.map((job) => {
-          const rawJob = job as JobListItem & { final_design_count?: number | null };
+          const rawJob = job as JobListItem & {
+            final_design_count?: number | null;
+          };
           return {
             ...job,
             finalDesignCount:
@@ -103,13 +116,7 @@ export class JobsComponent implements OnInit, OnDestroy {
         this.jobs.set(this.sortJobsByScore(normalizedJobs));
         this.total.set(response.total);
         this.loading.set(false);
-      },
-      error: (err) => {
-        console.error("Error loading jobs:", err);
-        this.error.set("Failed to load jobs. Please try again.");
-        this.loading.set(false);
-      }
-    });
+      });
   }
 
   /**

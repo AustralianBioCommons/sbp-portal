@@ -126,4 +126,84 @@ describe("ResultsService", () => {
       url: "https://reports.example.test/job-1/report.html",
     });
   });
+
+  it("should fetch downloads", () => {
+    service.getJobDownloads("job/1").subscribe((response) => {
+      expect(response.downloads.length).toBe(1);
+      expect(response.downloads[0].label).toBe("Results CSV");
+    });
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/downloads`
+    );
+    expect(req.request.method).toBe("GET");
+    req.flush({
+      runId: "job/1",
+      downloads: [
+        {
+          label: "Results CSV",
+          key: "results_csv",
+          url: "/files/results.csv",
+          category: "stat_csv"
+        }
+      ]
+    });
+  });
+
+  it("should return null from getJobReport when report is absent", () => {
+    let result: unknown;
+    service.getJobReport("job/1").subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/report`
+    );
+    expect(req.request.method).toBe("GET");
+    req.flush({ runId: "job/1", report: null });
+
+    expect(result).toBeNull();
+  });
+
+  it("should return a safe URL from getJobReport for a relative URL", () => {
+    let result: unknown;
+    service.getJobReport("job/1").subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/report`
+    );
+    req.flush({
+      runId: "job/1",
+      report: {
+        label: "Report",
+        key: "report",
+        url: "/api/results/job%2F1/report?token=t",
+        category: "report"
+      }
+    });
+
+    expect(
+      sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
+    ).toBe(`${environment.apiBaseUrl}/api/results/job%2F1/report?token=t`);
+  });
+
+  it("should return a safe URL from getJobReport for an absolute URL", () => {
+    let result: unknown;
+    service.getJobReport("job/1").subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/report`
+    );
+    req.flush({
+      runId: "job/1",
+      report: {
+        label: "Report",
+        key: "report",
+        url: "https://cdn.example.test/report.html",
+        category: "report"
+      }
+    });
+
+    expect(
+      sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
+    ).toBe("https://cdn.example.test/report.html");
+  });
 });

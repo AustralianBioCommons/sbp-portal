@@ -59,8 +59,10 @@ describe("JobsComponent", () => {
       "bulkDeleteJobs",
     ]);
     mockResultsService = jasmine.createSpyObj("ResultsService", [
-      "getJobReportResourceUrl",
+      "getJobReport",
+      "getJobDownloads",
       "getJobSettingParams",
+      "getJobLogs",
     ]);
     mockJobsService.listJobs.and.returnValue(of(mockResponse));
     mockJobsService.cancelJob.and.returnValue(
@@ -78,11 +80,17 @@ describe("JobsComponent", () => {
     }).compileComponents();
 
     sanitizer = TestBed.inject(DomSanitizer);
-    mockResultsService.getJobReportResourceUrl.and.returnValue(
+    mockResultsService.getJobReport.and.returnValue(
       of(sanitizer.bypassSecurityTrustResourceUrl("https://example.test/report.html"))
+    );
+    mockResultsService.getJobDownloads.and.returnValue(
+      of({ runId: mockJob.id, downloads: [] })
     );
     mockResultsService.getJobSettingParams.and.returnValue(
       of({ runId: mockJob.id, settingParams: { binder_name: "PDL1" } })
+    );
+    mockResultsService.getJobLogs.and.returnValue(
+      of({ runId: mockJob.id, logs: [], entries: [], formattedEntries: [] })
     );
 
     fixture = TestBed.createComponent(JobsComponent);
@@ -452,30 +460,10 @@ describe("JobsComponent", () => {
     expect(component.showJobDetailsDialog()).toBeFalse();
   });
 
-  it("should ignore delete and download requests when no job details are selected", () => {
+  it("should ignore delete request when no job details are selected", () => {
     component.deleteSelectedJobFromDetails();
-    component.downloadSelectedJobFiles();
 
     expect(component.showDeleteDialog()).toBeFalse();
-  });
-
-  it("should download the selected job details package", () => {
-    const createObjectUrlSpy = spyOn(URL, "createObjectURL").and.returnValue("blob:test");
-    const revokeObjectUrlSpy = spyOn(URL, "revokeObjectURL");
-    const link = {
-      click: jasmine.createSpy("click"),
-      href: "",
-      download: ""
-    } as unknown as HTMLAnchorElement;
-    spyOn(document, "createElement").and.returnValue(link);
-    component.viewJobDetails(mockJob);
-
-    component.downloadSelectedJobFiles();
-
-    expect(createObjectUrlSpy).toHaveBeenCalled();
-    expect(link.download).toContain("example-job");
-    expect(link.click).toHaveBeenCalled();
-    expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:test");
   });
 
   it("should provide fallback values for job detail helpers", () => {

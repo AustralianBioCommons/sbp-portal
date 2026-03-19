@@ -18,6 +18,8 @@ import {
   ResultLogsResponse,
   ResultsService,
 } from "../../cores/services/results.service";
+import { EMPTY } from "rxjs";
+import { catchError } from "rxjs/operators";
 import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -168,8 +170,18 @@ export class JobResultsComponent implements OnChanges {
 
     this.reportLoading.set(true);
     this.reportError.set(null);
-    this.resultsService.getJobReport(this.job.id).subscribe({
-      next: (reportResourceUrl) => {
+    this.resultsService
+      .getJobReport(this.job.id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error loading job report:", err);
+          this.reportLoading.set(false);
+          this.reportUrl.set(null);
+          this.reportError.set("Failed to load report.");
+          return EMPTY;
+        })
+      )
+      .subscribe((reportResourceUrl) => {
         if (reportResourceUrl) {
           this.reportUrl.set(reportResourceUrl);
         } else {
@@ -177,14 +189,7 @@ export class JobResultsComponent implements OnChanges {
           this.reportError.set("No report available for this job.");
         }
         this.reportLoading.set(false);
-      },
-      error: (err) => {
-        console.error("Error loading job report:", err);
-        this.reportLoading.set(false);
-        this.reportUrl.set(null);
-        this.reportError.set("Failed to load report.");
-      }
-    });
+      });
   }
 
   private loadSettings(): void {
@@ -197,18 +202,21 @@ export class JobResultsComponent implements OnChanges {
 
     this.settingsLoading.set(true);
     this.settingsError.set(null);
-    this.resultsService.getJobSettingParams(this.job.id).subscribe({
-      next: (response) => {
+    this.resultsService
+      .getJobSettingParams(this.job.id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error loading job settings:", err);
+          this.settingsLoading.set(false);
+          this.settingsItems.set([]);
+          this.settingsError.set("Failed to load settings.");
+          return EMPTY;
+        })
+      )
+      .subscribe((response) => {
         this.settingsItems.set(this.normalizeSettings(response.settingParams));
         this.settingsLoading.set(false);
-      },
-      error: (err) => {
-        console.error("Error loading job settings:", err);
-        this.settingsLoading.set(false);
-        this.settingsItems.set([]);
-        this.settingsError.set("Failed to load settings.");
-      }
-    });
+      });
   }
 
   private loadDownloads(): void {
@@ -221,8 +229,18 @@ export class JobResultsComponent implements OnChanges {
 
     this.filesLoading.set(true);
     this.filesError.set(null);
-    this.resultsService.getJobDownloads(this.job.id).subscribe({
-      next: (response) => {
+    this.resultsService
+      .getJobDownloads(this.job.id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error loading job downloads:", err);
+          this.filesLoading.set(false);
+          this.filesItems.set([]);
+          this.filesError.set("Failed to load files.");
+          return EMPTY;
+        })
+      )
+      .subscribe((response) => {
         this.filesItems.set(
           response.downloads.map((download) => ({
             label: download.label,
@@ -231,14 +249,7 @@ export class JobResultsComponent implements OnChanges {
           }))
         );
         this.filesLoading.set(false);
-      },
-      error: (err) => {
-        console.error("Error loading job downloads:", err);
-        this.filesLoading.set(false);
-        this.filesItems.set([]);
-        this.filesError.set("Failed to load files.");
-      }
-    });
+      });
   }
 
   private loadLogs(): void {
@@ -249,18 +260,21 @@ export class JobResultsComponent implements OnChanges {
 
     this.logsLoading.set(true);
     this.logsError.set(null);
-    this.resultsService.getJobLogs(this.job.id).subscribe({
-      next: (response) => {
+    this.resultsService
+      .getJobLogs(this.job.id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error loading job logs:", err);
+          this.logsLoading.set(false);
+          this.logsItems.set([]);
+          this.logsError.set("Failed to load logs.");
+          return EMPTY;
+        })
+      )
+      .subscribe((response) => {
         this.logsItems.set(this.normalizeLogsResponse(response));
         this.logsLoading.set(false);
-      },
-      error: (err) => {
-        console.error("Error loading job logs:", err);
-        this.logsLoading.set(false);
-        this.logsItems.set([]);
-        this.logsError.set("Failed to load logs.");
-      }
-    });
+      });
   }
 
   private resetLogsState(): void {

@@ -48,9 +48,10 @@ describe("JobResultsComponent", () => {
 
   beforeEach(async () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
-      "getJobReportResourceUrl",
+      "getJobReport",
+      "getJobDownloads",
       "getJobSettingParams",
-      "getJobLogs",
+      "getJobLogs"
     ]);
 
     await TestBed.configureTestingModule({
@@ -59,8 +60,15 @@ describe("JobResultsComponent", () => {
     }).compileComponents();
 
     sanitizer = TestBed.inject(DomSanitizer);
-    resultsService.getJobReportResourceUrl.and.returnValue(
-      of(sanitizer.bypassSecurityTrustResourceUrl("https://example.test/report.html"))
+    resultsService.getJobReport.and.returnValue(
+      of(
+        sanitizer.bypassSecurityTrustResourceUrl(
+          "https://example.test/report.html"
+        )
+      )
+    );
+    resultsService.getJobDownloads.and.returnValue(
+      of({ runId: mockJob.id, downloads: [] })
     );
     resultsService.getJobSettingParams.and.returnValue(
       of({
@@ -136,25 +144,22 @@ describe("JobResultsComponent", () => {
   });
 
   it("should build and render the job report iframe", () => {
-    expect(resultsService.getJobReportResourceUrl).toHaveBeenCalledWith(mockJob.id);
+    expect(resultsService.getJobReport).toHaveBeenCalledWith(mockJob.id);
     expect(fixture.nativeElement.textContent).toContain("Job name");
     const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
     expect(iframe).not.toBeNull();
     expect(iframe.title).toContain(mockJob.jobName);
   });
 
-  it("should emit close, delete, and download requests", () => {
+  it("should emit close and delete requests", () => {
     spyOn(component.closeRequested, "emit");
     spyOn(component.deleteRequested, "emit");
-    spyOn(component.downloadRequested, "emit");
 
     const buttons = fixture.debugElement.queryAll(By.css("button"));
-    buttons[0].nativeElement.click();
-    buttons[1].nativeElement.click();
-    buttons[2].nativeElement.click();
+    buttons[0].nativeElement.click(); // Delete
+    buttons[2].nativeElement.click(); // Close (buttons[1] is the disabled Download button)
 
     expect(component.deleteRequested.emit).toHaveBeenCalled();
-    expect(component.downloadRequested.emit).toHaveBeenCalled();
     expect(component.closeRequested.emit).toHaveBeenCalled();
   });
 
@@ -174,8 +179,8 @@ describe("JobResultsComponent", () => {
     });
 
     expect(component.activeTab()).toBe("results");
-    expect(resultsService.getJobReportResourceUrl.calls.mostRecent().args).toEqual([
-      fallbackJob.id,
+    expect(resultsService.getJobReport.calls.mostRecent().args).toEqual([
+      fallbackJob.id
     ]);
     expect(resultsService.getJobSettingParams.calls.mostRecent().args).toEqual([
       fallbackJob.id,
@@ -305,7 +310,7 @@ describe("JobResultsComponent", () => {
   });
 
   it("should handle report fetch errors", () => {
-    resultsService.getJobReportResourceUrl.and.returnValue(
+    resultsService.getJobReport.and.returnValue(
       throwError(() => new Error("report failed"))
     );
 
@@ -513,5 +518,155 @@ describe("JobResultsComponent", () => {
     expect(component.logsError()).toBeNull();
     expect(component.logsLoading()).toBeFalse();
     expect(resultsService.getJobLogs).not.toHaveBeenCalled();
+  });
+
+  it("should set reportError when getJobReport returns null", () => {
+    resultsService.getJobReport.and.returnValue(of(null));
+
+    fixture = TestBed.createComponent(JobResultsComponent);
+    component = fixture.componentInstance;
+    component.isOpen = true;
+    component.job = mockJob;
+    component.ngOnChanges({
+      isOpen: {
+        currentValue: true,
+        previousValue: false,
+        firstChange: true,
+        isFirstChange: () => true
+      },
+      job: {
+        currentValue: mockJob,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    fixture.detectChanges();
+
+    expect(component.reportUrl()).toBeNull();
+    expect(component.reportError()).toBe("No report available for this job.");
+    expect(component.reportLoading()).toBeFalse();
+  });
+
+  it("should populate filesItems from getJobDownloads response", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: mockJob.id,
+        downloads: [
+          {
+            label: "Results CSV",
+            key: "results_csv",
+            url: "https://cdn.test/results.csv",
+            category: "stat_csv"
+          },
+          {
+            label: "Structure PDB",
+            key: "structure_pdb",
+            url: "https://cdn.test/struct.pdb",
+            category: "pdb_files"
+          }
+        ]
+      })
+    );
+
+    fixture = TestBed.createComponent(JobResultsComponent);
+    component = fixture.componentInstance;
+    component.isOpen = true;
+    component.job = mockJob;
+    component.ngOnChanges({
+      isOpen: {
+        currentValue: true,
+        previousValue: false,
+        firstChange: true,
+        isFirstChange: () => true
+      },
+      job: {
+        currentValue: mockJob,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    fixture.detectChanges();
+
+    expect(component.filesItems().length).toBe(2);
+    expect(component.filesItems()[0].label).toBe("Results CSV");
+    expect(component.filesItems()[0].category).toBe("stat_csv");
+    expect(component.filesLoading()).toBeFalse();
+    expect(component.filesError()).toBeNull();
+  });
+
+  it("should handle downloads fetch errors", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      throwError(() => new Error("downloads failed"))
+    );
+
+    fixture = TestBed.createComponent(JobResultsComponent);
+    component = fixture.componentInstance;
+    component.isOpen = true;
+    component.job = mockJob;
+    component.ngOnChanges({
+      isOpen: {
+        currentValue: true,
+        previousValue: false,
+        firstChange: true,
+        isFirstChange: () => true
+      },
+      job: {
+        currentValue: mockJob,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    fixture.detectChanges();
+
+    expect(component.filesItems()).toEqual([]);
+    expect(component.filesError()).toBe("Failed to load files.");
+    expect(component.filesLoading()).toBeFalse();
+  });
+
+  it("should group files by category with formatted names via getFilesByCategory", () => {
+    component.filesItems.set([
+      { label: "File A", url: "https://cdn.test/a.csv", category: "stat_csv" },
+      { label: "File B", url: "https://cdn.test/b.pdb", category: "pdb_files" },
+      { label: "File C", url: "https://cdn.test/c.csv", category: "stat_csv" }
+    ]);
+
+    const groups = component.getFilesByCategory();
+    expect(groups.length).toBe(2);
+    expect(groups[0].category).toBe("Stat CSV");
+    expect(groups[0].files.length).toBe(2);
+    expect(groups[1].category).toBe("PDB Files");
+    expect(groups[1].files.length).toBe(1);
+  });
+
+  it("should format category names with uppercase extensions and capitalized words", () => {
+    expect(component.formatCategoryName("stat_csv")).toBe("Stat CSV");
+    expect(component.formatCategoryName("pdb_files")).toBe("PDB Files");
+    expect(component.formatCategoryName("result_json")).toBe("Result JSON");
+    expect(component.formatCategoryName("simple")).toBe("Simple");
+  });
+
+  it("should show empty state on files tab when downloads list is empty", () => {
+    component.filesItems.set([]);
+    component.filesLoading.set(false);
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      "No files available for this run yet."
+    );
+  });
+
+  it("should show files error on files tab", () => {
+    component.filesError.set("Failed to load files.");
+    component.filesLoading.set(false);
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      "Failed to load files."
+    );
   });
 });
