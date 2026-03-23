@@ -110,6 +110,24 @@ describe("JobsComponent", () => {
     expect(component.jobs()).toEqual([mockJob]);
   });
 
+  it("should sort loaded jobs by submitted time descending by default", () => {
+    mockJobsService.listJobs.and.returnValue(
+      of({
+        jobs: [mockJob, secondJob],
+        total: 2,
+        limit: 50,
+        offset: 0,
+      })
+    );
+
+    component.loadJobs();
+
+    expect(component.jobs().map((job) => job.id)).toEqual([
+      secondJob.id,
+      mockJob.id,
+    ]);
+  });
+
   it("should normalize snake case final design count values when loading jobs", () => {
     mockJobsService.listJobs.and.returnValue(
       of({
@@ -226,7 +244,7 @@ describe("JobsComponent", () => {
     component.jobs.set([
       { ...mockJob, id: "a", score: 0.4 },
       { ...secondJob, id: "b", score: null },
-      { ...mockJob, id: "c", score: 0.9 },
+      { ...mockJob, id: "c", score: 0.9, submittedAt: "2026-03-12T12:00:00Z" },
     ]);
 
     component.toggleScoreSort();
@@ -239,7 +257,25 @@ describe("JobsComponent", () => {
 
     component.toggleScoreSort();
     expect(component.scoreSortDirection()).toBe("none");
+    expect(component.jobs().map((job) => job.id)).toEqual(["c", "b", "a"]);
+  });
+
+  it("should sort submitted time through desc and asc states", () => {
+    component.jobs.set([
+      { ...mockJob, id: "a", submittedAt: "2026-03-12T10:00:00Z" },
+      { ...secondJob, id: "b", submittedAt: "2026-03-12T12:00:00Z" },
+      { ...mockJob, id: "c", submittedAt: "2026-03-12T11:00:00Z" },
+    ]);
+
+    expect(component.jobs().map((job) => job.id)).toEqual(["a", "b", "c"]);
+
+    component.toggleSubmittedSort();
+    expect(component.submittedSortDirection()).toBe("asc");
     expect(component.jobs().map((job) => job.id)).toEqual(["a", "c", "b"]);
+
+    component.toggleSubmittedSort();
+    expect(component.submittedSortDirection()).toBe("desc");
+    expect(component.jobs().map((job) => job.id)).toEqual(["b", "c", "a"]);
   });
 
   it("should return status classes and helpers", () => {
