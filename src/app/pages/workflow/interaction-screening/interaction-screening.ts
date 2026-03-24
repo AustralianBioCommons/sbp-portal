@@ -88,7 +88,7 @@ export class InteractionScreeningComponent {
     { id: "colabfold", label: "ColabFold" },
   ];
   readonly unavailableToolLabels: string[] = this.tools.map((t) => t.label);
-  isToolAvailable = (_toolId: ToolChip["id"]) => false;
+  isToolAvailable = () => false;
   selectedTool = signal<ToolChip["id"]>("boltz");
   selectTool(id: ToolChip["id"]) {
     if (!this.isToolAvailable(id)) {

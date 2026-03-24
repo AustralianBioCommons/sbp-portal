@@ -15,7 +15,11 @@ export interface ParsedFastaResult {
 export function parseFasta(text: string): ParsedFastaResult {
   const trimmed = text.trim();
   if (!trimmed) {
-    return { valid: false, errorMessage: "Sequence is required", sequences: [] };
+    return {
+      valid: false,
+      errorMessage: "Sequence is required",
+      sequences: []
+    };
   }
 
   const lines = trimmed.split(/\r?\n/);
@@ -23,7 +27,7 @@ export function parseFasta(text: string): ParsedFastaResult {
     return {
       valid: false,
       errorMessage: "Invalid FASTA format: first line must start with '>'",
-      sequences: [],
+      sequences: []
     };
   }
 
@@ -43,7 +47,7 @@ export function parseFasta(text: string): ParsedFastaResult {
           return {
             valid: false,
             errorMessage: `Sequence for '${currentHeader}' is empty`,
-            sequences: [],
+            sequences: []
           };
         }
         sequences.push({ header: currentHeader, sequence: currentSeq });
@@ -52,8 +56,9 @@ export function parseFasta(text: string): ParsedFastaResult {
       if (!currentHeader) {
         return {
           valid: false,
-          errorMessage: "Invalid FASTA format: '>' header must have an identifier",
-          sequences: [],
+          errorMessage:
+            "Invalid FASTA format: '>' header must have an identifier",
+          sequences: []
         };
       }
       currentSeq = "";
@@ -62,7 +67,7 @@ export function parseFasta(text: string): ParsedFastaResult {
         return {
           valid: false,
           errorMessage: `Invalid characters in sequence for '${currentHeader}': "${line}"`,
-          sequences: [],
+          sequences: []
         };
       }
       currentSeq += line.toUpperCase();
@@ -74,7 +79,7 @@ export function parseFasta(text: string): ParsedFastaResult {
       return {
         valid: false,
         errorMessage: `Sequence for '${currentHeader}' is empty`,
-        sequences: [],
+        sequences: []
       };
     }
     sequences.push({ header: currentHeader, sequence: currentSeq });
