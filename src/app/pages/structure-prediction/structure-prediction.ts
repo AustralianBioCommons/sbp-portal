@@ -43,8 +43,8 @@ export class StructurePredictionComponent {
       id: "interaction-screening",
       label: "Interaction Screening",
       href: "/interaction-screening",
-      disabled: true,
-    },
+      disabled: false
+    }
   ];
 
   tools = [
