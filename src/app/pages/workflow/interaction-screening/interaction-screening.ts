@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   inject,
-  OnInit,
   Signal,
   signal,
 } from "@angular/core";
@@ -22,7 +21,7 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
-import { parseFasta, ParsedFastaResult } from "../../../cores/utils/fasta.utils";
+import { parseFasta } from "../../../cores/utils/fasta.utils";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -59,7 +58,7 @@ type StepItem = Step;
   templateUrl: "./interaction-screening.html",
   styleUrls: ["./interaction-screening.scss"],
 })
-export class InteractionScreeningComponent implements OnInit {
+export class InteractionScreeningComponent {
   // Auth
   public auth = inject(AuthService);
   // Workflow submission service
@@ -89,7 +88,7 @@ export class InteractionScreeningComponent implements OnInit {
     { id: "colabfold", label: "ColabFold" },
   ];
   readonly unavailableToolLabels: string[] = this.tools.map((t) => t.label);
-  isToolAvailable = (_id: ToolChip["id"]) => false;
+  isToolAvailable = (_toolId: ToolChip["id"]) => false;
   selectedTool = signal<ToolChip["id"]>("boltz");
   selectTool(id: ToolChip["id"]) {
     if (!this.isToolAvailable(id)) {
@@ -340,9 +339,4 @@ export class InteractionScreeningComponent implements OnInit {
     this.showAlert.set(true);
   }
 
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
-
-  ngOnInit(): void {
-    // No schema loading needed — form uses two fixed FASTA textareas.
-  }
 }
