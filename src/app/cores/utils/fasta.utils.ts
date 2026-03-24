@@ -8,7 +8,8 @@ export interface ParsedFastaResult {
  * Parse and validate a multi-FASTA string.
  * Rules: https://en.wikipedia.org/wiki/FASTA_format
  *  – Each record starts with a '>' header line containing an identifier.
- *  – Sequence lines contain single-letter codes (A–Z), '-' (gap), '*' (stop).
+ *  – Sequence lines must only contain IUPAC nucleic acid codes:
+ *    A C G T U I R Y K M S W B D H V N (case-insensitive) and '-' (gap).
  *  – Blank lines between records are allowed and skipped.
  */
 export function parseFasta(text: string): ParsedFastaResult {
@@ -26,7 +27,8 @@ export function parseFasta(text: string): ParsedFastaResult {
     };
   }
 
-  const validChars = /^[A-Za-z*\-]+$/;
+  // IUPAC nucleic acid codes + gap character
+  const validChars = /^[ACGTUIRYKMSWBDHVNi-]+$/i;
   const sequences: { header: string; sequence: string }[] = [];
   let currentHeader = "";
   let currentSeq = "";
