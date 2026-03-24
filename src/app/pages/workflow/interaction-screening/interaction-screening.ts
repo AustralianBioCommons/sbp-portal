@@ -50,13 +50,13 @@ type StepItem = Step;
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
-    FormStatusComponent,
+    FormStatusComponent
   ],
   host: {
-    class: "block w-full interaction-screening-bg",
+    class: "block w-full interaction-screening-bg"
   },
   templateUrl: "./interaction-screening.html",
-  styleUrls: ["./interaction-screening.scss"],
+  styleUrls: ["./interaction-screening.scss"]
 })
 export class InteractionScreeningComponent {
   // Auth
@@ -74,7 +74,7 @@ export class InteractionScreeningComponent {
   readonly tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
     { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
+    { id: "papers", label: "Papers" }
   ];
   activeTab = signal<TabItem["id"]>("overview");
   isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
@@ -85,13 +85,13 @@ export class InteractionScreeningComponent {
   // No tools are currently available
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
-    { id: "colabfold", label: "ColabFold" },
+    { id: "colabfold", label: "ColabFold" }
   ];
   readonly unavailableToolLabels: string[] = this.tools.map((t) => t.label);
-  isToolAvailable = (_id: ToolChip["id"]) => false;
+  isToolAvailable = () => false;
   selectedTool = signal<ToolChip["id"]>("boltz");
   selectTool(id: ToolChip["id"]) {
-    if (!this.isToolAvailable(id)) {
+    if (!this.isToolAvailable()) {
       const label = this.tools.find((t) => t.id === id)?.label ?? id;
       this.showError(`${label} is not available yet.`);
       return;
@@ -103,37 +103,39 @@ export class InteractionScreeningComponent {
   );
 
   // ─── Two fixed FASTA inputs ───────────────────────────────────────────────
-  queryFasta = signal('');
+  queryFasta = signal("");
   queryFastaTouched = signal(false);
-  queryFastaError = signal('');
+  queryFastaError = signal("");
 
-  targetFasta = signal('');
+  targetFasta = signal("");
   targetFastaTouched = signal(false);
-  targetFastaError = signal('');
+  targetFastaError = signal("");
 
   // ─── Steps ───────────────────────────────────────────────────────────────
   readonly steps: StepItem[] = [
     {
       id: 1,
       title: "Input Configuration",
-      description: "Add sequences in FASTA format and assign query / target type",
+      description:
+        "Add sequences in FASTA format and assign query / target type"
     },
     {
       id: 2,
       title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool",
+      description: "Configure parameters specific to the selected tool"
     },
     {
       id: 3,
       title: "Review & Submit",
-      description: "Review all settings and run the job",
-    },
+      description: "Review all settings and run the job"
+    }
   ];
   currentStep = signal<number>(1);
   completedSteps = signal<number[]>([]);
-  isFormValid = computed(() =>
-    parseFasta(this.queryFasta()).valid &&
-    parseFasta(this.targetFasta()).valid
+  isFormValid = computed(
+    () =>
+      parseFasta(this.queryFasta()).valid &&
+      parseFasta(this.targetFasta()).valid
   );
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -165,21 +167,25 @@ export class InteractionScreeningComponent {
       items.push({
         label: "Query Sequence",
         value: qResult.sequences.map((s) => s.header).join(", "),
-        fieldName: "query_sequence",
+        fieldName: "query_sequence"
       });
     }
     if (tResult.valid) {
       items.push({
         label: "Target Sequence",
         value: tResult.sequences.map((s) => s.header).join(", "),
-        fieldName: "target_sequence",
+        fieldName: "target_sequence"
       });
     }
     return items;
   });
 
   // Form validation summary for FormStatusComponent
-  getFormValidationSummary(): { valid: boolean; errorCount: number; rowCount: number } {
+  getFormValidationSummary(): {
+    valid: boolean;
+    errorCount: number;
+    rowCount: number;
+  } {
     const errorCount =
       (parseFasta(this.queryFasta()).valid ? 0 : 1) +
       (parseFasta(this.targetFasta()).valid ? 0 : 1);
@@ -240,7 +246,9 @@ export class InteractionScreeningComponent {
 
   validateTarget(): void {
     this.targetFastaTouched.set(true);
-    this.targetFastaError.set(parseFasta(this.targetFasta()).errorMessage ?? "");
+    this.targetFastaError.set(
+      parseFasta(this.targetFasta()).errorMessage ?? ""
+    );
   }
 
   hasTargetError(): boolean {
@@ -274,13 +282,13 @@ export class InteractionScreeningComponent {
       {
         id: qResult.sequences[0]?.header ?? "query",
         sequence: this.queryFasta().trim(),
-        group: "query",
+        group: "query"
       },
       {
         id: tResult.sequences[0]?.header ?? "target",
         sequence: this.targetFasta().trim(),
-        group: "target",
-      },
+        group: "target"
+      }
     ];
   }
 
@@ -293,7 +301,7 @@ export class InteractionScreeningComponent {
     const sequences = this.buildWispsPayload();
     const payload: Record<string, unknown> = {
       sequences,
-      tool: this.selectedToolLabel(),
+      tool: this.selectedToolLabel()
     };
 
     console.log("Starting interaction screening submission…", payload);
@@ -304,7 +312,9 @@ export class InteractionScreeningComponent {
         const datasetId = response.datasetId;
         if (!datasetId) {
           this.workflowSubmission.isSubmitting.set(false);
-          this.showError("Dataset upload succeeded but no dataset ID was returned.");
+          this.showError(
+            "Dataset upload succeeded but no dataset ID was returned."
+          );
           return;
         }
         const workflowFormData = { ...payload, tool: this.selectedToolLabel() };
@@ -313,19 +323,27 @@ export class InteractionScreeningComponent {
           datasetId,
           (error) => {
             this.workflowSubmission.isSubmitting.set(false);
-            this.showError(`Workflow launch failed: ${error.message || "Unknown error"}`);
+            this.showError(
+              `Workflow launch failed: ${error.message || "Unknown error"}`
+            );
           }
         );
       },
       error: (error) => {
         this.workflowSubmission.isSubmitting.set(false);
-        this.showError(`Failed to upload dataset: ${error.message || "Unknown error"}`);
-      },
+        this.showError(
+          `Failed to upload dataset: ${error.message || "Unknown error"}`
+        );
+      }
     });
   }
 
-  submitNewJob() { window.location.reload(); }
-  goToJobs() { this.workflowSubmission.goToJobs(); }
+  submitNewJob() {
+    window.location.reload();
+  }
+  goToJobs() {
+    this.workflowSubmission.goToJobs();
+  }
   loginWithReturnUrl() {
     const currentUrl = window.location.pathname + window.location.search;
     this.auth.login(currentUrl);
@@ -338,5 +356,4 @@ export class InteractionScreeningComponent {
     this.alertMessage.set(message);
     this.showAlert.set(true);
   }
-
 }
