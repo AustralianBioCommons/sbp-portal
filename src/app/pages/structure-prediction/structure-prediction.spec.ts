@@ -30,7 +30,7 @@ describe("StructurePredictionComponent", () => {
       id: "single-structure-prediction",
       label: "Single Prediction",
       href: "/single-structure-prediction",
-      disabled: true,
+      disabled: false,
     });
     expect(component.workflows[1]).toEqual({
       id: "interaction-screening",
@@ -62,17 +62,17 @@ describe("StructurePredictionComponent", () => {
     });
   });
 
-  it("should not navigate to workflow when disabled", () => {
-    component.navigateToWorkflow("single-structure-prediction");
-    expect(mockRouter.navigate).not.toHaveBeenCalled();
-  });
-
   it("should navigate to workflow when enabled", () => {
-    component.workflows[0].disabled = false;
     component.navigateToWorkflow("single-structure-prediction");
     expect(mockRouter.navigate).toHaveBeenCalledWith([
       "/single-structure-prediction",
     ]);
+  });
+
+  it("should not navigate to workflow when disabled", () => {
+    component.workflows[0].disabled = true;
+    component.navigateToWorkflow("single-structure-prediction");
+    expect(mockRouter.navigate).not.toHaveBeenCalled();
   });
 
   it("should not navigate to workflow when id is unknown", () => {

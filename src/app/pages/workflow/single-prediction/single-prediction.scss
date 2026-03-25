@@ -1,0 +1,69 @@
+/* Keep styles minimal; rely on Tailwind tokens defined in tailwind.config.cjs */
+:host {
+  display: block;
+}
+
+button {
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.single-prediction-bg {
+  background-image: url("/assets/denovo-design.png");
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position: top center;
+  background-attachment: fixed;
+}
+
+.sequence-list {
+  position: relative;
+}
+
+.entity-row {
+  backdrop-filter: blur(6px);
+}
+
+.entity-row.cdk-drag-preview {
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+  border-color: rgb(148 163 184 / 1);
+}
+
+.entity-row.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+
+.sequence-list.cdk-drop-list-dragging .entity-row:not(.cdk-drag-placeholder) {
+  transition: transform 0.18s ease;
+}
+
+.entity-row__handle {
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+.entity-row__actions {
+  flex-shrink: 0;
+}
+
+.drag-dots {
+  display: grid;
+  grid-template-columns: repeat(3, 4px);
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.drag-dots::before,
+.drag-dots::after {
+  content: "";
+}
+
+.drag-dots,
+.drag-dots::before,
+.drag-dots::after {
+  width: 20px;
+  height: 4px;
+  background:
+    radial-gradient(circle, currentColor 2px, transparent 2.5px) 0 50% / 8px 4px
+      repeat-x;
+}

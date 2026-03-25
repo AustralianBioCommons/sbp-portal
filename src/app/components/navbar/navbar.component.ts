@@ -110,6 +110,10 @@ export class Navbar {
           path: "/de-novo-design",
         },
         {
+          label: "Single Prediction",
+          path: "/single-structure-prediction",
+        },
+        {
           label: "Interaction Screening",
           path: "/interaction-screening",
         },
