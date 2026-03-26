@@ -183,12 +183,14 @@ export class JobResultsComponent implements OnChanges {
       )
       .subscribe((reportResourceUrl) => {
         if (reportResourceUrl) {
+          // URL fetched successfully; keep reportLoading true until iframe load event fires.
           this.reportUrl.set(reportResourceUrl);
         } else {
+          // No report will be loaded into the iframe; stop showing the loading indicator.
           this.reportUrl.set(null);
           this.reportError.set("No report available for this job.");
+          this.reportLoading.set(false);
         }
-        this.reportLoading.set(false);
       });
   }
 
