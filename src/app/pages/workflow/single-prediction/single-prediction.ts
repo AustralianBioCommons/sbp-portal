@@ -116,6 +116,7 @@ export class SinglePredictionComponent {
     { id: "alphafold2", label: "AlphaFold2" },
     { id: "boltz", label: "Boltz" },
   ];
+  isToolAvailable = () => false;
   selectedTool = signal<ToolId>("colabfold");
   selectedToolLabel: Signal<string> = computed(
     () => this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? ""
@@ -179,8 +180,7 @@ export class SinglePredictionComponent {
   );
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
-  canGoNext: Signal<boolean> = computed(() => {
-    if (this.currentStep() === 1) {
+  canGoNext: Signal<boolean> = computed(() => {    if (this.currentStep() === 1) {
       return this.isStep1Valid();
     }
     if (this.currentStep() === 2) {
@@ -189,7 +189,7 @@ export class SinglePredictionComponent {
     return false;
   });
 
-  readonly canSubmit = computed(() => this.isFormValid());
+  readonly canSubmit = computed(() => this.isFormValid() && this.isToolAvailable());
 
   readonly formSummary = computed(() => {
     const entityItems = this.entityRows().map((row, index) => ({
@@ -224,8 +224,7 @@ export class SinglePredictionComponent {
     this.activeTab.set(id);
   }
 
-  selectTool(id: string) {
-    this.selectedTool.set(id as ToolId);
+  selectTool(id: string) {    this.selectedTool.set(id as ToolId);
   }
 
   addEntityRow(): void {
@@ -440,6 +439,11 @@ export class SinglePredictionComponent {
   }
 
   submitWorkflow() {
+    if (!this.isToolAvailable()) {
+      this.showError("Tools are currently not available. Submission is disabled.");
+      return;
+    }
+
     this.touchAllEntityRows();
     this.touchToolSettings();
 
