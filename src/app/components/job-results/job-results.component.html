@@ -70,7 +70,7 @@
                 <button
                   type="button"
                   (click)="setActiveTab(tab.id)"
-                  class="whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-all duration-200 hover:scale-110"
+                  class="whitespace-nowrap px-1 py-4 text-sm font-medium transition-all duration-200 hover:scale-110"
                   [class.text-primary]="activeTab() === tab.id"
                   [class.border-gray-800]="activeTab() === tab.id"
                   [class.border-b-3]="activeTab() === tab.id"
@@ -78,6 +78,7 @@
                   [class.text-blue-900]="activeTab() !== tab.id"
                   [class.hover:text-blue-800]="activeTab() !== tab.id"
                   [class.hover:border-gray-300]="activeTab() !== tab.id"
+                  [class.border-b-2]="activeTab() !== tab.id"
                   [class.border-transparent]="activeTab() !== tab.id"
                 >
                   {{ tab.label }}
