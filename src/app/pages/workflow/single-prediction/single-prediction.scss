@@ -37,6 +37,15 @@ button {
   transition: transform 0.18s ease;
 }
 
+/* Hides the native OS arrow and injects a consistent chevron icon */
+.select-chevron {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem 1.25rem;
+}
+
 .entity-row__handle {
   flex-shrink: 0;
   cursor: grab;
@@ -46,24 +55,12 @@ button {
   flex-shrink: 0;
 }
 
+/* 2-column × 3-row dot grip icon, identical to MUI row-ordering handle */
 .drag-dots {
-  display: grid;
-  grid-template-columns: repeat(3, 4px);
-  gap: 4px;
-  margin: 2px 0;
-}
-
-.drag-dots::before,
-.drag-dots::after {
-  content: "";
-}
-
-.drag-dots,
-.drag-dots::before,
-.drag-dots::after {
-  width: 20px;
-  height: 4px;
-  background:
-    radial-gradient(circle, currentColor 2px, transparent 2.5px) 0 50% / 8px 4px
-      repeat-x;
+  display: block;
+  width: 12px;
+  height: 18px;
+  background-image: radial-gradient(circle, currentColor 1.5px, transparent 2px);
+  background-size: 6px 6px;
+  background-position: 0 0;
 }

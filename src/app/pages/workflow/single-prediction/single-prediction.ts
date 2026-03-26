@@ -300,6 +300,9 @@ export class SinglePredictionComponent {
   }
 
   shouldShowRowFieldError(row: EntityRow, field: keyof EntityRow["touched"]): boolean {
+    if (field === "sequence" && row.sequence.trim().length > 0) {
+      return true;
+    }
     return this.stepOneTouched() || row.touched[field];
   }
 

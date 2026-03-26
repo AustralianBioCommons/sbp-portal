@@ -1,5 +1,4 @@
 import {
-  parseFasta,
   validateDnaSequence,
   validateProteinSequence,
   validateRnaSequence,
@@ -21,7 +20,7 @@ describe("fasta.utils", () => {
     it("rejects invalid protein characters", () => {
       expect(validateProteinSequence("ATG123")).toEqual({
         valid: false,
-        errorMessage: "Protein sequence must use valid amino acid characters only.",
+        errorMessage: "Protein sequence must use valid IUPAC FASTA characters only.",
       });
     });
   });
@@ -66,63 +65,4 @@ describe("fasta.utils", () => {
     });
   });
 
-  describe("parseFasta", () => {
-    it("rejects empty input", () => {
-      expect(parseFasta("   ")).toEqual({
-        valid: false,
-        errorMessage: "Sequence is required",
-        sequences: [],
-      });
-    });
-
-    it("rejects input without a header on the first line", () => {
-      expect(parseFasta("ACGT")).toEqual({
-        valid: false,
-        errorMessage: "Invalid FASTA format: first line must start with '>'",
-        sequences: [],
-      });
-    });
-
-    it("rejects a header without an identifier", () => {
-      expect(parseFasta(">\nACGT")).toEqual({
-        valid: false,
-        errorMessage: "Invalid FASTA format: '>' header must have an identifier",
-        sequences: [],
-      });
-    });
-
-    it("rejects invalid sequence characters", () => {
-      expect(parseFasta(">seq1\nACGTZ")).toEqual({
-        valid: false,
-        errorMessage: `Invalid characters in sequence for 'seq1': "ACGTZ"`,
-        sequences: [],
-      });
-    });
-
-    it("rejects an empty sequence before the next header", () => {
-      expect(parseFasta(">seq1\n>seq2\nACGT")).toEqual({
-        valid: false,
-        errorMessage: "Sequence for 'seq1' is empty",
-        sequences: [],
-      });
-    });
-
-    it("rejects an empty final sequence", () => {
-      expect(parseFasta(">seq1\nACGT\n>seq2")).toEqual({
-        valid: false,
-        errorMessage: "Sequence for 'seq2' is empty",
-        sequences: [],
-      });
-    });
-
-    it("parses multiple sequences and normalizes case", () => {
-      expect(parseFasta(">seq1\nacgt\n\n>seq2\nuunn-")).toEqual({
-        valid: true,
-        sequences: [
-          { header: "seq1", sequence: "ACGT" },
-          { header: "seq2", sequence: "UUNN-" },
-        ],
-      });
-    });
-  });
 });

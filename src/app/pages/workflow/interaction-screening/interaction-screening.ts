@@ -21,7 +21,7 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
-import { parseFasta } from "../../../cores/utils/fasta.utils";
+import { validateProteinSequence } from "../../../cores/utils/fasta.utils";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -134,8 +134,8 @@ export class InteractionScreeningComponent {
   completedSteps = signal<number[]>([]);
   isFormValid = computed(
     () =>
-      parseFasta(this.queryFasta()).valid &&
-      parseFasta(this.targetFasta()).valid
+      validateProteinSequence(this.queryFasta()).valid &&
+      validateProteinSequence(this.targetFasta()).valid
   );
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -161,19 +161,19 @@ export class InteractionScreeningComponent {
   // Review step summary
   formSummary = computed(() => {
     const items: { label: string; value: string; fieldName: string }[] = [];
-    const qResult = parseFasta(this.queryFasta());
-    const tResult = parseFasta(this.targetFasta());
+    const qResult = validateProteinSequence(this.queryFasta());
+    const tResult = validateProteinSequence(this.targetFasta());
     if (qResult.valid) {
       items.push({
         label: "Query Sequence",
-        value: qResult.sequences.map((s) => s.header).join(", "),
+        value: this.getQueryParsedHeaders() || "Query protein",
         fieldName: "query_sequence"
       });
     }
     if (tResult.valid) {
       items.push({
         label: "Target Sequence",
-        value: tResult.sequences.map((s) => s.header).join(", "),
+        value: this.getTargetParsedHeaders() || "Target protein",
         fieldName: "target_sequence"
       });
     }
@@ -187,8 +187,8 @@ export class InteractionScreeningComponent {
     rowCount: number;
   } {
     const errorCount =
-      (parseFasta(this.queryFasta()).valid ? 0 : 1) +
-      (parseFasta(this.targetFasta()).valid ? 0 : 1);
+      (validateProteinSequence(this.queryFasta()).valid ? 0 : 1) +
+      (validateProteinSequence(this.targetFasta()).valid ? 0 : 1);
     return { valid: this.isFormValid(), errorCount, rowCount: 2 };
   }
 
@@ -223,7 +223,9 @@ export class InteractionScreeningComponent {
 
   validateQuery(): void {
     this.queryFastaTouched.set(true);
-    this.queryFastaError.set(parseFasta(this.queryFasta()).errorMessage ?? "");
+    this.queryFastaError.set(
+      validateProteinSequence(this.queryFasta()).errorMessage ?? ""
+    );
   }
 
   hasQueryError(): boolean {
@@ -235,8 +237,11 @@ export class InteractionScreeningComponent {
   }
 
   getQueryParsedHeaders(): string {
-    const result = parseFasta(this.queryFasta());
-    return result.valid ? result.sequences.map((s) => s.header).join(", ") : "";
+    if (!validateProteinSequence(this.queryFasta()).valid) {
+      return "";
+    }
+    const headers = this.extractFastaHeaders(this.queryFasta());
+    return headers.length > 0 ? headers.join(", ") : "Query protein";
   }
 
   onTargetFastaChange(value: string): void {
@@ -247,7 +252,7 @@ export class InteractionScreeningComponent {
   validateTarget(): void {
     this.targetFastaTouched.set(true);
     this.targetFastaError.set(
-      parseFasta(this.targetFasta()).errorMessage ?? ""
+      validateProteinSequence(this.targetFasta()).errorMessage ?? ""
     );
   }
 
@@ -260,8 +265,11 @@ export class InteractionScreeningComponent {
   }
 
   getTargetParsedHeaders(): string {
-    const result = parseFasta(this.targetFasta());
-    return result.valid ? result.sequences.map((s) => s.header).join(", ") : "";
+    if (!validateProteinSequence(this.targetFasta()).valid) {
+      return "";
+    }
+    const headers = this.extractFastaHeaders(this.targetFasta());
+    return headers.length > 0 ? headers.join(", ") : "Target protein";
   }
 
   private touchAll(): void {
@@ -276,20 +284,29 @@ export class InteractionScreeningComponent {
    * Each element matches the wisps schema_input row: { id, sequence, group }.
    */
   private buildWispsPayload(): Record<string, unknown>[] {
-    const qResult = parseFasta(this.queryFasta());
-    const tResult = parseFasta(this.targetFasta());
+    const queryHeaders = this.extractFastaHeaders(this.queryFasta());
+    const targetHeaders = this.extractFastaHeaders(this.targetFasta());
     return [
       {
-        id: qResult.sequences[0]?.header ?? "query",
+        id: queryHeaders[0] ?? "query",
         sequence: this.queryFasta().trim(),
         group: "query"
       },
       {
-        id: tResult.sequences[0]?.header ?? "target",
+        id: targetHeaders[0] ?? "target",
         sequence: this.targetFasta().trim(),
         group: "target"
       }
     ];
+  }
+
+  private extractFastaHeaders(value: string): string[] {
+    return value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith(">"))
+      .map((line) => line.slice(1).trim())
+      .filter((header) => header.length > 0);
   }
 
   submitWorkflow() {

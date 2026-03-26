@@ -110,17 +110,8 @@
             Drag rows to reorder entities. Desktop uses a single-line editor layout inspired by AlphaFold Server.
           </div>
 
-          <div class="mt-4 hidden grid-cols-[44px_44px_170px_110px_minmax(0,1fr)_52px] items-center gap-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 lg:grid">
-            <span class="sr-only">Drag</span>
-            <span>#</span>
-            <span>Type</span>
-            <span>Copies</span>
-            <span>Sequence</span>
-            <span class="sr-only">Delete</span>
-          </div>
-
           <div
-            class="sequence-list mt-6 space-y-4"
+            class="sequence-list mt-6 space-y-2"
             cdkDropList
             cdkDropListOrientation="vertical"
             [cdkDropListData]="entityRows()"
@@ -128,33 +119,29 @@
           >
             @for (row of entityRows(); track row.id; let i = $index) {
             <div
-              class="entity-row rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+              class="entity-row rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:bg-slate-50/60"
               cdkDrag
               cdkDragLockAxis="y"
               cdkDragBoundary=".sequence-list"
               cdkDragPreviewContainer="parent"
             >
-              <div class="grid gap-3 lg:grid-cols-[44px_44px_170px_110px_minmax(0,1fr)_52px] lg:items-start">
-                <div class="entity-row__handle flex items-start justify-center lg:pt-8">
+              <div class="grid gap-3 lg:grid-cols-[44px_170px_110px_minmax(0,1fr)_40px] lg:items-start">
+                <div class="entity-row__handle flex flex-col items-center gap-1 pt-1">
+                  <span class="text-[11px] font-semibold text-slate-500">#{{ i + 1 }}</span>
                   <div
-                    class="flex h-11 w-11 flex-col items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 shadow-sm"
+                    class="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                     cdkDragHandle
                     title="Drag row"
                     aria-label="Drag row"
                   >
                     <span class="drag-dots"></span>
-                    <span class="drag-dots"></span>
                   </div>
-                </div>
-
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white lg:mt-8">
-                  {{ i + 1 }}
                 </div>
 
                 <div>
                   <label
                     [for]="'molecule-type-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 lg:sr-only lg:absolute"
+                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
                   >
                     Type
                   </label>
@@ -163,7 +150,7 @@
                     [value]="row.moleculeType"
                     (change)="updateRowMoleculeType(row.id, $any($event.target).value)"
                     (blur)="touchRowField(row.id, 'moleculeType')"
-                    class="block h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    class="select-chevron block h-11 w-full rounded-xl border border-slate-300 bg-white pl-3 pr-10 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   >
                     @for (moleculeType of moleculeTypes; track moleculeType.value) {
                     <option [value]="moleculeType.value">
@@ -176,7 +163,7 @@
                 <div>
                   <label
                     [for]="'copy-number-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 lg:sr-only lg:absolute"
+                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
                   >
                     Copies
                   </label>
@@ -205,7 +192,7 @@
                 <div class="min-w-0">
                   <label
                     [for]="'sequence-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 lg:sr-only lg:absolute"
+                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
                   >
                     Sequence
                   </label>
@@ -247,10 +234,11 @@
                   }
                 </div>
 
-                <div class="entity-row__actions flex items-start justify-end lg:pt-8">
+                <div class="entity-row__actions flex flex-col items-end gap-1 pt-1">
+                  <span class="text-[11px] font-semibold text-slate-500">Delete</span>
                   <button
                     type="button"
-                    class="flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-white text-red-600 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-white text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
                     [disabled]="entityRows().length === 1"
                     (click)="removeEntityRow(row.id)"
                     [attr.aria-label]="'Delete entity ' + (i + 1)"
@@ -274,14 +262,8 @@
                 borderRadius="rounded-md"
                 colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700"
               >
-                Add Row
+                Add Entity
               </app-button>
-            </div>
-
-            <div class="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-              <strong>Validation rules:</strong> Protein, DNA, and RNA rows are
-              validated by alphabet. Ligands are validated as SMILES strings.
-              ColabFold and AlphaFold2 require every row to be Protein.
             </div>
 
             <app-form-status
