@@ -12,6 +12,13 @@
   z-index: 1000;
 }
 
+.loading-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
 .loading-container {
   text-align: center;
 }

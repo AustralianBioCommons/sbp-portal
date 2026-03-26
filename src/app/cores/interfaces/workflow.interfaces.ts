@@ -13,6 +13,7 @@ export interface WorkflowLaunchForm {
  */
 export interface WorkflowLaunchPayload {
   launch: WorkflowLaunchForm;
+  datasetId: string;
   formData: Record<string, unknown>;
 }
 

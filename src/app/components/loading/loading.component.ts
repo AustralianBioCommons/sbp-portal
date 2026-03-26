@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { CommonModule } from "@angular/common";
 
 @Component({
@@ -8,4 +8,7 @@ import { CommonModule } from "@angular/common";
   templateUrl: "./loading.component.html",
   styleUrls: ["./loading.component.scss"],
 })
-export class LoadingComponent {}
+export class LoadingComponent {
+  @Input() message: string = "Loading...";
+  @Input() inline: boolean = false;
+}

@@ -100,4 +100,5 @@ describe("JobsService", () => {
     expect(req.request.body).toEqual({ runIds: ["job-1", "job-2"] });
     req.flush({ deleted: ["job-1", "job-2"], failed: {} });
   });
+
 });

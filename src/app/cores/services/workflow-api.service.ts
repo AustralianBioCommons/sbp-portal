@@ -31,12 +31,12 @@ export class WorkflowApiService {
       paramsText?: string | null;
     },
     formData: Record<string, unknown>,
-    datasetId?: string
+    datasetId: string
   ): Observable<WorkflowLaunchResponse> {
-    const payload: WorkflowLaunchPayload & { datasetId?: string } = {
+    const payload: WorkflowLaunchPayload = {
       launch,
+      datasetId,
       formData,
-      ...(datasetId && { datasetId }),
     };
     return this.http.post<WorkflowLaunchResponse>(
       `${this.apiUrl}/launch`,

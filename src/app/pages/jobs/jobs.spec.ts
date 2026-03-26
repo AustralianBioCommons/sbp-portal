@@ -1,7 +1,10 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
+import { DomSanitizer } from "@angular/platform-browser";
 import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
+import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
+import { ResultsService } from "../../cores/services/results.service";
 import { JobsComponent } from "./jobs";
 import {
   JobListItem,
@@ -13,6 +16,8 @@ describe("JobsComponent", () => {
   let component: JobsComponent;
   let fixture: ComponentFixture<JobsComponent>;
   let mockJobsService: jasmine.SpyObj<JobsService>;
+  let mockResultsService: jasmine.SpyObj<ResultsService>;
+  let sanitizer: DomSanitizer;
 
   const mockJob: JobListItem = {
     id: "job-1",
@@ -53,6 +58,12 @@ describe("JobsComponent", () => {
       "cancelJob",
       "bulkDeleteJobs",
     ]);
+    mockResultsService = jasmine.createSpyObj("ResultsService", [
+      "getJobReport",
+      "getJobDownloads",
+      "getJobSettingParams",
+      "getJobLogs",
+    ]);
     mockJobsService.listJobs.and.returnValue(of(mockResponse));
     mockJobsService.cancelJob.and.returnValue(
       of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" })
@@ -60,11 +71,27 @@ describe("JobsComponent", () => {
     mockJobsService.bulkDeleteJobs.and.returnValue(
       of({ deleted: [mockJob.id], failed: {} })
     );
-
     await TestBed.configureTestingModule({
       imports: [JobsComponent],
-      providers: [{ provide: JobsService, useValue: mockJobsService }],
+      providers: [
+        { provide: JobsService, useValue: mockJobsService },
+        { provide: ResultsService, useValue: mockResultsService },
+      ],
     }).compileComponents();
+
+    sanitizer = TestBed.inject(DomSanitizer);
+    mockResultsService.getJobReport.and.returnValue(
+      of(sanitizer.bypassSecurityTrustResourceUrl("https://example.test/report.html"))
+    );
+    mockResultsService.getJobDownloads.and.returnValue(
+      of({ runId: mockJob.id, downloads: [] })
+    );
+    mockResultsService.getJobSettingParams.and.returnValue(
+      of({ runId: mockJob.id, settingParams: { binder_name: "PDL1" } })
+    );
+    mockResultsService.getJobLogs.and.returnValue(
+      of({ runId: mockJob.id, logs: [], entries: [], formattedEntries: [] })
+    );
 
     fixture = TestBed.createComponent(JobsComponent);
     component = fixture.componentInstance;
@@ -126,6 +153,21 @@ describe("JobsComponent", () => {
     expect(component.searchQuery()).toBe("binder");
     expect(component.currentPage()).toBe(1);
     expect(loadJobsSpy).toHaveBeenCalled();
+  });
+
+  it("should include search and selected statuses when loading jobs", () => {
+    component.searchQuery.set("binder");
+    component.selectedStatuses.set(["Completed", "Failed"]);
+    component.currentPage.set(2);
+
+    component.loadJobs();
+
+    expect(mockJobsService.listJobs).toHaveBeenCalledWith({
+      limit: 50,
+      offset: 50,
+      search: "binder",
+      status: ["Completed", "Failed"],
+    });
   });
 
   it("should toggle statuses and report selection state", () => {
@@ -249,6 +291,28 @@ describe("JobsComponent", () => {
     expect(component.showDeleteDialog()).toBeTrue();
   });
 
+  it("should manage job details dialog visibility and tab state", () => {
+    component.viewJobDetails(mockJob);
+
+    expect(component.showJobDetailsDialog()).toBeTrue();
+    expect(component.selectedJobDetails()).toEqual(mockJob);
+
+    component.closeJobDetailsDialog();
+    expect(component.showJobDetailsDialog()).toBeFalse();
+    expect(component.selectedJobDetails()).toBeNull();
+  });
+
+  it("should clean up viewport listeners on destroy", () => {
+    const cleanupSpy = jasmine.createSpy("cleanup");
+    (component as unknown as { viewportListeners: Array<() => void> }).viewportListeners = [
+      cleanupSpy,
+    ];
+
+    component.ngOnDestroy();
+
+    expect(cleanupSpy).toHaveBeenCalled();
+  });
+
   it("should toggle and close the status dropdown", () => {
     component.toggleStatusDropdown();
     expect(component.showStatusDropdown()).toBeTrue();
@@ -360,6 +424,15 @@ describe("JobsComponent", () => {
     ).toBeTruthy();
   });
 
+  it("should render the job details dialog when viewing job details", async () => {
+    component.viewJobDetails(mockJob);
+    await detectComponentChanges();
+
+    expect(
+      fixture.debugElement.query(By.directive(JobResultsComponent))
+    ).toBeTruthy();
+  });
+
   it("should close the menu when the viewport changes", () => {
     component.openActionMenuId.set(mockJob.id);
     component.actionMenuStyle.set({ left: "10px", top: "20px" });
@@ -375,6 +448,28 @@ describe("JobsComponent", () => {
 
     expect(component.openActionMenuId()).toBeNull();
     expect(component.actionMenuStyle()).toEqual({});
+  });
+
+  it("should open delete confirmation from the job details dialog", () => {
+    component.viewJobDetails(mockJob);
+
+    component.deleteSelectedJobFromDetails();
+
+    expect(component.selectedJobs()).toEqual([mockJob.id]);
+    expect(component.showDeleteDialog()).toBeTrue();
+    expect(component.showJobDetailsDialog()).toBeFalse();
+  });
+
+  it("should ignore delete request when no job details are selected", () => {
+    component.deleteSelectedJobFromDetails();
+
+    expect(component.showDeleteDialog()).toBeFalse();
+  });
+
+  it("should provide fallback values for job detail helpers", () => {
+    component.viewJobDetails(secondJob);
+
+    expect(component.selectedJobDetails()).toEqual(secondJob);
   });
 
   it("should clear selection and close the delete dialog when no jobs are selected", () => {
@@ -469,8 +564,7 @@ describe("JobsComponent", () => {
     component.viewJobDetails(mockJob);
 
     expect(component.openActionMenuId()).toBeNull();
-    expect(component.error()).toBe(
-      'Job details for "Example job" are not available yet.'
-    );
+    expect(component.showJobDetailsDialog()).toBeTrue();
+    expect(component.selectedJobDetails()).toEqual(mockJob);
   });
 });

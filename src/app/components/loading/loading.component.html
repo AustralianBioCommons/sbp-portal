@@ -1,4 +1,4 @@
-<div class="loading-overlay">
+<div [class]="inline ? 'loading-inline' : 'loading-overlay'">
   <div class="loading-container">
     <!-- Australian BioCommons branded spinner -->
     <div class="spinner-container">
@@ -8,7 +8,7 @@
 
     <!-- Loading text with brand colors -->
     <div class="loading-text">
-      <p class="loading-title">Loading...</p>
+      <p class="loading-title">{{ message }}</p>
     </div>
 
     <!-- Subtle pulse animation for additional visual feedback -->
