@@ -21,7 +21,7 @@ export class WorkflowApiService {
    * Launch a new workflow
    * @param launch - Workflow launch configuration
    * @param formData - Form data to be passed to the workflow
-   * @param datasetId - Optional dataset ID to attach to the workflow
+   * @param datasetId - Dataset ID to attach to the workflow (required)
    */
   launchWorkflow(
     launch: {
