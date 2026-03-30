@@ -224,7 +224,7 @@
                           ? 'ATGCGT'
                           : row.moleculeType === 'rna'
                             ? 'AUGCGU'
-                            : 'MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAP'
+                            : 'ACDEFGHIKLMNPQRSTVWY'
                     "
                   />
                   @if (shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence) {
@@ -239,8 +239,7 @@
                   }
                 </div>
 
-                <div class="entity-row__actions flex flex-col items-end gap-1 pt-1">
-                  <span class="text-[11px] font-semibold text-slate-500">Delete</span>
+                <div class="flex self-start pt-5 justify-center">
                   <button
                     type="button"
                     class="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"

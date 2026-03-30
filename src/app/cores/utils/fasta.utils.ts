@@ -3,7 +3,7 @@ export interface SequenceValidationResult {
   errorMessage?: string;
 }
 
-const IUPAC_FASTA_CHARS = /^[ACGTUIRYKMSWBDHVNi-]+$/i;
+const CANONICAL_AA_CHARS = /^[ARNDCQEGHILKMFPSTWYV]+$/i;
 
 export function validateProteinSequence(sequence: string): SequenceValidationResult {
   const normalized = sequence.replace(/\s+/g, "").toUpperCase();
@@ -15,11 +15,11 @@ export function validateProteinSequence(sequence: string): SequenceValidationRes
     };
   }
 
-  if (!IUPAC_FASTA_CHARS.test(normalized)) {
+  if (!CANONICAL_AA_CHARS.test(normalized)) {
     return {
       valid: false,
       errorMessage:
-        "Protein sequence must use valid IUPAC FASTA characters only."
+        "Protein sequence must use valid 20 canonical amino acids FASTA characters only."
     };
   }
 
@@ -36,7 +36,7 @@ export function validateDnaSequence(sequence: string): SequenceValidationResult 
     };
   }
 
-  if (!/^[ATGCN\-]+$/.test(normalized)) {
+  if (!/^[ATGCN]+$/.test(normalized)) {
     return {
       valid: false,
       errorMessage:
@@ -57,7 +57,7 @@ export function validateRnaSequence(sequence: string): SequenceValidationResult 
     };
   }
 
-  if (!/^[AUGCN\-]+$/.test(normalized)) {
+  if (!/^[AUGCN]+$/.test(normalized)) {
     return {
       valid: false,
       errorMessage:

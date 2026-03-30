@@ -70,7 +70,7 @@ describe("SinglePredictionComponent", () => {
   });
 
   function fillValidProteinRow(
-    sequence = "MKTAYIAK",
+    sequence = "ACDEFGHIK",
     copyNumber = "1"
   ): number {
     const rowId = component.entityRows()[0].id;
@@ -249,9 +249,9 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should normalize protein sequence content in summary", () => {
-    fillValidProteinRow("mk ta yi");
+    fillValidProteinRow("ac de fg");
 
-    expect(component.formSummary()[0].value).toContain("MKTAYI");
+    expect(component.formSummary()[0].value).toContain("ACDEFG");
   });
 
   it("should expose tool-specific settings for all tools", () => {
@@ -368,7 +368,7 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should submit a valid workflow payload", () => {
-    fillValidProteinRow("MKTAYIAK", "2");
+    fillValidProteinRow("ACDEFGHIK", "2");
     component.selectTool("alphafold2");
     component.alphafold2FullDbs.set(true);
 

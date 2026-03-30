@@ -20,7 +20,8 @@ describe("fasta.utils", () => {
     it("rejects invalid protein characters", () => {
       expect(validateProteinSequence("ATG123")).toEqual({
         valid: false,
-        errorMessage: "Protein sequence must use valid IUPAC FASTA characters only.",
+        errorMessage:
+          "Protein sequence must use valid 20 canonical amino acids FASTA characters only."
       });
     });
   });
