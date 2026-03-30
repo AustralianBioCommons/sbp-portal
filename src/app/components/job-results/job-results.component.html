@@ -93,7 +93,7 @@
             @switch (activeTab()) {
               @case ("results") {
                   <div class="rounded-2xl border border-slate-200 p-5">
-                    <h3 class="text-lg font-semibold text-slate-900">Design Summary Report</h3>
+                    <h3 class="text-md font-semibold text-slate-900">Design Summary Report</h3>
                     @if (reportError()) {
                       <p class="mt-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                         {{ reportError() }}
@@ -126,7 +126,7 @@
               @case ("files") {
                 <div class="rounded-2xl border border-slate-200 bg-white">
                   <div class="border-b border-slate-200 px-5 py-4">
-                    <h3 class="text-lg font-semibold text-slate-900">Available files</h3>
+                    <h3 class="text-md font-semibold text-slate-900">Available files</h3>
                     <p class="mt-1 text-sm text-slate-500">
                       Download individual result files from this workflow run.
                     </p>
@@ -182,7 +182,7 @@
               }
               @case ("settings") {
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <h3 class="text-lg font-semibold text-slate-900">Run settings</h3>
+                  <h3 class="text-md font-semibold text-slate-900">Run settings</h3>
                   @if (settingsError()) {
                     <p class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                       {{ settingsError() }}
@@ -214,7 +214,7 @@
               }
               @case ("logs") {
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <h3 class="text-lg font-semibold text-slate-900">Logs</h3>
+                  <h3 class="text-md font-semibold text-slate-900">Logs</h3>
                   @if (logsError()) {
                     <p class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                       {{ logsError() }}
