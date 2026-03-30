@@ -9,18 +9,22 @@ import {
   ViewChild
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
+import { LoadingComponent } from "../../components/loading/loading.component";
 import {
   JobListItem,
   JobListQueryParams,
   JobsService
 } from "../../cores/services/jobs.service";
+import { EMPTY } from "rxjs";
+import { catchError } from "rxjs/operators";
 import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 
 @Component({
   selector: "app-jobs",
   standalone: true,
-  imports: [CommonModule, FormsModule, JobsActionMenuComponent],
+  imports: [CommonModule, FormsModule, JobsActionMenuComponent, JobResultsComponent, LoadingComponent],
   templateUrl: "./jobs.html"
 })
 export class JobsComponent implements OnInit, OnDestroy {
@@ -41,11 +45,13 @@ export class JobsComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   selectedJobs = signal<string[]>([]);
   showDeleteDialog = signal(false);
+  showJobDetailsDialog = signal(false);
   showStatusDropdown = signal(false);
   actionLoading = signal<Record<string, boolean>>({});
   bulkDeleting = signal(false);
   openActionMenuId = signal<string | null>(null);
   actionMenuStyle = signal<Record<string, string>>({});
+  selectedJobDetails = signal<JobListItem | null>(null);
 
   // Filter and pagination state
   searchQuery = signal<string>("");
@@ -86,10 +92,21 @@ export class JobsComponent implements OnInit, OnDestroy {
       params.status = this.selectedStatuses();
     }
 
-    this.jobsService.listJobs(params).subscribe({
-      next: (response) => {
+    this.jobsService
+      .listJobs(params)
+      .pipe(
+        catchError((err) => {
+          console.error("Error loading jobs:", err);
+          this.error.set("Failed to load jobs. Please try again.");
+          this.loading.set(false);
+          return EMPTY;
+        })
+      )
+      .subscribe((response) => {
         const normalizedJobs = response.jobs.map((job) => {
-          const rawJob = job as JobListItem & { final_design_count?: number | null };
+          const rawJob = job as JobListItem & {
+            final_design_count?: number | null;
+          };
           return {
             ...job,
             finalDesignCount:
@@ -99,13 +116,7 @@ export class JobsComponent implements OnInit, OnDestroy {
         this.jobs.set(this.sortJobsByScore(normalizedJobs));
         this.total.set(response.total);
         this.loading.set(false);
-      },
-      error: (err) => {
-        console.error("Error loading jobs:", err);
-        this.error.set("Failed to load jobs. Please try again.");
-        this.loading.set(false);
-      }
-    });
+      });
   }
 
   /**
@@ -332,6 +343,11 @@ export class JobsComponent implements OnInit, OnDestroy {
     this.showDeleteDialog.set(false);
   }
 
+  closeJobDetailsDialog(): void {
+    this.showJobDetailsDialog.set(false);
+    this.selectedJobDetails.set(null);
+  }
+
   /**
    * Toggle status dropdown visibility
    */
@@ -466,6 +482,17 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   viewJobDetails(job: JobListItem): void {
     this.closeActionMenu();
-    this.error.set(`Job details for "${job.jobName}" are not available yet.`);
+    this.selectedJobDetails.set(job);
+    this.showJobDetailsDialog.set(true);
+  }
+
+  deleteSelectedJobFromDetails(): void {
+    const job = this.selectedJobDetails();
+    if (!job) {
+      return;
+    }
+
+    this.openDeleteDialogFor(job.id);
+    this.closeJobDetailsDialog();
   }
 }
