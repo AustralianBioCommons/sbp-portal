@@ -36,11 +36,11 @@ export function validateDnaSequence(sequence: string): SequenceValidationResult 
     };
   }
 
-  if (!/^[ATGCN]+$/.test(normalized)) {
+  if (!/^[ATGC]+$/.test(normalized)) {
     return {
       valid: false,
       errorMessage:
-        "DNA sequence must use valid DNA characters only (A, T, G, C, N)."
+        "DNA sequence must use valid DNA characters only (A, T, G, C)."
     };
   }
 
@@ -57,11 +57,11 @@ export function validateRnaSequence(sequence: string): SequenceValidationResult 
     };
   }
 
-  if (!/^[AUGCN]+$/.test(normalized)) {
+  if (!/^[AUGC]+$/.test(normalized)) {
     return {
       valid: false,
       errorMessage:
-        "RNA sequence must use valid RNA characters only (A, U, G, C, N)."
+        "RNA sequence must use valid RNA characters only (A, U, G, C)."
     };
   }
 

@@ -28,7 +28,7 @@ describe("fasta.utils", () => {
 
   describe("validateDnaSequence", () => {
     it("accepts valid DNA characters", () => {
-      expect(validateDnaSequence("ATGCN")).toEqual({ valid: true });
+      expect(validateDnaSequence("ATGC")).toEqual({ valid: true });
     });
 
     it("rejects empty DNA input", () => {
@@ -42,14 +42,14 @@ describe("fasta.utils", () => {
       expect(validateDnaSequence("AUGC")).toEqual({
         valid: false,
         errorMessage:
-          "DNA sequence must use valid DNA characters only (A, T, G, C, N)."
+          "DNA sequence must use valid DNA characters only (A, T, G, C)."
       });
     });
   });
 
   describe("validateRnaSequence", () => {
     it("accepts valid RNA characters", () => {
-      expect(validateRnaSequence("AUGCN")).toEqual({ valid: true });
+      expect(validateRnaSequence("AUGC")).toEqual({ valid: true });
     });
 
     it("rejects empty RNA input", () => {
@@ -63,7 +63,7 @@ describe("fasta.utils", () => {
       expect(validateRnaSequence("ATGC")).toEqual({
         valid: false,
         errorMessage:
-          "RNA sequence must use valid RNA characters only (A, U, G, C, N)."
+          "RNA sequence must use valid RNA characters only (A, U, G, C)."
       });
     });
   });
