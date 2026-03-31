@@ -7,13 +7,13 @@ import {
 describe("fasta.utils", () => {
   describe("validateProteinSequence", () => {
     it("accepts valid protein characters", () => {
-      expect(validateProteinSequence("MKT AYI-X*").valid).toBe(true);
+      expect(validateProteinSequence("MKT AYI").valid).toBe(true);
     });
 
     it("rejects empty protein input", () => {
       expect(validateProteinSequence(" \n\t ")).toEqual({
         valid: false,
-        errorMessage: "Protein sequence is required.",
+        errorMessage: "Protein sequence is required."
       });
     });
 
@@ -21,49 +21,51 @@ describe("fasta.utils", () => {
       expect(validateProteinSequence("ATG123")).toEqual({
         valid: false,
         errorMessage:
-          "Protein sequence must use valid 20 canonical amino acids FASTA characters only."
+          "Protein sequence must use valid 20 canonical amino acids characters only."
       });
     });
   });
 
   describe("validateDnaSequence", () => {
     it("accepts valid DNA characters", () => {
-      expect(validateDnaSequence("ATGCN-\nAT")).toEqual({ valid: true });
+      expect(validateDnaSequence("ATGCN")).toEqual({ valid: true });
     });
 
     it("rejects empty DNA input", () => {
       expect(validateDnaSequence("")).toEqual({
         valid: false,
-        errorMessage: "DNA sequence is required.",
+        errorMessage: "DNA sequence is required."
       });
     });
 
     it("rejects invalid DNA characters", () => {
       expect(validateDnaSequence("AUGC")).toEqual({
         valid: false,
-        errorMessage: "DNA sequence must use valid DNA characters only (A, T, G, C, N, -).",
+        errorMessage:
+          "DNA sequence must use valid DNA characters only (A, T, G, C, N)."
       });
     });
   });
 
   describe("validateRnaSequence", () => {
     it("accepts valid RNA characters", () => {
-      expect(validateRnaSequence("AUGCN-\nAU")).toEqual({ valid: true });
+      expect(validateRnaSequence("AUGCN")).toEqual({ valid: true });
     });
 
     it("rejects empty RNA input", () => {
       expect(validateRnaSequence("")).toEqual({
         valid: false,
-        errorMessage: "RNA sequence is required.",
+        errorMessage: "RNA sequence is required."
       });
     });
 
     it("rejects invalid RNA characters", () => {
       expect(validateRnaSequence("ATGC")).toEqual({
         valid: false,
-        errorMessage: "RNA sequence must use valid RNA characters only (A, U, G, C, N, -).",
+        errorMessage:
+          "RNA sequence must use valid RNA characters only (A, U, G, C, N)."
       });
     });
   });
-
 });
+

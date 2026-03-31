@@ -27,12 +27,14 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/auth.service";
+import { CcdLookupService } from "../../../cores/services/ccd-lookup.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
+  isValidSmiles,
   validateDnaSequence,
   validateProteinSequence,
-  validateRnaSequence,
+  validateRnaSequence
 } from "../../../cores/utils/fasta.utils";
 
 interface TabItem {
@@ -40,7 +42,7 @@ interface TabItem {
   label: string;
 }
 
-type MoleculeType = "protein" | "rna" | "dna" | "ligand";
+type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
 type ToolId = "colabfold" | "alphafold2" | "boltz";
 type StepItem = Step;
 
@@ -85,20 +87,28 @@ interface ToolSettingErrors {
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
-    FormStatusComponent,
+    FormStatusComponent
   ],
   host: {
-    class: "block w-full single-prediction-bg",
+    class: "block w-full single-prediction-bg"
   },
   templateUrl: "./single-prediction.html",
-  styleUrls: ["./single-prediction.scss"],
+  styleUrls: ["./single-prediction.scss"]
 })
 export class SinglePredictionComponent {
   public auth = inject(AuthService);
   public workflowSubmission = inject(WorkflowSubmissionService);
   private datasetUploadService = inject(DatasetUploadService);
+  private ccdLookupService = inject(CcdLookupService);
 
   private nextRowId = 1;
+
+  // Per-row CCD remote validation state
+  ccdLookupState = signal<
+    Record<number, "idle" | "loading" | "valid" | "invalid">
+  >({});
+  ccdLookupNames = signal<Record<number, string>>({}); // compound name from RCSB
+  ccdLookupErrors = signal<Record<number, string>>({}); // validation error message from service
 
   showAlert = signal(false);
   alertMessage = signal("");
@@ -106,7 +116,7 @@ export class SinglePredictionComponent {
   readonly tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
     { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
+    { id: "papers", label: "Papers" }
   ];
   activeTab = signal<TabItem["id"]>("overview");
   isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
@@ -114,19 +124,21 @@ export class SinglePredictionComponent {
   readonly tools: ToolChip[] = [
     { id: "colabfold", label: "ColabFold" },
     { id: "alphafold2", label: "AlphaFold2" },
-    { id: "boltz", label: "Boltz" },
+    { id: "boltz", label: "Boltz" }
   ];
   isToolAvailable = () => false;
   selectedTool = signal<ToolId>("colabfold");
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? ""
+    () =>
+      this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? ""
   );
 
   readonly moleculeTypes: { value: MoleculeType; label: string }[] = [
     { value: "protein", label: "Protein" },
     { value: "rna", label: "RNA" },
     { value: "dna", label: "DNA" },
-    { value: "ligand", label: "Ligand" },
+    { value: "ligand", label: "Ligand (SMILES)" },
+    { value: "ccd", label: "Ligand (CCD)" }
   ];
 
   entityRows = signal<EntityRow[]>([this.createEntityRow()]);
@@ -145,18 +157,20 @@ export class SinglePredictionComponent {
     {
       id: 1,
       title: "Input Configuration",
-      description: "Define one or more entities with sequence, copies, and molecule type",
+      description:
+        "Define one or more entities with sequence, copies, and molecule type"
     },
     {
       id: 2,
       title: "Tool Settings",
-      description: "Configure only the settings required by the selected tool",
+      description: "Configure only the settings required by the selected tool"
     },
     {
       id: 3,
       title: "Review & Submit",
-      description: "Review entities, settings, and generated FASTA content before submission",
-    },
+      description:
+        "Review entities, settings, and generated FASTA content before submission"
+    }
   ];
   currentStep = signal<number>(1);
   completedSteps = signal<number[]>([]);
@@ -170,7 +184,8 @@ export class SinglePredictionComponent {
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
         (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
-      )
+      ) &&
+      !Object.values(this.ccdLookupState()).some((s) => s === "loading")
   );
   readonly isStep2Valid = computed(
     () => Object.keys(this.toolSettingErrors()).length === 0
@@ -180,7 +195,8 @@ export class SinglePredictionComponent {
   );
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
-  canGoNext: Signal<boolean> = computed(() => {    if (this.currentStep() === 1) {
+  canGoNext: Signal<boolean> = computed(() => {
+    if (this.currentStep() === 1) {
       return this.isStep1Valid();
     }
     if (this.currentStep() === 2) {
@@ -189,13 +205,19 @@ export class SinglePredictionComponent {
     return false;
   });
 
-  readonly canSubmit = computed(() => this.isFormValid() && this.isToolAvailable());
+  readonly canSubmit = computed(
+    () => this.isFormValid() && this.isToolAvailable()
+  );
 
   readonly formSummary = computed(() => {
     const entityItems = this.entityRows().map((row, index) => ({
       label: `Entity ${index + 1}`,
-      value: `${this.getMoleculeTypeLabel(row.moleculeType)} x${this.getParsedCopyNumber(row.copyNumber)} • ${this.getNormalizedSequence(row)}`,
-      fieldName: `entity_${row.id}`,
+      value: `${this.getMoleculeTypeLabel(
+        row.moleculeType
+      )} x${this.getParsedCopyNumber(
+        row.copyNumber
+      )} • ${this.getNormalizedSequence(row)}`,
+      fieldName: `entity_${row.id}`
     }));
 
     const settingItems = this.getToolSettingsSummaryItems();
@@ -212,10 +234,12 @@ export class SinglePredictionComponent {
       .flatMap((row, index) => {
         const copies = this.getParsedCopyNumber(row.copyNumber);
         const sequence = this.getNormalizedSequence(row);
-        return Array.from({ length: copies }, (_, copyIndex) => [
-          `>entity_${index + 1}_copy_${copyIndex + 1}|${row.moleculeType}`,
-          sequence,
-        ].join("\n"));
+        return Array.from({ length: copies }, (_, copyIndex) =>
+          [
+            `>entity_${index + 1}_copy_${copyIndex + 1}|${row.moleculeType}`,
+            sequence
+          ].join("\n")
+        );
       })
       .join("\n");
   });
@@ -224,7 +248,8 @@ export class SinglePredictionComponent {
     this.activeTab.set(id);
   }
 
-  selectTool(id: string) {    this.selectedTool.set(id as ToolId);
+  selectTool(id: string) {
+    this.selectedTool.set(id as ToolId);
   }
 
   addEntityRow(): void {
@@ -250,10 +275,29 @@ export class SinglePredictionComponent {
       }
       return rows.filter((row) => row.id !== id);
     });
+    this.ccdLookupState.update((s) => {
+      const next = { ...s };
+      delete next[id];
+      return next;
+    });
+    this.ccdLookupNames.update((s) => {
+      const next = { ...s };
+      delete next[id];
+      return next;
+    });
+    this.ccdLookupErrors.update((s) => {
+      const next = { ...s };
+      delete next[id];
+      return next;
+    });
   }
 
   updateRowSequence(id: number, value: string): void {
     this.patchRow(id, { sequence: value });
+    const row = this.entityRows().find((r) => r.id === id);
+    if (row?.moleculeType === "ccd") {
+      this.triggerCcdLookup(id, value);
+    }
   }
 
   updateRowCopyNumber(id: number, value: string): void {
@@ -262,6 +306,29 @@ export class SinglePredictionComponent {
 
   updateRowMoleculeType(id: number, value: string): void {
     this.patchRow(id, { moleculeType: value as MoleculeType });
+    if (value === "ccd") {
+      const row = this.entityRows().find((r) => r.id === id);
+      if (row?.sequence) {
+        this.triggerCcdLookup(id, row.sequence);
+      }
+    } else {
+      // Clear CCD state when switching away from ccd type
+      this.ccdLookupState.update((s) => {
+        const next = { ...s };
+        delete next[id];
+        return next;
+      });
+      this.ccdLookupNames.update((s) => {
+        const next = { ...s };
+        delete next[id];
+        return next;
+      });
+      this.ccdLookupErrors.update((s) => {
+        const next = { ...s };
+        delete next[id];
+        return next;
+      });
+    }
   }
 
   isStepInvalid = (id: number) => {
@@ -276,10 +343,16 @@ export class SinglePredictionComponent {
 
   isStepComplete = (id: number) => {
     if (id === 1) {
-      return this.isStep1Valid() && (this.completedSteps().includes(1) || this.currentStep() > 1);
+      return (
+        this.isStep1Valid() &&
+        (this.completedSteps().includes(1) || this.currentStep() > 1)
+      );
     }
     if (id === 2) {
-      return this.isStep2Valid() && (this.completedSteps().includes(2) || this.currentStep() > 2);
+      return (
+        this.isStep2Valid() &&
+        (this.completedSteps().includes(2) || this.currentStep() > 2)
+      );
     }
     return this.completedSteps().includes(id);
   };
@@ -298,7 +371,10 @@ export class SinglePredictionComponent {
     return this.entityValidationResults()[index] ?? {};
   }
 
-  shouldShowRowFieldError(row: EntityRow, field: keyof EntityRow["touched"]): boolean {
+  shouldShowRowFieldError(
+    row: EntityRow,
+    field: keyof EntityRow["touched"]
+  ): boolean {
     if (field === "sequence" && row.sequence.trim().length > 0) {
       return true;
     }
@@ -325,34 +401,34 @@ export class SinglePredictionComponent {
           {
             label: "alphafold2_random_seed",
             value: this.alphafold2RandomSeed(),
-            fieldName: "alphafold2_random_seed",
+            fieldName: "alphafold2_random_seed"
           },
           {
             label: "alphafold2_full_dbs",
             value: this.alphafold2FullDbs() ? "true" : "false",
-            fieldName: "alphafold2_full_dbs",
-          },
+            fieldName: "alphafold2_full_dbs"
+          }
         ];
       case "colabfold":
         return [
           {
             label: "colabfold_num_recycles",
             value: this.colabfoldNumRecycles(),
-            fieldName: "colabfold_num_recycles",
+            fieldName: "colabfold_num_recycles"
           },
           {
             label: "colabfold_use_templates",
             value: this.colabfoldUseTemplates() ? "true" : "false",
-            fieldName: "colabfold_use_templates",
-          },
+            fieldName: "colabfold_use_templates"
+          }
         ];
       case "boltz":
         return [
           {
             label: "boltz_use_potentials",
             value: this.boltzUsePotentials() ? "true" : "false",
-            fieldName: "boltz_use_potentials",
-          },
+            fieldName: "boltz_use_potentials"
+          }
         ];
     }
 
@@ -377,13 +453,14 @@ export class SinglePredictionComponent {
     return {
       valid: this.isFormValid(),
       errorCount: entityErrorCount + toolErrorCount,
-      rowCount: this.entityRows().length,
+      rowCount: this.entityRows().length
     };
   }
 
   getToolSettingsErrorCount(): number {
-    return Object.values(this.toolSettingErrors()).filter((value) => Boolean(value))
-      .length;
+    return Object.values(this.toolSettingErrors()).filter((value) =>
+      Boolean(value)
+    ).length;
   }
 
   previousStep() {
@@ -440,7 +517,9 @@ export class SinglePredictionComponent {
 
   submitWorkflow() {
     if (!this.isToolAvailable()) {
-      this.showError("Tools are currently not available. Submission is disabled.");
+      this.showError(
+        "Tools are currently not available. Submission is disabled."
+      );
       return;
     }
 
@@ -459,10 +538,10 @@ export class SinglePredictionComponent {
         id: `entity_${index + 1}`,
         moleculeType: row.moleculeType,
         copyNumber: this.getParsedCopyNumber(row.copyNumber),
-        sequence: this.getNormalizedSequence(row),
+        sequence: this.getNormalizedSequence(row)
       })),
       fastaContent: this.generatedFastaContent(),
-      ...this.buildToolSettingsPayload(),
+      ...this.buildToolSettingsPayload()
     };
 
     this.workflowSubmission.isSubmitting.set(true);
@@ -494,7 +573,7 @@ export class SinglePredictionComponent {
         this.showError(
           `Failed to upload dataset: ${error.message || "Unknown error"}`
         );
-      },
+      }
     });
   }
 
@@ -517,7 +596,9 @@ export class SinglePredictionComponent {
   }
 
   getMoleculeTypeLabel(type: MoleculeType): string {
-    return this.moleculeTypes.find((item) => item.value === type)?.label ?? type;
+    return (
+      this.moleculeTypes.find((item) => item.value === type)?.label ?? type
+    );
   }
 
   private createEntityRow(): EntityRow {
@@ -529,8 +610,8 @@ export class SinglePredictionComponent {
       touched: {
         sequence: false,
         copyNumber: false,
-        moleculeType: false,
-      },
+        moleculeType: false
+      }
     };
   }
 
@@ -538,6 +619,39 @@ export class SinglePredictionComponent {
     this.entityRows.update((rows) =>
       rows.map((row) => (row.id === id ? { ...row, ...patch } : row))
     );
+  }
+
+  private triggerCcdLookup(id: number, code: string): void {
+    if (!code.trim()) {
+      this.ccdLookupState.update((s) => ({ ...s, [id]: "idle" }));
+      this.ccdLookupNames.update((s) => {
+        const next = { ...s };
+        delete next[id];
+        return next;
+      });
+      this.ccdLookupErrors.update((s) => {
+        const next = { ...s };
+        delete next[id];
+        return next;
+      });
+      return;
+    }
+
+    this.ccdLookupState.update((s) => ({ ...s, [id]: "loading" }));
+    this.ccdLookupService.lookup(code).subscribe((result) => {
+      this.ccdLookupState.update((s) => ({
+        ...s,
+        [id]: result.valid ? "valid" : "invalid"
+      }));
+      if (result.valid && result.name) {
+        this.ccdLookupNames.update((s) => ({ ...s, [id]: result.name! }));
+      } else if (!result.valid && result.errorMessage) {
+        this.ccdLookupErrors.update((s) => ({
+          ...s,
+          [id]: result.errorMessage!
+        }));
+      }
+    });
   }
 
   private touchAllEntityRows(): void {
@@ -548,8 +662,8 @@ export class SinglePredictionComponent {
         touched: {
           sequence: true,
           copyNumber: true,
-          moleculeType: true,
-        },
+          moleculeType: true
+        }
       }))
     );
   }
@@ -573,12 +687,19 @@ export class SinglePredictionComponent {
       );
       if (!sequenceValidation.valid) {
         errors.sequence = sequenceValidation.errorMessage;
+      } else if (row.moleculeType === "ccd") {
+        const lookupState = this.ccdLookupState()[row.id];
+        if (lookupState === "invalid") {
+          errors.sequence =
+            this.ccdLookupErrors()[row.id] ?? "CCD code is invalid.";
+        }
       }
     }
 
     const copyNumber = Number.parseInt(row.copyNumber, 10);
     if (!Number.isInteger(copyNumber) || copyNumber < 1) {
-      errors.copyNumber = "Copy number must be a whole number greater than or equal to 1.";
+      errors.copyNumber =
+        "Copy number must be a whole number greater than or equal to 1.";
     }
 
     if (
@@ -598,7 +719,7 @@ export class SinglePredictionComponent {
       if (!Number.isInteger(value) || value < 0) {
         return {
           alphafold2RandomSeed:
-            "alphafold2_random_seed must be a whole number greater than or equal to 0.",
+            "alphafold2_random_seed must be a whole number greater than or equal to 0."
         };
       }
     }
@@ -608,7 +729,7 @@ export class SinglePredictionComponent {
       if (!Number.isInteger(value) || value < 1) {
         return {
           colabfoldNumRecycles:
-            "colabfold_num_recycles must be a whole number greater than or equal to 1.",
+            "colabfold_num_recycles must be a whole number greater than or equal to 1."
         };
       }
     }
@@ -624,7 +745,7 @@ export class SinglePredictionComponent {
             this.alphafold2RandomSeed(),
             10
           ),
-          alphafold2_full_dbs: this.alphafold2FullDbs(),
+          alphafold2_full_dbs: this.alphafold2FullDbs()
         };
       case "colabfold":
         return {
@@ -632,11 +753,11 @@ export class SinglePredictionComponent {
             this.colabfoldNumRecycles(),
             10
           ),
-          colabfold_use_templates: this.colabfoldUseTemplates(),
+          colabfold_use_templates: this.colabfoldUseTemplates()
         };
       case "boltz":
         return {
-          boltz_use_potentials: this.boltzUsePotentials(),
+          boltz_use_potentials: this.boltzUsePotentials()
         };
     }
 
@@ -646,6 +767,9 @@ export class SinglePredictionComponent {
   private getNormalizedSequence(row: EntityRow): string {
     if (row.moleculeType === "ligand") {
       return row.sequence.trim();
+    }
+    if (row.moleculeType === "ccd") {
+      return row.sequence.trim().toUpperCase();
     }
 
     return row.sequence.replace(/\s+/g, "").toUpperCase();
@@ -668,47 +792,20 @@ export class SinglePredictionComponent {
       case "rna":
         return validateRnaSequence(value);
       case "ligand":
-        return this.isValidSmiles(value)
+        return isValidSmiles(value)
           ? { valid: true }
           : {
               valid: false,
-              errorMessage: "Ligand sequence must be a valid SMILES string.",
+              errorMessage: "Ligand sequence must be a valid SMILES string."
             };
+      case "ccd":
+        return { valid: true };
     }
 
     return {
       valid: false,
-      errorMessage: "Sequence format is invalid.",
+      errorMessage: "Sequence format is invalid."
     };
-  }
-
-  private isValidSmiles(value: string): boolean {
-    if (!value || /\s/.test(value)) {
-      return false;
-    }
-
-    if (!/^[A-Za-z0-9@+\-\[\]\(\)=#$\\/%.:*]+$/.test(value)) {
-      return false;
-    }
-
-    const stack: string[] = [];
-    const pairs: Record<string, string> = {
-      ")": "(",
-      "]": "[",
-    };
-
-    for (const char of value) {
-      if (char === "(" || char === "[") {
-        stack.push(char);
-      } else if (char === ")" || char === "]") {
-        const expected = pairs[char];
-        if (stack.pop() !== expected) {
-          return false;
-        }
-      }
-    }
-
-    return stack.length === 0 && /[A-Za-z]/.test(value);
   }
 
   private showError(message: string): void {

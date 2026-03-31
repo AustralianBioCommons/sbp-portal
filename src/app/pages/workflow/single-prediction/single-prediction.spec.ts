@@ -2,12 +2,14 @@ import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
+import { CcdLookupService } from "../../../cores/services/ccd-lookup.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
+  isValidSmiles,
   validateDnaSequence,
   validateProteinSequence,
-  validateRnaSequence,
+  validateRnaSequence
 } from "../../../cores/utils/fasta.utils";
 import { SinglePredictionComponent } from "./single-prediction";
 
@@ -15,6 +17,7 @@ describe("SinglePredictionComponent", () => {
   let component: SinglePredictionComponent;
   let fixture: ComponentFixture<SinglePredictionComponent>;
   let datasetUploadService: jasmine.SpyObj<DatasetUploadService>;
+  let ccdLookupService: jasmine.SpyObj<CcdLookupService>;
   let workflowSubmissionService: {
     isSubmitting: ReturnType<typeof signal<boolean>>;
     showSuccessDialog: ReturnType<typeof signal<boolean>>;
@@ -39,6 +42,11 @@ describe("SinglePredictionComponent", () => {
       })
     );
 
+    ccdLookupService = jasmine.createSpyObj("CcdLookupService", ["lookup"]);
+    ccdLookupService.lookup.and.returnValue(
+      of({ valid: true, name: "ADENOSINE-5'-TRIPHOSPHATE" })
+    );
+
     workflowSubmissionService = {
       isSubmitting: signal(false),
       showSuccessDialog: signal(false),
@@ -56,6 +64,7 @@ describe("SinglePredictionComponent", () => {
       imports: [SinglePredictionComponent],
       providers: [
         { provide: AuthService, useValue: authService },
+        { provide: CcdLookupService, useValue: ccdLookupService },
         { provide: DatasetUploadService, useValue: datasetUploadService },
         {
           provide: WorkflowSubmissionService,
@@ -182,6 +191,65 @@ describe("SinglePredictionComponent", () => {
 
     component.updateRowSequence(rowId, "bad smiles");
     expect(component.getRowErrors(0).sequence).toContain("SMILES");
+
+    component.updateRowSequence(rowId, "ATP");
+    component.updateRowMoleculeType(rowId, "ccd");
+    expect(component.isStep1Valid()).toBe(true);
+
+    ccdLookupService.lookup.and.returnValue(
+      of({ valid: false, errorMessage: "Ligand CCD code must be 1\u20135 alphanumeric characters (e.g. ATP, HEM)." })
+    );
+    component.updateRowSequence(rowId, "AT!P");
+    expect(component.getRowErrors(0).sequence).toContain("CCD");
+  });
+
+  it("should call RCSB API and mark CCD row valid when lookup succeeds", () => {
+    const rowId = component.entityRows()[0].id;
+    component.selectTool("boltz");
+    component.updateRowMoleculeType(rowId, "ccd");
+    component.updateRowSequence(rowId, "ATP");
+
+    expect(ccdLookupService.lookup).toHaveBeenCalledWith("ATP");
+    expect(component.ccdLookupState()[rowId]).toBe("valid");
+    expect(component.ccdLookupNames()[rowId]).toBe("ADENOSINE-5'-TRIPHOSPHATE");
+    expect(component.isStep1Valid()).toBe(true);
+  });
+
+  it("should mark CCD row invalid and add error when RCSB lookup returns not found", () => {
+    ccdLookupService.lookup.and.returnValue(
+      of({ valid: false, errorMessage: "CCD code not found in the RCSB Chemical Component Dictionary." })
+    );
+    const rowId = component.entityRows()[0].id;
+    component.selectTool("boltz");
+    component.updateRowMoleculeType(rowId, "ccd");
+    component.updateRowSequence(rowId, "XYZ");
+
+    expect(component.ccdLookupState()[rowId]).toBe("invalid");
+    expect(component.isStep1Valid()).toBe(false);
+    expect(component.getRowErrors(0).sequence).toContain("not found");
+  });
+
+  it("should clear CCD lookup state when switching away from ccd molecule type", () => {
+    const rowId = component.entityRows()[0].id;
+    component.selectTool("boltz");
+    component.updateRowMoleculeType(rowId, "ccd");
+    component.updateRowSequence(rowId, "ATP");
+    expect(component.ccdLookupState()[rowId]).toBe("valid");
+
+    component.updateRowMoleculeType(rowId, "protein");
+    expect(component.ccdLookupState()[rowId]).toBeUndefined();
+  });
+
+  it("should block step 1 advance while CCD lookup is in-flight (loading state)", () => {
+    // Return an observable that never completes to simulate in-flight
+    ccdLookupService.lookup.and.returnValue(new Observable());
+    const rowId = component.entityRows()[0].id;
+    component.selectTool("boltz");
+    component.updateRowMoleculeType(rowId, "ccd");
+    component.updateRowSequence(rowId, "ATP");
+
+    expect(component.ccdLookupState()[rowId]).toBe("loading");
+    expect(component.isStep1Valid()).toBe(false);
   });
 
   it("should return protein and RNA validation messages for invalid sequences", () => {
@@ -198,9 +266,9 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should reject malformed SMILES branches and use the fallback message path", () => {
-    expect(component["isValidSmiles"]("C]")).toBe(false);
-    expect(component["isValidSmiles"]("C?")).toBe(false);
-    expect(component["isValidSmiles"]("12345")).toBe(false);
+    expect(isValidSmiles("C]")).toBe(false);
+    expect(isValidSmiles("C?")).toBe(false);
+    expect(isValidSmiles("12345")).toBe(false);
     expect(
       component["validateSequenceByMoleculeType"]("ABC", "other" as never)
     ).toEqual({
@@ -371,6 +439,7 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow("ACDEFGHIK", "2");
     component.selectTool("alphafold2");
     component.alphafold2FullDbs.set(true);
+    component.isToolAvailable = () => true;
 
     component.submitWorkflow();
 
@@ -389,6 +458,7 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should show an error when submitting invalid input", () => {
+    component.isToolAvailable = () => true;
     component.submitWorkflow();
 
     expect(component.showAlert()).toBe(true);
@@ -398,6 +468,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show an error when dataset upload succeeds without dataset id", () => {
     fillValidProteinRow();
+    component.isToolAvailable = () => true;
     datasetUploadService.uploadDataset.and.returnValue(
       of({
         success: true,
@@ -413,6 +484,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show an error when dataset upload fails", () => {
     fillValidProteinRow();
+    component.isToolAvailable = () => true;
     datasetUploadService.uploadDataset.and.returnValue(
       throwError(() => new Error("upload failed"))
     );
