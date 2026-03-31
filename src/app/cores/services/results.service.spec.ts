@@ -85,11 +85,11 @@ describe("ResultsService", () => {
 
   it("should return a trusted resource URL for the report", () => {
     const trustedUrl = service.getSafeReportResourceUrl(
-      "https://example.test/report.html"
+      `${environment.apiBaseUrl}/report.html`
     );
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
-      "https://example.test/report.html"
+      `${environment.apiBaseUrl}/report.html`
     );
   });
 
@@ -110,10 +110,10 @@ describe("ResultsService", () => {
     });
   });
 
-  it("should preserve absolute preview report URL", () => {
+  it("should sanitize cross-origin preview report URLs", () => {
     service.getJobReportResourceUrl("job/1").subscribe((response) => {
       expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
-        "https://reports.example.test/job-1/report.html"
+        "about:blank"
       );
     });
 
@@ -185,7 +185,7 @@ describe("ResultsService", () => {
     ).toBe(`${environment.apiBaseUrl}/api/results/job%2F1/report?token=t`);
   });
 
-  it("should return a safe URL from getJobReport for an absolute URL", () => {
+  it("should sanitize cross-origin report URLs from getJobReport", () => {
     let result: unknown;
     service.getJobReport("job/1").subscribe((r) => (result = r));
 
@@ -204,6 +204,6 @@ describe("ResultsService", () => {
 
     expect(
       sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
-    ).toBe("https://cdn.example.test/report.html");
+    ).toBe("about:blank");
   });
 });
