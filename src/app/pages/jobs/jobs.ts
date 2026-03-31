@@ -59,6 +59,7 @@ export class JobsComponent implements OnInit, OnDestroy {
   currentPage = signal<number>(1);
   pageSize = signal<number>(50);
   scoreSortDirection = signal<"none" | "asc" | "desc">("none");
+  submittedSortDirection = signal<"asc" | "desc">("desc");
 
   // Available status options
   statusOptions = ["Completed", "Failed", "Stopped", "In progress", "In queue"];
@@ -113,7 +114,7 @@ export class JobsComponent implements OnInit, OnDestroy {
               rawJob.finalDesignCount ?? rawJob.final_design_count ?? null
           };
         });
-        this.jobs.set(this.sortJobsByScore(normalizedJobs));
+        this.jobs.set(this.sortJobs(normalizedJobs));
         this.total.set(response.total);
         this.loading.set(false);
       });
@@ -219,25 +220,50 @@ export class JobsComponent implements OnInit, OnDestroy {
     const current = this.scoreSortDirection();
     const next = current === "none" ? "desc" : current === "desc" ? "asc" : "none";
     this.scoreSortDirection.set(next);
-    this.jobs.set(this.sortJobsByScore(this.jobs()));
+    this.jobs.set(this.sortJobs(this.jobs()));
   }
 
-  private sortJobsByScore(jobs: JobListItem[]): JobListItem[] {
+  toggleSubmittedSort(): void {
+    const current = this.submittedSortDirection();
+    this.submittedSortDirection.set(current === "desc" ? "asc" : "desc");
+    this.jobs.set(this.sortJobs(this.jobs()));
+  }
+
+  private sortJobs(jobs: JobListItem[]): JobListItem[] {
     const direction = this.scoreSortDirection();
-    if (direction === "none") {
-      return [...jobs];
+    if (direction !== "none") {
+      return [...jobs].sort((a, b) => {
+        const aScore = a.score;
+        const bScore = b.score;
+
+        if (aScore === null && bScore === null) {
+          return this.compareSubmittedAt(a, b);
+        }
+        if (aScore === null) return 1;
+        if (bScore === null) return -1;
+
+        const scoreComparison =
+          direction === "asc" ? aScore - bScore : bScore - aScore;
+
+        return scoreComparison !== 0
+          ? scoreComparison
+          : this.compareSubmittedAt(a, b);
+      });
     }
 
     return [...jobs].sort((a, b) => {
-      const aScore = a.score;
-      const bScore = b.score;
-
-      if (aScore === null && bScore === null) return 0;
-      if (aScore === null) return 1;
-      if (bScore === null) return -1;
-
-      return direction === "asc" ? aScore - bScore : bScore - aScore;
+      return this.compareSubmittedAt(a, b);
     });
+  }
+
+  private compareSubmittedAt(a: JobListItem, b: JobListItem): number {
+    const aSubmittedAt = new Date(a.submittedAt).getTime();
+    const bSubmittedAt = new Date(b.submittedAt).getTime();
+    const submittedComparison = aSubmittedAt - bSubmittedAt;
+
+    return this.submittedSortDirection() === "asc"
+      ? submittedComparison
+      : -submittedComparison;
   }
 
   /**
