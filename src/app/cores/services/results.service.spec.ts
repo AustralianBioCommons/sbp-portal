@@ -206,4 +206,48 @@ describe("ResultsService", () => {
       sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
     ).toBe("about:blank");
   });
+
+  it("should sanitize report URLs with non-http/https protocol", () => {
+    let result: unknown;
+    service.getJobReport("job/1").subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/report`
+    );
+    req.flush({
+      runId: "job/1",
+      report: {
+        label: "Report",
+        key: "report",
+        url: "javascript:alert(1)",
+        category: "report"
+      }
+    });
+
+    expect(
+      sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
+    ).toBe("about:blank");
+  });
+
+  it("should sanitize malformed report URLs that cannot be parsed", () => {
+    let result: unknown;
+    service.getJobReport("job/1").subscribe((r) => (result = r));
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/report`
+    );
+    req.flush({
+      runId: "job/1",
+      report: {
+        label: "Report",
+        key: "report",
+        url: "http::///bad",
+        category: "report"
+      }
+    });
+
+    expect(
+      sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
+    ).toBe("about:blank");
+  });
 });

@@ -144,6 +144,9 @@ describe("JobResultsComponent", () => {
   });
 
   it("should build and render the job report iframe", () => {
+    component.reportLoading.set(false);
+    fixture.detectChanges();
+
     expect(resultsService.getJobReport).toHaveBeenCalledWith(mockJob.id);
     expect(fixture.nativeElement.textContent).toContain("Job name");
     const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
@@ -290,6 +293,9 @@ describe("JobResultsComponent", () => {
   });
 
   it("should stop loading when the report iframe loads", () => {
+    component.reportLoading.set(false);
+    fixture.detectChanges();
+
     const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
 
     iframe.dispatchEvent(new Event("load"));
@@ -300,6 +306,9 @@ describe("JobResultsComponent", () => {
   });
 
   it("should handle report iframe loading errors", () => {
+    component.reportLoading.set(false);
+    fixture.detectChanges();
+
     const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
 
     iframe.dispatchEvent(new Event("error"));

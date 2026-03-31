@@ -145,6 +145,19 @@ describe("WorkflowSubmissionService", () => {
     );
   });
 
+  it("should fall back to 'Unknown error' in alert when error has no message", () => {
+    const alertSpy = spyOn(window, "alert");
+    workflowApiService.launchWorkflow.and.returnValue(
+      throwError(() => ({ message: "" }))
+    );
+
+    service.submitWorkflowWithDataset({ tool: "Boltz" }, "dataset-789");
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Failed to launch workflow: Unknown error"
+    );
+  });
+
   it("should navigate to home and jobs after closing success dialog", () => {
     service.showSuccessDialog.set(true);
 
