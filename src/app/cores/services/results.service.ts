@@ -75,8 +75,24 @@ export class ResultsService {
     );
   }
 
+  private isAllowedReportUrl(url: string): boolean {
+    try {
+      const base = new URL(environment.apiBaseUrl);
+      const parsed = new URL(url, base);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return false;
+      }
+      return parsed.origin === base.origin;
+    } catch {
+      return false;
+    }
+  }
+
   getSafeReportResourceUrl(reportUrl: string): SafeResourceUrl {
-    return this.sanitizer.bypassSecurityTrustResourceUrl(reportUrl);
+    const safeUrl = this.isAllowedReportUrl(reportUrl)
+      ? reportUrl
+      : "about:blank";
+    return this.sanitizer.bypassSecurityTrustResourceUrl(safeUrl);
   }
 
   getJobReport(runId: string): Observable<SafeResourceUrl | null> {
