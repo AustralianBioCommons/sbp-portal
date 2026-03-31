@@ -21,7 +21,7 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
-import { parseFasta } from "../../../cores/utils/fasta.utils";
+import { validateProteinSequence } from "../../../cores/utils/fasta.utils";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -117,7 +117,7 @@ export class InteractionScreeningComponent {
       id: 1,
       title: "Input Configuration",
       description:
-        "Add sequences in FASTA format and assign query / target type"
+        "Add query and target protein sequences"
     },
     {
       id: 2,
@@ -134,8 +134,8 @@ export class InteractionScreeningComponent {
   completedSteps = signal<number[]>([]);
   isFormValid = computed(
     () =>
-      parseFasta(this.queryFasta()).valid &&
-      parseFasta(this.targetFasta()).valid
+      validateProteinSequence(this.queryFasta()).valid &&
+      validateProteinSequence(this.targetFasta()).valid
   );
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -161,19 +161,17 @@ export class InteractionScreeningComponent {
   // Review step summary
   formSummary = computed(() => {
     const items: { label: string; value: string; fieldName: string }[] = [];
-    const qResult = parseFasta(this.queryFasta());
-    const tResult = parseFasta(this.targetFasta());
-    if (qResult.valid) {
+    if (validateProteinSequence(this.queryFasta()).valid) {
       items.push({
         label: "Query Sequence",
-        value: qResult.sequences.map((s) => s.header).join(", "),
+        value: this.queryFasta().trim().slice(0, 40) + (this.queryFasta().trim().length > 40 ? "…" : ""),
         fieldName: "query_sequence"
       });
     }
-    if (tResult.valid) {
+    if (validateProteinSequence(this.targetFasta()).valid) {
       items.push({
         label: "Target Sequence",
-        value: tResult.sequences.map((s) => s.header).join(", "),
+        value: this.targetFasta().trim().slice(0, 40) + (this.targetFasta().trim().length > 40 ? "…" : ""),
         fieldName: "target_sequence"
       });
     }
@@ -187,8 +185,8 @@ export class InteractionScreeningComponent {
     rowCount: number;
   } {
     const errorCount =
-      (parseFasta(this.queryFasta()).valid ? 0 : 1) +
-      (parseFasta(this.targetFasta()).valid ? 0 : 1);
+      (validateProteinSequence(this.queryFasta()).valid ? 0 : 1) +
+      (validateProteinSequence(this.targetFasta()).valid ? 0 : 1);
     return { valid: this.isFormValid(), errorCount, rowCount: 2 };
   }
 
@@ -223,7 +221,7 @@ export class InteractionScreeningComponent {
 
   validateQuery(): void {
     this.queryFastaTouched.set(true);
-    this.queryFastaError.set(parseFasta(this.queryFasta()).errorMessage ?? "");
+    this.queryFastaError.set(validateProteinSequence(this.queryFasta()).errorMessage ?? "");
   }
 
   hasQueryError(): boolean {
@@ -234,11 +232,6 @@ export class InteractionScreeningComponent {
     return this.queryFastaTouched() ? this.queryFastaError() : "";
   }
 
-  getQueryParsedHeaders(): string {
-    const result = parseFasta(this.queryFasta());
-    return result.valid ? result.sequences.map((s) => s.header).join(", ") : "";
-  }
-
   onTargetFastaChange(value: string): void {
     this.targetFasta.set(value);
     if (this.targetFastaTouched()) this.validateTarget();
@@ -247,7 +240,7 @@ export class InteractionScreeningComponent {
   validateTarget(): void {
     this.targetFastaTouched.set(true);
     this.targetFastaError.set(
-      parseFasta(this.targetFasta()).errorMessage ?? ""
+      validateProteinSequence(this.targetFasta()).errorMessage ?? ""
     );
   }
 
@@ -257,11 +250,6 @@ export class InteractionScreeningComponent {
 
   getTargetError(): string {
     return this.targetFastaTouched() ? this.targetFastaError() : "";
-  }
-
-  getTargetParsedHeaders(): string {
-    const result = parseFasta(this.targetFasta());
-    return result.valid ? result.sequences.map((s) => s.header).join(", ") : "";
   }
 
   private touchAll(): void {
@@ -276,16 +264,14 @@ export class InteractionScreeningComponent {
    * Each element matches the wisps schema_input row: { id, sequence, group }.
    */
   private buildWispsPayload(): Record<string, unknown>[] {
-    const qResult = parseFasta(this.queryFasta());
-    const tResult = parseFasta(this.targetFasta());
     return [
       {
-        id: qResult.sequences[0]?.header ?? "query",
+        id: "query",
         sequence: this.queryFasta().trim(),
         group: "query"
       },
       {
-        id: tResult.sequences[0]?.header ?? "target",
+        id: "target",
         sequence: this.targetFasta().trim(),
         group: "target"
       }
