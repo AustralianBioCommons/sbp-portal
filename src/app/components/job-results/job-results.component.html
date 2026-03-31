@@ -70,7 +70,7 @@
                 <button
                   type="button"
                   (click)="setActiveTab(tab.id)"
-                  class="whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-all duration-200 hover:scale-110"
+                  class="whitespace-nowrap px-1 py-4 text-sm font-medium transition-all duration-200 hover:scale-110"
                   [class.text-primary]="activeTab() === tab.id"
                   [class.border-gray-800]="activeTab() === tab.id"
                   [class.border-b-3]="activeTab() === tab.id"
@@ -78,6 +78,7 @@
                   [class.text-blue-900]="activeTab() !== tab.id"
                   [class.hover:text-blue-800]="activeTab() !== tab.id"
                   [class.hover:border-gray-300]="activeTab() !== tab.id"
+                  [class.border-b-2]="activeTab() !== tab.id"
                   [class.border-transparent]="activeTab() !== tab.id"
                 >
                   {{ tab.label }}
@@ -92,17 +93,18 @@
             @switch (activeTab()) {
               @case ("results") {
                   <div class="rounded-2xl border border-slate-200 p-5">
-                    <h3 class="text-lg font-semibold text-slate-900">Design Summary Report</h3>
+                    <h3 class="text-md font-semibold text-slate-900">Design Summary Report</h3>
                     @if (reportError()) {
                       <p class="mt-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                         {{ reportError() }}
                       </p>
-                    } @else if (reportLoading()) {
-                      <div class="mt-4 px-4 py-6">
-                        <app-loading message="Loading report..." [inline]="true"></app-loading>
-                      </div>
                     } @else if (reportUrl(); as reportDocumentUrl) {
-                      <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                      <div class="relative mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        @if (reportLoading()) {
+                          <div class="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
+                            <app-loading message="Loading report..." [inline]="true"></app-loading>
+                          </div>
+                        }
                         <iframe
                           class="w-full bg-white"
                           style="height: 500px; zoom: 0.7;"
@@ -112,6 +114,10 @@
                           (error)="onReportError()"
                         ></iframe>
                       </div>
+                    } @else if (reportLoading()) {
+                      <div class="mt-4 px-4 py-6">
+                        <app-loading message="Loading report..." [inline]="true"></app-loading>
+                      </div>
                     } @else {
                       <p class="mt-2 text-sm text-slate-600">No report data is available for this run yet.</p>
                     }
@@ -120,7 +126,7 @@
               @case ("files") {
                 <div class="rounded-2xl border border-slate-200 bg-white">
                   <div class="border-b border-slate-200 px-5 py-4">
-                    <h3 class="text-lg font-semibold text-slate-900">Available files</h3>
+                    <h3 class="text-md font-semibold text-slate-900">Available files</h3>
                     <p class="mt-1 text-sm text-slate-500">
                       Download individual result files from this workflow run.
                     </p>
@@ -176,7 +182,7 @@
               }
               @case ("settings") {
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <h3 class="text-lg font-semibold text-slate-900">Run settings</h3>
+                  <h3 class="text-md font-semibold text-slate-900">Run settings</h3>
                   @if (settingsError()) {
                     <p class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                       {{ settingsError() }}
@@ -208,7 +214,7 @@
               }
               @case ("logs") {
                 <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <h3 class="text-lg font-semibold text-slate-900">Logs</h3>
+                  <h3 class="text-md font-semibold text-slate-900">Logs</h3>
                   @if (logsError()) {
                     <p class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                       {{ logsError() }}
