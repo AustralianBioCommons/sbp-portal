@@ -44,7 +44,7 @@ describe("SinglePredictionComponent", () => {
 
     ccdLookupService = jasmine.createSpyObj("CcdLookupService", ["lookup"]);
     ccdLookupService.lookup.and.returnValue(
-      of({ valid: true, name: "ADENOSINE-5'-TRIPHOSPHATE" })
+      of({ valid: true, name: "Adenosine triphosphate" })
     );
 
     workflowSubmissionService = {
@@ -174,7 +174,7 @@ describe("SinglePredictionComponent", () => {
     const rowId = component.entityRows()[0].id;
     component.selectTool("boltz");
 
-    component.updateRowSequence(rowId, "ACGTNN");
+    component.updateRowSequence(rowId, "ACGT");
     component.updateRowMoleculeType(rowId, "dna");
     expect(component.isStep1Valid()).toBe(true);
 
@@ -203,7 +203,7 @@ describe("SinglePredictionComponent", () => {
     expect(component.getRowErrors(0).sequence).toContain("CCD");
   });
 
-  it("should call RCSB API and mark CCD row valid when lookup succeeds", () => {
+  it("should call lookup and mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
@@ -211,13 +211,13 @@ describe("SinglePredictionComponent", () => {
 
     expect(ccdLookupService.lookup).toHaveBeenCalledWith("ATP");
     expect(component.ccdLookupState()[rowId]).toBe("valid");
-    expect(component.ccdLookupNames()[rowId]).toBe("ADENOSINE-5'-TRIPHOSPHATE");
+    expect(component.ccdLookupNames()[rowId]).toBe("Adenosine triphosphate");
     expect(component.isStep1Valid()).toBe(true);
   });
 
-  it("should mark CCD row invalid and add error when RCSB lookup returns not found", () => {
+  it("should mark CCD row invalid and add error when CCD code is not in supported list", () => {
     ccdLookupService.lookup.and.returnValue(
-      of({ valid: false, errorMessage: "CCD code not found in the RCSB Chemical Component Dictionary." })
+      of({ valid: false, errorMessage: '"XYZ" is not in the supported CCD list.' })
     );
     const rowId = component.entityRows()[0].id;
     component.selectTool("boltz");
@@ -226,7 +226,7 @@ describe("SinglePredictionComponent", () => {
 
     expect(component.ccdLookupState()[rowId]).toBe("invalid");
     expect(component.isStep1Valid()).toBe(false);
-    expect(component.getRowErrors(0).sequence).toContain("not found");
+    expect(component.getRowErrors(0).sequence).toContain("supported CCD list");
   });
 
   it("should clear CCD lookup state when switching away from ccd molecule type", () => {
@@ -292,10 +292,10 @@ describe("SinglePredictionComponent", () => {
     expect(validateProteinSequence("MKT AYI").valid).toBe(true);
     expect(validateProteinSequence("123").valid).toBe(false);
 
-    expect(validateDnaSequence("ATGCN").valid).toBe(true);
+    expect(validateDnaSequence("ATGC").valid).toBe(true);
     expect(validateDnaSequence("AUGC").valid).toBe(false);
 
-    expect(validateRnaSequence("AUGCN").valid).toBe(true);
+    expect(validateRnaSequence("AUGC").valid).toBe(true);
     expect(validateRnaSequence("ATGC").valid).toBe(false);
   });
 

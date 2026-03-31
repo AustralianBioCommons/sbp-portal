@@ -201,6 +201,25 @@
                   >
                     Sequence
                   </label>
+                  @if (row.moleculeType === 'ccd') {
+                  <select
+                    [id]="'sequence-' + row.id"
+                    [value]="row.sequence"
+                    (change)="updateRowSequence(row.id, $any($event.target).value)"
+                    (blur)="touchRowField(row.id, 'sequence')"
+                    [class]="
+                      shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence
+                        ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
+                        : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
+                    "
+                    class="block h-11 w-full rounded-xl border bg-white px-4 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 transition-colors"
+                  >
+                    <option value="" disabled [selected]="!row.sequence">Select a ligand…</option>
+                    @for (opt of ccdOptions; track opt.code) {
+                    <option [value]="opt.code" [selected]="row.sequence === opt.code">{{ opt.code }} – {{ opt.name }}</option>
+                    }
+                  </select>
+                  } @else {
                   <input
                     [id]="'sequence-' + row.id"
                     type="text"
@@ -220,25 +239,18 @@
                     [placeholder]="
                       row.moleculeType === 'ligand'
                         ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
-                        : row.moleculeType === 'ccd'
-                          ? 'ATP'
-                          : row.moleculeType === 'dna'
-                            ? 'ATGCGT'
-                            : row.moleculeType === 'rna'
-                              ? 'AUGCGU'
-                              : 'ACDEFGHIKLMNPQRSTVWY'
+                        : row.moleculeType === 'dna'
+                          ? 'ATGCGT'
+                          : row.moleculeType === 'rna'
+                            ? 'AUGCGU'
+                            : 'ACDEFGHIKLMNPQRSTVWY'
                     "
                   />
+                  }
                   @if (shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
                     {{ getRowErrors(i).sequence }}
                   </p>
-                  }
-                  @if (row.moleculeType === 'ccd' && ccdLookupState()[row.id] === 'loading') {
-                  <p class="mt-1 text-xs text-gray-500">Verifying CCD code…</p>
-                  }
-                  @if (row.moleculeType === 'ccd' && ccdLookupState()[row.id] === 'valid' && ccdLookupNames()[row.id]) {
-                  <p class="mt-1 text-xs text-green-700">{{ ccdLookupNames()[row.id] }}</p>
                   }
                   @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
                   <p class="mt-1 text-xs text-red-600" role="alert">

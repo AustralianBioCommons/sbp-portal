@@ -1,7 +1,5 @@
-import { HttpClient } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
+import { Injectable } from "@angular/core";
 import { Observable, of } from "rxjs";
-import { catchError, map } from "rxjs/operators";
 
 export interface CcdLookupResult {
   valid: boolean;
@@ -9,11 +7,30 @@ export interface CcdLookupResult {
   errorMessage?: string;
 }
 
+export const CCD_COMPOUNDS: Record<string, string> = {
+  ADP: "Adenosine diphosphate",
+  ATP: "Adenosine triphosphate",
+  AMP: "Adenosine phosphate",
+  GTP: "Guanosine-5'-triphosphate",
+  GDP: "Guanosine-5'-diphosphate",
+  FAD: "Flavin-adenine dinucleotide",
+  NAD: "Nicotinamide-adenine-dinucleotide",
+  NAP: "Nicotinamide-adenine-dinucleotide-phosphate (NADP)",
+  NDP: "Dihydro-nicotinamide-adenine-dinucleotide-phosphate (NADPH)",
+  HEM: "Heme",
+  HEC: "Heme C",
+  PLM: "Palmitic acid",
+  OLA: "Oleic acid",
+  MYR: "Myristic acid",
+  CIT: "Citric acid",
+  CLA: "Chlorophyll A",
+  CHL: "Chlorophyll B",
+  BCL: "Bacteriochlorophyll A",
+  BCB: "Bacteriochlorophyll B",
+};
+
 @Injectable({ providedIn: "root" })
 export class CcdLookupService {
-  private http = inject(HttpClient);
-  private readonly baseUrl = "https://data.rcsb.org/rest/v1/core/chemcomp";
-
   lookup(code: string): Observable<CcdLookupResult> {
     const normalized = code.trim().toUpperCase();
 
@@ -24,21 +41,14 @@ export class CcdLookupService {
       });
     }
 
-    return this.http
-      .get<{ chem_comp: { name: string } }>(`${this.baseUrl}/${normalized}`)
-      .pipe(
-        map((response) => ({ valid: true, name: response.chem_comp.name })),
-        catchError((err) => {
-          if (err.status === 404) {
-            return of({
-              valid: false,
-              errorMessage: "CCD code not found in the RCSB Chemical Component Dictionary.",
-            });
-          }
-          // On unexpected network errors fall back to treating as valid
-          // so format-checked codes are not blocked by transient failures
-          return of({ valid: true });
-        })
-      );
+    const name = CCD_COMPOUNDS[normalized];
+    if (name) {
+      return of({ valid: true, name });
+    }
+
+    return of({
+      valid: false,
+      errorMessage: `"${normalized}" is not in the supported CCD list.`,
+    });
   }
 }

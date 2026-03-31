@@ -27,7 +27,7 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/auth.service";
-import { CcdLookupService } from "../../../cores/services/ccd-lookup.service";
+import { CcdLookupService, CCD_COMPOUNDS } from "../../../cores/services/ccd-lookup.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
@@ -101,9 +101,9 @@ export class SinglePredictionComponent {
   private datasetUploadService = inject(DatasetUploadService);
   private ccdLookupService = inject(CcdLookupService);
 
-  private nextRowId = 1;
+  readonly ccdOptions = Object.entries(CCD_COMPOUNDS).map(([code, name]) => ({ code, name }));
 
-  // Per-row CCD remote validation state
+  private nextRowId = 1;
   ccdLookupState = signal<
     Record<number, "idle" | "loading" | "valid" | "invalid">
   >({});
