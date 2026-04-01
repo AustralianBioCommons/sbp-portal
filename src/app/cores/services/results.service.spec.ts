@@ -13,6 +13,7 @@ describe("ResultsService", () => {
   let service: ResultsService;
   let httpMock: HttpTestingController;
   let sanitizer: DomSanitizer;
+  const apiBase = environment.apiBaseUrl!.replace(/\/?$/, "/");
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -105,7 +106,7 @@ describe("ResultsService", () => {
     const trustedUrl = service.getSafeReportResourceUrl("./report.html");
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
-      `${environment.apiBaseUrl}/report.html`
+      new URL("./report.html", apiBase).href
     );
   });
 
@@ -121,7 +122,17 @@ describe("ResultsService", () => {
     const trustedUrl = service.getSafeReportResourceUrl("?token=test-token");
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
-      `${environment.apiBaseUrl}/?token=test-token`
+      new URL("?token=test-token", apiBase).href
+    );
+  });
+
+  it("should sanitize protocol-relative report URLs to about:blank", () => {
+    const trustedUrl = service.getSafeReportResourceUrl(
+      "//evil.example/report"
+    );
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      "about:blank"
     );
   });
 
@@ -166,6 +177,23 @@ describe("ResultsService", () => {
     previewReq.flush({
       runId: "job/1",
       url: "https://reports.example.test/job-1/report.html",
+    });
+  });
+
+  it("should sanitize cross-origin http report URLs to about:blank", () => {
+    service.getJobReportResourceUrl("job/1").subscribe((response) => {
+      expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
+        "about:blank"
+      );
+    });
+
+    const previewReq = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/report/preview`
+    );
+    expect(previewReq.request.method).toBe("POST");
+    previewReq.flush({
+      runId: "job/1",
+      url: "http://reports.example.test/job-1/report.html",
     });
   });
 

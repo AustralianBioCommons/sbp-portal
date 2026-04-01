@@ -82,19 +82,18 @@ export class ResultsService {
         return null;
       }
 
-      const base = new URL(environment.apiBaseUrl);
       const hasExplicitScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmedUrl);
 
       if (hasExplicitScheme) {
         const parsed = new URL(trimmedUrl);
-        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        if (parsed.protocol !== "https:") {
           return null;
         }
         return parsed.href;
       }
 
       const isRelativePath =
-        trimmedUrl.startsWith("/") ||
+        (trimmedUrl.startsWith("/") && !trimmedUrl.startsWith("//")) ||
         trimmedUrl.startsWith("./") ||
         trimmedUrl.startsWith("../") ||
         trimmedUrl.startsWith("?");
@@ -103,6 +102,11 @@ export class ResultsService {
         return null;
       }
 
+      const apiBase = environment.apiBaseUrl;
+      if (!apiBase) {
+        return null;
+      }
+      const base = new URL(apiBase.replace(/\/?$/, "/"));
       return new URL(trimmedUrl, base).href;
     } catch {
       return null;
