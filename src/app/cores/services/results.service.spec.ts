@@ -93,6 +93,48 @@ describe("ResultsService", () => {
     );
   });
 
+  it("should sanitize blank report URLs to about:blank", () => {
+    const trustedUrl = service.getSafeReportResourceUrl("   ");
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      "about:blank"
+    );
+  });
+
+  it("should allow dot-relative preview report URLs", () => {
+    const trustedUrl = service.getSafeReportResourceUrl("./report.html");
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      `${environment.apiBaseUrl}/report.html`
+    );
+  });
+
+  it("should allow parent-relative preview report URLs", () => {
+    const trustedUrl = service.getSafeReportResourceUrl("../report.html");
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      `${new URL("../report.html", environment.apiBaseUrl).href}`
+    );
+  });
+
+  it("should allow query-only preview report URLs", () => {
+    const trustedUrl = service.getSafeReportResourceUrl("?token=test-token");
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      `${environment.apiBaseUrl}/?token=test-token`
+    );
+  });
+
+  it("should sanitize non-relative report URLs without an explicit scheme", () => {
+    const trustedUrl = service.getSafeReportResourceUrl(
+      "reports.example.test/job-1/report.html"
+    );
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      "about:blank"
+    );
+  });
+
   it("should return a trusted resource URL from the report endpoint URL", () => {
     service.getJobReportResourceUrl("job/1").subscribe((response) => {
       expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
@@ -110,10 +152,10 @@ describe("ResultsService", () => {
     });
   });
 
-  it("should sanitize cross-origin preview report URLs", () => {
+  it("should allow cross-origin https preview report URLs", () => {
     service.getJobReportResourceUrl("job/1").subscribe((response) => {
       expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
-        "about:blank"
+        "https://reports.example.test/job-1/report.html"
       );
     });
 
@@ -185,7 +227,7 @@ describe("ResultsService", () => {
     ).toBe(`${environment.apiBaseUrl}/api/results/job%2F1/report?token=t`);
   });
 
-  it("should sanitize cross-origin report URLs from getJobReport", () => {
+  it("should allow cross-origin https report URLs from getJobReport", () => {
     let result: unknown;
     service.getJobReport("job/1").subscribe((r) => (result = r));
 
@@ -204,7 +246,7 @@ describe("ResultsService", () => {
 
     expect(
       sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
-    ).toBe("about:blank");
+    ).toBe("https://cdn.example.test/report.html");
   });
 
   it("should sanitize report URLs with non-http/https protocol", () => {

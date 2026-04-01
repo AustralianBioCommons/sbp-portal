@@ -75,23 +75,42 @@ export class ResultsService {
     );
   }
 
-  private isAllowedReportUrl(url: string): boolean {
+  private normalizeReportUrl(url: string): string | null {
     try {
-      const base = new URL(environment.apiBaseUrl);
-      const parsed = new URL(url, base);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        return false;
+      const trimmedUrl = url.trim();
+      if (!trimmedUrl) {
+        return null;
       }
-      return parsed.origin === base.origin;
+
+      const base = new URL(environment.apiBaseUrl);
+      const hasExplicitScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmedUrl);
+
+      if (hasExplicitScheme) {
+        const parsed = new URL(trimmedUrl);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          return null;
+        }
+        return parsed.href;
+      }
+
+      const isRelativePath =
+        trimmedUrl.startsWith("/") ||
+        trimmedUrl.startsWith("./") ||
+        trimmedUrl.startsWith("../") ||
+        trimmedUrl.startsWith("?");
+
+      if (!isRelativePath) {
+        return null;
+      }
+
+      return new URL(trimmedUrl, base).href;
     } catch {
-      return false;
+      return null;
     }
   }
 
   getSafeReportResourceUrl(reportUrl: string): SafeResourceUrl {
-    const safeUrl = this.isAllowedReportUrl(reportUrl)
-      ? reportUrl
-      : "about:blank";
+    const safeUrl = this.normalizeReportUrl(reportUrl) ?? "about:blank";
     return this.sanitizer.bypassSecurityTrustResourceUrl(safeUrl);
   }
 
@@ -103,10 +122,7 @@ export class ResultsService {
           if (!response.report || !response.report.url) {
             return null;
           }
-          const reportUrl = response.report.url.startsWith("http")
-            ? response.report.url
-            : `${environment.apiBaseUrl}${response.report.url}`;
-          return this.getSafeReportResourceUrl(reportUrl);
+          return this.getSafeReportResourceUrl(response.report.url);
         })
       );
   }
@@ -119,10 +135,7 @@ export class ResultsService {
       )
       .pipe(
         map((response) => {
-          const reportUrl = response.url.startsWith("http")
-            ? response.url
-            : `${environment.apiBaseUrl}${response.url}`;
-          return this.getSafeReportResourceUrl(reportUrl);
+          return this.getSafeReportResourceUrl(response.url);
         })
       );
   }
