@@ -49,7 +49,7 @@ export interface ListboxSelectOption {
         [id]="menuId"
         role="listbox"
         tabindex="-1"
-        class="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-20 max-h-[14.875rem] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
+        class="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-[14.875rem] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
       >
         @for (option of options; track option.value) {
         <button
@@ -117,4 +117,5 @@ export class ListboxSelectComponent {
     this.blurred.emit();
     this.closeMenu();
   }
+
 }

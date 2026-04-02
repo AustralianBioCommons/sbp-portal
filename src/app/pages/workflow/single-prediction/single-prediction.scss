@@ -20,11 +20,8 @@ button {
   position: relative;
 }
 
-.entity-row {
-  backdrop-filter: blur(6px);
-}
-
 .entity-row.cdk-drag-preview {
+  backdrop-filter: blur(6px);
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
   border-color: rgb(148 163 184 / 1);
 }
