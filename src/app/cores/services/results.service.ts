@@ -1,6 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from "@angular/platform-browser";
+import normalizeUrlPath from "als-normalize-urlpath";
 import { map, Observable } from "rxjs";
 import { environment } from "../../../environments/environment";
 
@@ -75,23 +76,84 @@ export class ResultsService {
     );
   }
 
-  private isAllowedReportUrl(url: string): boolean {
+  /**
+   * Normalizes report preview URLs into an absolute HTTPS URL that is safe to hand to an iframe.
+   *
+   * Accepted inputs:
+   * - Absolute `https://...` URLs.
+   * - Root-relative paths such as `/api/results/...`.
+   * - Same-directory relative paths that start with `./`.
+   * - Query-only references such as `?token=...`, resolved against `environment.apiBaseUrl`.
+   *
+   * Rejected inputs:
+   * - Empty or whitespace-only strings.
+   * - Protocol-relative URLs such as `//example.test/report`.
+   * - Any explicit non-HTTPS scheme such as `http:`, `javascript:`, `data:`, or `blob:`.
+   * - Parent-directory traversal such as `../report.html` or `/safe/../report.html`.
+   * - Bare host/path values without a scheme, or any other malformed relative reference.
+   */
+  private normalizeReportUrl(url: string): string | null {
     try {
-      const base = new URL(environment.apiBaseUrl);
-      const parsed = new URL(url, base);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        return false;
+      const trimmedUrl = url.trim();
+      if (!trimmedUrl) {
+        return null;
       }
-      return parsed.origin === base.origin;
+
+      const hasExplicitScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmedUrl);
+
+      if (hasExplicitScheme) {
+        const parsed = new URL(trimmedUrl);
+        if (parsed.protocol !== "https:") {
+          return null;
+        }
+        return parsed.href;
+      }
+
+      const isRelativePath =
+        (trimmedUrl.startsWith("/") && !trimmedUrl.startsWith("//")) ||
+        trimmedUrl.startsWith("./") ||
+        trimmedUrl.startsWith("?");
+
+      if (!isRelativePath) {
+        return null;
+      }
+
+      const apiBase = environment.apiBaseUrl;
+      if (!apiBase) {
+        return null;
+      }
+
+      const base = new URL(apiBase.replace(/\/?$/, "/"));
+      if (trimmedUrl.startsWith("?")) {
+        return new URL(trimmedUrl, base).href;
+      }
+
+      const pathCandidate = trimmedUrl.split(/[?#]/, 1)[0].replace(/\\/g, "/");
+      if (/(^|\/)\.\.(?=\/|$)/.test(pathCandidate)) {
+        return null;
+      }
+
+      const normalized = normalizeUrlPath(trimmedUrl, { encode: true });
+      if (!normalized.pathname) {
+        return null;
+      }
+
+      const resolved = new URL(normalized.pathname, base);
+      if (normalized.query && Object.keys(normalized.query).length > 0) {
+        resolved.search = new URLSearchParams(normalized.query).toString();
+      }
+      if (normalized.hash) {
+        resolved.hash = normalized.hash;
+      }
+
+      return resolved.href;
     } catch {
-      return false;
+      return null;
     }
   }
 
   getSafeReportResourceUrl(reportUrl: string): SafeResourceUrl {
-    const safeUrl = this.isAllowedReportUrl(reportUrl)
-      ? reportUrl
-      : "about:blank";
+    const safeUrl = this.normalizeReportUrl(reportUrl) ?? "about:blank";
     return this.sanitizer.bypassSecurityTrustResourceUrl(safeUrl);
   }
 
@@ -103,10 +165,7 @@ export class ResultsService {
           if (!response.report || !response.report.url) {
             return null;
           }
-          const reportUrl = response.report.url.startsWith("http")
-            ? response.report.url
-            : `${environment.apiBaseUrl}${response.report.url}`;
-          return this.getSafeReportResourceUrl(reportUrl);
+          return this.getSafeReportResourceUrl(response.report.url);
         })
       );
   }
@@ -119,10 +178,7 @@ export class ResultsService {
       )
       .pipe(
         map((response) => {
-          const reportUrl = response.url.startsWith("http")
-            ? response.url
-            : `${environment.apiBaseUrl}${response.url}`;
-          return this.getSafeReportResourceUrl(reportUrl);
+          return this.getSafeReportResourceUrl(response.url);
         })
       );
   }
