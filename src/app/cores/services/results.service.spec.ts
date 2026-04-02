@@ -110,11 +110,21 @@ describe("ResultsService", () => {
     );
   });
 
-  it("should allow parent-relative preview report URLs", () => {
+  it("should sanitize parent-relative preview report URLs to about:blank", () => {
     const trustedUrl = service.getSafeReportResourceUrl("../report.html");
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
-      `${new URL("../report.html", environment.apiBaseUrl).href}`
+      "about:blank"
+    );
+  });
+
+  it("should sanitize embedded parent traversal segments to about:blank", () => {
+    const trustedUrl = service.getSafeReportResourceUrl(
+      "/reports/../private/report.html"
+    );
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      "about:blank"
     );
   });
 
@@ -123,6 +133,16 @@ describe("ResultsService", () => {
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
       new URL("?token=test-token", apiBase).href
+    );
+  });
+
+  it("should normalize safe relative report paths with duplicate separators", () => {
+    const trustedUrl = service.getSafeReportResourceUrl(
+      "/reports//latest/./index.html?token=test-token#summary"
+    );
+
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      `${new URL("/reports/latest/index.html", apiBase).href}?token=test-token#summary`
     );
   });
 

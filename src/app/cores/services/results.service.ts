@@ -1,6 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from "@angular/platform-browser";
+import normalizeUrlPath from "als-normalize-urlpath";
 import { map, Observable } from "rxjs";
 import { environment } from "../../../environments/environment";
 
@@ -75,6 +76,22 @@ export class ResultsService {
     );
   }
 
+  /**
+   * Normalizes report preview URLs into an absolute HTTPS URL that is safe to hand to an iframe.
+   *
+   * Accepted inputs:
+   * - Absolute `https://...` URLs.
+   * - Root-relative paths such as `/api/results/...`.
+   * - Same-directory relative paths that start with `./`.
+   * - Query-only references such as `?token=...`, resolved against `environment.apiBaseUrl`.
+   *
+   * Rejected inputs:
+   * - Empty or whitespace-only strings.
+   * - Protocol-relative URLs such as `//example.test/report`.
+   * - Any explicit non-HTTPS scheme such as `http:`, `javascript:`, `data:`, or `blob:`.
+   * - Parent-directory traversal such as `../report.html` or `/safe/../report.html`.
+   * - Bare host/path values without a scheme, or any other malformed relative reference.
+   */
   private normalizeReportUrl(url: string): string | null {
     try {
       const trimmedUrl = url.trim();
@@ -95,7 +112,6 @@ export class ResultsService {
       const isRelativePath =
         (trimmedUrl.startsWith("/") && !trimmedUrl.startsWith("//")) ||
         trimmedUrl.startsWith("./") ||
-        trimmedUrl.startsWith("../") ||
         trimmedUrl.startsWith("?");
 
       if (!isRelativePath) {
@@ -106,8 +122,31 @@ export class ResultsService {
       if (!apiBase) {
         return null;
       }
+
       const base = new URL(apiBase.replace(/\/?$/, "/"));
-      return new URL(trimmedUrl, base).href;
+      if (trimmedUrl.startsWith("?")) {
+        return new URL(trimmedUrl, base).href;
+      }
+
+      const pathCandidate = trimmedUrl.split(/[?#]/, 1)[0].replace(/\\/g, "/");
+      if (/(^|\/)\.\.(?=\/|$)/.test(pathCandidate)) {
+        return null;
+      }
+
+      const normalized = normalizeUrlPath(trimmedUrl, { encode: true });
+      if (!normalized.pathname) {
+        return null;
+      }
+
+      const resolved = new URL(normalized.pathname, base);
+      if (normalized.query && Object.keys(normalized.query).length > 0) {
+        resolved.search = new URLSearchParams(normalized.query).toString();
+      }
+      if (normalized.hash) {
+        resolved.hash = normalized.hash;
+      }
+
+      return resolved.href;
     } catch {
       return null;
     }
