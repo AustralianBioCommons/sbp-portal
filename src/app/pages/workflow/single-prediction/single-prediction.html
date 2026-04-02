@@ -150,19 +150,13 @@
                   >
                     Type
                   </label>
-                  <select
-                    [id]="'molecule-type-' + row.id"
+                  <app-listbox-select
+                    [inputId]="'molecule-type-' + row.id"
+                    [options]="moleculeTypeOptions"
                     [value]="row.moleculeType"
-                    (change)="updateRowMoleculeType(row.id, $any($event.target).value)"
-                    (blur)="touchRowField(row.id, 'moleculeType')"
-                    class="select-chevron block h-11 w-full rounded-xl border border-slate-300 bg-white pl-3 pr-10 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
-                  >
-                    @for (moleculeType of moleculeTypes; track moleculeType.value) {
-                    <option [value]="moleculeType.value">
-                      {{ moleculeType.label }}
-                    </option>
-                    }
-                  </select>
+                    (valueChange)="updateRowMoleculeType(row.id, $event)"
+                    (blurred)="touchRowField(row.id, 'moleculeType')"
+                  ></app-listbox-select>
                 </div>
 
                 <div>
@@ -202,23 +196,15 @@
                     Sequence
                   </label>
                   @if (row.moleculeType === 'ccd') {
-                  <select
-                    [id]="'sequence-' + row.id"
+                  <app-listbox-select
+                    [inputId]="'sequence-' + row.id"
+                    [options]="ccdOptions"
                     [value]="row.sequence"
-                    (change)="updateRowSequence(row.id, $any($event.target).value)"
-                    (blur)="touchRowField(row.id, 'sequence')"
-                    [class]="
-                      shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence
-                        ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-                        : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
-                    "
-                    class="block h-11 w-full rounded-xl border bg-white px-4 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 transition-colors"
-                  >
-                    <option value="" disabled [selected]="!row.sequence">Select a ligand…</option>
-                    @for (opt of ccdOptions; track opt.code) {
-                    <option [value]="opt.code" [selected]="row.sequence === opt.code">{{ opt.code }} – {{ opt.name }}</option>
-                    }
-                  </select>
+                    [placeholder]="'Select a ligand...'"
+                    [invalid]="!!(shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence)"
+                    (valueChange)="updateRowSequence(row.id, $event)"
+                    (blurred)="touchRowField(row.id, 'sequence')"
+                  ></app-listbox-select>
                   } @else {
                   <input
                     [id]="'sequence-' + row.id"

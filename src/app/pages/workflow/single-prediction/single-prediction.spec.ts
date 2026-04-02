@@ -2,10 +2,10 @@ import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
-import { CcdLookupService } from "../../../cores/services/ccd-lookup.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
+  lookupCcdCompound,
   isValidSmiles,
   validateDnaSequence,
   validateProteinSequence,
@@ -17,7 +17,6 @@ describe("SinglePredictionComponent", () => {
   let component: SinglePredictionComponent;
   let fixture: ComponentFixture<SinglePredictionComponent>;
   let datasetUploadService: jasmine.SpyObj<DatasetUploadService>;
-  let ccdLookupService: jasmine.SpyObj<CcdLookupService>;
   let workflowSubmissionService: {
     isSubmitting: ReturnType<typeof signal<boolean>>;
     showSuccessDialog: ReturnType<typeof signal<boolean>>;
@@ -42,11 +41,6 @@ describe("SinglePredictionComponent", () => {
       })
     );
 
-    ccdLookupService = jasmine.createSpyObj("CcdLookupService", ["lookup"]);
-    ccdLookupService.lookup.and.returnValue(
-      of({ valid: true, name: "Adenosine triphosphate" })
-    );
-
     workflowSubmissionService = {
       isSubmitting: signal(false),
       showSuccessDialog: signal(false),
@@ -64,7 +58,6 @@ describe("SinglePredictionComponent", () => {
       imports: [SinglePredictionComponent],
       providers: [
         { provide: AuthService, useValue: authService },
-        { provide: CcdLookupService, useValue: ccdLookupService },
         { provide: DatasetUploadService, useValue: datasetUploadService },
         {
           provide: WorkflowSubmissionService,
@@ -98,6 +91,24 @@ describe("SinglePredictionComponent", () => {
     expect(component.entityRows()[0].copyNumber).toBe("1");
     expect(component.entityRows()[0].moleculeType).toBe("protein");
     expect(component.selectedTool()).toBe("colabfold");
+    expect(component.canSubmit()).toBe(false);
+  });
+
+  it("should expose navigation and label fallbacks for unknown state", () => {
+    expect(component.canGoPrev()).toBe(false);
+    expect(component.canGoNext()).toBe(false);
+
+    fillValidProteinRow();
+    component.currentStep.set(2);
+    expect(component.canGoNext()).toBe(true);
+
+    component.currentStep.set(3);
+    expect(component.canGoNext()).toBe(false);
+
+    component.selectedTool.set("unknown" as never);
+    expect(component.selectedToolLabel()).toBe("");
+    expect(component.getToolSettingsSummaryItems()).toEqual([]);
+    expect(component.getMoleculeTypeLabel("unknown" as never)).toBe("unknown");
   });
 
   it("should switch tabs", () => {
@@ -196,29 +207,22 @@ describe("SinglePredictionComponent", () => {
     component.updateRowMoleculeType(rowId, "ccd");
     expect(component.isStep1Valid()).toBe(true);
 
-    ccdLookupService.lookup.and.returnValue(
-      of({ valid: false, errorMessage: "Ligand CCD code must be 1\u20135 alphanumeric characters (e.g. ATP, HEM)." })
-    );
     component.updateRowSequence(rowId, "AT!P");
     expect(component.getRowErrors(0).sequence).toContain("CCD");
   });
 
-  it("should call lookup and mark CCD row valid when code is in the supported list", () => {
+  it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
 
-    expect(ccdLookupService.lookup).toHaveBeenCalledWith("ATP");
     expect(component.ccdLookupState()[rowId]).toBe("valid");
     expect(component.ccdLookupNames()[rowId]).toBe("Adenosine triphosphate");
     expect(component.isStep1Valid()).toBe(true);
   });
 
   it("should mark CCD row invalid and add error when CCD code is not in supported list", () => {
-    ccdLookupService.lookup.and.returnValue(
-      of({ valid: false, errorMessage: '"XYZ" is not in the supported CCD list.' })
-    );
     const rowId = component.entityRows()[0].id;
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
@@ -240,16 +244,27 @@ describe("SinglePredictionComponent", () => {
     expect(component.ccdLookupState()[rowId]).toBeUndefined();
   });
 
-  it("should block step 1 advance while CCD lookup is in-flight (loading state)", () => {
-    // Return an observable that never completes to simulate in-flight
-    ccdLookupService.lookup.and.returnValue(new Observable());
+  it("should reset CCD lookup state for blank codes and expose field helper branches", () => {
     const rowId = component.entityRows()[0].id;
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
 
-    expect(component.ccdLookupState()[rowId]).toBe("loading");
-    expect(component.isStep1Valid()).toBe(false);
+    let row = component.entityRows()[0];
+    expect(component.shouldShowRowFieldError(row, "sequence")).toBe(true);
+    expect(component.shouldShowRowToolError(row)).toBe(false);
+
+    component.updateRowSequence(rowId, "   ");
+    row = component.entityRows()[0];
+
+    expect(component.ccdLookupState()[rowId]).toBe("idle");
+    expect(component.ccdLookupNames()[rowId]).toBeUndefined();
+    expect(component.ccdLookupErrors()[rowId]).toBeUndefined();
+    expect(component.generatedFastaContent()).toBe("");
+    expect(component.shouldShowRowFieldError(row, "copyNumber")).toBe(false);
+
+    component.touchRowField(rowId, "copyNumber");
+    expect(component.shouldShowRowToolError(component.entityRows()[0])).toBe(true);
   });
 
   it("should return protein and RNA validation messages for invalid sequences", () => {
@@ -297,6 +312,11 @@ describe("SinglePredictionComponent", () => {
 
     expect(validateRnaSequence("AUGC").valid).toBe(true);
     expect(validateRnaSequence("ATGC").valid).toBe(false);
+
+    expect(lookupCcdCompound("ATP")).toEqual({
+      valid: true,
+      name: "Adenosine triphosphate"
+    });
   });
 
   it("should allow Boltz with non-protein molecules and generate FASTA-like content", () => {
@@ -435,6 +455,18 @@ describe("SinglePredictionComponent", () => {
     expect(validSummary.rowCount).toBe(1);
   });
 
+  it("should ignore invalid manual step changes and stay on the first step when moving back", () => {
+    component.goToStep(0);
+    expect(component.currentStep()).toBe(1);
+
+    component.previousStep();
+    expect(component.currentStep()).toBe(1);
+
+    component.completedSteps.set([3]);
+    expect(component.isStepInvalid(3)).toBe(false);
+    expect(component.isStepComplete(3)).toBe(true);
+  });
+
   it("should submit a valid workflow payload", () => {
     fillValidProteinRow("ACDEFGHIK", "2");
     component.selectTool("alphafold2");
@@ -455,6 +487,17 @@ describe("SinglePredictionComponent", () => {
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
     expect(payload["fastaContent"]).toContain(">entity_1_copy_1|protein");
+    expect(component.canSubmit()).toBe(true);
+  });
+
+  it("should block submission when tools are unavailable", () => {
+    fillValidProteinRow();
+
+    component.submitWorkflow();
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("Submission is disabled");
+    expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
   });
 
   it("should show an error when submitting invalid input", () => {
@@ -493,6 +536,21 @@ describe("SinglePredictionComponent", () => {
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("upload failed");
+  });
+
+  it("should show the workflow launch fallback error when the callback has no message", () => {
+    fillValidProteinRow();
+    component.isToolAvailable = () => true;
+
+    component.submitWorkflow();
+
+    const onWorkflowError =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+        .args[2];
+    onWorkflowError({});
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("Unknown error");
   });
 
   it("should delegate login and jobs navigation helpers", () => {

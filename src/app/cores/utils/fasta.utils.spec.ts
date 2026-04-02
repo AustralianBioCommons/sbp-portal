@@ -1,4 +1,6 @@
 import {
+  lookupCcdCompound,
+  CCD_COMPOUNDS,
   validateDnaSequence,
   validateProteinSequence,
   validateRnaSequence,
@@ -67,5 +69,54 @@ describe("fasta.utils", () => {
       });
     });
   });
-});
 
+  describe("lookupCcdCompound", () => {
+    it("returns the compound name for a known code", () => {
+      expect(lookupCcdCompound("ATP")).toEqual({
+        valid: true,
+        name: "Adenosine triphosphate"
+      });
+    });
+
+    it("normalizes the code to uppercase before lookup", () => {
+      expect(lookupCcdCompound("atp")).toEqual({
+        valid: true,
+        name: "Adenosine triphosphate"
+      });
+    });
+
+    it("returns an error for an unsupported code", () => {
+      expect(lookupCcdCompound("XYZ")).toEqual({
+        valid: false,
+        errorMessage: "\"XYZ\" is not in the supported CCD list."
+      });
+    });
+
+    it("returns valid=true for every supported CCD code", () => {
+      Object.entries(CCD_COMPOUNDS).forEach(([code, name]) => {
+        expect(lookupCcdCompound(code)).withContext(code).toEqual({
+          valid: true,
+          name
+        });
+      });
+    });
+
+    it("rejects invalid CCD formats", () => {
+      expect(lookupCcdCompound("AT!")).toEqual({
+        valid: false,
+        errorMessage: "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM)."
+      });
+    });
+
+    it("rejects codes longer than 5 characters", () => {
+      expect(lookupCcdCompound("TOOLONG").valid).toBe(false);
+    });
+
+    it("trims whitespace before lookup", () => {
+      expect(lookupCcdCompound("  HEM  ")).toEqual({
+        valid: true,
+        name: "Heme"
+      });
+    });
+  });
+});

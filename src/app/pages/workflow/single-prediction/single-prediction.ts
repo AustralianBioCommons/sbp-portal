@@ -17,6 +17,10 @@ import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { FormStatusComponent } from "../../../components/workflow/form-status/form-status.component";
+import {
+  ListboxSelectComponent,
+  ListboxSelectOption
+} from "../../../components/workflow/listbox-select/listbox-select.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
   Step,
@@ -27,11 +31,12 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/auth.service";
-import { CcdLookupService, CCD_COMPOUNDS } from "../../../cores/services/ccd-lookup.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
+  CCD_COMPOUNDS,
   isValidSmiles,
+  lookupCcdCompound,
   validateDnaSequence,
   validateProteinSequence,
   validateRnaSequence
@@ -84,6 +89,7 @@ interface ToolSettingErrors {
     DialogComponent,
     LoadingComponent,
     ToolSelectionComponent,
+    ListboxSelectComponent,
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
@@ -99,14 +105,13 @@ export class SinglePredictionComponent {
   public auth = inject(AuthService);
   public workflowSubmission = inject(WorkflowSubmissionService);
   private datasetUploadService = inject(DatasetUploadService);
-  private ccdLookupService = inject(CcdLookupService);
 
-  readonly ccdOptions = Object.entries(CCD_COMPOUNDS).map(([code, name]) => ({ code, name }));
+  readonly ccdOptions: ListboxSelectOption[] = Object.entries(CCD_COMPOUNDS).map(
+    ([code, name]) => ({ value: code, label: `${code} - ${name}` })
+  );
 
   private nextRowId = 1;
-  ccdLookupState = signal<
-    Record<number, "idle" | "loading" | "valid" | "invalid">
-  >({});
+  ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
   ccdLookupNames = signal<Record<number, string>>({}); // compound name from RCSB
   ccdLookupErrors = signal<Record<number, string>>({}); // validation error message from service
 
@@ -140,6 +145,9 @@ export class SinglePredictionComponent {
     { value: "ligand", label: "Ligand (SMILES)" },
     { value: "ccd", label: "Ligand (CCD)" }
   ];
+  readonly moleculeTypeOptions: ListboxSelectOption[] = this.moleculeTypes.map(
+    (item) => ({ value: item.value, label: item.label })
+  );
 
   entityRows = signal<EntityRow[]>([this.createEntityRow()]);
   stepOneTouched = signal(false);
@@ -184,8 +192,7 @@ export class SinglePredictionComponent {
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
         (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
-      ) &&
-      !Object.values(this.ccdLookupState()).some((s) => s === "loading")
+      )
   );
   readonly isStep2Valid = computed(
     () => Object.keys(this.toolSettingErrors()).length === 0
@@ -637,21 +644,29 @@ export class SinglePredictionComponent {
       return;
     }
 
-    this.ccdLookupState.update((s) => ({ ...s, [id]: "loading" }));
-    this.ccdLookupService.lookup(code).subscribe((result) => {
-      this.ccdLookupState.update((s) => ({
+    const result = lookupCcdCompound(code);
+    this.ccdLookupState.update((s) => ({
+      ...s,
+      [id]: result.valid ? "valid" : "invalid"
+    }));
+    if (result.valid && result.name) {
+      this.ccdLookupNames.update((s) => ({ ...s, [id]: result.name }));
+      this.ccdLookupErrors.update((s) => {
+        const next = { ...s };
+        delete next[id];
+        return next;
+      });
+    } else if (!result.valid && result.errorMessage) {
+      this.ccdLookupErrors.update((s) => ({
         ...s,
-        [id]: result.valid ? "valid" : "invalid"
+        [id]: result.errorMessage
       }));
-      if (result.valid && result.name) {
-        this.ccdLookupNames.update((s) => ({ ...s, [id]: result.name! }));
-      } else if (!result.valid && result.errorMessage) {
-        this.ccdLookupErrors.update((s) => ({
-          ...s,
-          [id]: result.errorMessage!
-        }));
-      }
-    });
+      this.ccdLookupNames.update((s) => {
+        const next = { ...s };
+        delete next[id];
+        return next;
+      });
+    }
   }
 
   private touchAllEntityRows(): void {
