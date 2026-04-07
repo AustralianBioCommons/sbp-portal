@@ -62,10 +62,14 @@ describe("LoadingComponent", () => {
       expect(compiled.querySelector(".loading-inline")).toBeFalsy();
     });
 
-    it("should render loading-inline when inline is true", () => {
+    it("should use Tailwind inline classes when inline is true", () => {
       component.inline = true;
       fixture.detectChanges();
-      expect(compiled.querySelector(".loading-inline")).toBeTruthy();
+      const wrapper = compiled.querySelector("div") as HTMLElement;
+      expect(wrapper.classList.contains("flex")).toBeTrue();
+      expect(wrapper.classList.contains("items-center")).toBeTrue();
+      expect(wrapper.classList.contains("justify-center")).toBeTrue();
+      expect(wrapper.classList.contains("p-4")).toBeTrue();
       expect(compiled.querySelector(".loading-overlay")).toBeFalsy();
     });
 
@@ -74,8 +78,9 @@ describe("LoadingComponent", () => {
       fixture.detectChanges();
       component.inline = false;
       fixture.detectChanges();
-      expect(compiled.querySelector(".loading-overlay")).toBeTruthy();
-      expect(compiled.querySelector(".loading-inline")).toBeFalsy();
+      const wrapper = compiled.querySelector("div") as HTMLElement;
+      expect(wrapper.classList.contains("loading-overlay")).toBeTrue();
+      expect(wrapper.classList.contains("flex")).toBeFalse();
     });
   });
 

@@ -31,70 +31,40 @@ export const CCD_COMPOUNDS: Record<string, string> = {
   BCB: "Bacteriochlorophyll B"
 };
 
-const CANONICAL_AA_CHARS = /^[ARNDCQEGHILKMFPSTWYV]+$/i;
-
-export function validateProteinSequence(sequence: string): SequenceValidationResult {
-  const normalized = sequence.replace(/\s+/g, "").toUpperCase();
-
-  if (!normalized) {
-    return {
-      valid: false,
-      errorMessage: "Protein sequence is required."
-    };
-  }
-
-  if (!CANONICAL_AA_CHARS.test(normalized)) {
-    return {
-      valid: false,
-      errorMessage:
-        "Protein sequence must use valid 20 canonical amino acids characters only."
-    };
-  }
-
-  return { valid: true };
+function createSequenceValidator(
+  pattern: RegExp,
+  emptyMessage: string,
+  invalidMessage: string
+): (sequence: string) => SequenceValidationResult {
+  return (sequence: string): SequenceValidationResult => {
+    const normalized = sequence.replace(/\s+/g, "").toUpperCase();
+    if (!normalized) {
+      return { valid: false, errorMessage: emptyMessage };
+    }
+    if (!pattern.test(normalized)) {
+      return { valid: false, errorMessage: invalidMessage };
+    }
+    return { valid: true };
+  };
 }
 
-export function validateDnaSequence(sequence: string): SequenceValidationResult {
-  const normalized = sequence.replace(/\s+/g, "").toUpperCase();
+export const validateProteinSequence = createSequenceValidator(
+  /^[ARNDCQEGHILKMFPSTWYV]+$/,
+  "Protein sequence is required.",
+  "Protein sequence must use valid 20 canonical amino acids characters only."
+);
 
-  if (!normalized) {
-    return {
-      valid: false,
-      errorMessage: "DNA sequence is required."
-    };
-  }
+export const validateDnaSequence = createSequenceValidator(
+  /^[ATGC]+$/,
+  "DNA sequence is required.",
+  "DNA sequence must use valid DNA characters only (A, T, G, C)."
+);
 
-  if (!/^[ATGC]+$/.test(normalized)) {
-    return {
-      valid: false,
-      errorMessage:
-        "DNA sequence must use valid DNA characters only (A, T, G, C)."
-    };
-  }
-
-  return { valid: true };
-}
-
-export function validateRnaSequence(sequence: string): SequenceValidationResult {
-  const normalized = sequence.replace(/\s+/g, "").toUpperCase();
-
-  if (!normalized) {
-    return {
-      valid: false,
-      errorMessage: "RNA sequence is required."
-    };
-  }
-
-  if (!/^[AUGC]+$/.test(normalized)) {
-    return {
-      valid: false,
-      errorMessage:
-        "RNA sequence must use valid RNA characters only (A, U, G, C)."
-    };
-  }
-
-  return { valid: true };
-}
+export const validateRnaSequence = createSequenceValidator(
+  /^[AUGC]+$/,
+  "RNA sequence is required.",
+  "RNA sequence must use valid RNA characters only (A, U, G, C)."
+);
 
 export function lookupCcdCompound(code: string): CcdLookupResult {
   const normalized = code.trim().toUpperCase();
@@ -145,3 +115,4 @@ export function isValidSmiles(value: string): boolean {
 
   return stack.length === 0 && /[A-Za-z]/.test(value);
 }
+

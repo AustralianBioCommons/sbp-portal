@@ -47,7 +47,7 @@
           </h1>
           <p class="mt-2 text-sm text-gray-500">
             Screen protein–protein interactions using the wisps pipeline.
-            Provide query and target sequences in FASTA format, choose a
+            Provide query and target protein sequences, choose a
             prediction tool, and submit your job.
           </p>
         </div>
@@ -121,7 +121,7 @@
         @if (currentStep() === 1) {
         <app-step-content
           title="Input Configuration"
-          description="Provide one query sequence and one target sequence in FASTA format."
+          description="Provide one query protein sequence and one target protein sequence."
         >
           <div class="mt-6 space-y-6">
             <!-- Query Sequence -->
@@ -134,10 +134,7 @@
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
               <p class="mt-1 text-xs text-gray-500">
-                Enter the query protein sequence in FASTA format. Must begin
-                with a
-                <code class="font-mono bg-gray-100 px-1 rounded">&gt;identifier</code>
-                line, followed by amino acid single-letter codes.
+                Enter the query protein sequence using single-letter amino acid codes (e.g. MKTAYIAKQR…).
               </p>
               <textarea
                 id="query-fasta"
@@ -146,24 +143,18 @@
                 autocomplete="off"
                 autocorrect="off"
                 autocapitalize="off"
-                [value]="queryFasta()"
-                (input)="onQueryFastaChange($any($event.target).value)"
-                (blur)="validateQuery()"
+                [formControl]="form.controls.queryFasta"
                 [class]="
                   hasQueryError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-1 transition-colors"
-                placeholder=">query1&#10;ACDEFGHIKLMNPQRSTVWY"
+                placeholder="MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAP"
               ></textarea>
               @if (hasQueryError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ getQueryError() }}
-              </p>
-              } @if (!hasQueryError() && getQueryParsedHeaders()) {
-              <p class="mt-1 text-xs text-green-700">
-                Parsed: {{ getQueryParsedHeaders() }}
               </p>
               }
             </div>
@@ -178,7 +169,7 @@
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
               <p class="mt-1 text-xs text-gray-500">
-                Enter the target protein sequence in FASTA format. The pipeline
+                Enter the target protein sequence using single-letter amino acid codes. The pipeline
                 will evaluate its interaction with the query sequence above.
               </p>
               <textarea
@@ -188,38 +179,20 @@
                 autocomplete="off"
                 autocorrect="off"
                 autocapitalize="off"
-                [value]="targetFasta()"
-                (input)="onTargetFastaChange($any($event.target).value)"
-                (blur)="validateTarget()"
+                [formControl]="form.controls.targetFasta"
                 [class]="
                   hasTargetError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-1 transition-colors"
-                placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY"
+                placeholder="ACDEFGHIKLMNPQRSTVWY"
               ></textarea>
               @if (hasTargetError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ getTargetError() }}
               </p>
-              } @if (!hasTargetError() && getTargetParsedHeaders()) {
-              <p class="mt-1 text-xs text-green-700">
-                Parsed: {{ getTargetParsedHeaders() }}
-              </p>
               }
-            </div>
-
-            <!-- FASTA format hint -->
-            <div
-              class="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800"
-            >
-              <strong>FASTA format:</strong> Each sequence starts with
-              <code class="font-mono bg-blue-100 px-1 rounded">&gt;</code>
-              followed by an identifier, then amino acid single-letter codes
-              (A–Z, <code class="font-mono">*</code>,
-              <code class="font-mono">-</code>). Blank lines between records are
-              ignored.
             </div>
 
             <!-- Form Status -->

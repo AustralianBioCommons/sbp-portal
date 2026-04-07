@@ -21,6 +21,7 @@ import {
 import { EMPTY } from "rxjs";
 import { catchError } from "rxjs/operators";
 import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
+import { environment } from "../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
 type JobSettingItem = { label: string; value: string; details: string[] };
@@ -183,12 +184,14 @@ export class JobResultsComponent implements OnChanges {
       )
       .subscribe((reportResourceUrl) => {
         if (reportResourceUrl) {
+          // URL fetched successfully; keep reportLoading true until iframe load event fires.
           this.reportUrl.set(reportResourceUrl);
         } else {
+          // No report will be loaded into the iframe; stop showing the loading indicator.
           this.reportUrl.set(null);
           this.reportError.set("No report available for this job.");
+          this.reportLoading.set(false);
         }
-        this.reportLoading.set(false);
       });
   }
 
@@ -244,7 +247,7 @@ export class JobResultsComponent implements OnChanges {
         this.filesItems.set(
           response.downloads.map((download) => ({
             label: download.label,
-            url: download.url,
+            url: this.normalizeDownloadUrl(download.url),
             category: download.category
           }))
         );
@@ -275,6 +278,10 @@ export class JobResultsComponent implements OnChanges {
         this.logsItems.set(this.normalizeLogsResponse(response));
         this.logsLoading.set(false);
       });
+  }
+
+  private normalizeDownloadUrl(url: string): string {
+    return url.startsWith("http") ? url : `${environment.apiBaseUrl}${url}`;
   }
 
   private resetLogsState(): void {

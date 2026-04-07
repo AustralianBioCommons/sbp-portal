@@ -8,6 +8,7 @@ import {
   ResultLogsResponse,
   ResultsService,
 } from "../../cores/services/results.service";
+import { environment } from "../../../environments/environment";
 
 type JobResultsPrivateApi = {
   normalizeLogsResponse: (response: ResultLogsResponse) => string[];
@@ -594,6 +595,46 @@ describe("JobResultsComponent", () => {
     expect(component.filesItems()[0].category).toBe("stat_csv");
     expect(component.filesLoading()).toBeFalse();
     expect(component.filesError()).toBeNull();
+  });
+
+  it("should prefix relative download URLs with the API base URL", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: mockJob.id,
+        downloads: [
+          {
+            label: "Results CSV",
+            key: "results_csv",
+            url: "/api/results/job-1/downloads/results.csv",
+            category: "stat_csv"
+          }
+        ]
+      })
+    );
+
+    fixture = TestBed.createComponent(JobResultsComponent);
+    component = fixture.componentInstance;
+    component.isOpen = true;
+    component.job = mockJob;
+    component.ngOnChanges({
+      isOpen: {
+        currentValue: true,
+        previousValue: false,
+        firstChange: true,
+        isFirstChange: () => true
+      },
+      job: {
+        currentValue: mockJob,
+        previousValue: null,
+        firstChange: true,
+        isFirstChange: () => true
+      }
+    });
+    fixture.detectChanges();
+
+    expect(component.filesItems()[0].url).toBe(
+      `${environment.apiBaseUrl}/api/results/job-1/downloads/results.csv`
+    );
   });
 
   it("should handle downloads fetch errors", () => {

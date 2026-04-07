@@ -1,6 +1,6 @@
 {
   "name": "sbp-portal",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "ng": "ng",
@@ -31,6 +31,7 @@
     "@ng-icons/lucide": "^32.2.0",
     "@ng-icons/simple-icons": "^32.2.0",
     "@ng-icons/tabler-icons": "^32.2.0",
+    "als-normalize-urlpath": "^2.3.0",
     "date-fns": "^4.1.0",
     "playwright": "^1.56.0",
     "rxjs": "~7.8.0",

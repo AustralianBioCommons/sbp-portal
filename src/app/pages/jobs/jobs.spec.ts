@@ -260,6 +260,19 @@ describe("JobsComponent", () => {
     expect(component.jobs().map((job) => job.id)).toEqual(["c", "b", "a"]);
   });
 
+  it("should fall back to submittedAt order when both scores are null during score sort", () => {
+    component.jobs.set([
+      { ...mockJob, id: "a", score: null, submittedAt: "2026-03-12T11:00:00Z" },
+      { ...secondJob, id: "b", score: null, submittedAt: "2026-03-12T10:00:00Z" },
+      { ...mockJob, id: "c", score: 0.8, submittedAt: "2026-03-12T09:00:00Z" },
+    ]);
+
+    component.toggleScoreSort();
+    expect(component.scoreSortDirection()).toBe("desc");
+    // c has the only score so comes first; a and b both null → sorted by submittedAt desc
+    expect(component.jobs().map((job) => job.id)).toEqual(["c", "a", "b"]);
+  });
+
   it("should sort submitted time through desc and asc states", () => {
     component.jobs.set([
       { ...mockJob, id: "a", submittedAt: "2026-03-12T10:00:00Z" },
@@ -478,6 +491,35 @@ describe("JobsComponent", () => {
     expect(component.openActionMenuId()).toBeNull();
     expect(component.actionMenuStyle()).toEqual({});
   });
+
+  it("should close the action menu when no action menu component is mounted", fakeAsync(() => {
+    const trigger = {
+      getBoundingClientRect: () => ({ right: 300, bottom: 200, top: 160 }),
+    } as HTMLElement;
+
+    // Ensure actionMenu ViewChild is undefined so the menuEl branch is null
+    component["actionMenu"] = undefined;
+
+    component.toggleActionMenu(mockJob.id, trigger);
+    tick(0);
+
+    expect(component.openActionMenuId()).toBeNull();
+  }));
+
+  it("should close the action menu when no action menu component is mounted", fakeAsync(() => {
+    const trigger = {
+      getBoundingClientRect: () => ({ right: 300, bottom: 200, top: 160 }),
+    } as HTMLElement;
+
+    // Ensure actionMenu ViewChild is undefined so the menuEl branch is null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (component as any)["actionMenu"] = undefined;
+
+    component.toggleActionMenu(mockJob.id, trigger);
+    tick(0);
+
+    expect(component.openActionMenuId()).toBeNull();
+  }));
 
   it("should do nothing on viewport changes when no action menu is open", () => {
     component.onViewportChange();
