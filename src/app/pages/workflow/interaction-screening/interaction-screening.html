@@ -143,9 +143,7 @@
                 autocomplete="off"
                 autocorrect="off"
                 autocapitalize="off"
-                [value]="queryFasta()"
-                (input)="onQueryFastaChange($any($event.target).value)"
-                (blur)="validateQuery()"
+                [formControl]="form.controls.queryFasta"
                 [class]="
                   hasQueryError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
@@ -181,9 +179,7 @@
                 autocomplete="off"
                 autocorrect="off"
                 autocapitalize="off"
-                [value]="targetFasta()"
-                (input)="onTargetFastaChange($any($event.target).value)"
-                (blur)="validateTarget()"
+                [formControl]="form.controls.targetFasta"
                 [class]="
                   hasTargetError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'

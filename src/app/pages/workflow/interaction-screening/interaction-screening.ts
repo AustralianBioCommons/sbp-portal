@@ -6,6 +6,15 @@ import {
   Signal,
   signal,
 } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
+import {
+  AbstractControl,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn
+} from "@angular/forms";
+import { startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -21,10 +30,22 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
-import { validateProteinSequence } from "../../../cores/utils/fasta.utils";
+import {
+  SequenceValidationResult,
+  validateProteinSequence
+} from "../../../cores/utils/fasta.utils";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+
+function fastaValidator(
+  validate: (seq: string) => SequenceValidationResult
+): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const result = validate(control.value ?? "");
+    return result.valid ? null : { fasta: result.errorMessage };
+  };
+}
 
 interface TabItem {
   id: "overview" | "output" | "papers";
@@ -42,6 +63,7 @@ type StepItem = Step;
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     AlertComponent,
     ButtonComponent,
     DialogComponent,
@@ -65,7 +87,18 @@ export class InteractionScreeningComponent {
   public workflowSubmission = inject(WorkflowSubmissionService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
-
+  // Form
+  private fb = inject(NonNullableFormBuilder);
+  readonly form = this.fb.group({
+    queryFasta: ["", fastaValidator(validateProteinSequence)],
+    targetFasta: ["", fastaValidator(validateProteinSequence)]
+  });
+  private formStatus = toSignal(
+    this.form.statusChanges.pipe(startWith(this.form.status))
+  );
+  private formValue = toSignal(
+    this.form.valueChanges.pipe(startWith(this.form.value))
+  );
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
@@ -102,22 +135,12 @@ export class InteractionScreeningComponent {
     () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
   );
 
-  // ─── Two fixed FASTA inputs ───────────────────────────────────────────────
-  queryFasta = signal("");
-  queryFastaTouched = signal(false);
-  queryFastaError = signal("");
-
-  targetFasta = signal("");
-  targetFastaTouched = signal(false);
-  targetFastaError = signal("");
-
   // ─── Steps ───────────────────────────────────────────────────────────────
   readonly steps: StepItem[] = [
     {
       id: 1,
       title: "Input Configuration",
-      description:
-        "Add query and target protein sequences"
+      description: "Add query and target protein sequences"
     },
     {
       id: 2,
@@ -132,11 +155,7 @@ export class InteractionScreeningComponent {
   ];
   currentStep = signal<number>(1);
   completedSteps = signal<number[]>([]);
-  isFormValid = computed(
-    () =>
-      validateProteinSequence(this.queryFasta()).valid &&
-      validateProteinSequence(this.targetFasta()).valid
-  );
+  isFormValid = computed(() => this.formStatus() === "VALID");
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
   canGoNext: Signal<boolean> = computed(() => {
@@ -160,18 +179,24 @@ export class InteractionScreeningComponent {
 
   // Review step summary
   formSummary = computed(() => {
+    const queryFasta = this.formValue()?.queryFasta ?? "";
+    const targetFasta = this.formValue()?.targetFasta ?? "";
     const items: { label: string; value: string; fieldName: string }[] = [];
-    if (validateProteinSequence(this.queryFasta()).valid) {
+    if (validateProteinSequence(queryFasta).valid) {
       items.push({
         label: "Query Sequence",
-        value: this.queryFasta().trim().slice(0, 40) + (this.queryFasta().trim().length > 40 ? "…" : ""),
+        value:
+          queryFasta.trim().slice(0, 40) +
+          (queryFasta.trim().length > 40 ? "…" : ""),
         fieldName: "query_sequence"
       });
     }
-    if (validateProteinSequence(this.targetFasta()).valid) {
+    if (validateProteinSequence(targetFasta).valid) {
       items.push({
         label: "Target Sequence",
-        value: this.targetFasta().trim().slice(0, 40) + (this.targetFasta().trim().length > 40 ? "…" : ""),
+        value:
+          targetFasta.trim().slice(0, 40) +
+          (targetFasta.trim().length > 40 ? "…" : ""),
         fieldName: "target_sequence"
       });
     }
@@ -185,8 +210,8 @@ export class InteractionScreeningComponent {
     rowCount: number;
   } {
     const errorCount =
-      (validateProteinSequence(this.queryFasta()).valid ? 0 : 1) +
-      (validateProteinSequence(this.targetFasta()).valid ? 0 : 1);
+      (this.form.controls.queryFasta.valid ? 0 : 1) +
+      (this.form.controls.targetFasta.valid ? 0 : 1);
     return { valid: this.isFormValid(), errorCount, rowCount: 2 };
   }
 
@@ -212,49 +237,28 @@ export class InteractionScreeningComponent {
     if (step >= 1 && step <= this.steps.length) this.currentStep.set(step);
   }
 
-  // ─── Query / Target FASTA handlers ───────────────────────────────────────
-
-  onQueryFastaChange(value: string): void {
-    this.queryFasta.set(value);
-    if (this.queryFastaTouched()) this.validateQuery();
-  }
-
-  validateQuery(): void {
-    this.queryFastaTouched.set(true);
-    this.queryFastaError.set(validateProteinSequence(this.queryFasta()).errorMessage ?? "");
-  }
+  // ─── Query / Target FASTA error helpers ──────────────────────────────────
 
   hasQueryError(): boolean {
-    return this.queryFastaTouched() && !!this.queryFastaError();
+    const ctrl = this.form.controls.queryFasta;
+    return ctrl.touched && ctrl.invalid;
   }
 
   getQueryError(): string {
-    return this.queryFastaTouched() ? this.queryFastaError() : "";
-  }
-
-  onTargetFastaChange(value: string): void {
-    this.targetFasta.set(value);
-    if (this.targetFastaTouched()) this.validateTarget();
-  }
-
-  validateTarget(): void {
-    this.targetFastaTouched.set(true);
-    this.targetFastaError.set(
-      validateProteinSequence(this.targetFasta()).errorMessage ?? ""
-    );
+    return this.form.controls.queryFasta.errors?.["fasta"] ?? "";
   }
 
   hasTargetError(): boolean {
-    return this.targetFastaTouched() && !!this.targetFastaError();
+    const ctrl = this.form.controls.targetFasta;
+    return ctrl.touched && ctrl.invalid;
   }
 
   getTargetError(): string {
-    return this.targetFastaTouched() ? this.targetFastaError() : "";
+    return this.form.controls.targetFasta.errors?.["fasta"] ?? "";
   }
 
   private touchAll(): void {
-    this.validateQuery();
-    this.validateTarget();
+    this.form.markAllAsTouched();
   }
 
   // ─── Submission ───────────────────────────────────────────────────────────
@@ -262,17 +266,18 @@ export class InteractionScreeningComponent {
   /**
    * Build the wisps-compatible payload array.
    * Each element matches the wisps schema_input row: { id, sequence, group }.
+   * Whitespace normalisation matches the validator (replace(/\s+/g, "")).
    */
   private buildWispsPayload(): Record<string, unknown>[] {
     return [
       {
         id: "query",
-        sequence: this.queryFasta().replace(/\s+/g, ""),
+        sequence: (this.form.value.queryFasta ?? "").replace(/\s+/g, ""),
         group: "query"
       },
       {
         id: "target",
-        sequence: this.targetFasta().replace(/\s+/g, ""),
+        sequence: (this.form.value.targetFasta ?? "").replace(/\s+/g, ""),
         group: "target"
       }
     ];
@@ -292,7 +297,9 @@ export class InteractionScreeningComponent {
 
     console.log("Starting interaction screening submission…", {
       tool: payload["tool"],
-      hasSequences: Array.isArray(sequences) ? sequences.length > 0 : !!sequences,
+      hasSequences: Array.isArray(sequences)
+        ? sequences.length > 0
+        : !!sequences
     });
     this.workflowSubmission.isSubmitting.set(true);
 
