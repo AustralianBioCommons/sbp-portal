@@ -92,7 +92,7 @@ export function isValidSmiles(value: string): boolean {
     return false;
   }
 
-  if (!/^[A-Za-z0-9@+\-\[\]\(\)=#$\\/%.:*]+$/.test(value)) {
+  if (!/^[A-Za-z0-9@+\-[\]()=#$\\/%.:*]+$/.test(value)) {
     return false;
   }
 
