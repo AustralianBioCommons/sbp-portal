@@ -10,6 +10,7 @@ import { Home } from "./app/pages/home/home";
 import { JobsComponent } from "./app/pages/jobs/jobs";
 import { NotFoundComponent } from "./app/pages/not-found/not-found";
 import { DeNovoDesignComponent } from "./app/pages/workflow/de-novo-design/de-novo-design";
+import { InteractionScreeningComponent } from "./app/pages/workflow/interaction-screening/interaction-screening";
 import { environment } from "./environments/environment";
 
 bootstrapApplication(AppComponent, {
@@ -20,7 +21,11 @@ bootstrapApplication(AppComponent, {
       { path: "themes", component: Home },
       {
         path: "de-novo-design",
-        component: DeNovoDesignComponent,
+        component: DeNovoDesignComponent
+      },
+      {
+        path: "interaction-screening",
+        component: InteractionScreeningComponent
       },
       {
         path: "jobs",
