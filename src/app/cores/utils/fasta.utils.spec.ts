@@ -1,9 +1,10 @@
 import {
   lookupCcdCompound,
   CCD_COMPOUNDS,
+  isValidSmiles,
   validateDnaSequence,
   validateProteinSequence,
-  validateRnaSequence,
+  validateRnaSequence
 } from "./fasta.utils";
 
 describe("fasta.utils", () => {
@@ -117,6 +118,60 @@ describe("fasta.utils", () => {
         valid: true,
         name: "Heme"
       });
+    });
+  });
+
+  describe("isValidSmiles", () => {
+    it("accepts a simple molecule", () => {
+      expect(isValidSmiles("CCO")).toBe(true);
+    });
+
+    it("accepts caffeine SMILES", () => {
+      expect(isValidSmiles("Cn1cnc2c1c(=O)n(c(=O)n2C)C")).toBe(true);
+    });
+
+    it("accepts SMILES with ring closures and branches", () => {
+      expect(isValidSmiles("C1=CC=CC=C1")).toBe(true); // benzene
+    });
+
+    it("accepts SMILES with square-bracket atoms", () => {
+      expect(isValidSmiles("[NH4+]")).toBe(true);
+    });
+
+    it("accepts SMILES with charges and isotopes", () => {
+      expect(isValidSmiles("[13CH4]")).toBe(true);
+    });
+
+    it("rejects empty string", () => {
+      expect(isValidSmiles("")).toBe(false);
+    });
+
+    it("rejects strings containing whitespace", () => {
+      expect(isValidSmiles("CC O")).toBe(false);
+      expect(isValidSmiles("CC\tO")).toBe(false);
+    });
+
+    it("rejects strings with no letter characters", () => {
+      expect(isValidSmiles("123")).toBe(false);
+    });
+
+    it("rejects characters outside the allowed set", () => {
+      expect(isValidSmiles("CC!O")).toBe(false);
+      expect(isValidSmiles("CC{O}")).toBe(false);
+    });
+
+    it("rejects mismatched parentheses", () => {
+      expect(isValidSmiles("C(C")).toBe(false);
+      expect(isValidSmiles("C)C")).toBe(false);
+    });
+
+    it("rejects mismatched square brackets", () => {
+      expect(isValidSmiles("[NH4")).toBe(false);
+      expect(isValidSmiles("NH4]")).toBe(false);
+    });
+
+    it("rejects mismatched mixed brackets", () => {
+      expect(isValidSmiles("C([NH4)")).toBe(false);
     });
   });
 });
