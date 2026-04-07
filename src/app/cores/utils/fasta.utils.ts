@@ -51,7 +51,7 @@ function createSequenceValidator(
 export const validateProteinSequence = createSequenceValidator(
   /^[ARNDCQEGHILKMFPSTWYV]+$/,
   "Protein sequence is required.",
-  "Protein sequence must use valid 20 canonical amino acids characters only."
+  "Protein sequence must contain only the 20 canonical amino acid letters."
 );
 
 export const validateDnaSequence = createSequenceValidator(
