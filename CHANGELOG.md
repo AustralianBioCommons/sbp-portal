@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/AustralianBioCommons/sbp-portal/compare/v1.0.0...v1.0.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* report url ([#33](https://github.com/AustralianBioCommons/sbp-portal/issues/33)) ([834e4a6](https://github.com/AustralianBioCommons/sbp-portal/commit/834e4a6b80b92666e39f1bd70f8fb39f320b8503))
+
 ## 1.0.0 (2026-03-31)
 
 
