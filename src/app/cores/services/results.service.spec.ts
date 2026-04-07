@@ -340,4 +340,17 @@ describe("ResultsService", () => {
       sanitizer.sanitize(SecurityContext.RESOURCE_URL, result as never)
     ).toBe("about:blank");
   });
+
+  it("should return about:blank for relative URLs when apiBaseUrl is not configured", () => {
+    const original = environment.apiBaseUrl;
+    (environment as unknown as Record<string, unknown>)["apiBaseUrl"] = "";
+
+    const trustedUrl = service.getSafeReportResourceUrl("/report.html");
+    expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
+      "about:blank"
+    );
+
+    (environment as unknown as Record<string, unknown>)["apiBaseUrl"] =
+      original;
+  });
 });

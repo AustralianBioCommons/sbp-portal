@@ -573,4 +573,25 @@ describe("SinglePredictionComponent", () => {
     expect(component.alphafold2RandomSeedTouched()).toBe(true);
     expect(component.colabfoldNumRecyclesTouched()).toBe(true);
   });
+
+  it("should include tool setting errors in form validation summary error count", () => {
+    fillValidProteinRow();
+    component.selectTool("alphafold2");
+    component.updateAlphafold2RandomSeed("-5");
+    component.setAlphafold2RandomSeedTouched();
+
+    const summary = component.getFormValidationSummary();
+    expect(summary.valid).toBe(false);
+    expect(summary.errorCount).toBeGreaterThan(0);
+  });
+
+  it("should produce a copy number validation error for non-positive values", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+    component.updateRowCopyNumber(rowId, "0");
+    component.touchRowField(rowId, "copyNumber");
+
+    const errors = component.entityValidationResults()[0];
+    expect(errors["copyNumber"]).toContain("greater than or equal to 1");
+  });
 });

@@ -23,7 +23,7 @@ describe("fasta.utils", () => {
       expect(validateProteinSequence("ATG123")).toEqual({
         valid: false,
         errorMessage:
-          "Protein sequence must use valid 20 canonical amino acids characters only."
+          "Protein sequence must contain only the 20 canonical amino acid letters."
       });
     });
   });
