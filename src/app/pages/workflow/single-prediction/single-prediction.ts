@@ -255,8 +255,8 @@ export class SinglePredictionComponent {
     this.activeTab.set(id);
   }
 
-  selectTool(id: string) {
-    this.selectedTool.set(id as ToolId);
+  selectTool(id: ToolId) {
+    this.selectedTool.set(id);
   }
 
   addEntityRow(): void {
