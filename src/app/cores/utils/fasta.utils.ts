@@ -9,6 +9,16 @@ export interface CcdLookupResult {
   errorMessage?: string;
 }
 
+/**
+ * Supported Chemical Component Dictionary (CCD) ligand codes.
+ * CCD codes are standardised by the wwPDB: https://www.wwpdb.org/data/ccd
+ * A searchable list of all CCD entries is available at:
+ * https://www.ebi.ac.uk/pdbe-srv/pdbechem/ and https://www.rcsb.org/ligand
+ *
+ * Note: this list of 20 compounds is consistent with the ligands supported
+ * by the standard AlphaFold Server
+ * (https://alphafoldserver.com/faq#what-biological-molecule-types-can-be-modeled-with-alphafold-server).
+ */
 export const CCD_COMPOUNDS: Record<string, string> = {
   ADP: "Adenosine diphosphate",
   ATP: "Adenosine triphosphate",
@@ -48,6 +58,12 @@ function createSequenceValidator(
   };
 }
 
+/**
+ * Validates a protein sequence against the 20 canonical amino acids
+ * (ARNDCQEGHILKMFPSTWYV). This is consistent with the standard AlphaFold
+ * Server input: https://alphafoldserver.com
+ * Whitespace is stripped before validation.
+ */
 export const validateProteinSequence = createSequenceValidator(
   /^[ARNDCQEGHILKMFPSTWYV]+$/,
   "Protein sequence is required.",
