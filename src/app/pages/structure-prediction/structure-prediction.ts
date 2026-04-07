@@ -37,7 +37,7 @@ export class StructurePredictionComponent {
       id: "single-structure-prediction",
       label: "Single Prediction",
       href: "/single-structure-prediction",
-      disabled: true,
+      disabled: false,
     },
     {
       id: "interaction-screening",

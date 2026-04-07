@@ -11,6 +11,7 @@ import { JobsComponent } from "./app/pages/jobs/jobs";
 import { NotFoundComponent } from "./app/pages/not-found/not-found";
 import { DeNovoDesignComponent } from "./app/pages/workflow/de-novo-design/de-novo-design";
 import { InteractionScreeningComponent } from "./app/pages/workflow/interaction-screening/interaction-screening";
+import { SinglePredictionComponent } from "./app/pages/workflow/single-prediction/single-prediction";
 import { environment } from "./environments/environment";
 
 bootstrapApplication(AppComponent, {
@@ -26,6 +27,10 @@ bootstrapApplication(AppComponent, {
       {
         path: "interaction-screening",
         component: InteractionScreeningComponent
+      },
+      {
+        path: "single-structure-prediction",
+        component: SinglePredictionComponent
       },
       {
         path: "jobs",
