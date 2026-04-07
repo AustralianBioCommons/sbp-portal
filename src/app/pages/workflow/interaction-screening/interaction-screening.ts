@@ -267,12 +267,12 @@ export class InteractionScreeningComponent {
     return [
       {
         id: "query",
-        sequence: this.queryFasta().trim(),
+        sequence: this.queryFasta().replace(/\s+/g, ""),
         group: "query"
       },
       {
         id: "target",
-        sequence: this.targetFasta().trim(),
+        sequence: this.targetFasta().replace(/\s+/g, ""),
         group: "target"
       }
     ];
