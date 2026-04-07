@@ -112,8 +112,8 @@ export class SinglePredictionComponent {
 
   private nextRowId = 1;
   ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
-  ccdLookupNames = signal<Record<number, string>>({}); // compound name from RCSB
-  ccdLookupErrors = signal<Record<number, string>>({}); // validation error message from service
+  ccdLookupNames = signal<Record<number, string>>({}); // compound name resolved from the local CCD dictionary via lookupCcdCompound()
+  ccdLookupErrors = signal<Record<number, string>>({}); // validation error message produced by the local CCD dictionary lookup
 
   showAlert = signal(false);
   alertMessage = signal("");
