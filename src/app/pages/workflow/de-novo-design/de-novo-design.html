@@ -128,14 +128,6 @@
               @for (row of schemaLoader.inputRows(); track row.id; let i =
               $index) {
 
-              <!-- Mol* structure viewer (shown when a valid local PDB file is selected) -->
-              @if (localPdbFile()) {
-              <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                <app-molstar-viewer [pdbFile]="localPdbFile()"
-                  (residuesSelected)="onResiduesSelected(row.id, $event)"></app-molstar-viewer>
-              </div>
-              }
-
               <div
                 class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
               >
@@ -151,48 +143,47 @@
                   @for (field of schemaLoader.requiredInputFields(); track
                   field.name) {
                     @if (field.name === 'starting_pdb') {
-                    <!-- Single file picker: shows Mol* viewer immediately;
-                         actual upload to S3 is deferred to Next click. -->
-                    <div class="col-span-1 md:col-span-2 lg:col-span-3">
-                      <label
-                        [for]="'pdb-picker-' + row.id"
-                        class="block text-sm font-medium text-gray-700"
-                      >
-                        Target PDB file
-                        <span class="text-red-500 ml-1">*</span>
-                      </label>
-                      <p class="mt-0.5 text-xs text-gray-500">
-                        Select a <code>.pdb</code> file. The structure will be
-                        previewed above so you can pick hotspot residues.
-                        The file is uploaded when you click <strong>Next</strong>.
-                      </p>
-                      <div class="mt-2 flex items-center gap-3 flex-wrap">
-                        <input
-                          [id]="'pdb-picker-' + row.id"
-                          type="file"
-                          accept=".pdb"
-                          class="block text-sm text-gray-700
-                            file:mr-3 file:py-1.5 file:px-3 file:rounded
-                            file:border-0 file:text-sm file:font-medium
-                            file:bg-blue-50 file:text-blue-700
-                            hover:file:bg-blue-100
-                            disabled:opacity-50"
-                          [disabled]="isPdbUploading()"
-                          (change)="onPdbFilePicked($event, row.id)"
-                        />
+                    <!-- PDB picker + Mol* viewer as one connected card -->
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 overflow-hidden rounded-lg border border-gray-200">
+                    
+                      <!-- Header row -->
+                      <div class="flex items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3">
+                        <div>
+                          <label class="block text-sm font-medium text-gray-700">
+                            Target PDB file
+                            <span class="text-red-500 ml-1">*</span>
+                          </label>
+                          <p class="mt-0.5 text-xs text-gray-500">
+                            Click residues in the preview to set hotspot targets.
+                            The file is uploaded when you click <strong>Next</strong>.
+                          </p>
+                        </div>
                         @if (localPdbFile()) {
-                          <button
-                            type="button"
-                            class="text-xs text-gray-500 underline hover:text-red-600"
-                            (click)="clearLocalPdb(row.id)"
-                          >Clear</button>
+                          <div class="flex shrink-0 items-center gap-2">
+                            <span class="max-w-48 truncate text-xs text-gray-500">{{ localPdbFile()!.name }}</span>
+                            <button
+                              type="button"
+                              class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600"
+                              (click)="clearLocalPdb(row.id)"
+                            >Clear</button>
+                          </div>
                         }
                       </div>
+
                       @if (hasRowFieldError(row.id, 'starting_pdb') && !localPdbFile()) {
-                        <p class="mt-1 text-sm text-red-600">
+                        <p class="px-4 pt-2 text-sm text-red-600">
                           {{ getRowFieldError(row.id, 'starting_pdb') }}
                         </p>
                       }
+<!-- Mol* viewer — fills the bottom of the card -->
+<div class="p-4">
+  <app-molstar-viewer
+    [pdbFile]="localPdbFile()"
+    [disabled]="isPdbUploading()"
+    (filePicked)="onPdbFilePicked($event, row.id)"
+    (residuesSelected)="onResiduesSelected(row.id, $event)"
+  ></app-molstar-viewer>
+</div>
                     </div>
                     } @else {
                     <app-form-field [field]="field" [value]="getRowValue(row.id, field.name)"

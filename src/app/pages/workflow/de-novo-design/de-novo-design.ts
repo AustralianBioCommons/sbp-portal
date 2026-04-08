@@ -181,17 +181,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   /** Called when user picks a .pdb file via the custom picker.
    *  Sets the local viewer file and marks the form field value with the
    *  filename so required validation passes before the real upload. */
-  onPdbFilePicked(event: Event, rowId: string): void {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) {
-      this.localPdbFile.set(null);
-      this.updateRowValueWithValidation(rowId, "starting_pdb", "");
-      return;
-    }
+  onPdbFilePicked(file: File, rowId: string): void {
     const validation = this.pdbUploadService.validatePdbFile(file);
     if (!validation.valid) {
       this.showError(validation.error ?? "Invalid PDB file.");
-      (event.target as HTMLInputElement).value = "";
       return;
     }
     this.localPdbFile.set(file);

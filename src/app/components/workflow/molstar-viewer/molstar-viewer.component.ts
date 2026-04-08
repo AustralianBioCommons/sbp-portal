@@ -72,6 +72,30 @@ const MOLSTAR_JS =
     <div class="space-y-2">
       <h4 class="text-sm font-medium text-gray-700">Target Structure Preview</h4>
 
+      <!-- Idle placeholder (no file selected yet) -->
+      @if (status() === 'idle') {
+        <div class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center">
+          <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M20 7l-8-4-8 4m16 0v10l-8 4m0-10L4 7m8 10V11" />
+          </svg>
+          <p class="text-sm text-gray-400">Load a <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file to preview the structure here</p>
+          <label
+            class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm"
+            [class.cursor-pointer]="!disabled"
+            [class.opacity-50]="disabled"
+            [class.pointer-events-none]="disabled"
+          >
+            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Choose .pdb file
+            <input type="file" class="sr-only" accept=".pdb" [disabled]="disabled" (change)="onFileInputChange($event)" />
+          </label>
+        </div>
+      }
+
       <!-- Loading state -->
       @if (status() === 'loading') {
         <div class="flex items-center gap-2 text-sm text-gray-500 py-2">
@@ -99,7 +123,7 @@ const MOLSTAR_JS =
       <div
         [id]="containerId"
         class="molstar-wrap"
-        [class.hidden]="status() === 'loading' || status() === 'error'"
+        [class.hidden]="status() === 'idle' || status() === 'loading' || status() === 'error'"
       ></div>
 
       <!-- Selection bar (shown when residues are picked) -->
@@ -137,6 +161,10 @@ export class MolstarViewerComponent
   @Input() pdbFile: File | null = null;
   /** Emits a comma-separated residue string (e.g. "A42,A43,B11") on each selection change. */
   @Output() residuesSelected = new EventEmitter<string>();
+  /** Disables the file picker embedded in the idle placeholder. */
+  @Input() disabled = false;
+  /** Emits the chosen File when the user picks one from the idle placeholder. */
+  @Output() filePicked = new EventEmitter<File>();
 
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
   readonly errorMessage = signal("");
@@ -151,6 +179,18 @@ export class MolstarViewerComponent
 
   /** Shared promise so the CDN assets are only loaded once per page. */
   private static cdnLoadPromise: Promise<void> | null = null;
+
+  // ── File input (idle placeholder) ────────────────────────────────────────
+
+  onFileInputChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      this.filePicked.emit(file);
+      // Reset so the same file can be re-picked after an external clear.
+      input.value = '';
+    }
+  }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
