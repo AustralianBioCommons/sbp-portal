@@ -194,7 +194,7 @@ export class FormFieldComponent {
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
-  alertType = signal<'error' | 'success' | 'warning' | 'info'>('error');
+  alertType = signal<"error" | "success" | "warning" | "info">("error");
 
   @Input({ required: true }) field!: InputSchemaField;
   @Input() value: unknown = "";
@@ -203,6 +203,8 @@ export class FormFieldComponent {
 
   @Output() valueChange = new EventEmitter<unknown>();
   @Output() fieldBlur = new EventEmitter<void>();
+  /** Emits the raw File immediately when the user picks a file, before any upload. */
+  @Output() fileSelected = new EventEmitter<File | null>();
 
   get fieldId(): string {
     return `field-${this.field.name}`;
@@ -220,13 +222,13 @@ export class FormFieldComponent {
 
   private showError(message: string): void {
     this.alertMessage.set(message);
-    this.alertType.set('error');
+    this.alertType.set("error");
     this.showAlert.set(true);
   }
 
   private showSuccess(message: string): void {
     this.alertMessage.set(message);
-    this.alertType.set('success');
+    this.alertType.set("success");
     this.showAlert.set(true);
   }
 
@@ -244,6 +246,7 @@ export class FormFieldComponent {
 
     if (!file) {
       this.valueChange.emit(null);
+      this.fileSelected.emit(null);
       return;
     }
 
@@ -256,10 +259,12 @@ export class FormFieldComponent {
         console.error("File validation failed:", validation.error);
         this.showError(`${validation.error}`);
         this.valueChange.emit(null);
+        this.fileSelected.emit(null);
         return;
       }
 
-      // Upload the PDB file to the backend
+      // Emit the raw file immediately so the parent can show a local preview
+      this.fileSelected.emit(file);
       console.log("Uploading PDB file:", file.name);
       this.pdbUploadService
         .uploadPdbFile({

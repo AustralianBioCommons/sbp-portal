@@ -10,6 +10,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
+import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
 
 import { filter, Subscription, take } from "rxjs";
 import { AlertComponent } from "../../../components/alert/alert.component";
@@ -30,6 +31,7 @@ import {
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
+import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
@@ -60,12 +62,13 @@ type StepItem = Step;
     FormFieldComponent,
     ConfigurationSummaryComponent,
     FormStatusComponent,
+    MolstarViewerComponent
   ],
   host: {
-    class: "block w-full de-novo-design-bg",
+    class: "block w-full de-novo-design-bg"
   },
   templateUrl: "./de-novo-design.html",
-  styleUrls: ["./de-novo-design.scss"],
+  styleUrls: ["./de-novo-design.scss"]
 })
 export class DeNovoDesignComponent implements OnInit, OnDestroy {
   private readonly availableToolId: ToolChip["id"] = "bindcraft";
@@ -83,6 +86,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   public workflowSubmission = inject(WorkflowSubmissionService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
+  // PDB upload service
+  private pdbUploadService = inject(PdbUploadService);
 
   // Alert state
   showAlert = signal(false);
@@ -100,7 +105,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   readonly tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
     { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
+    { id: "papers", label: "Papers" }
   ];
   activeTab = signal<TabItem["id"]>("overview");
   isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
@@ -112,16 +117,16 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   readonly tools: ToolChip[] = [
     {
       id: "boltzgen",
-      label: "BoltzGen",
+      label: "BoltzGen"
     },
     {
       id: "rfdiffusion",
-      label: "RFDiffusion",
+      label: "RFDiffusion"
     },
     {
       id: "bindcraft",
-      label: "BindCraft",
-    },
+      label: "BindCraft"
+    }
   ];
   readonly unavailableToolLabels: string[] = this.tools
     .filter((tool) => tool.id !== this.availableToolId)
@@ -152,7 +157,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   > = {
     boltzgen: [],
     rfdiffusion: [],
-    bindcraft: [],
+    bindcraft: []
   };
 
   // Computed signal to indicate whether the currently selected tool exposes parameters
@@ -165,6 +170,49 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   // Step 1: Input configuration
   inputSequence = signal<string>("");
   inputFileName = signal<string>("");
+
+  /** Raw local File for the starting_pdb field – shown in Mol* viewer immediately.
+   *  Actual upload to S3 is deferred until the user clicks Next. */
+  localPdbFile = signal<File | null>(null);
+
+  /** True while the PDB file is being uploaded to S3 on Next click. */
+  isPdbUploading = signal(false);
+
+  /** Called when user picks a .pdb file via the custom picker.
+   *  Sets the local viewer file and marks the form field value with the
+   *  filename so required validation passes before the real upload. */
+  onPdbFilePicked(event: Event, rowId: string): void {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    if (!file) {
+      this.localPdbFile.set(null);
+      this.updateRowValueWithValidation(rowId, "starting_pdb", "");
+      return;
+    }
+    const validation = this.pdbUploadService.validatePdbFile(file);
+    if (!validation.valid) {
+      this.showError(validation.error ?? "Invalid PDB file.");
+      (event.target as HTMLInputElement).value = "";
+      return;
+    }
+    this.localPdbFile.set(file);
+    // Use filename as placeholder value so schema required-check passes.
+    this.updateRowValueWithValidation(rowId, "starting_pdb", file.name);
+  }
+
+  clearLocalPdb(rowId: string): void {
+    this.localPdbFile.set(null);
+    this.updateRowValueWithValidation(rowId, "starting_pdb", "");
+  }
+
+  /** Called when the user selects residues in the Mol* viewer. */
+  onResiduesSelected(rowId: string, residues: string): void {
+    this.updateRowValueWithValidation(
+      rowId,
+      "target_hotspot_residues",
+      residues
+    );
+  }
+
 
   // Steps marked complete only when user presses Next on that step
   completedSteps = signal<number[]>([]);
@@ -201,18 +249,18 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     {
       id: 1,
       title: "Input Configuration",
-      description: "Provide sequence or structure inputs",
+      description: "Provide sequence or structure inputs"
     },
     {
       id: 2,
       title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool",
+      description: "Configure parameters specific to the selected tool"
     },
     {
       id: 3,
       title: "Review & Submit",
-      description: "Review all settings and run the job",
-    },
+      description: "Review all settings and run the job"
+    }
   ];
   currentStep = signal<number>(1);
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -231,31 +279,68 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (this.currentStep() > 1) this.currentStep.update((v) => v - 1);
   }
   nextStep() {
-    if (this.currentStep() < this.steps.length) {
-      const current = this.currentStep();
+    if (this.currentStep() >= this.steps.length) return;
+    const current = this.currentStep();
 
-      // Validate current step before proceeding
-      if (current === 1) {
-        // Mark that user has attempted step 1
-        this.attemptedStep1.set(true);
+    if (current === 1) {
+      this.attemptedStep1.set(true);
+      this.validateAllRequiredFields();
+      this.validateForm();
 
-        // Validate all required fields to show specific errors
-        this.validateAllRequiredFields();
-        this.validateForm();
-
-        // Check if form is valid
-        if (!this.isFormValid()) {
-          // Don't proceed if validation fails
-          console.log("Cannot proceed: Input configuration validation failed");
-          return;
-        }
+      if (!this.isFormValid()) {
+        console.log("Cannot proceed: Input configuration validation failed");
+        return;
       }
 
-      this.completedSteps.update((arr) =>
-        arr.includes(current) ? arr : [...arr, current]
-      );
-      this.currentStep.update((v) => v + 1);
+      // Upload the PDB file to S3 before moving on, if one is pending.
+      const file = this.localPdbFile();
+      const rowId = this.schemaLoader.inputRows()[0]?.id;
+      if (file && rowId) {
+        this.isPdbUploading.set(true);
+        this.subscription.add(
+          this.pdbUploadService
+            .uploadPdbFile({
+              file,
+              metadata: {
+                fieldName: "starting_pdb",
+                uploadedAt: new Date().toISOString()
+              }
+            })
+            .subscribe({
+              next: (response) => {
+                const s3Uri =
+                  response.s3Uri ??
+                  response.fileUrl ??
+                  response.fileId ??
+                  response.fileName ??
+                  file.name;
+                // Replace placeholder filename with the real S3 path.
+                this.updateRowValueWithValidation(rowId, "starting_pdb", s3Uri);
+                this.isPdbUploading.set(false);
+                this.advanceStep(current);
+              },
+              error: (error) => {
+                this.isPdbUploading.set(false);
+                const msg =
+                  error?.error?.message ??
+                  error?.message ??
+                  "Unknown error";
+                this.showError(`Failed to upload PDB file: ${msg}. Please try again.`);
+              }
+            })
+        );
+        return;
+      }
     }
+
+    this.advanceStep(current);
+  }
+
+  private advanceStep(current: number): void {
+    this.completedSteps.update((arr) =>
+      arr.includes(current) ? arr : [...arr, current]
+    );
+    this.currentStep.update((v) => v + 1);
   }
   goToStep(step: number) {
     if (step >= 1 && step <= this.steps.length) {
@@ -307,11 +392,13 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       () => {
         // Success callback: initialize form data
         const defaultValues = this.schemaLoader.generateDefaultValues();
-        
+
         // Add default URLs for settings fields
-        defaultValues.settings_filters = "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_filters.json";
-        defaultValues.settings_advanced = "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_4stage_multimer.json";
-        
+        defaultValues.settings_filters =
+          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_filters.json";
+        defaultValues.settings_advanced =
+          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_4stage_multimer.json";
+
         this.initializeFormData(defaultValues);
 
         // Initialize table with one default row
@@ -320,10 +407,18 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           const rows = this.schemaLoader.inputRows();
           if (rows.length > 0) {
             const firstRowId = rows[0].id;
-            this.schemaLoader.updateRowValue(firstRowId, "settings_filters", defaultValues.settings_filters);
-            this.schemaLoader.updateRowValue(firstRowId, "settings_advanced", defaultValues.settings_advanced);
+            this.schemaLoader.updateRowValue(
+              firstRowId,
+              "settings_filters",
+              defaultValues.settings_filters
+            );
+            this.schemaLoader.updateRowValue(
+              firstRowId,
+              "settings_advanced",
+              defaultValues.settings_advanced
+            );
           }
-          
+
           // After row is created, sync to form data
           this.syncRowsToFormData();
           this.validateAllRows();
@@ -349,7 +444,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     this.datasetUploadService
       .uploadDataset({
-        formData,
+        formData
       })
       .subscribe({
         next: (response) => {
@@ -367,7 +462,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
           const workflowFormData = {
             ...formData,
-            tool: this.selectedToolLabel(),
+            tool: this.selectedToolLabel()
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(
@@ -493,7 +588,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     } else {
       this.formErrors.set({
         ...currentErrors,
-        [fieldName]: validationResult.errors[0] || "Invalid value",
+        [fieldName]: validationResult.errors[0] || "Invalid value"
       });
     }
   }
@@ -622,7 +717,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         summary.push({
           label: field.label || field.name,
           value: displayValue,
-          fieldName: field.name,
+          fieldName: field.name
         });
       }
     });
@@ -637,7 +732,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       hasParameters: this.selectedToolHasParams(),
       totalFields: this.schemaLoader.inputSchemaFields().length,
       filledFields: this.formSummary().length,
-      requiredFields: this.schemaLoader.requiredInputFields().length,
+      requiredFields: this.schemaLoader.requiredInputFields().length
     };
   }
 
@@ -696,7 +791,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       // Add error for this specific cell
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: validationResult.errors[0] || "Invalid value",
+        [errorKey]: validationResult.errors[0] || "Invalid value"
       });
     }
 
@@ -763,7 +858,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     return {
       valid: this.isFormValid(),
       errorCount: Object.keys(errors).length,
-      rowCount: rows.length,
+      rowCount: rows.length
     };
   }
 }

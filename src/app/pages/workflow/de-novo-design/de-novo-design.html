@@ -127,6 +127,15 @@
             <div class="space-y-4">
               @for (row of schemaLoader.inputRows(); track row.id; let i =
               $index) {
+
+              <!-- Mol* structure viewer (shown when a valid local PDB file is selected) -->
+              @if (localPdbFile()) {
+              <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                <app-molstar-viewer [pdbFile]="localPdbFile()"
+                  (residuesSelected)="onResiduesSelected(row.id, $event)"></app-molstar-viewer>
+              </div>
+              }
+
               <div
                 class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
               >
@@ -141,14 +150,56 @@
                 >
                   @for (field of schemaLoader.requiredInputFields(); track
                   field.name) {
-                  <app-form-field
-                    [field]="field"
-                    [value]="getRowValue(row.id, field.name)"
-                    [hasError]="hasRowFieldError(row.id, field.name)"
-                    [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                    (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                    (fieldBlur)="validateRowField(row.id, field.name)"
-                  ></app-form-field>
+                    @if (field.name === 'starting_pdb') {
+                    <!-- Single file picker: shows Mol* viewer immediately;
+                         actual upload to S3 is deferred to Next click. -->
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3">
+                      <label
+                        [for]="'pdb-picker-' + row.id"
+                        class="block text-sm font-medium text-gray-700"
+                      >
+                        Target PDB file
+                        <span class="text-red-500 ml-1">*</span>
+                      </label>
+                      <p class="mt-0.5 text-xs text-gray-500">
+                        Select a <code>.pdb</code> file. The structure will be
+                        previewed above so you can pick hotspot residues.
+                        The file is uploaded when you click <strong>Next</strong>.
+                      </p>
+                      <div class="mt-2 flex items-center gap-3 flex-wrap">
+                        <input
+                          [id]="'pdb-picker-' + row.id"
+                          type="file"
+                          accept=".pdb"
+                          class="block text-sm text-gray-700
+                            file:mr-3 file:py-1.5 file:px-3 file:rounded
+                            file:border-0 file:text-sm file:font-medium
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100
+                            disabled:opacity-50"
+                          [disabled]="isPdbUploading()"
+                          (change)="onPdbFilePicked($event, row.id)"
+                        />
+                        @if (localPdbFile()) {
+                          <button
+                            type="button"
+                            class="text-xs text-gray-500 underline hover:text-red-600"
+                            (click)="clearLocalPdb(row.id)"
+                          >Clear</button>
+                        }
+                      </div>
+                      @if (hasRowFieldError(row.id, 'starting_pdb') && !localPdbFile()) {
+                        <p class="mt-1 text-sm text-red-600">
+                          {{ getRowFieldError(row.id, 'starting_pdb') }}
+                        </p>
+                      }
+                    </div>
+                    } @else {
+                    <app-form-field [field]="field" [value]="getRowValue(row.id, field.name)"
+                      [hasError]="hasRowFieldError(row.id, field.name)" [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                      (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                      (fieldBlur)="validateRowField(row.id, field.name)"></app-form-field>
+                    }
                   }
                 </div>
               </div>
@@ -262,11 +313,11 @@
               type="button"
               variant="primary"
               (click)="nextStep()"
-              [disabled]="!canGoNext() || (auth.isAuthenticated$ | async) === false"
+              [disabled]="!canGoNext() || isPdbUploading() || (auth.isAuthenticated$ | async) === false"
               borderRadius="rounded-DEFAULT-10"
               colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Next
+              @if (isPdbUploading()) { Uploading… } @else { Next }
             </app-button>
             } @if (currentStep() === steps.length) {
             <app-button
