@@ -195,15 +195,26 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   clearLocalPdb(rowId: string): void {
     this.localPdbFile.set(null);
     this.updateRowValueWithValidation(rowId, "starting_pdb", "");
+    this.updateRowValue(rowId, "chains", "");
+    this.updateRowValue(rowId, "target_hotspot_residues", "");
   }
 
-  /** Called when the user selects residues in the Mol* viewer. */
+  /** Called when the user selects residues in the Mol* viewer.
+   *  Also derives the unique chain letters (first char of each token)
+   *  and auto-fills the chains field. e.g. "A56,B12" → chains = "A,B".
+   */
   onResiduesSelected(rowId: string, residues: string): void {
-    this.updateRowValueWithValidation(
-      rowId,
-      "target_hotspot_residues",
-      residues
-    );
+    if (residues) {
+      this.updateRowValueWithValidation(rowId, "target_hotspot_residues", residues);
+      // Derive chains from the leading letter(s) of each residue token
+      const chains = [...new Set(
+        residues.split(",").map(r => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "").filter(Boolean)
+      )].sort().join(",");
+      if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
+    } else {
+      this.updateRowValue(rowId, "target_hotspot_residues", "");
+      this.updateRowValue(rowId, "chains", "");
+    }
   }
 
 

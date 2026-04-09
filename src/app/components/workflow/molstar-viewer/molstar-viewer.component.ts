@@ -3,11 +3,13 @@ import {
   Component,
   EventEmitter,
   Input,
+  NgZone,
   OnChanges,
   OnDestroy,
   Output,
   SimpleChanges,
-  signal,
+  inject,
+  signal
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 
@@ -62,98 +64,159 @@ const MOLSTAR_JS =
         border-radius: 0.5rem;
         background: #1e1e2e;
       }
-      /* hide right panel to save space */
-      .molstar-wrap :global(.msp-layout-region-right) {
+      /* Hide the right panel and right-side toolbar */
+      .molstar-wrap ::ng-deep .msp-layout-region-right,
+      .molstar-wrap ::ng-deep .msp-viewport-controls-panels {
         display: none !important;
       }
-    `,
+    `
   ],
   template: `
     <div class="space-y-2">
-      <h4 class="text-sm font-medium text-gray-700">Target Structure Preview</h4>
+      <h4 class="text-sm font-medium text-gray-700">
+        Target Structure Preview
+      </h4>
 
       <!-- Idle placeholder (no file selected yet) -->
       @if (status() === 'idle') {
-        <div class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center">
-          <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M20 7l-8-4-8 4m16 0v10l-8 4m0-10L4 7m8 10V11" />
-          </svg>
-          <p class="text-sm text-gray-400">Load a <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file to preview the structure here</p>
-          <label
-            class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm"
-            [class.cursor-pointer]="!disabled"
-            [class.opacity-50]="disabled"
-            [class.pointer-events-none]="disabled"
+      <div
+        class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center"
+      >
+        <svg
+          class="h-10 w-10 text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M20 7l-8-4-8 4m16 0v10l-8 4m0-10L4 7m8 10V11"
+          />
+        </svg>
+        <p class="text-sm text-gray-400">
+          Load a
+          <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file
+          to preview the structure here
+        </p>
+        <label
+          class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm"
+          [class.cursor-pointer]="!disabled"
+          [class.opacity-50]="disabled"
+          [class.pointer-events-none]="disabled"
+        >
+          <svg
+            class="h-4 w-4 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            Choose .pdb file
-            <input type="file" class="sr-only" accept=".pdb" [disabled]="disabled" (change)="onFileInputChange($event)" />
-          </label>
-        </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+          Choose .pdb file
+          <input
+            type="file"
+            class="sr-only"
+            accept=".pdb"
+            [disabled]="disabled"
+            (change)="onFileInputChange($event)"
+          />
+        </label>
+      </div>
       }
 
       <!-- Loading state -->
       @if (status() === 'loading') {
-        <div class="flex items-center gap-2 text-sm text-gray-500 py-2">
-          <svg class="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-          Loading structure…
-        </div>
+      <div class="flex items-center gap-2 text-sm text-gray-500 py-2">
+        <svg
+          class="animate-spin h-4 w-4 text-blue-600"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          ></path>
+        </svg>
+        Loading structure…
+      </div>
       }
 
       <!-- Error state -->
       @if (status() === 'error') {
-        <div class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3">
-          <svg class="mt-0.5 h-4 w-4 shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd" />
-          </svg>
-          <p class="text-sm text-red-700">{{ errorMessage() }}</p>
-        </div>
+      <div
+        class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3"
+      >
+        <svg
+          class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <p class="text-sm text-red-700">{{ errorMessage() }}</p>
+      </div>
       }
 
       <!-- Viewer container (always present so mol* can attach) -->
       <div
         [id]="containerId"
         class="molstar-wrap"
-        [class.hidden]="status() === 'idle' || status() === 'loading' || status() === 'error'"
+        [class.hidden]="
+          status() === 'idle' || status() === 'loading' || status() === 'error'
+        "
       ></div>
 
       <!-- Selection bar (shown when residues are picked) -->
       @if (status() === 'loaded') {
-        <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm">
-          <p class="font-medium text-blue-800">
-            Hotspot residue selection
-          </p>
-          @if (selectedResidues().length > 0) {
-            <p class="mt-1 text-blue-700 font-mono break-all">
-              {{ selectedResidues().join(',') }}
-            </p>
-            <button
-              type="button"
-              class="mt-2 text-xs text-blue-600 underline hover:text-blue-800"
-              (click)="clearSelection()"
-            >
-              Clear selection
-            </button>
-          } @else {
-            <p class="mt-1 text-blue-600">
-              Click residues in the viewer to add them as hotspots.
-              Hold <kbd class="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">Shift</kbd>
-              to add to the selection; click empty space to deselect.
-            </p>
-          }
-        </div>
+      <div
+        class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm"
+      >
+        <p class="font-medium text-blue-800">Hotspot residue selection</p>
+        @if (selectedResidues().length > 0) {
+        <p class="mt-1 text-blue-700 font-mono break-all">
+          {{ selectedResidues().join(",") }}
+        </p>
+        <button
+          type="button"
+          class="mt-2 text-xs text-blue-600 underline hover:text-blue-800"
+          (click)="clearSelection()"
+        >
+          Clear selection
+        </button>
+        } @else {
+        <p class="mt-1 text-blue-600">
+          Click residues in the viewer to add them as hotspots. Hold
+          <kbd class="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs"
+            >Shift</kbd
+          >
+          to add to the selection; click empty space to deselect.
+        </p>
+        }
+      </div>
       }
     </div>
-  `,
+  `
 })
 export class MolstarViewerComponent
   implements AfterViewInit, OnChanges, OnDestroy
@@ -173,6 +236,7 @@ export class MolstarViewerComponent
   private viewer: MolstarViewerInstance | null = null;
   /** Subscription handle returned by mol*'s selection event. */
   private selectionSub: { unsubscribe(): void } | null = null;
+  private readonly zone = inject(NgZone);
 
   private static instanceCount = 0;
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
@@ -188,7 +252,7 @@ export class MolstarViewerComponent
     if (file) {
       this.filePicked.emit(file);
       // Reset so the same file can be re-picked after an external clear.
-      input.value = '';
+      input.value = "";
     }
   }
 
@@ -218,16 +282,16 @@ export class MolstarViewerComponent
 
   clearSelection(): void {
     try {
-      // Ask mol* to deselect everything
+      // Documented API: plugin.managers.interactivity.lociSelects.deselectAll()
+      // https://molstar.org/docs/plugin/viewer-state/#select-loci
       const plugin = this.viewer?.plugin as Record<string, unknown> | undefined;
-      const mgr = (
-        plugin?.["managers"] as Record<string, unknown> | undefined
-      )?.["structure"] as Record<string, unknown> | undefined;
-      const sel = mgr?.["selection"] as
-        | Record<string, unknown>
-        | undefined;
-      if (typeof sel?.["clear"] === "function") {
-        (sel["clear"] as () => void)();
+      const lociSelects = (
+        (plugin?.["managers"] as Record<string, unknown> | undefined)?.[
+          "interactivity"
+        ] as Record<string, unknown> | undefined
+      )?.["lociSelects"] as Record<string, unknown> | undefined;
+      if (typeof lociSelects?.["deselectAll"] === "function") {
+        (lociSelects["deselectAll"] as () => void)();
       }
     } catch {
       // swallow — best-effort
@@ -315,7 +379,39 @@ export class MolstarViewerComponent
           layoutShowRightPanel: false,
           collapseRightPanel: true,
           layoutShowLog: false,
+          viewportShowSelectionMode: true,
+          viewportShowControls: false
         });
+        // Set granularity to residue so a single click selects the whole residue
+        // https://molstar.org/docs/plugin/viewer-state/#interactivity
+        try {
+          const iMgr = (
+            (this.viewer.plugin as Record<string, unknown>)[
+              "managers"
+            ] as Record<string, unknown>
+          )["interactivity"] as
+            | { setProps(p: Record<string, unknown>): void }
+            | undefined;
+          iMgr?.setProps?.({ granularity: "residue" });
+        } catch {
+          /* non-critical */
+        }
+        // Enable selection mode immediately so the user doesn't have to toggle it
+        try {
+          const selMode = (
+            (this.viewer.plugin as Record<string, unknown>)["selectionMode"]
+          );
+          if (selMode === false || selMode === undefined) {
+            ((this.viewer.plugin as Record<string, unknown>)["behaviors"] as Record<string, unknown>)
+              ["canvas3d"];
+            // Use the documented PluginCommands approach: set canvas3d selection mode
+            const canvas3d = (this.viewer.plugin as Record<string, unknown>)["canvas3d"] as
+              | { setProps(p: Record<string, unknown>): void } | undefined;
+            canvas3d?.setProps?.({ renderer: {} }); // no-op to force init
+          }
+          // The Viewer wrapper exposes plugin.selectionMode as a setter
+          (this.viewer.plugin as Record<string, unknown>)["selectionMode"] = true;
+        } catch { /* non-critical */ }
         this.hookSelection();
         this.preventButtonFormSubmit();
       } else {
@@ -325,7 +421,7 @@ export class MolstarViewerComponent
 
       const content = await file.text();
       await this.viewer.loadStructureFromData(content, "pdb", false, {
-        label: file.name,
+        label: file.name
       });
 
       this.status.set("loaded");
@@ -346,27 +442,43 @@ export class MolstarViewerComponent
 
   // ── Selection ──────────────────────────────────────────────────────────────
 
+  /**
+   * Subscribe to selection.events.changed — this fires AFTER Mol*'s own
+   * SelectLoci behavior has updated selection.entries, so we always read
+   * the correct current selection.
+   * https://molstar.org/docs/plugin/selections/#selection-events
+   *
+   * We also run the signal/emit inside NgZone so Angular's change detection
+   * picks up the update (Mol* callbacks execute outside Angular's zone).
+   */
   private hookSelection(): void {
     if (!this.viewer) return;
     try {
       const plugin = this.viewer.plugin as Record<string, unknown>;
-      const selectionMgr = ((plugin["managers"] as Record<string, unknown>)[
-        "structure"
-      ] as Record<string, unknown>)["selection"] as Record<string, unknown>;
+      // plugin.managers.structure.selection
+      const selMgr = (
+        (plugin["managers"] as Record<string, unknown>)["structure"] as Record<
+          string,
+          unknown
+        >
+      )["selection"] as Record<string, unknown>;
 
-      const events = selectionMgr["events"] as Record<string, unknown>;
-      const changed = events["changed"] as {
+      // selection.events.changed — fires after selection state is updated
+      const changed = (selMgr["events"] as Record<string, unknown>)[
+        "changed"
+      ] as {
         subscribe(cb: () => void): { unsubscribe(): void };
       };
 
       this.selectionSub = changed.subscribe(() => {
-        const residues = this.extractSelectedResidues(selectionMgr);
-        this.selectedResidues.set(residues);
-        this.residuesSelected.emit(residues.join(","));
+        const residues = this.readCurrentSelection(plugin);
+        // Run inside Angular's zone so signals + template bindings update
+        this.zone.run(() => {
+          this.selectedResidues.set(residues);
+          this.residuesSelected.emit(residues.join(","));
+        });
       });
     } catch {
-      // Mol* API mismatch — selection events won't fire, but the viewer
-      // still works for visual inspection.
       console.warn(
         "Mol* selection hook unavailable; hotspot auto-fill disabled."
       );
@@ -374,93 +486,79 @@ export class MolstarViewerComponent
   }
 
   /**
-   * Extracts auth chain + auth_seq_id strings (e.g. "A42") from mol*'s
-   * current selection using the atomic hierarchy stored in the model.
+   * Read current selection from plugin.managers.structure.selection.entries.
+   *
+   * Each entry is a SelectionEntry: { structure: Structure, ref: string }
+   * where `structure` is a sub-Structure containing ONLY the selected atoms.
+   * (The docs example destructures `{ structure }` from each entry value.)
+   * https://molstar.org/docs/plugin/selections/#selection-events
    */
-  private extractSelectedResidues(
-    selMgr: Record<string, unknown>
-  ): string[] {
+  private readCurrentSelection(plugin: Record<string, unknown>): string[] {
     const seen = new Set<string>();
     try {
-      // sel.entries: Map<string, { loci: StructureElement.Loci }>
-      const entries = selMgr["entries"] as
-        | Map<string, Record<string, unknown>>
-        | undefined;
+      const selMgr = (
+        (plugin["managers"] as Record<string, unknown>)["structure"] as Record<string, unknown>
+      )["selection"] as Record<string, unknown>;
+      const entries = selMgr["entries"] as Map<string, Record<string, unknown>>;
 
-      if (!entries) {
-        // Fallback: try getLoci()
-        const loci =
-          typeof selMgr["getLoci"] === "function"
-            ? (selMgr["getLoci"] as () => unknown)()
-            : null;
-        if (loci) this.visitLoci(loci as Record<string, unknown>, seen);
-        return Array.from(seen).sort();
+      for (const entry of entries.values()) {
+        // docs: for (const { structure } of selections)
+        this.visitStructureUnits(entry["structure"] as Record<string, unknown>, seen);
       }
-
-      for (const [, entry] of entries) {
-        this.visitLoci(entry["loci"] as Record<string, unknown>, seen);
-      }
-    } catch {
-      // swallow — best-effort extraction
-    }
+    } catch { /* swallow */ }
     return Array.from(seen).sort();
   }
 
-  /** Walk a single StructureElement.Loci and collect residue id strings. */
-  private visitLoci(
-    loci: Record<string, unknown>,
+  /**
+   * Iterate all units of a Mol* sub-Structure and collect
+   * auth chain + auth_seq_id residue strings (e.g. "A42").
+   *
+   * unit.elements is a SortedArray<ElementIndex> of GLOBAL atom indices
+   * (not unit-local offsets), so we pass them straight into the hierarchy
+   * index arrays.
+   */
+  private visitStructureUnits(
+    structure: Record<string, unknown> | undefined,
     out: Set<string>
   ): void {
-    if (!loci || loci["kind"] !== "element-loci") return;
+    if (!structure) return;
+    const units = structure["units"] as
+      | Array<Record<string, unknown>>
+      | undefined;
+    if (!Array.isArray(units)) return;
 
-    const elements = loci["elements"] as Array<{
-      unit: Record<string, unknown>;
-      indices: unknown;
-    }>;
-    if (!Array.isArray(elements)) return;
-
-    for (const { unit, indices } of elements) {
+    for (const unit of units) {
       try {
         const model = unit["model"] as Record<string, unknown>;
-        const atomicHierarchy = model["atomicHierarchy"] as Record<
-          string,
-          unknown
-        >;
-        const residueSegments = atomicHierarchy[
-          "residueAtomSegments"
-        ] as Record<string, ArrayLike<number>>;
-        const chainSegments = atomicHierarchy["chainAtomSegments"] as Record<
-          string,
-          ArrayLike<number>
-        >;
-        const residues = atomicHierarchy["residues"] as Record<
-          string,
-          unknown
-        >;
-        const chains = atomicHierarchy["chains"] as Record<string, unknown>;
-        const unitElements = unit["elements"] as ArrayLike<number>;
+        const ah = model["atomicHierarchy"] as Record<string, unknown>;
+        const residueIdx = (
+          ah["residueAtomSegments"] as Record<string, ArrayLike<number>>
+        )["index"];
+        const chainIdx = (
+          ah["chainAtomSegments"] as Record<string, ArrayLike<number>>
+        )["index"];
 
-        const seqIdCol = (
-          (residues["auth_seq_id"] as Record<string, unknown>)["value"] as (
-            i: number
-          ) => number
-        ).bind(residues["auth_seq_id"]);
-        const chainIdCol = (
-          (chains["auth_asym_id"] as Record<string, unknown>)["value"] as (
-            i: number
-          ) => string
-        ).bind(chains["auth_asym_id"]);
+        const seqIdVal = (
+          (ah["residues"] as Record<string, unknown>)["auth_seq_id"] as Record<
+            string,
+            unknown
+          >
+        )["value"] as (i: number) => number;
+        const chainIdVal = (
+          (ah["chains"] as Record<string, unknown>)["auth_asym_id"] as Record<
+            string,
+            unknown
+          >
+        )["value"] as (i: number) => string;
 
-        this.iterateOrderedSet(indices, (unitIdx) => {
-          const atomIdx = unitElements[unitIdx];
-          const rI = residueSegments["index"][atomIdx];
-          const cI = chainSegments["index"][atomIdx];
-          const seqId = seqIdCol(rI);
-          const chainId = chainIdCol(cI);
-          out.add(`${chainId}${seqId}`);
+        // unit.elements: global atom indices already selected in this unit
+        this.iterateOrderedSet(unit["elements"], (atomIdx) => {
+          out.add(
+            `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(residueIdx[atomIdx])}`
+          );
         });
       } catch {
-        // skip this element group on any hierarchy mismatch
+        /* skip unit on any hierarchy mismatch */
       }
     }
   }
@@ -470,10 +568,7 @@ export class MolstarViewerComponent
    *   - an Interval `{ min, max }` (exclusive end)
    *   - a SortedArray (TypedArray / ArrayLike<number>)
    */
-  private iterateOrderedSet(
-    set: unknown,
-    cb: (v: number) => void
-  ): void {
+  private iterateOrderedSet(set: unknown, cb: (v: number) => void): void {
     if (set === null || set === undefined) return;
     if (ArrayBuffer.isView(set)) {
       const arr = set as unknown as ArrayLike<number>;
