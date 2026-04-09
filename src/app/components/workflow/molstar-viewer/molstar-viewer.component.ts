@@ -31,8 +31,7 @@ interface MolstarViewerInstance {
     isBinary?: boolean,
     options?: Record<string, unknown>
   ): Promise<void>;
-  clear(): Promise<void>;
-  plugin: Record<string, unknown>;
+  plugin: Record<string, unknown> & { clear(): Promise<void> };
 }
 
 declare global {
@@ -59,8 +58,8 @@ const MOLSTAR_JS =
       app-molstar-viewer .molstar-wrap {
         position: relative;
         width: 100%;
-        height: 520px;
-        min-height: 520px;
+        height: 360px;
+        min-height: 360px;
         overflow: hidden;
         border: 1px solid #e5e7eb;
         border-radius: 0.5rem;
@@ -82,9 +81,32 @@ const MOLSTAR_JS =
   ],
   template: `
     <div class="space-y-2">
-      <h4 class="text-sm font-medium text-gray-700">
-        Target Structure Preview
-      </h4>
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-medium text-gray-700">
+          Target Structure Preview
+        </h4>
+        @if (status() === 'loaded') {
+        <label
+          class="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
+          [class.cursor-pointer]="!disabled"
+          [class.opacity-50]="disabled"
+          [class.pointer-events-none]="disabled"
+        >
+          <svg class="h-3.5 w-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Upload new structure
+          <input
+            type="file"
+            class="sr-only"
+            accept=".pdb"
+            [disabled]="disabled"
+            (change)="onFileInputChange($event)"
+          />
+        </label>
+        }
+      </div>
 
       <!-- Idle placeholder (no file selected yet) -->
       @if (status() === 'idle') {
@@ -286,7 +308,7 @@ export class MolstarViewerComponent
 
   ngOnDestroy(): void {
     this.cleanupSubscription();
-    void this.viewer?.clear();
+    void this.viewer?.plugin?.clear();
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
@@ -426,8 +448,10 @@ export class MolstarViewerComponent
         this.hookSelection();
         this.preventButtonFormSubmit();
       } else {
-        // Clear previous structure
-        await this.viewer.clear();
+        // Clear previous structure and re-hook selection for the new one
+        await this.viewer.plugin.clear();
+        this.cleanupSubscription();
+        this.hookSelection();
       }
 
       const content = await file.text();
@@ -490,7 +514,7 @@ export class MolstarViewerComponent
 
   private clearViewer(): void {
     this.cleanupSubscription();
-    void this.viewer?.clear();
+    void this.viewer?.plugin?.clear();
     this.selectedResidues.set([]);
     this.status.set("idle");
   }

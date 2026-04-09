@@ -22,33 +22,48 @@ export interface LengthRange {
     `
       :host {
         display: block;
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .slider-wrapper {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
       }
       .slider-track {
-        position: relative;
+        display: grid;
+        align-items: center;
+        width: 100%;
+        height: 24px;
+        margin: 4px 0;
+        box-sizing: border-box;
+      }
+      .slider-track-bar {
+        grid-area: 1/1;
         height: 6px;
         background: #e5e7eb;
         border-radius: 3px;
-        margin: 10px 0;
+        pointer-events: none;
       }
       .slider-fill {
-        position: absolute;
-        height: 100%;
+        grid-area: 1/1;
+        height: 6px;
         background: #3b82f6;
         border-radius: 3px;
         pointer-events: none;
       }
       input[type="range"] {
-        position: absolute;
+        grid-area: 1/1;
         width: 100%;
-        top: 50%;
-        transform: translateY(-50%);
+        height: 24px;
         -webkit-appearance: none;
         appearance: none;
         background: transparent;
         pointer-events: none;
         margin: 0;
         padding: 0;
-        height: 6px;
+        box-sizing: border-box;
       }
       input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
@@ -83,7 +98,7 @@ export interface LengthRange {
     `,
   ],
   template: `
-    <div>
+    <div class="slider-wrapper">
       <div class="flex items-center justify-between mb-2">
         <div class="text-xs text-gray-500">
           Min length: <strong class="text-gray-700">{{ currentMin() }}</strong>
@@ -94,10 +109,11 @@ export interface LengthRange {
       </div>
 
       <div class="slider-track">
+        <div class="slider-track-bar"></div>
         <div
           class="slider-fill"
-          [style.left.%]="fillLeft()"
-          [style.right.%]="fillRight()"
+          [style.margin-left.%]="fillLeft()"
+          [style.margin-right.%]="fillRight()"
         ></div>
         <input
           type="range"
@@ -128,7 +144,7 @@ export class LengthRangeSliderComponent implements OnChanges {
   @Input() min = 0;
   @Input() max = 300;
   @Input() minValue = 65;
-  @Input() maxValue = 150;
+  @Input() maxValue = 65;
   @Input() disabled = false;
   @Output() rangeChange = new EventEmitter<LengthRange>();
 
@@ -137,7 +153,7 @@ export class LengthRangeSliderComponent implements OnChanges {
   readonly _max = signal(300);
 
   readonly currentMin = signal(65);
-  readonly currentMax = signal(150);
+  readonly currentMax = signal(65);
 
   readonly fillLeft = computed(() =>
     this._max() > this._min()

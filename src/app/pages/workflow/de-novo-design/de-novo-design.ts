@@ -192,6 +192,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.showError(validation.error ?? "Invalid PDB file.");
       return;
     }
+    // If replacing an existing file, clear all structure-derived fields first.
+    if (this.localPdbFile()) {
+      this.updateRowValue(rowId, "chains", "");
+      this.updateRowValue(rowId, "target_hotspot_residues", "");
+      this.updateRowValue(rowId, "min_length", "");
+      this.updateRowValue(rowId, "max_length", "");
+      this.pdbSequenceLength.set(300);
+    }
     this.localPdbFile.set(file);
     // Use filename as placeholder value so schema required-check passes.
     this.updateRowValueWithValidation(rowId, "starting_pdb", file.name);
@@ -210,6 +218,18 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   onSequenceLengthDetected(length: number): void {
     this.pdbSequenceLength.set(length);
+    // Only clamp min/max when the structure is shorter than the schema's default max.
+    const rowId = this.schemaLoader.inputRows()[0]?.id;
+    if (rowId) {
+      const schemaMax = this.getRowNumberValue(rowId, "max_length", 150);
+      if (length < schemaMax) {
+        const schemaMin = this.getRowNumberValue(rowId, "min_length", 65);
+        const clampedMax = length;
+        const clampedMin = Math.min(schemaMin, clampedMax - 1);
+        this.updateRowValue(rowId, "min_length", clampedMin);
+        this.updateRowValue(rowId, "max_length", clampedMax);
+      }
+    }
   }
 
   onLengthRangeChange(rowId: string, range: { min: number; max: number }): void {

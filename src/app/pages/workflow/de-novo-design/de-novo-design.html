@@ -137,83 +137,89 @@
                   </h4>
                 </div>
 
-                <div
-                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                >
-                  @for (field of schemaLoader.requiredInputFields(); track
-                  field.name) {
-                    @if (field.name === 'starting_pdb') {
-                    <!-- PDB picker + Mol* viewer as one connected card -->
-                    <div class="col-span-1 md:col-span-2 lg:col-span-3 overflow-hidden rounded-lg border border-gray-200">
-                    
-                      <!-- Header row -->
-                      <div class="flex items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3">
-                        <div>
-                          <label class="block text-sm font-medium text-gray-700">
-                            Target PDB file
-                            <span class="text-red-500 ml-1">*</span>
-                          </label>
-                          <p class="mt-0.5 text-xs text-gray-500">
-                            Click residues in the preview to set hotspot targets.
-                            The file is uploaded when you click <strong>Next</strong>.
-                          </p>
-                        </div>
-                        @if (localPdbFile()) {
-                          <div class="flex shrink-0 items-center gap-2">
-                            <span class="max-w-48 truncate text-xs text-gray-500">{{ localPdbFile()!.name }}</span>
-                            <button
-                              type="button"
-                              class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600"
-                              (click)="clearLocalPdb(row.id)"
-                            >Clear</button>
-                          </div>
-                        }
-                      </div>
+                <div class="flex flex-col lg:flex-row gap-4 items-start">
 
-                      @if (hasRowFieldError(row.id, 'starting_pdb') && !localPdbFile()) {
-                        <p class="px-4 pt-2 text-sm text-red-600">
-                          {{ getRowFieldError(row.id, 'starting_pdb') }}
+                  <!-- Left half: PDB viewer -->
+                  <div class="w-full lg:w-1/2 overflow-hidden rounded-lg border border-gray-200">
+
+                    <!-- Header row -->
+                    <div class="flex items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700">
+                          Target PDB file
+                          <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <p class="mt-0.5 text-xs text-gray-500">
+                          Click residues in the preview to set hotspot targets.
+                          The file is uploaded when you click <strong>Next</strong>.
                         </p>
-                      }
-<!-- Mol* viewer — fills the bottom of the card -->
-<div class="p-4">
-  <app-molstar-viewer
-    [pdbFile]="localPdbFile()"
-    [disabled]="isPdbUploading()"
-    (filePicked)="onPdbFilePicked($event, row.id)"
-    (residuesSelected)="onResiduesSelected(row.id, $event)"
-    (sequenceLengthDetected)="onSequenceLengthDetected($event)"
-  ></app-molstar-viewer>
-</div>
-                    </div>
-                    } @else if (field.name === 'min_length') {
-                    <div class="col-span-1 md:col-span-2 lg:col-span-3 rounded-lg border border-gray-200 px-4 py-3">
-                      <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Binder Length Range <span class="text-red-500">*</span>
-                      </label>
+                      </div>
                       @if (localPdbFile()) {
-                        <p class="text-xs text-gray-500 mb-3">
-                          Range bounded by the target structure ({{ pdbSequenceLength() }} residues).
-                        </p>
+                        <div class="flex shrink-0 items-center gap-2">
+                          <span class="max-w-48 truncate text-xs text-gray-500">{{ localPdbFile()!.name }}</span>
+                          <button
+                            type="button"
+                            class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600"
+                            (click)="clearLocalPdb(row.id)"
+                          >Clear</button>
+                        </div>
                       }
-                      <app-length-range-slider
-                        [min]="0"
-                        [max]="pdbSequenceLength()"
-                        [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
-                        [maxValue]="getRowNumberValue(row.id, 'max_length', 150)"
-                        [disabled]="isPdbUploading()"
-                        (rangeChange)="onLengthRangeChange(row.id, $event)"
-                      ></app-length-range-slider>
                     </div>
-                    } @else if (field.name === 'max_length') {
-                    <!-- handled by the Binder Length Range slider above -->
-                    } @else {
-                    <app-form-field [field]="field" [value]="getRowValue(row.id, field.name)"
-                      [hasError]="hasRowFieldError(row.id, field.name)" [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                      (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                      (fieldBlur)="validateRowField(row.id, field.name)"></app-form-field>
+
+                    @if (hasRowFieldError(row.id, 'starting_pdb') && !localPdbFile()) {
+                      <p class="px-4 pt-2 text-sm text-red-600">
+                        {{ getRowFieldError(row.id, 'starting_pdb') }}
+                      </p>
                     }
-                  }
+
+                    <div class="p-4">
+                      <app-molstar-viewer
+                        [pdbFile]="localPdbFile()"
+                        [disabled]="isPdbUploading()"
+                        (filePicked)="onPdbFilePicked($event, row.id)"
+                        (residuesSelected)="onResiduesSelected(row.id, $event)"
+                        (sequenceLengthDetected)="onSequenceLengthDetected($event)"
+                      ></app-molstar-viewer>
+                    </div>
+                  </div>
+
+                  <!-- Right half: all other fields -->
+                  <div class="w-full lg:w-1/2 min-w-0 flex flex-col gap-4">
+                    @for (field of schemaLoader.requiredInputFields(); track field.name) {
+                      @if (field.name === 'starting_pdb' || field.name === 'max_length') {
+                        <!-- skip: viewer on left, max_length handled by slider -->
+                      } @else if (field.name === 'min_length') {
+                      <div class="rounded-lg border border-gray-200 px-4 py-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                          Binder Length Range <span class="text-red-500">*</span>
+                        </label>
+                        @if (localPdbFile()) {
+                          <p class="text-xs text-gray-500 mb-3">
+                            Range bounded by the target structure ({{ pdbSequenceLength() }} residues).
+                          </p>
+                        }
+                        <app-length-range-slider
+                          [min]="0"
+                          [max]="pdbSequenceLength()"
+                          [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
+                          [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
+                          [disabled]="isPdbUploading()"
+                          (rangeChange)="onLengthRangeChange(row.id, $event)"
+                        ></app-length-range-slider>
+                      </div>
+                      } @else {
+                      <app-form-field
+                        [field]="field"
+                        [value]="getRowValue(row.id, field.name)"
+                        [hasError]="hasRowFieldError(row.id, field.name)"
+                        [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                        (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                        (fieldBlur)="validateRowField(row.id, field.name)"
+                      ></app-form-field>
+                      }
+                    }
+                  </div>
+
                 </div>
               </div>
               }
