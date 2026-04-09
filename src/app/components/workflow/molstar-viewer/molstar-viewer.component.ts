@@ -8,6 +8,7 @@ import {
   OnDestroy,
   Output,
   SimpleChanges,
+  ViewEncapsulation,
   inject,
   signal
 } from "@angular/core";
@@ -49,12 +50,13 @@ const MOLSTAR_JS =
   selector: "app-molstar-viewer",
   standalone: true,
   imports: [CommonModule],
+  encapsulation: ViewEncapsulation.None,
   styles: [
     `
-      :host {
+      app-molstar-viewer {
         display: block;
       }
-      .molstar-wrap {
+      app-molstar-viewer .molstar-wrap {
         position: relative;
         width: 100%;
         height: 520px;
@@ -64,9 +66,16 @@ const MOLSTAR_JS =
         border-radius: 0.5rem;
         background: #1e1e2e;
       }
-      /* Hide the right panel and right-side toolbar */
-      .molstar-wrap ::ng-deep .msp-layout-region-right,
-      .molstar-wrap ::ng-deep .msp-viewport-controls-panels {
+      /* Hide all Mol* toolbars and control panels */
+      app-molstar-viewer .msp-layout-region-top,
+      app-molstar-viewer .msp-layout-region-right,
+      app-molstar-viewer .msp-layout-region-left,
+      app-molstar-viewer .msp-layout-region-bottom,
+      app-molstar-viewer .msp-viewport-controls,
+      app-molstar-viewer .msp-viewport-controls-panels,
+      app-molstar-viewer .msp-selection-viewport-controls,
+      app-molstar-viewer .msp-controls-panel,
+      app-molstar-viewer .msp-sequence-wrapper {
         display: none !important;
       }
     `
@@ -228,6 +237,8 @@ export class MolstarViewerComponent
   @Input() disabled = false;
   /** Emits the chosen File when the user picks one from the idle placeholder. */
   @Output() filePicked = new EventEmitter<File>();
+  /** Emits total residue count of the loaded structure (use as slider max). */
+  @Output() sequenceLengthDetected = new EventEmitter<number>();
 
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
   readonly errorMessage = signal("");
@@ -372,8 +383,8 @@ export class MolstarViewerComponent
       if (!this.viewer) {
         this.viewer = await window.molstar.Viewer.create(this.containerId, {
           layoutIsExpanded: false,
-          layoutShowControls: true,
-          layoutShowSequence: true,
+          layoutShowControls: false,
+          layoutShowSequence: false,
           layoutShowRemoteState: false,
           layoutShowLeftPanel: false,
           layoutShowRightPanel: false,
@@ -425,12 +436,56 @@ export class MolstarViewerComponent
       });
 
       this.status.set("loaded");
+      this.emitSequenceLength();
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Could not render PDB file.";
       this.errorMessage.set(msg);
       this.status.set("error");
     }
+  }
+
+  /** Count unique residues across all units and emit as the slider upper bound. */
+  private emitSequenceLength(): void {
+    try {
+      const plugin = this.viewer!.plugin as Record<string, unknown>;
+      const structureList = (
+        (
+          (plugin["managers"] as Record<string, unknown>)["structure"] as Record<string, unknown>
+        )["hierarchy"] as Record<string, unknown>
+      )["current"] as Record<string, unknown>;
+      const structures = structureList["structures"] as Array<Record<string, unknown>>;
+      if (!Array.isArray(structures) || structures.length === 0) return;
+
+      const residuesSeen = new Set<string>();
+      for (const s of structures) {
+        const data = (
+          (s["cell"] as Record<string, unknown>)["obj"] as Record<string, unknown>
+        )?.["data"] as Record<string, unknown> | undefined;
+        if (!data) continue;
+        const units = data["units"] as Array<Record<string, unknown>> | undefined;
+        if (!Array.isArray(units)) continue;
+        for (const unit of units) {
+          try {
+            const model = unit["model"] as Record<string, unknown>;
+            const ah = model["atomicHierarchy"] as Record<string, unknown>;
+            const chainIdx = (ah["chainAtomSegments"] as Record<string, ArrayLike<number>>)["index"];
+            const residueIdx = (ah["residueAtomSegments"] as Record<string, ArrayLike<number>>)["index"];
+            const seqIdVal = ((ah["residues"] as Record<string, unknown>)["auth_seq_id"] as Record<string, unknown>)["value"] as (i: number) => number;
+            const chainIdVal = ((ah["chains"] as Record<string, unknown>)["auth_asym_id"] as Record<string, unknown>)["value"] as (i: number) => string;
+            const elements = unit["elements"] as ArrayLike<number>;
+            for (let i = 0; i < elements.length; i++) {
+              const atomIdx = elements[i];
+              residuesSeen.add(`${chainIdVal(chainIdx[atomIdx])}_${seqIdVal(residueIdx[atomIdx])}`);
+            }
+          } catch { /* skip unit */ }
+        }
+      }
+
+      if (residuesSeen.size > 0) {
+        this.zone.run(() => this.sequenceLengthDetected.emit(residuesSeen.size));
+      }
+    } catch { /* non-critical */ }
   }
 
   private clearViewer(): void {

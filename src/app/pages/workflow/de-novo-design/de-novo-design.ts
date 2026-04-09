@@ -11,6 +11,7 @@ import {
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
+import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
 
 import { filter, Subscription, take } from "rxjs";
 import { AlertComponent } from "../../../components/alert/alert.component";
@@ -62,7 +63,8 @@ type StepItem = Step;
     FormFieldComponent,
     ConfigurationSummaryComponent,
     FormStatusComponent,
-    MolstarViewerComponent
+    MolstarViewerComponent,
+    LengthRangeSliderComponent
   ],
   host: {
     class: "block w-full de-novo-design-bg"
@@ -175,6 +177,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  Actual upload to S3 is deferred until the user clicks Next. */
   localPdbFile = signal<File | null>(null);
 
+  /** Residue count of the loaded PDB — drives the range slider upper bound. */
+  pdbSequenceLength = signal<number>(300);
+
   /** True while the PDB file is being uploaded to S3 on Next click. */
   isPdbUploading = signal(false);
 
@@ -197,6 +202,19 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(rowId, "starting_pdb", "");
     this.updateRowValue(rowId, "chains", "");
     this.updateRowValue(rowId, "target_hotspot_residues", "");
+  }
+
+  onChainsDetected(rowId: string, chains: string): void {
+    this.updateRowValueWithValidation(rowId, "chains", chains);
+  }
+
+  onSequenceLengthDetected(length: number): void {
+    this.pdbSequenceLength.set(length);
+  }
+
+  onLengthRangeChange(rowId: string, range: { min: number; max: number }): void {
+    this.updateRowValueWithValidation(rowId, "min_length", range.min);
+    this.updateRowValueWithValidation(rowId, "max_length", range.max);
   }
 
   /** Called when the user selects residues in the Mol* viewer.
@@ -769,6 +787,16 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   // Get value for a specific row and field
   getRowValue(rowId: string, fieldName: string): unknown {
     return this.schemaLoader.getRowValue(rowId, fieldName);
+  }
+
+  getRowNumberValue(rowId: string, fieldName: string, defaultVal: number): number {
+    const val = this.getRowValue(rowId, fieldName);
+    if (typeof val === "number" && Number.isFinite(val)) return val;
+    if (typeof val === "string" && val !== "") {
+      const n = Number(val);
+      if (Number.isFinite(n)) return n;
+    }
+    return defaultVal;
   }
 
   // Row-level validation methods
