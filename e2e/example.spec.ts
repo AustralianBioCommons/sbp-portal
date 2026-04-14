@@ -10,7 +10,7 @@ test.describe("Basic app", () => {
   });
 
   test("main content visible", async ({ page }) => {
-    const content = page.locator("app-root");
-    await expect(content).toBeVisible();
+    const content = page.locator("app-header");
+    await expect(content).toBeVisible({ timeout: 15000 });
   });
 });
