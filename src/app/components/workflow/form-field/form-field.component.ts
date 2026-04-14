@@ -194,7 +194,7 @@ export class FormFieldComponent {
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
-  alertType = signal<"error" | "success" | "warning" | "info">("error");
+  alertType = signal<'error' | 'success' | 'warning' | 'info'>('error');
 
   @Input({ required: true }) field!: InputSchemaField;
   @Input() value: unknown = "";
@@ -222,13 +222,13 @@ export class FormFieldComponent {
 
   private showError(message: string): void {
     this.alertMessage.set(message);
-    this.alertType.set("error");
+    this.alertType.set('error');
     this.showAlert.set(true);
   }
 
   private showSuccess(message: string): void {
     this.alertMessage.set(message);
-    this.alertType.set("success");
+    this.alertType.set('success');
     this.showAlert.set(true);
   }
 

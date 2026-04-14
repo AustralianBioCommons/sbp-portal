@@ -64,13 +64,13 @@ type StepItem = Step;
     ConfigurationSummaryComponent,
     FormStatusComponent,
     MolstarViewerComponent,
-    LengthRangeSliderComponent
+    LengthRangeSliderComponent,
   ],
   host: {
-    class: "block w-full de-novo-design-bg"
+    class: "block w-full de-novo-design-bg",
   },
   templateUrl: "./de-novo-design.html",
-  styleUrls: ["./de-novo-design.scss"]
+  styleUrls: ["./de-novo-design.scss"],
 })
 export class DeNovoDesignComponent implements OnInit, OnDestroy {
   private readonly availableToolId: ToolChip["id"] = "bindcraft";
@@ -107,7 +107,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   readonly tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
     { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" }
+    { id: "papers", label: "Papers" },
   ];
   activeTab = signal<TabItem["id"]>("overview");
   isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
@@ -119,16 +119,16 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   readonly tools: ToolChip[] = [
     {
       id: "boltzgen",
-      label: "BoltzGen"
+      label: "BoltzGen",
     },
     {
       id: "rfdiffusion",
-      label: "RFDiffusion"
+      label: "RFDiffusion",
     },
     {
       id: "bindcraft",
-      label: "BindCraft"
-    }
+      label: "BindCraft",
+    },
   ];
   readonly unavailableToolLabels: string[] = this.tools
     .filter((tool) => tool.id !== this.availableToolId)
@@ -159,7 +159,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   > = {
     boltzgen: [],
     rfdiffusion: [],
-    bindcraft: []
+    bindcraft: [],
   };
 
   // Computed signal to indicate whether the currently selected tool exposes parameters
@@ -279,18 +279,18 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     {
       id: 1,
       title: "Input Configuration",
-      description: "Provide sequence or structure inputs"
+      description: "Provide sequence or structure inputs",
     },
     {
       id: 2,
       title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool"
+      description: "Configure parameters specific to the selected tool",
     },
     {
       id: 3,
       title: "Review & Submit",
-      description: "Review all settings and run the job"
-    }
+      description: "Review all settings and run the job",
+    },
   ];
   currentStep = signal<number>(1);
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
