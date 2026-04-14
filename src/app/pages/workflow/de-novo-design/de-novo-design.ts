@@ -216,7 +216,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
-  onSequenceLengthDetected(_length: number): void {
+  onSequenceLengthDetected(_: number): void {
     // Slider bound and min/max values stay at schema defaults regardless of PDB length.
   }
 
