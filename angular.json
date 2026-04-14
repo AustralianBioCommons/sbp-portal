@@ -31,7 +31,20 @@
             ],
             "styles": ["src/styles.scss"],
             "scripts": [],
-            "allowedCommonJsDependencies": ["als-normalize-urlpath"]
+            "allowedCommonJsDependencies": [
+              "als-normalize-urlpath",
+              "react",
+              "react-dom/client",
+              "react/jsx-runtime",
+              "mutative/dist/index.js",
+              "style-to-js",
+              "extend"
+            ],
+            "externalDependencies": ["h264-mp4-encoder"],
+            "loader": {
+              ".jpg": "file",
+              ".png": "file"
+            }
           },
           "configurations": {
             "production": {
@@ -40,8 +53,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "1MB",
-                  "maximumError": "1.5MB"
+                  "maximumWarning": "5MB",
+                  "maximumError": "8MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -56,8 +69,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
-                  "maximumError": "5MB"
+                  "maximumWarning": "5MB",
+                  "maximumError": "10MB"
                 },
                 {
                   "type": "anyComponentStyle",
