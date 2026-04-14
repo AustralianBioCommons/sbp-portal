@@ -177,8 +177,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  Actual upload to S3 is deferred until the user clicks Next. */
   localPdbFile = signal<File | null>(null);
 
-  /** Residue count of the loaded PDB — drives the range slider upper bound. */
+  /** Schema default max_length — drives the range slider upper bound. */
   pdbSequenceLength = signal<number>(300);
+  /** Schema default min_length — drives the range slider lower bound. */
+  pdbSequenceMin = signal<number>(0);
 
   /** True while the PDB file is being uploaded to S3 on Next click. */
   isPdbUploading = signal(false);
@@ -192,13 +194,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.showError(validation.error ?? "Invalid PDB file.");
       return;
     }
-    // If replacing an existing file, clear all structure-derived fields first.
+    // If replacing an existing file, clear only structure-derived fields;
+    // min_length, max_length, and pdbSequenceLength stay at schema defaults.
     if (this.localPdbFile()) {
       this.updateRowValue(rowId, "chains", "");
       this.updateRowValue(rowId, "target_hotspot_residues", "");
-      this.updateRowValue(rowId, "min_length", "");
-      this.updateRowValue(rowId, "max_length", "");
-      this.pdbSequenceLength.set(300);
     }
     this.localPdbFile.set(file);
     // Use filename as placeholder value so schema required-check passes.
@@ -216,20 +216,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
-  onSequenceLengthDetected(length: number): void {
-    this.pdbSequenceLength.set(length);
-    // Only clamp min/max when the structure is shorter than the schema's default max.
-    const rowId = this.schemaLoader.inputRows()[0]?.id;
-    if (rowId) {
-      const schemaMax = this.getRowNumberValue(rowId, "max_length", 150);
-      if (length < schemaMax) {
-        const schemaMin = this.getRowNumberValue(rowId, "min_length", 65);
-        const clampedMax = length;
-        const clampedMin = Math.min(schemaMin, clampedMax - 1);
-        this.updateRowValue(rowId, "min_length", clampedMin);
-        this.updateRowValue(rowId, "max_length", clampedMax);
-      }
-    }
+  onSequenceLengthDetected(_length: number): void {
+    // Slider bound and min/max values stay at schema defaults regardless of PDB length.
   }
 
   onLengthRangeChange(rowId: string, range: { min: number; max: number }): void {
@@ -442,6 +430,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_4stage_multimer.json";
 
         this.initializeFormData(defaultValues);
+
+        // Seed slider bounds from schema defaults so they never change with PDB load.
+        if (typeof defaultValues['max_length'] === 'number') {
+          this.pdbSequenceLength.set(defaultValues['max_length'] as number);
+        }
+        if (typeof defaultValues['min_length'] === 'number') {
+          this.pdbSequenceMin.set(defaultValues['min_length'] as number);
+        }
 
         // Initialize table with one default row
         this.schemaLoader.initializeDefaultRow(() => {

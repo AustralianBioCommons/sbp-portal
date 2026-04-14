@@ -65,16 +65,14 @@ const MOLSTAR_JS =
         border-radius: 0.5rem;
         background: #1e1e2e;
       }
-      /* Hide all Mol* toolbars and control panels */
-      app-molstar-viewer .msp-layout-region-top,
+      /* Keep only the sequence bar (top) and 3D viewport visible */
       app-molstar-viewer .msp-layout-region-right,
       app-molstar-viewer .msp-layout-region-left,
       app-molstar-viewer .msp-layout-region-bottom,
       app-molstar-viewer .msp-viewport-controls,
       app-molstar-viewer .msp-viewport-controls-panels,
       app-molstar-viewer .msp-selection-viewport-controls,
-      app-molstar-viewer .msp-controls-panel,
-      app-molstar-viewer .msp-sequence-wrapper {
+      app-molstar-viewer .msp-controls-panel {
         display: none !important;
       }
     `
@@ -92,9 +90,18 @@ const MOLSTAR_JS =
           [class.opacity-50]="disabled"
           [class.pointer-events-none]="disabled"
         >
-          <svg class="h-3.5 w-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          <svg
+            class="h-3.5 w-3.5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
           </svg>
           Upload new structure
           <input
@@ -405,8 +412,8 @@ export class MolstarViewerComponent
       if (!this.viewer) {
         this.viewer = await window.molstar.Viewer.create(this.containerId, {
           layoutIsExpanded: false,
-          layoutShowControls: false,
-          layoutShowSequence: false,
+          layoutShowControls: true,
+          layoutShowSequence: true,
           layoutShowRemoteState: false,
           layoutShowLeftPanel: false,
           layoutShowRightPanel: false,
@@ -431,20 +438,27 @@ export class MolstarViewerComponent
         }
         // Enable selection mode immediately so the user doesn't have to toggle it
         try {
-          const selMode = (
-            (this.viewer.plugin as Record<string, unknown>)["selectionMode"]
-          );
+          const selMode = (this.viewer.plugin as Record<string, unknown>)[
+            "selectionMode"
+          ];
           if (selMode === false || selMode === undefined) {
-            ((this.viewer.plugin as Record<string, unknown>)["behaviors"] as Record<string, unknown>)
-              ["canvas3d"];
+            (
+              (this.viewer.plugin as Record<string, unknown>)[
+                "behaviors"
+              ] as Record<string, unknown>
+            )["canvas3d"];
             // Use the documented PluginCommands approach: set canvas3d selection mode
-            const canvas3d = (this.viewer.plugin as Record<string, unknown>)["canvas3d"] as
-              | { setProps(p: Record<string, unknown>): void } | undefined;
+            const canvas3d = (this.viewer.plugin as Record<string, unknown>)[
+              "canvas3d"
+            ] as { setProps(p: Record<string, unknown>): void } | undefined;
             canvas3d?.setProps?.({ renderer: {} }); // no-op to force init
           }
           // The Viewer wrapper exposes plugin.selectionMode as a setter
-          (this.viewer.plugin as Record<string, unknown>)["selectionMode"] = true;
-        } catch { /* non-critical */ }
+          (this.viewer.plugin as Record<string, unknown>)["selectionMode"] =
+            true;
+        } catch {
+          /* non-critical */
+        }
         this.hookSelection();
         this.preventButtonFormSubmit();
       } else {
@@ -459,6 +473,8 @@ export class MolstarViewerComponent
         label: file.name
       });
 
+      await this.applyBallAndStick();
+      this.showSequencePanel();
       this.status.set("loaded");
       this.emitSequenceLength();
     } catch (err) {
@@ -475,41 +491,72 @@ export class MolstarViewerComponent
       const plugin = this.viewer!.plugin as Record<string, unknown>;
       const structureList = (
         (
-          (plugin["managers"] as Record<string, unknown>)["structure"] as Record<string, unknown>
+          (plugin["managers"] as Record<string, unknown>)[
+            "structure"
+          ] as Record<string, unknown>
         )["hierarchy"] as Record<string, unknown>
       )["current"] as Record<string, unknown>;
-      const structures = structureList["structures"] as Array<Record<string, unknown>>;
+      const structures = structureList["structures"] as Array<
+        Record<string, unknown>
+      >;
       if (!Array.isArray(structures) || structures.length === 0) return;
 
       const residuesSeen = new Set<string>();
       for (const s of structures) {
         const data = (
-          (s["cell"] as Record<string, unknown>)["obj"] as Record<string, unknown>
+          (s["cell"] as Record<string, unknown>)["obj"] as Record<
+            string,
+            unknown
+          >
         )?.["data"] as Record<string, unknown> | undefined;
         if (!data) continue;
-        const units = data["units"] as Array<Record<string, unknown>> | undefined;
+        const units = data["units"] as
+          | Array<Record<string, unknown>>
+          | undefined;
         if (!Array.isArray(units)) continue;
         for (const unit of units) {
           try {
             const model = unit["model"] as Record<string, unknown>;
             const ah = model["atomicHierarchy"] as Record<string, unknown>;
-            const chainIdx = (ah["chainAtomSegments"] as Record<string, ArrayLike<number>>)["index"];
-            const residueIdx = (ah["residueAtomSegments"] as Record<string, ArrayLike<number>>)["index"];
-            const seqIdVal = ((ah["residues"] as Record<string, unknown>)["auth_seq_id"] as Record<string, unknown>)["value"] as (i: number) => number;
-            const chainIdVal = ((ah["chains"] as Record<string, unknown>)["auth_asym_id"] as Record<string, unknown>)["value"] as (i: number) => string;
+            const chainIdx = (
+              ah["chainAtomSegments"] as Record<string, ArrayLike<number>>
+            )["index"];
+            const residueIdx = (
+              ah["residueAtomSegments"] as Record<string, ArrayLike<number>>
+            )["index"];
+            const seqIdVal = (
+              (ah["residues"] as Record<string, unknown>)[
+                "auth_seq_id"
+              ] as Record<string, unknown>
+            )["value"] as (i: number) => number;
+            const chainIdVal = (
+              (ah["chains"] as Record<string, unknown>)[
+                "auth_asym_id"
+              ] as Record<string, unknown>
+            )["value"] as (i: number) => string;
             const elements = unit["elements"] as ArrayLike<number>;
             for (let i = 0; i < elements.length; i++) {
               const atomIdx = elements[i];
-              residuesSeen.add(`${chainIdVal(chainIdx[atomIdx])}_${seqIdVal(residueIdx[atomIdx])}`);
+              residuesSeen.add(
+                `${chainIdVal(chainIdx[atomIdx])}_${seqIdVal(
+                  residueIdx[atomIdx]
+                )}`
+              );
             }
-          } catch { /* skip unit */ }
+          } catch {
+            /* skip unit */
+          }
         }
       }
 
       if (residuesSeen.size > 0) {
-        this.zone.run(() => this.sequenceLengthDetected.emit(residuesSeen.size));
+        this.zone.run(() =>
+          this.sequenceLengthDetected.emit(residuesSeen.size)
+        );
       }
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
   }
 
   private clearViewer(): void {
@@ -551,10 +598,11 @@ export class MolstarViewerComponent
 
       this.selectionSub = changed.subscribe(() => {
         const residues = this.readCurrentSelection(plugin);
+        const compressed = this.compressToRanges(residues);
         // Run inside Angular's zone so signals + template bindings update
         this.zone.run(() => {
-          this.selectedResidues.set(residues);
-          this.residuesSelected.emit(residues.join(","));
+          this.selectedResidues.set(compressed);
+          this.residuesSelected.emit(compressed.join(","));
         });
       });
     } catch {
@@ -573,19 +621,39 @@ export class MolstarViewerComponent
    * https://molstar.org/docs/plugin/selections/#selection-events
    */
   private readCurrentSelection(plugin: Record<string, unknown>): string[] {
-    const seen = new Set<string>();
+    // Map from residue label (e.g. "A42") to the first global atom index seen
+    // for that residue. Sorting by atom index gives the structural order that
+    // downstream tools expect rather than a lexicographic sort.
+    const residueAtomIndex = new Map<string, number>();
     try {
       const selMgr = (
-        (plugin["managers"] as Record<string, unknown>)["structure"] as Record<string, unknown>
+        (plugin["managers"] as Record<string, unknown>)["structure"] as Record<
+          string,
+          unknown
+        >
       )["selection"] as Record<string, unknown>;
       const entries = selMgr["entries"] as Map<string, Record<string, unknown>>;
 
       for (const entry of entries.values()) {
         // docs: for (const { structure } of selections)
-        this.visitStructureUnits(entry["structure"] as Record<string, unknown>, seen);
+        this.visitStructureUnits(
+          entry["structure"] as Record<string, unknown>,
+          residueAtomIndex
+        );
       }
-    } catch { /* swallow */ }
-    return Array.from(seen).sort();
+    } catch {
+      /* swallow */
+    }
+    const parse = (label: string) => {
+      const m = label.match(/^([A-Za-z]+)(-?\d+)$/);
+      return m ? { chain: m[1], seq: parseInt(m[2], 10) } : { chain: label, seq: 0 };
+    };
+    return Array.from(residueAtomIndex.keys())
+      .sort((a, b) => {
+        const pa = parse(a), pb = parse(b);
+        const cmp = pa.chain.localeCompare(pb.chain);
+        return cmp !== 0 ? cmp : pa.seq - pb.seq;
+      });
   }
 
   /**
@@ -598,7 +666,7 @@ export class MolstarViewerComponent
    */
   private visitStructureUnits(
     structure: Record<string, unknown> | undefined,
-    out: Set<string>
+    out: Map<string, number>
   ): void {
     if (!structure) return;
     const units = structure["units"] as
@@ -630,11 +698,15 @@ export class MolstarViewerComponent
           >
         )["value"] as (i: number) => string;
 
-        // unit.elements: global atom indices already selected in this unit
+        // unit.elements is a SortedArray, so the first atom index we see for a
+        // residue is already its global minimum — record it once for ordering.
         this.iterateOrderedSet(unit["elements"], (atomIdx) => {
-          out.add(
-            `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(residueIdx[atomIdx])}`
-          );
+          const label = `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(
+            residueIdx[atomIdx]
+          )}`;
+          if (!out.has(label)) {
+            out.set(label, atomIdx);
+          }
         });
       } catch {
         /* skip unit on any hierarchy mismatch */
@@ -662,6 +734,117 @@ export class MolstarViewerComponent
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /**
+   * Force Mol*'s internal regionState.top to 'full' so the sequence panel
+   * is allocated space. layoutIsExpanded:false leaves all regions 'hidden'
+   * by default; this overrides just the top region after a structure loads.
+   */
+  private showSequencePanel(): void {
+    if (!this.viewer) return;
+    try {
+      const plugin = this.viewer.plugin as any;
+      const regionState = plugin.layout?.currentState?.regionState ?? {};
+      plugin.layout?.setProps?.({ regionState: { ...regionState, top: 'full' } });
+    } catch { /* non-critical */ }
+  }
+
+  /**
+   * Replace the default representation with cartoon + ball-and-stick overlay.
+   * Mirrors the approach in the reference implementation: remove existing
+   * component representations, build a static polymer component, then add
+   * both repr types via the registry/builder API.
+   */
+  private async applyBallAndStick(): Promise<void> {
+    if (!this.viewer) return;
+    try {
+      const plugin = this.viewer.plugin as any;
+      const hierarchy = plugin.managers.structure.hierarchy;
+      const manager = plugin.managers.structure.component;
+      const reprBuilder = plugin.builders.structure.representation;
+      const reprRegistry = plugin.representation.structure.registry;
+
+      const addRepr = async (
+        component: any,
+        name: string,
+        typeParams?: object
+      ) => {
+        if (!component) return;
+        const reprType = reprRegistry.get(name);
+        if (!reprType) return;
+        const params: any = { type: reprType };
+        if (typeParams) params.typeParams = typeParams;
+        await reprBuilder.addRepresentation(component, params);
+      };
+
+      const structures: any[] =
+        hierarchy.current?.structures ?? hierarchy.selection?.structures ?? [];
+
+      for (const s of structures) {
+        for (const c of s.components ?? []) {
+          await manager.removeRepresentations([c]);
+        }
+        const polymer =
+          await plugin.builders.structure.tryCreateComponentStatic(
+            s.cell,
+            "polymer",
+            { label: "Polymer" }
+          );
+        await addRepr(polymer, "cartoon");
+        await addRepr(polymer, "ball-and-stick", {
+          sizeFactor: 0.18,
+          sizeAspectRatio: 0.7
+        });
+      }
+    } catch {
+      /* non-critical — default visual still shows */
+    }
+  }
+
+  /**
+   * Collapse runs of consecutive residues on the same chain into range notation.
+   * Input must already be sorted by global atom index (as returned by
+   * readCurrentSelection). e.g. ["A12","A13","A14","B5"] → ["A12-A14","B5"].
+   */
+  private compressToRanges(residues: string[]): string[] {
+    if (residues.length === 0) return [];
+
+    type Parsed = { chain: string; seq: number; label: string };
+    const parsed: (Parsed | null)[] = residues.map((label) => {
+      const m = label.match(/^([A-Za-z]+)(-?\d+)$/);
+      return m ? { chain: m[1], seq: parseInt(m[2], 10), label } : null;
+    });
+
+    const result: string[] = [];
+    let i = 0;
+    while (i < parsed.length) {
+      const cur = parsed[i];
+      if (!cur) {
+        result.push(residues[i++]);
+        continue;
+      }
+
+      // Extend the run while same chain and seq increments by 1
+      let j = i + 1;
+      while (j < parsed.length) {
+        const prev = parsed[j - 1] as Parsed;
+        const next = parsed[j];
+        if (!next || next.chain !== cur.chain || next.seq !== prev.seq + 1)
+          break;
+        j++;
+      }
+
+      const last = parsed[j - 1] as Parsed;
+      result.push(
+        j - i === 1
+          ? cur.label
+          : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`
+      );
+      i = j;
+    }
+
+    return result;
+  }
 
   /** Prevent any <button> inside the viewer from submitting the parent form. */
   private preventButtonFormSubmit(): void {
