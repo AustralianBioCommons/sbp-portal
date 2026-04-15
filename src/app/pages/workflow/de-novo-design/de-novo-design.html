@@ -193,11 +193,6 @@
                         <p class="block text-sm font-medium text-gray-700 mb-1">
                           Binder Length Range <span class="text-red-500">*</span>
                         </p>
-                        @if (localPdbFile()) {
-                          <p class="text-xs text-gray-500 mb-3">
-                            Range bounded by the target structure ({{ pdbSequenceLength() }} residues).
-                          </p>
-                        }
                         <app-length-range-slider
                           [min]="pdbSequenceMin()"
                           [max]="pdbSequenceLength()"
