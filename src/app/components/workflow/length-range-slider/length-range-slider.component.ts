@@ -92,27 +92,17 @@ export class LengthRangeSliderComponent implements OnChanges {
 
   onMinInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const val = Number(input.value);
-    const range = this.normalizeRange(val, this.currentMax(), {
-      min: this._min(),
-      max: this._max(),
-    });
-
-    this.currentMin.set(range.min);
-    input.value = String(range.min);
-    this.rangeChange.emit({ min: range.min, max: this.currentMax() });
+    const val = this.clamp(Number(input.value), this._min(), this.currentMax() - 1);
+    this.currentMin.set(val);
+    input.value = String(val);
+    this.rangeChange.emit({ min: val, max: this.currentMax() });
   }
 
   onMaxInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const val = Number(input.value);
-    const range = this.normalizeRange(this.currentMin(), val, {
-      min: this._min(),
-      max: this._max(),
-    });
-
-    this.currentMax.set(range.max);
-    input.value = String(range.max);
-    this.rangeChange.emit({ min: this.currentMin(), max: range.max });
+    const val = this.clamp(Number(input.value), this.currentMin() + 1, this._max());
+    this.currentMax.set(val);
+    input.value = String(val);
+    this.rangeChange.emit({ min: this.currentMin(), max: val });
   }
 }
