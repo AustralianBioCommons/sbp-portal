@@ -215,8 +215,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.localPdbFile.set(null);
     this.uploadedPdbFile.set(null);
     this.updateRowValueWithValidation(rowId, "starting_pdb", "");
-    this.updateRowValue(rowId, "chains", "");
-    this.updateRowValue(rowId, "target_hotspot_residues", "");
+    this.updateRowValueWithValidation(rowId, "chains", "");
+    this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
   }
 
   onChainsDetected(rowId: string, chains: string): void {
