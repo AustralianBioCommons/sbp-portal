@@ -46,6 +46,7 @@ export class MolstarViewerComponent
 
   private viewer: Viewer | null = null;
   private selectionSub: { unsubscribe(): void } | null = null;
+  private formSubmitAbortCtrl: AbortController | null = null;
   private readonly zone = inject(NgZone);
 
   private static instanceCount = 0;
@@ -82,6 +83,8 @@ export class MolstarViewerComponent
 
   ngOnDestroy(): void {
     this.cleanupSubscription();
+    this.formSubmitAbortCtrl?.abort();
+    this.formSubmitAbortCtrl = null;
     void this.viewer?.plugin?.clear();
   }
 
@@ -320,10 +323,14 @@ export class MolstarViewerComponent
     return result;
   }
 
-  /** Prevent any <button> inside the viewer from submitting the parent form. */
+  /** Prevent any <button> inside the viewer from submitting the parent form.
+   *  The listener is tied to an AbortController so it's removed on destroy. */
   private preventButtonFormSubmit(): void {
+    // Only register once per component instance.
+    if (this.formSubmitAbortCtrl) return;
     const container = document.getElementById(this.containerId);
     if (!container) return;
+    this.formSubmitAbortCtrl = new AbortController();
     container.addEventListener("click", (event) => {
       const btn = (event.target as Element | null)?.closest?.("button");
       if (btn && container.contains(btn)) {
@@ -333,7 +340,7 @@ export class MolstarViewerComponent
           event.preventDefault();
         }
       }
-    }, true);
+    }, { capture: true, signal: this.formSubmitAbortCtrl.signal });
   }
 
   private cleanupSubscription(): void {
