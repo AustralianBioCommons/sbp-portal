@@ -177,6 +177,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  Actual upload to S3 is deferred until the user clicks Next. */
   localPdbFile = signal<File | null>(null);
 
+  /** Reference to the File object that was last successfully uploaded.
+   *  Used to skip re-upload when the user navigates Back then Next again. */
+  private uploadedPdbFile = signal<File | null>(null);
+
   /** Schema default max_length — drives the range slider upper bound. */
   pdbSequenceLength = signal<number>(300);
   /** Schema default min_length — drives the range slider lower bound. */
@@ -201,12 +205,15 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.updateRowValue(rowId, "target_hotspot_residues", "");
     }
     this.localPdbFile.set(file);
+    // New file picked — reset upload tracking so Next will upload this file.
+    this.uploadedPdbFile.set(null);
     // Use filename as placeholder value so schema required-check passes.
     this.updateRowValueWithValidation(rowId, "starting_pdb", file.name);
   }
 
   clearLocalPdb(rowId: string): void {
     this.localPdbFile.set(null);
+    this.uploadedPdbFile.set(null);
     this.updateRowValueWithValidation(rowId, "starting_pdb", "");
     this.updateRowValue(rowId, "chains", "");
     this.updateRowValue(rowId, "target_hotspot_residues", "");
@@ -325,7 +332,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       // Upload the PDB file to S3 before moving on, if one is pending.
       const file = this.localPdbFile();
       const rowId = this.schemaLoader.inputRows()[0]?.id;
-      if (file && rowId) {
+      if (file && rowId && file !== this.uploadedPdbFile()) {
         this.isPdbUploading.set(true);
         this.subscription.add(
           this.pdbUploadService
@@ -346,6 +353,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
                   file.name;
                 // Replace placeholder filename with the real S3 path.
                 this.updateRowValueWithValidation(rowId, "starting_pdb", s3Uri);
+                // Record the uploaded file so Back+Next doesn't re-upload it.
+                this.uploadedPdbFile.set(file);
                 this.isPdbUploading.set(false);
                 this.advanceStep(current);
               },
