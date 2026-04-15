@@ -238,8 +238,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       )].sort().join(",");
       if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
     } else {
-      this.updateRowValue(rowId, "target_hotspot_residues", "");
-      this.updateRowValue(rowId, "chains", "");
+      this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
+      this.updateRowValueWithValidation(rowId, "chains", "");
     }
   }
 
