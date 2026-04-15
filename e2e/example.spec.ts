@@ -10,10 +10,7 @@ test.describe("Basic app", () => {
   });
 
   test("main content visible", async ({ page }) => {
-    // Wait for Angular to bootstrap — app-root gets children once the app renders
-    await page.waitForFunction(
-      () => (document.querySelector("app-root")?.childElementCount ?? 0) > 0,
-      { timeout: 20000 }
-    );
+    const content = page.locator("app-root");
+    await expect(content).toBeVisible();
   });
 });
