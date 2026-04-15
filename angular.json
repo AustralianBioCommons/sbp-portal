@@ -40,7 +40,12 @@
               "style-to-js",
               "extend"
             ],
-            "externalDependencies": ["h264-mp4-encoder"],
+            "fileReplacements": [
+              {
+                "replace": "node_modules/h264-mp4-encoder/embuild/dist/h264-mp4-encoder.node.js",
+                "with": "src/stubs/h264-mp4-encoder.stub.js"
+              }
+            ],
             "loader": {
               ".jpg": "file",
               ".png": "file"
