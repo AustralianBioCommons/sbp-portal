@@ -735,7 +735,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   formSummary = computed(() => {
     const data = this.formData();
     const fields = this.schemaLoader.inputSchemaFields();
-    const summary: { label: string; value: string; fieldName: string }[] = [];
+    const localPdb = this.localPdbFile();
+    const summary: { label: string; value: string; fieldName: string; url?: string }[] = [];
 
     // Fields to exclude from summary
     const excludedFields = ["settings_filters", "settings_advanced"];
@@ -749,9 +750,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       const value = data[field.name];
       if (value !== undefined && value !== null && value !== "") {
         let displayValue = String(value);
+        let downloadUrl: string | undefined;
 
-        // Format different field types
-        if (field.type === "boolean") {
+        if (field.name === "starting_pdb") {
+          // Show only the filename; optionally link to the file if it's an HTTP URL.
+          const rawPath = String(value);
+          displayValue = localPdb?.name ?? this.extractFilename(rawPath);
+          downloadUrl = rawPath.startsWith("http") ? rawPath : undefined;
+        } else if (field.type === "boolean") {
           displayValue = value ? "Yes" : "No";
         } else if (field.type === "number") {
           displayValue = String(value);
@@ -764,13 +770,21 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         summary.push({
           label: field.label || field.name,
           value: displayValue,
-          fieldName: field.name
+          fieldName: field.name,
+          ...(downloadUrl ? { url: downloadUrl } : {})
         });
       }
     });
 
     return summary;
   });
+
+  /** Extract just the filename from a path, S3 URI, or HTTP URL. */
+  private extractFilename(path: string): string {
+    if (!path) return path;
+    const parts = path.split(/[/\\?#]/);
+    return parts.filter((p) => p.length > 0).pop() ?? path;
+  }
 
   // Get summary of configuration for display
   getConfigurationSummary() {

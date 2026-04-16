@@ -15,10 +15,12 @@ type JobResultsPrivateApi = {
   normalizeLogs: (logs: string | string[] | null | undefined) => string[];
   normalizeSettings: (
     settingParams: Record<string, unknown> | null | undefined
-  ) => Array<{ label: string; value: string; details: string[] }>;
+  ) => Array<{ label: string; value: string; details: string[]; url?: string }>;
   formatSettingLabel: (key: string) => string;
   formatSettingValue: (value: unknown) => string;
   formatValidationDetails: (validation: Record<string, unknown> | undefined) => string[];
+  isPdbSettingKey: (key: string) => boolean;
+  extractFilename: (path: string) => string;
 };
 
 describe("JobResultsComponent", () => {
@@ -709,5 +711,139 @@ describe("JobResultsComponent", () => {
     expect(fixture.nativeElement.textContent).toContain(
       "Failed to load files."
     );
+  });
+
+  describe("isPdbSettingKey", () => {
+    it("should return true for keys containing 'pdb'", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(privateApi.isPdbSettingKey("starting_pdb")).toBeTrue();
+      expect(privateApi.isPdbSettingKey("PDB_input")).toBeTrue();
+      expect(privateApi.isPdbSettingKey("my_pdb_file")).toBeTrue();
+    });
+
+    it("should return false for keys that do not contain 'pdb'", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(privateApi.isPdbSettingKey("binder_name")).toBeFalse();
+      expect(privateApi.isPdbSettingKey("min_length")).toBeFalse();
+      expect(privateApi.isPdbSettingKey("chains")).toBeFalse();
+    });
+  });
+
+  describe("extractFilename", () => {
+    it("should return the path unchanged when empty or N/A", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(privateApi.extractFilename("")).toBe("");
+      expect(privateApi.extractFilename("N/A")).toBe("N/A");
+    });
+
+    it("should extract filename from an HTTP URL", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(privateApi.extractFilename("https://api.example.com/files/target.pdb")).toBe("target.pdb");
+    });
+
+    it("should extract filename from an S3 URI", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(privateApi.extractFilename("s3://my-bucket/uploads/2026/target.pdb")).toBe("target.pdb");
+    });
+
+    it("should extract filename from a plain file path", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(privateApi.extractFilename("/data/inputs/target.pdb")).toBe("target.pdb");
+    });
+
+    it("should return the value unchanged when there is no path separator", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(privateApi.extractFilename("target.pdb")).toBe("target.pdb");
+    });
+  });
+
+  describe("normalizeSettings — PDB field handling", () => {
+    it("should show only filename and set url for a PDB key with an HTTP value", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      const items = privateApi.normalizeSettings({
+        starting_pdb: "https://api.example.com/uploads/target.pdb"
+      });
+
+      expect(items.length).toBe(1);
+      expect(items[0].value).toBe("target.pdb");
+      expect(items[0].url).toBe("https://api.example.com/uploads/target.pdb");
+    });
+
+    it("should show only filename and omit url for a PDB key with an S3 URI", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      const items = privateApi.normalizeSettings({
+        starting_pdb: "s3://my-bucket/uploads/target.pdb"
+      });
+
+      expect(items.length).toBe(1);
+      expect(items[0].value).toBe("target.pdb");
+      expect(items[0].url).toBeUndefined();
+    });
+
+    it("should show only filename and set url for a schema-wrapped PDB key with an HTTP value", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      const items = privateApi.normalizeSettings({
+        starting_pdb: {
+          label: "Starting PDB",
+          value: "https://api.example.com/uploads/target.pdb"
+        }
+      });
+
+      expect(items.length).toBe(1);
+      expect(items[0].value).toBe("target.pdb");
+      expect(items[0].url).toBe("https://api.example.com/uploads/target.pdb");
+    });
+
+    it("should show only filename and omit url for a schema-wrapped PDB key with an S3 URI", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      const items = privateApi.normalizeSettings({
+        starting_pdb: {
+          label: "Starting PDB",
+          value: "s3://my-bucket/uploads/target.pdb"
+        }
+      });
+
+      expect(items.length).toBe(1);
+      expect(items[0].value).toBe("target.pdb");
+      expect(items[0].url).toBeUndefined();
+    });
+
+    it("should not set url on non-PDB settings keys", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      const items = privateApi.normalizeSettings({
+        binder_name: "PDL1"
+      });
+
+      expect(items.length).toBe(1);
+      expect(items[0].value).toBe("PDL1");
+      expect(items[0].url).toBeUndefined();
+    });
+
+    it("should render a download link in the settings tab for an HTTP PDB value", async () => {
+      resultsService.getJobSettingParams.and.returnValue(
+        of({
+          runId: mockJob.id,
+          settingParams: {
+            starting_pdb: "https://api.example.com/uploads/target.pdb"
+          }
+        })
+      );
+
+      fixture = TestBed.createComponent(JobResultsComponent);
+      component = fixture.componentInstance;
+      component.isOpen = true;
+      component.job = mockJob;
+      component.ngOnChanges({
+        isOpen: { currentValue: true, previousValue: false, firstChange: true, isFirstChange: () => true },
+        job: { currentValue: mockJob, previousValue: null, firstChange: true, isFirstChange: () => true }
+      });
+      component.setActiveTab("settings");
+      fixture.detectChanges();
+
+      const anchor = fixture.nativeElement.querySelector("a[download]") as HTMLAnchorElement;
+      expect(anchor).not.toBeNull();
+      expect(anchor.textContent?.trim()).toBe("target.pdb");
+      expect(anchor.href).toContain("api.example.com/uploads/target.pdb");
+    });
   });
 });
