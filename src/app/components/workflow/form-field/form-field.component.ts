@@ -15,178 +15,7 @@ import { AlertComponent } from "../../alert/alert.component";
   selector: "app-form-field",
   standalone: true,
   imports: [CommonModule, AlertComponent],
-  template: `
-    <div class="space-y-2">
-      <!-- Alert (Error or Success) -->
-      @if (showAlert()) {
-      <app-alert
-        [type]="alertType()"
-        [message]="alertMessage()"
-        [dismissible]="true"
-        (dismissed)="closeAlert()"
-      ></app-alert>
-      }
-      <!-- Field Label -->
-      <label [for]="fieldId" class="block text-sm font-medium text-gray-700">
-        {{ getDisplayFieldLabel() }}
-        @if (field.required) {
-        <span class="text-red-500 ml-1">*</span>
-        } @if (field.description) {
-        <div class="group relative inline-block ml-1">
-          <svg
-            class="w-4 h-4 text-gray-400 cursor-help"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
-          <!-- Tooltip -->
-          <div
-            class="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-lg px-3 py-2 mt-1 left-0 min-w-[200px] max-w-[300px] shadow-lg"
-          >
-            <div class="font-medium">{{ getDisplayFieldLabel() }}</div>
-            <div class="text-gray-300 mt-1">{{ field.description }}</div>
-            <div class="text-gray-400 text-xs mt-2">
-              Type: {{ field.type }}
-              @if (field.required) {
-              <span class="text-red-400"> • Required</span>
-              }
-            </div>
-            @if (field.validation?.min !== undefined || field.validation?.max
-            !== undefined) {
-            <div class="text-gray-400 text-xs mt-1">
-              @if (field.validation.min !== undefined && field.validation.max
-              !== undefined) { Range: {{ field.validation.min }} -
-              {{ field.validation.max }} } @else if (field.validation.min !==
-              undefined) { Min: {{ field.validation.min }} } @else if
-              (field.validation.max !== undefined) { Max:
-              {{ field.validation.max }}
-              }
-            </div>
-            }
-          </div>
-        </div>
-        }
-      </label>
-
-      <!-- Field Input -->
-      <div class="relative">
-        <!-- String Input -->
-        @if (field.type === 'string' && !field.options) {
-        <input
-          [id]="fieldId"
-          type="text"
-          [class]="getInputClasses()"
-          [placeholder]="
-            field.placeholder ||
-            'Enter ' + (field.label || field.name).toLowerCase()
-          "
-          [value]="value"
-          [required]="field.required"
-          [minlength]="field.validation?.minLength"
-          [maxlength]="field.validation?.maxLength"
-          [pattern]="field.validation?.pattern"
-          (input)="onValueChange($any($event.target).value)"
-          (blur)="onBlur()"
-        />
-        }
-
-        <!-- Number Input -->
-        @if (field.type === 'number') {
-        <input
-          [id]="fieldId"
-          type="number"
-          [class]="getInputClasses()"
-          [placeholder]="field.placeholder || 'Enter number'"
-          [min]="field.validation?.min"
-          [max]="field.validation?.max"
-          [step]="field.validation?.step || 'any'"
-          [value]="value"
-          [required]="field.required"
-          (input)="onValueChange(+$any($event.target).value)"
-          (blur)="onBlur()"
-        />
-        }
-
-        <!-- Boolean Input -->
-        @if (field.type === 'boolean') {
-        <div class="flex items-center">
-          <input
-            [id]="fieldId"
-            type="checkbox"
-            [class]="
-              'h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 ' +
-              (hasError ? 'border-red-300' : '')
-            "
-            [checked]="value === true"
-            (change)="onValueChange($any($event.target).checked)"
-            (blur)="onBlur()"
-          />
-          <span class="ml-2 text-sm text-gray-600">Enable this option</span>
-        </div>
-        }
-
-        <!-- Select/Options Input -->
-        @if (field.options && field.options.length > 0) {
-        <select
-          [id]="fieldId"
-          [class]="getSelectClasses()"
-          [value]="value"
-          [required]="field.required"
-          (change)="onValueChange($any($event.target).value)"
-          (blur)="onBlur()"
-        >
-          <option value="">Select {{ getDisplayFieldLabel() }}</option>
-          @for (option of field.options; track option) { @if (typeof option ===
-          'string') {
-          <option [value]="option">{{ option }}</option>
-          } @else {
-          <option [value]="option.value">
-            {{ option.label || option.value }}
-          </option>
-          } }
-        </select>
-        }
-
-        <!-- File Input -->
-        @if (field.type === 'file') {
-        <input
-          type="file"
-          [class]="getFileClasses()"
-          [required]="field.required"
-          [accept]="field.validation?.accept"
-          (change)="onFileChange($event)"
-          (blur)="onBlur()"
-        />
-        }
-
-        <!-- Field Error -->
-        @if (hasError && errorMessage) {
-        <div class="mt-1 text-sm text-red-600">{{ errorMessage }}</div>
-        }
-      </div>
-
-      <!-- Field Help Text -->
-      @if (field.validation?.min !== undefined || field.validation?.max !==
-      undefined) {
-      <div class="text-xs text-gray-500">
-        @if (field.validation.min !== undefined && field.validation.max !==
-        undefined) { Range: {{ field.validation.min }} -
-        {{ field.validation.max }} } @else if (field.validation.min !==
-        undefined) { Minimum: {{ field.validation.min }} } @else if
-        (field.validation.max !== undefined) { Maximum:
-        {{ field.validation.max }}
-        }
-      </div>
-      }
-    </div>
-  `
+  templateUrl: "./form-field.component.html",
 })
 export class FormFieldComponent {
   private pdbUploadService = inject(PdbUploadService);
@@ -203,6 +32,8 @@ export class FormFieldComponent {
 
   @Output() valueChange = new EventEmitter<unknown>();
   @Output() fieldBlur = new EventEmitter<void>();
+  /** Emits the raw File immediately when the user picks a file, before any upload. */
+  @Output() fileSelected = new EventEmitter<File | null>();
 
   get fieldId(): string {
     return `field-${this.field.name}`;
@@ -224,12 +55,6 @@ export class FormFieldComponent {
     this.showAlert.set(true);
   }
 
-  private showSuccess(message: string): void {
-    this.alertMessage.set(message);
-    this.alertType.set('success');
-    this.showAlert.set(true);
-  }
-
   onValueChange(newValue: unknown): void {
     this.valueChange.emit(newValue);
   }
@@ -244,6 +69,7 @@ export class FormFieldComponent {
 
     if (!file) {
       this.valueChange.emit(null);
+      this.fileSelected.emit(null);
       return;
     }
 
@@ -256,51 +82,17 @@ export class FormFieldComponent {
         console.error("File validation failed:", validation.error);
         this.showError(`${validation.error}`);
         this.valueChange.emit(null);
+        this.fileSelected.emit(null);
         return;
       }
 
-      // Upload the PDB file to the backend
-      console.log("Uploading PDB file:", file.name);
-      this.pdbUploadService
-        .uploadPdbFile({
-          file,
-          metadata: {
-            fieldName: this.field.name,
-            uploadedAt: new Date().toISOString()
-          }
-        })
-        .subscribe({
-          next: (response) => {
-            this.showSuccess(`File "${file.name}" uploaded successfully!`);
-            // Emit the S3 URI (preferred), otherwise fall back to other identifiers
-            this.valueChange.emit(
-              response.s3Uri ||
-                response.fileUrl ||
-                response.fileId ||
-                response.fileName ||
-                file.name
-            );
-          },
-          error: (error) => {
-            console.error("PDB file upload failed:", error);
-            const errorMessage =
-              error?.error?.message ||
-              error?.message ||
-              "Unknown error occurred";
-            const statusText = error?.statusText
-              ? ` (${error.statusText})`
-              : "";
-            this.showError(
-              `File upload failed: ${errorMessage}${statusText}. Please try again or contact support if the problem persists.`
-            );
-            this.valueChange.emit(null);
-          }
-        });
+      // Emit the file for local preview; upload is deferred to Next click
+      this.fileSelected.emit(file);
+      // Use filename as placeholder so required validation passes before upload
+      this.valueChange.emit(file.name);
     } catch (error) {
-      console.error("Unexpected error during file upload:", error);
-      this.showError(
-        "An unexpected error occurred while processing the file. Please try again or contact support."
-      );
+      console.error("Unexpected error during file processing:", error);
+      this.showError("An unexpected error occurred while processing the file.");
       this.valueChange.emit(null);
     }
   }

@@ -235,29 +235,37 @@ export class InputSchemaService {
   /**
    * Parse fields from schema
    */
+  private static readonly LABEL_OVERRIDES: Record<string, string> = {
+    starting_pdb: 'Target PDB',
+  };
+
   private parseFields(fields: Record<string, unknown>[]): InputSchemaField[] {
-    return fields.map((field) => ({
-      name: this.getStringValue(field.name) || "unnamed_field",
-      type: this.mapFieldType(
-        this.getStringValue(field.type) || "string",
-        this.getStringValue(field.format)
-      ),
-      label:
+    return fields.map((field) => {
+      const name = this.getStringValue(field.name) || "unnamed_field";
+      const schemaLabel =
         this.getStringValue(field.label) ||
         this.getStringValue(field.title) ||
-        this.getStringValue(field.name),
-      description: this.getStringValue(field.description) || "",
-      required: typeof field.required === "boolean" ? field.required : false,
-      default: this.getDefaultValue(field.default),
-      options: this.getOptionsValue(field.options || field.enum),
-      validation:
-        typeof field.validation === "object" && field.validation !== null
-          ? (field.validation as Record<string, unknown>)
-          : {},
-      placeholder: this.getStringValue(field.placeholder) || "",
-      help_text: this.getStringValue(field.help_text) || "",
-      fa_icon: this.getStringValue(field.fa_icon) || "",
-    }));
+        name;
+      return {
+        name,
+        type: this.mapFieldType(
+          this.getStringValue(field.type) || "string",
+          this.getStringValue(field.format)
+        ),
+        label: InputSchemaService.LABEL_OVERRIDES[name] ?? schemaLabel,
+        description: this.getStringValue(field.description) || "",
+        required: typeof field.required === "boolean" ? field.required : false,
+        default: this.getDefaultValue(field.default),
+        options: this.getOptionsValue(field.options || field.enum),
+        validation:
+          typeof field.validation === "object" && field.validation !== null
+            ? (field.validation as Record<string, unknown>)
+            : {},
+        placeholder: this.getStringValue(field.placeholder) || "",
+        help_text: this.getStringValue(field.help_text) || "",
+        fa_icon: this.getStringValue(field.fa_icon) || "",
+      };
+    });
   }
 
   /**
@@ -287,7 +295,7 @@ export class InputSchemaService {
           this.getStringValue(prop.type) || "string",
           this.getStringValue(prop.format)
         ),
-        label: label,
+        label: InputSchemaService.LABEL_OVERRIDES[key] ?? label,
         description: description,
         required: required.includes(key),
         default: this.getDefaultValue(prop.default),

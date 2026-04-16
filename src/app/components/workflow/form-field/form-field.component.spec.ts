@@ -1,18 +1,12 @@
 import { NO_ERRORS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
-import {
-  provideHttpClientTesting,
-  HttpTestingController,
-} from "@angular/common/http/testing";
 import { InputSchemaField } from "../../../cores/input-schema.service";
 import { FormFieldComponent } from "./form-field.component";
-import { environment } from "../../../../environments/environment";
 
 describe("FormFieldComponent", () => {
   let component: FormFieldComponent;
   let fixture: ComponentFixture<FormFieldComponent>;
-  let httpMock: HttpTestingController;
 
   const mockStringField: InputSchemaField = {
     name: "testField",
@@ -26,26 +20,21 @@ describe("FormFieldComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FormFieldComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient()],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(FormFieldComponent);
     component = fixture.componentInstance;
-    httpMock = TestBed.inject(HttpTestingController);
-
-    // Set required inputs
     component.field = mockStringField;
     component.value = "";
-  });
-
-  afterEach(() => {
-    httpMock.verify();
   });
 
   it("should create", () => {
     expect(component).toBeTruthy();
   });
+
+  // ── Value / blur ────────────────────────────────────────────────────────────
 
   it("should emit valueChange when input value changes", () => {
     spyOn(component.valueChange, "emit");
@@ -53,316 +42,146 @@ describe("FormFieldComponent", () => {
     expect(component.valueChange.emit).toHaveBeenCalledWith("new value");
   });
 
-  it("should emit blur event when input loses focus", () => {
+  it("should emit fieldBlur when input loses focus", () => {
     spyOn(component.fieldBlur, "emit");
     component.onBlur();
     expect(component.fieldBlur.emit).toHaveBeenCalled();
   });
 
+  // ── fieldId ─────────────────────────────────────────────────────────────────
+
   it("should generate a stable field id", () => {
     expect(component.fieldId).toBe("field-testField");
   });
 
-  it("should format Pdb as PDB in display label", () => {
-    component.field = {
-      name: "starting_pdb",
-      label: "Starting Pdb",
-      type: "string",
-      required: true,
-    };
+  // ── Display label ───────────────────────────────────────────────────────────
 
+  it("should format Pdb as PDB in display label", () => {
+    component.field = { name: "starting_pdb", label: "Starting Pdb", type: "string", required: true };
     expect(component.getDisplayFieldLabel()).toBe("Starting PDB");
   });
 
-  it("should use field name when label is missing and format Pdb as PDB", () => {
-    component.field = {
-      name: "starting Pdb",
-      type: "string",
-      required: false,
-    } as InputSchemaField;
-
+  it("should fall back to field name when label is missing", () => {
+    component.field = { name: "starting Pdb", type: "string", required: false } as InputSchemaField;
     expect(component.getDisplayFieldLabel()).toBe("starting PDB");
   });
 
-  it("should keep display label unchanged when no Pdb token exists", () => {
-    component.field = {
-      name: "starting_structure",
-      label: "Starting Structure",
-      type: "string",
-      required: true,
-    };
-
+  it("should leave label unchanged when no Pdb token exists", () => {
+    component.field = { name: "starting_structure", label: "Starting Structure", type: "string", required: true };
     expect(component.getDisplayFieldLabel()).toBe("Starting Structure");
   });
 
-  it("should return proper input classes", () => {
-    const classes = component.getInputClasses();
-    expect(classes).toContain("border-gray-300");
+  // ── CSS helpers ─────────────────────────────────────────────────────────────
+
+  it("should return normal input classes when no error", () => {
+    expect(component.getInputClasses()).toContain("border-gray-300");
   });
 
-  it("should return proper error classes when hasError is true", () => {
+  it("should return error input classes when hasError is true", () => {
     component.hasError = true;
-    const classes = component.getInputClasses();
-    expect(classes).toContain("border-red-300");
+    expect(component.getInputClasses()).toContain("border-red-300");
   });
 
-  it("should return proper select classes when hasError is false", () => {
+  it("should return normal select classes when no error", () => {
     component.hasError = false;
     const classes = component.getSelectClasses();
     expect(classes).toContain("border-gray-300 bg-white text-gray-900");
-    expect(classes).not.toContain("border-red-300 bg-red-50 text-red-900");
+    expect(classes).not.toContain("border-red-300");
   });
 
-  it("should return proper select classes when hasError is true", () => {
+  it("should return error select classes when hasError is true", () => {
     component.hasError = true;
     const classes = component.getSelectClasses();
     expect(classes).toContain("border-red-300 bg-red-50 text-red-900");
     expect(classes).not.toContain("border-gray-300 bg-white text-gray-900");
   });
 
-  it("should return proper file classes when hasError is false", () => {
+  it("should return normal file classes when no error", () => {
     component.hasError = false;
     const classes = component.getFileClasses();
     expect(classes).toContain("file:mr-4");
     expect(classes).not.toContain("file:bg-red-100 file:text-red-700");
   });
 
-  it("should return proper file classes when hasError is true", () => {
+  it("should return error file classes when hasError is true", () => {
     component.hasError = true;
     const classes = component.getFileClasses();
     expect(classes).toContain("file:mr-4");
     expect(classes).toContain("file:bg-red-100 file:text-red-700");
   });
 
-  it("should handle file change event with non-PDB file", () => {
-    spyOn(component.valueChange, "emit");
-    const mockFile = new File(["test"], "test.txt", { type: "text/plain" });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
+  // ── onFileChange — no file ──────────────────────────────────────────────────
 
-    component.onFileChange(mockEvent);
+  it("should emit null on both outputs when no file is selected", () => {
+    spyOn(component.valueChange, "emit");
+    spyOn(component.fileSelected, "emit");
+    const event = { target: { files: [] } } as unknown as Event;
+
+    component.onFileChange(event);
+
     expect(component.valueChange.emit).toHaveBeenCalledWith(null);
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("File must have .pdb extension");
+    expect(component.fileSelected.emit).toHaveBeenCalledWith(null);
   });
 
-  it("should handle file change event with no file", () => {
-    spyOn(component.valueChange, "emit");
-    const mockEvent = {
-      target: { files: [] },
-    } as unknown as Event;
+  // ── onFileChange — invalid file ─────────────────────────────────────────────
 
-    component.onFileChange(mockEvent);
+  it("should reject a non-PDB file and show an error", () => {
+    spyOn(component.valueChange, "emit");
+    spyOn(component.fileSelected, "emit");
+    const file = new File(["test"], "test.txt", { type: "text/plain" });
+    const event = { target: { files: [file] } } as unknown as Event;
+
+    component.onFileChange(event);
+
     expect(component.valueChange.emit).toHaveBeenCalledWith(null);
-  });
-
-  it("should successfully upload a valid PDB file", () => {
-    spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
-
-    const mockResponse = {
-      message: "File uploaded successfully",
-      success: true,
-      s3Uri: "s3://example-bucket/test.pdb",
-      fileUrl: "https://example.com/test.pdb",
-      fileName: "test.pdb",
-    };
-
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    expect(req.request.method).toBe("POST");
-    req.flush(mockResponse);
-
-    expect(component.valueChange.emit).toHaveBeenCalledWith(mockResponse.s3Uri);
+    expect(component.fileSelected.emit).toHaveBeenCalledWith(null);
     expect(component.showAlert()).toBe(true);
-    expect(component.alertType()).toBe("success");
-    expect(component.alertMessage()).toContain("uploaded successfully");
+    expect(component.alertMessage()).toContain(".pdb extension");
   });
 
-  it("should use fileUrl when s3Uri is not available", () => {
+  // ── onFileChange — valid PDB (deferred upload) ──────────────────────────────
+
+  it("should emit fileSelected with the File and valueChange with filename for a valid PDB", () => {
     spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
+    spyOn(component.fileSelected, "emit");
+    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", { type: "chemical/x-pdb" });
+    const event = { target: { files: [file] } } as unknown as Event;
 
-    const mockResponse = {
-      message: "File uploaded successfully",
-      success: true,
-      fileUrl: "https://example.com/test.pdb",
-      fileName: "test.pdb",
-    };
+    component.onFileChange(event);
 
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    req.flush(mockResponse);
-
-    expect(component.valueChange.emit).toHaveBeenCalledWith(
-      mockResponse.fileUrl
-    );
+    expect(component.fileSelected.emit).toHaveBeenCalledWith(file);
+    expect(component.valueChange.emit).toHaveBeenCalledWith("structure.pdb");
+    // No HTTP request is made — upload is deferred to Next click
+    expect(component.showAlert()).toBe(false);
   });
 
-  it("should use fileId when s3Uri and fileUrl are not available", () => {
-    spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
+  it("should not show a success alert after picking a valid PDB (no upload yet)", () => {
+    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", { type: "chemical/x-pdb" });
+    const event = { target: { files: [file] } } as unknown as Event;
 
-    const mockResponse = {
-      message: "File uploaded successfully",
-      success: true,
-      fileId: "file-123",
-    };
+    component.onFileChange(event);
 
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    req.flush(mockResponse);
-
-    expect(component.valueChange.emit).toHaveBeenCalledWith(
-      mockResponse.fileId
-    );
+    expect(component.showAlert()).toBe(false);
   });
 
-  it("should use fileName when s3Uri, fileUrl, and fileId are not available", () => {
+  // ── onFileChange — unexpected error ─────────────────────────────────────────
+
+  it("should show an error alert and emit null when validation throws", () => {
     spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
+    spyOn(component["pdbUploadService"], "validatePdbFile").and.throwError("Unexpected");
+    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", { type: "chemical/x-pdb" });
+    const event = { target: { files: [file] } } as unknown as Event;
 
-    const mockResponse = {
-      message: "File uploaded successfully",
-      success: true,
-      fileName: "test.pdb",
-    };
-
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    req.flush(mockResponse);
-
-    expect(component.valueChange.emit).toHaveBeenCalledWith(
-      mockResponse.fileName
-    );
-  });
-
-  it("should use file name when no identifiers are available", () => {
-    spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "original.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
-
-    const mockResponse = {
-      message: "File uploaded successfully",
-      success: true,
-    };
-
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    req.flush(mockResponse);
-
-    expect(component.valueChange.emit).toHaveBeenCalledWith("original.pdb");
-  });
-
-  it("should handle upload error for valid PDB file", () => {
-    spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
-
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    req.flush(
-      { message: "Upload failed" },
-      { status: 500, statusText: "Server Error" }
-    );
+    component.onFileChange(event);
 
     expect(component.valueChange.emit).toHaveBeenCalledWith(null);
     expect(component.showAlert()).toBe(true);
-    expect(component.alertType()).toBe('error');
-    expect(component.alertMessage()).toContain("File upload failed");
+    expect(component.alertMessage()).toContain("unexpected error");
   });
 
-  it("should handle upload error with error.error.message", () => {
-    spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
+  // ── Alert ───────────────────────────────────────────────────────────────────
 
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    req.flush(
-      { message: "Specific error from server" },
-      { status: 400, statusText: "Bad Request" }
-    );
-
-    expect(component.alertMessage()).toContain("Specific error from server");
-    expect(component.alertMessage()).toContain("Bad Request");
-  });
-
-  it("should handle upload error without statusText", () => {
-    spyOn(component.valueChange, "emit");
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
-
-    component.onFileChange(mockEvent);
-
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/workflows/pdb/upload`
-    );
-    req.error(new ProgressEvent("error"), { status: 0, statusText: "" });
-
-    expect(component.alertMessage()).toContain("File upload failed");
-    expect(component.alertMessage()).not.toContain("()");
-  });
-
-  it("should close alert when closeAlert is called", () => {
+  it("should clear the alert when closeAlert is called", () => {
     component.showAlert.set(true);
     component.alertMessage.set("Test error");
 
@@ -372,155 +191,50 @@ describe("FormFieldComponent", () => {
     expect(component.alertMessage()).toBe("");
   });
 
-  it("should handle unexpected error in catch block", () => {
-    spyOn(component.valueChange, "emit");
-    spyOn(component["pdbUploadService"], "validatePdbFile").and.throwError(
-      "Unexpected validation error"
-    );
+  // ── Field type helpers (state assertions) ───────────────────────────────────
 
-    const mockFile = new File(["ATOM   1  N   ALA A   1"], "test.pdb", {
-      type: "chemical/x-pdb",
-    });
-    const mockEvent = {
-      target: { files: [mockFile] },
-    } as unknown as Event;
-
-    component.onFileChange(mockEvent);
-
-    expect(component.valueChange.emit).toHaveBeenCalledWith(null);
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("unexpected error");
-  });
-
-  // Additional tests for template coverage
   it("should handle number field type", () => {
-    component.field = {
-      name: "numberField",
-      label: "Number Field",
-      type: "number",
-      required: true,
-      validation: { min: 0, max: 100 },
-    };
-    component.value = 50;
+    component.field = { name: "n", label: "N", type: "number", required: true, validation: { min: 0, max: 100 } };
     expect(component.field.type).toBe("number");
   });
 
   it("should handle boolean field type", () => {
-    component.field = {
-      name: "boolField",
-      label: "Boolean Field",
-      type: "boolean",
-      required: false,
-    };
-    component.value = true;
+    component.field = { name: "b", label: "B", type: "boolean", required: false };
     expect(component.field.type).toBe("boolean");
   });
 
   it("should handle select field with string options", () => {
-    component.field = {
-      name: "selectField",
-      label: "Select Field",
-      type: "string",
-      required: true,
-      options: ["option1", "option2", "option3"],
-    };
-    component.value = "option1";
+    component.field = { name: "s", label: "S", type: "string", required: true, options: ["a", "b", "c"] };
     expect(component.field.options?.length).toBe(3);
   });
 
   it("should handle select field with object options", () => {
     component.field = {
-      name: "selectField",
-      label: "Select Field",
-      type: "string",
-      required: true,
-      options: [
-        { value: "val1", label: "Option 1" },
-        { value: "val2", label: "Option 2" },
-      ],
+      name: "s", label: "S", type: "string", required: true,
+      options: [{ value: "v1", label: "L1" }, { value: "v2", label: "L2" }],
     };
-    component.value = "val1";
     expect(component.field.options?.length).toBe(2);
   });
 
-  it("should display error message when hasError is set", () => {
+  it("should reflect errorMessage and hasError inputs", () => {
     component.hasError = true;
     component.errorMessage = "This field is required";
     expect(component.hasError).toBe(true);
     expect(component.errorMessage).toBe("This field is required");
   });
 
-  it("should handle validation with min and max", () => {
-    component.field = {
-      name: "numberField",
-      label: "Number Field",
-      type: "number",
-      required: true,
-      validation: { min: 10, max: 100 },
-    };
-    expect(component.field.validation?.min).toBe(10);
-    expect(component.field.validation?.max).toBe(100);
-  });
-
-  it("should handle validation with min only", () => {
-    component.field = {
-      name: "numberField",
-      label: "Number Field",
-      type: "number",
-      required: true,
-      validation: { min: 10 },
-    };
-    expect(component.field.validation?.min).toBe(10);
-    expect(component.field.validation?.max).toBeUndefined();
-  });
-
-  it("should handle validation with max only", () => {
-    component.field = {
-      name: "numberField",
-      label: "Number Field",
-      type: "number",
-      required: true,
-      validation: { max: 100 },
-    };
-    expect(component.field.validation?.min).toBeUndefined();
-    expect(component.field.validation?.max).toBe(100);
-  });
-
-  it("should show alert when showAlert signal is true", () => {
-    component.showAlert.set(true);
-    component.alertMessage.set("Test alert");
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toBe("Test alert");
-  });
-
   it("should handle file field type", () => {
-    component.field = {
-      name: "fileField",
-      label: "File Field",
-      type: "file",
-      required: true,
-    };
+    component.field = { name: "f", label: "F", type: "file", required: true };
     expect(component.field.type).toBe("file");
   });
 
   it("should handle field with description", () => {
-    component.field = {
-      name: "testField",
-      label: "Test Field",
-      type: "string",
-      description: "This is a test field description",
-      required: true,
-    };
-    expect(component.field.description).toBe("This is a test field description");
+    component.field = { name: "t", label: "T", type: "string", description: "desc", required: true };
+    expect(component.field.description).toBe("desc");
   });
 
   it("should handle optional field", () => {
-    component.field = {
-      name: "optionalField",
-      label: "Optional Field",
-      type: "string",
-      required: false,
-    };
+    component.field = { name: "o", label: "O", type: "string", required: false };
     expect(component.field.required).toBe(false);
   });
 });
