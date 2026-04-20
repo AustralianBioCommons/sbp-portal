@@ -73,11 +73,10 @@ export class FooterSectionsComponent {
           label: "Structure prediction",
           href: "/themes?tab=structure-prediction",
         },
-        { label: "Structure search", href: "/themes?tab=structure-search" },
       ],
     },
     {
-      heading: "Pre-config workflows",
+      heading: "Workflows",
       links: [
         {
           label: "De novo design",
