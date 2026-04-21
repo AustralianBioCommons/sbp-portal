@@ -26,6 +26,7 @@ import { OrderedSet } from "molstar/lib/mol-data/int";
   imports: [CommonModule],
   encapsulation: ViewEncapsulation.None,
   templateUrl: "./molstar-viewer.component.html",
+  host: { class: "block" },
 })
 export class MolstarViewerComponent
   implements AfterViewInit, OnChanges, OnDestroy

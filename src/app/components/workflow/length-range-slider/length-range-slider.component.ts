@@ -1,12 +1,10 @@
 import {
   Component,
   computed,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
+  effect,
+  input,
+  output,
   signal,
-  SimpleChanges,
 } from "@angular/core";
 
 export interface LengthRange {
@@ -20,13 +18,13 @@ export interface LengthRange {
   imports: [],
   templateUrl: "./length-range-slider.component.html",
 })
-export class LengthRangeSliderComponent implements OnChanges {
-  @Input() min = 0;
-  @Input() max = 300;
-  @Input() minValue = 65;
-  @Input() maxValue = 65;
-  @Input() disabled = false;
-  @Output() rangeChange = new EventEmitter<LengthRange>();
+export class LengthRangeSliderComponent {
+  readonly min = input(0);
+  readonly max = input(300);
+  readonly minValue = input(65);
+  readonly maxValue = input(65);
+  readonly disabled = input(false);
+  readonly rangeChange = output<LengthRange>();
 
   readonly _min = signal(0);
   readonly _max = signal(300);
@@ -44,50 +42,41 @@ export class LengthRangeSliderComponent implements OnChanges {
       : 0
   );
 
-  private clamp(value: number, min: number, max: number): number {
-    return Math.min(Math.max(value, min), max);
-  }
+  constructor() {
+    effect(() => {
+      const bounds = {
+        min: Math.min(this.min(), this.max()),
+        max: Math.max(this.min(), this.max()),
+      };
 
-  private getNormalizedBounds(): LengthRange {
-    return {
-      min: Math.min(this.min, this.max),
-      max: Math.max(this.min, this.max),
-    };
-  }
+      let normalizedMin: number;
+      let normalizedMax: number;
 
-  private normalizeRange(
-    minValue: number,
-    maxValue: number,
-    bounds: LengthRange
-  ): LengthRange {
-    if (bounds.min === bounds.max) {
-      return { min: bounds.min, max: bounds.max };
-    }
-
-    const normalizedMin = this.clamp(
-      Math.min(minValue, maxValue),
-      bounds.min,
-      bounds.max - 1
-    );
-    const normalizedMax = this.clamp(
-      Math.max(minValue, maxValue),
-      bounds.min + 1,
-      bounds.max
-    );
-
-    return { min: normalizedMin, max: normalizedMax };
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes["min"] || changes["max"] || changes["minValue"] || changes["maxValue"]) {
-      const bounds = this.getNormalizedBounds();
-      const range = this.normalizeRange(this.minValue, this.maxValue, bounds);
+      if (bounds.min === bounds.max) {
+        normalizedMin = bounds.min;
+        normalizedMax = bounds.max;
+      } else {
+        normalizedMin = this.clamp(
+          Math.min(this.minValue(), this.maxValue()),
+          bounds.min,
+          bounds.max - 1
+        );
+        normalizedMax = this.clamp(
+          Math.max(this.minValue(), this.maxValue()),
+          bounds.min + 1,
+          bounds.max
+        );
+      }
 
       this._min.set(bounds.min);
       this._max.set(bounds.max);
-      this.currentMin.set(range.min);
-      this.currentMax.set(range.max);
-    }
+      this.currentMin.set(normalizedMin);
+      this.currentMax.set(normalizedMax);
+    });
+  }
+
+  private clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max);
   }
 
   onMinInput(event: Event): void {
