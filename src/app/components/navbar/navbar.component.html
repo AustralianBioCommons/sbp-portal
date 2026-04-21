@@ -1,19 +1,17 @@
 <!-- Main Navigation Bar -->
 <nav class="navbar relative">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center py-2">
       <!-- Logo and Brand (Left corner) -->
-      <div class="flex items-center">
-        <button
-          class="flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
-          (click)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
-          aria-label="Navigate to home page"
-        >
-          <img class="w-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
-        </button>
-      </div>
+      <button
+        class="-mx-4 flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
+        (click)="navigate('/themes', { tab: 'binder-design' })"
+        (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
+        (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
+        aria-label="Navigate to home page"
+      >
+        <img class="w-60 h-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
+      </button>
 
       <!-- Compact Menu Button (Right side) -->
       <div class="flex items-center ml-auto">

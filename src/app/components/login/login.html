@@ -1,6 +1,6 @@
 <!-- Login Bar (Top bar for authentication) -->
 <div class="login-bar">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto">
     <div class="flex justify-end items-center py-2">
       <!-- User Section (if authenticated) -->
       @if (isAuthenticated$ | async) {
@@ -36,7 +36,7 @@
           type="button"
           data-testid="login-button"
           (click)="login()"
-          class="flex items-center space-x-2 text-sm font-semibold text-blue-900 bg-transparent px-4 py-1 rounded-md hover:text-blue-600 transition-colors duration-200"
+          class="flex items-center gap-2 text-sm font-semibold text-blue-900 bg-transparent rounded-md hover:text-blue-600 transition-all"
         >
           <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
           <span>Log in</span>

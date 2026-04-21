@@ -1,25 +1,5 @@
 /* Navbar styles - using Tailwind CSS custom properties */
 
-.navbar {
-  /* Custom backdrop blur and height - not easily replicated in Tailwind */
-  top: 0;
-  z-index: 999;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  height: 115px;
-  background-color: color-mix(in srgb, theme("colors.white") 95%, transparent);
-
-  /* Ensure content container matches the navbar height */
-  .flex.justify-between.items-center {
-    height: 100%;
-  }
-
-  /* Logo sizing */
-  img {
-    width: 300px;
-    height: 110px;
-  }
-}
 
 /* Menu animation - using custom keyframes */
 .compact-menu {

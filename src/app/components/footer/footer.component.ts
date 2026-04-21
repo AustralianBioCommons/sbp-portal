@@ -29,7 +29,7 @@ type SocialLink = {
 };
 
 @Component({
-  selector: "app-footer-sections",
+  selector: "app-footer",
   standalone: true,
   imports: [CommonModule, FormsModule, NgIconComponent],
   providers: [

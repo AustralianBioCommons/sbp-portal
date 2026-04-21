@@ -9,7 +9,7 @@
   ></app-alert>
   }
 
-  <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl mx-auto py-12">
     <!-- Browser-style Tabs attached to container -->
     <nav class="flex justify-center" aria-label="Tabs">
       <ul class="flex space-x-1">
@@ -47,8 +47,8 @@
           </h1>
           <p class="mt-2 text-sm text-gray-500">
             Screen protein–protein interactions using the wisps pipeline.
-            Provide query and target protein sequences, choose a
-            prediction tool, and submit your job.
+            Provide query and target protein sequences, choose a prediction
+            tool, and submit your job.
           </p>
         </div>
       </header>
@@ -74,9 +74,12 @@
           (toolSelect)="selectTool($event)"
         ></app-tool-selection>
 
-        <div class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+        <div
+          class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+        >
           <p class="text-sm text-amber-800">
-            {{ unavailableToolLabels.join(" and ") }} are temporarily unavailable.
+            {{ unavailableToolLabels.join(" and ") }} are temporarily
+            unavailable.
           </p>
         </div>
       </div>
@@ -134,7 +137,8 @@
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
               <p class="mt-1 text-xs text-gray-500">
-                Enter the query protein sequence using single-letter amino acid codes (e.g. MKTAYIAKQR…).
+                Enter the query protein sequence using single-letter amino acid
+                codes (e.g. MKTAYIAKQR…).
               </p>
               <textarea
                 id="query-fasta"
@@ -169,8 +173,9 @@
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
               <p class="mt-1 text-xs text-gray-500">
-                Enter the target protein sequence using single-letter amino acid codes. The pipeline
-                will evaluate its interaction with the query sequence above.
+                Enter the target protein sequence using single-letter amino acid
+                codes. The pipeline will evaluate its interaction with the query
+                sequence above.
               </p>
               <textarea
                 id="target-fasta"

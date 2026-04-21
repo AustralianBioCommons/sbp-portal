@@ -8,7 +8,7 @@
   ></app-alert>
   }
 
-  <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl mx-auto py-12">
     <nav class="flex justify-center" aria-label="Tabs">
       <ul class="flex space-x-1">
         @for (tab of tabs; track tab.id) {
@@ -69,7 +69,9 @@
           (toolSelect)="selectTool($event)"
         ></app-tool-selection>
 
-        <div class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+        <div
+          class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+        >
           <p class="text-sm text-amber-800">
             Tools are currently not available. You can still continue through
             the workflow steps, but submission is disabled.
@@ -130,9 +132,15 @@
               cdkDragBoundary=".sequence-list"
               cdkDragPreviewContainer="parent"
             >
-              <div class="grid gap-3 lg:grid-cols-[44px_170px_110px_minmax(0,1fr)_40px] lg:items-start">
-                <div class="entity-row__handle flex flex-col items-center gap-1 pt-1">
-                  <span class="text-[11px] font-semibold text-slate-500">#{{ i + 1 }}</span>
+              <div
+                class="grid gap-3 lg:grid-cols-[44px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
+              >
+                <div
+                  class="entity-row__handle flex flex-col items-center gap-1 pt-1"
+                >
+                  <span class="text-[11px] font-semibold text-slate-500"
+                    >#{{ i + 1 }}</span
+                  >
                   <div
                     class="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                     cdkDragHandle
@@ -181,7 +189,8 @@
                     "
                     class="block h-11 w-full rounded-xl border bg-white px-3 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 transition-colors"
                   />
-                  @if (shouldShowRowFieldError(row, 'copyNumber') && getRowErrors(i).copyNumber) {
+                  @if (shouldShowRowFieldError(row, 'copyNumber') &&
+                  getRowErrors(i).copyNumber) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
                     {{ getRowErrors(i).copyNumber }}
                   </p>
@@ -232,13 +241,12 @@
                             : 'ACDEFGHIKLMNPQRSTVWY'
                     "
                   />
-                  }
-                  @if (shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence) {
+                  } @if (shouldShowRowFieldError(row, 'sequence') &&
+                  getRowErrors(i).sequence) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
                     {{ getRowErrors(i).sequence }}
                   </p>
-                  }
-                  @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
+                  } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
                     {{ getRowErrors(i).tool }}
                   </p>
@@ -274,9 +282,12 @@
             </div>
             }
 
-            <div class="flex items-center justify-between rounded-lg border border-dashed border-blue-300 bg-blue-50 px-4 py-3">
+            <div
+              class="flex items-center justify-between rounded-lg border border-dashed border-blue-300 bg-blue-50 px-4 py-3"
+            >
               <p class="text-sm text-blue-900">
-                Add another entity row to define a multicomponent prediction input.
+                Add another entity row to define a multicomponent prediction
+                input.
               </p>
               <app-button
                 type="button"
@@ -295,9 +306,7 @@
             ></app-form-status>
           </div>
         </app-step-content>
-        }
-
-        @if (currentStep() === 2) {
+        } @if (currentStep() === 2) {
         <app-step-content
           title="Tool Settings — {{ selectedToolLabel() }}"
           description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}."
@@ -326,7 +335,8 @@
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 transition-colors"
               />
-              @if ((stepTwoTouched() || alphafold2RandomSeedTouched()) && toolSettingErrors().alphafold2RandomSeed) {
+              @if ((stepTwoTouched() || alphafold2RandomSeedTouched()) &&
+              toolSettingErrors().alphafold2RandomSeed) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ toolSettingErrors().alphafold2RandomSeed }}
               </p>
@@ -342,9 +352,7 @@
                 <span>alphafold2_full_dbs</span>
               </label>
             </div>
-            }
-
-            @if (selectedTool() === 'colabfold') {
+            } @if (selectedTool() === 'colabfold') {
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <label
                 for="colabfold-num-recycles"
@@ -367,7 +375,8 @@
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 transition-colors"
               />
-              @if ((stepTwoTouched() || colabfoldNumRecyclesTouched()) && toolSettingErrors().colabfoldNumRecycles) {
+              @if ((stepTwoTouched() || colabfoldNumRecyclesTouched()) &&
+              toolSettingErrors().colabfoldNumRecycles) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ toolSettingErrors().colabfoldNumRecycles }}
               </p>
@@ -383,9 +392,7 @@
                 <span>colabfold_use_templates</span>
               </label>
             </div>
-            }
-
-            @if (selectedTool() === 'boltz') {
+            } @if (selectedTool() === 'boltz') {
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <label class="flex items-center gap-3 text-sm text-gray-700">
                 <input
@@ -405,9 +412,7 @@
             ></app-form-status>
           </div>
         </app-step-content>
-        }
-
-        @if (currentStep() === 3) {
+        } @if (currentStep() === 3) {
         <app-step-content
           title="Review & Submit"
           description="Confirm the entity rows, selected tool, generated FASTA content, and tool-specific settings."
@@ -460,9 +465,7 @@
           </div>
         </div>
       </div>
-      }
-
-      @if (isActiveTab('output')) {
+      } @if (isActiveTab('output')) {
       <div class="mt-6">
         <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
           <h2 class="text-base font-semibold text-gray-900">Output</h2>
@@ -472,9 +475,7 @@
           </p>
         </div>
       </div>
-      }
-
-      @if (isActiveTab('papers')) {
+      } @if (isActiveTab('papers')) {
       <div class="mt-6">
         <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
           <h2 class="text-base font-semibold text-gray-900">Papers</h2>

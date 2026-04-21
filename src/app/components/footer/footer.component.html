@@ -1,13 +1,13 @@
-<footer id="footer-sections" data-footer-sections>
-  <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-    <!-- Main 4-column layout with first column bigger -->
-    <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-7">
-      <!-- Column 1: Logos and Social Links (takes 3 columns) -->
-      <div class="lg:col-span-3 sm:col-span-2 text-center">
-        <div class="grid grid-cols-2">
-          @for (logo of logos.slice(0, 2); track logo.href) {
+<footer class="bg-gray-50">
+  <div class="mx-auto max-w-7xl py-12">
+    <!-- Main 6-column layout with first column bigger -->
+    <div class="w-full grid md:grid-cols-3 lg:grid-cols-6">
+      <!-- Column 1: Logos and Social Links (takes 2 columns) -->
+      <div class="lg:col-span-3 text-center">
+        <div class="grid grid-cols-3">
+          @for (logo of logos; track logo.href) {
           <a
-            class="group logo-container flex items-center justify-center transition hover:opacity-80"
+            class="group flex items-center justify-center transition hover:opacity-80"
             [href]="logo.href"
             target="_blank"
             rel="noopener"
@@ -21,26 +21,9 @@
           </a>
           }
         </div>
-        @if (logos.length > 2) {
-        <div class="flex">
-          <a
-            class="group logo-container flex items-center justify-center transition hover:opacity-80"
-            [href]="logos[2].href"
-            target="_blank"
-            rel="noopener"
-          >
-            <img
-              [src]="logos[2].src"
-              [alt]="logos[2].alt"
-              class="logo-image"
-              loading="lazy"
-            />
-          </a>
-        </div>
-        }
       </div>
 
-      <!-- Columns 2-4: Link Groups (each takes 1 column with centered text) -->
+      <!-- Columns 3-5: Link Groups (each takes 1 column with centered text) -->
       @for (group of linkGroups; track group.heading) {
       <div class="flex flex-col justify-center">
         <div class="space-y-6">
@@ -67,7 +50,7 @@
     </div>
 
     <!-- Bottom Legal Information -->
-    <div class="mt-16 border-t footer-border pt-8">
+    <div class="mt-16 border-t pt-8">
       <div
         class="max-w-4xl mx-auto space-y-3 text-center text-sm footer-legal-text"
       >
