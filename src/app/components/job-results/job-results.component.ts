@@ -389,7 +389,8 @@ export class JobResultsComponent implements OnChanges {
 
   private extractFilename(path: string): string {
     if (!path || path === "N/A") return path;
-    const parts = path.split(/[/\\?#]/);
+    const withoutQuery = path.split(/[?#]/)[0];
+    const parts = withoutQuery.split(/[/\\]/);
     return parts.filter((p) => p.length > 0).pop() ?? path;
   }
 

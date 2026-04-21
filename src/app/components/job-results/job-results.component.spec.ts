@@ -755,6 +755,15 @@ describe("JobResultsComponent", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       expect(privateApi.extractFilename("target.pdb")).toBe("target.pdb");
     });
+
+    it("should extract filename from a presigned S3 URL with query parameters", () => {
+      const privateApi = component as unknown as JobResultsPrivateApi;
+      expect(
+        privateApi.extractFilename(
+          "https://my-bucket.s3.amazonaws.com/uploads/target.pdb?X-Amz-Signature=abc123&X-Amz-Expires=3600"
+        )
+      ).toBe("target.pdb");
+    });
   });
 
   describe("normalizeSettings — PDB field handling", () => {
