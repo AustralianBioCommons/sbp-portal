@@ -32,6 +32,7 @@ import {
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
+import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
   CCD_COMPOUNDS,
@@ -105,6 +106,7 @@ export class SinglePredictionComponent {
   public auth = inject(AuthService);
   public workflowSubmission = inject(WorkflowSubmissionService);
   private datasetUploadService = inject(DatasetUploadService);
+  private fastaUploadService = inject(FastaUploadService);
 
   readonly ccdOptions: ListboxSelectOption[] = Object.entries(CCD_COMPOUNDS).map(
     ([code, name]) => ({ value: code, label: `${code} - ${name}` })
@@ -114,6 +116,9 @@ export class SinglePredictionComponent {
   ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
   ccdLookupNames = signal<Record<number, string>>({}); // compound name resolved from the local CCD dictionary via lookupCcdCompound()
   ccdLookupErrors = signal<Record<number, string>>({}); // validation error message produced by the local CCD dictionary lookup
+  private preparedFastaContent = signal<string | null>(null);
+  private preparedFastaUrl = signal<string | null>(null);
+  private preparedSamplesheetDatasetId = signal<string | null>(null);
 
   showAlert = signal(false);
   alertMessage = signal("");
@@ -237,18 +242,25 @@ export class SinglePredictionComponent {
       return "";
     }
 
-    return this.entityRows()
-      .flatMap((row, index) => {
-        const copies = this.getParsedCopyNumber(row.copyNumber);
-        const sequence = this.getNormalizedSequence(row);
-        return Array.from({ length: copies }, (_, copyIndex) =>
+    const fastaRecords: string[] = [];
+    let sequenceNumber = 1;
+
+    for (const row of this.entityRows()) {
+      const copies = this.getParsedCopyNumber(row.copyNumber);
+      const sequence = this.getNormalizedSequence(row);
+
+      for (let copyIndex = 0; copyIndex < copies; copyIndex += 1) {
+        fastaRecords.push(
           [
-            `>entity_${index + 1}_copy_${copyIndex + 1}|${row.moleculeType}`,
+            `>${this.getFastaSequenceId(row.moleculeType, sequenceNumber)}`,
             sequence
           ].join("\n")
         );
-      })
-      .join("\n");
+        sequenceNumber += 1;
+      }
+    }
+
+    return fastaRecords.join("\n");
   });
 
   switchTab(id: TabItem["id"]) {
@@ -482,6 +494,8 @@ export class SinglePredictionComponent {
       if (!this.isStep1Valid()) {
         return;
       }
+      this.prepareSinglePredictionInput(() => this.advanceStep());
+      return;
     }
 
     if (this.currentStep() === 2) {
@@ -491,13 +505,7 @@ export class SinglePredictionComponent {
       }
     }
 
-    const current = this.currentStep();
-    if (current < this.steps.length) {
-      this.completedSteps.update((steps) =>
-        steps.includes(current) ? steps : [...steps, current]
-      );
-      this.currentStep.update((value) => value + 1);
-    }
+    this.advanceStep();
   }
 
   goToStep(step: number) {
@@ -538,49 +546,17 @@ export class SinglePredictionComponent {
       return;
     }
 
-    const payload: Record<string, unknown> = {
-      tool: this.selectedToolLabel(),
-      mode: this.selectedTool(),
-      entities: this.entityRows().map((row, index) => ({
-        id: `entity_${index + 1}`,
-        moleculeType: row.moleculeType,
-        copyNumber: this.getParsedCopyNumber(row.copyNumber),
-        sequence: this.getNormalizedSequence(row)
-      })),
-      fastaContent: this.generatedFastaContent(),
-      ...this.buildToolSettingsPayload()
-    };
-
     this.workflowSubmission.isSubmitting.set(true);
 
-    this.datasetUploadService.uploadDataset({ formData: payload }).subscribe({
-      next: (response) => {
-        const datasetId = response.datasetId;
-        if (!datasetId) {
-          this.workflowSubmission.isSubmitting.set(false);
-          this.showError(
-            "Dataset upload succeeded but no dataset ID was returned."
-          );
-          return;
-        }
-
-        this.workflowSubmission.submitWorkflowWithDataset(
-          payload,
-          datasetId,
-          (error) => {
-            this.workflowSubmission.isSubmitting.set(false);
-            this.showError(
-              `Workflow launch failed: ${error.message || "Unknown error"}`
-            );
-          }
-        );
-      },
-      error: (error) => {
+    this.prepareSinglePredictionInput(() => {
+      const datasetId = this.preparedSamplesheetDatasetId();
+      const fastaUrl = this.preparedFastaUrl();
+      if (!datasetId || !fastaUrl) {
         this.workflowSubmission.isSubmitting.set(false);
-        this.showError(
-          `Failed to upload dataset: ${error.message || "Unknown error"}`
-        );
+        this.showError("Single prediction input preparation did not complete.");
+        return;
       }
+      this.submitPreparedWorkflow(datasetId, fastaUrl);
     });
   }
 
@@ -793,6 +769,147 @@ export class SinglePredictionComponent {
   private getParsedCopyNumber(value: string): number {
     const parsed = Number.parseInt(value, 10);
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+  }
+
+  private advanceStep(): void {
+    const current = this.currentStep();
+    if (current < this.steps.length) {
+      this.completedSteps.update((steps) =>
+        steps.includes(current) ? steps : [...steps, current]
+      );
+      this.currentStep.update((value) => value + 1);
+    }
+  }
+
+  private prepareSinglePredictionInput(onPrepared: () => void): void {
+    const fastaContent = this.generatedFastaContent();
+    const cachedDatasetId = this.preparedSamplesheetDatasetId();
+    const cachedFastaUrl = this.preparedFastaUrl();
+    if (
+      cachedDatasetId &&
+      cachedFastaUrl &&
+      this.preparedFastaContent() === fastaContent
+    ) {
+      onPrepared();
+      return;
+    }
+
+    const samplesheetId = this.buildSamplesheetId();
+    const fastaFile = new File([fastaContent], `${samplesheetId}.fasta`, {
+      type: "text/plain"
+    });
+
+    this.fastaUploadService.uploadFastaFile({ file: fastaFile }).subscribe({
+      next: (response) => {
+        const presignedFastaUrl = response.presignedUrl;
+        if (!presignedFastaUrl) {
+          this.workflowSubmission.isSubmitting.set(false);
+          this.showError(
+            "FASTA upload succeeded but no pre-signed URL was returned."
+          );
+          return;
+        }
+
+        const samplesheet = {
+          id: samplesheetId,
+          fasta: presignedFastaUrl
+        };
+
+        this.datasetUploadService.uploadDataset({
+          formData: samplesheet,
+          datasetName: `${samplesheetId}-samplesheet`,
+          datasetDescription: "Single prediction samplesheet"
+        }).subscribe({
+          next: (datasetResponse) => {
+            const datasetId = datasetResponse.datasetId;
+            if (!datasetId) {
+              this.workflowSubmission.isSubmitting.set(false);
+              this.showError(
+                "Dataset upload succeeded but no dataset ID was returned."
+              );
+              return;
+            }
+
+            this.preparedFastaContent.set(fastaContent);
+            this.preparedFastaUrl.set(presignedFastaUrl);
+            this.preparedSamplesheetDatasetId.set(datasetId);
+            onPrepared();
+          },
+          error: (error) => {
+            this.workflowSubmission.isSubmitting.set(false);
+            this.showError(
+              `Failed to upload samplesheet dataset: ${
+                error.message || "Unknown error"
+              }`
+            );
+          }
+        });
+      },
+      error: (error) => {
+        this.workflowSubmission.isSubmitting.set(false);
+        this.showError(
+          `Failed to upload FASTA file: ${error.message || "Unknown error"}`
+        );
+      }
+    });
+  }
+
+  private submitPreparedWorkflow(datasetId: string, fastaUrl: string): void {
+    this.workflowSubmission.submitWorkflowWithDataset(
+      {
+        ...this.buildWorkflowPayload(),
+        fastaFileUrl: fastaUrl,
+        samplesheetId: this.buildSamplesheetId()
+      },
+      datasetId,
+      (error) => {
+        this.workflowSubmission.isSubmitting.set(false);
+        this.showError(
+          `Workflow launch failed: ${error.message || "Unknown error"}`
+        );
+      }
+    );
+  }
+
+  private buildWorkflowPayload(): Record<string, unknown> {
+    return {
+      tool: this.selectedToolLabel(),
+      mode: this.selectedTool(),
+      entities: this.entityRows().map((row, index) => ({
+        id: `entity_${index + 1}`,
+        moleculeType: row.moleculeType,
+        copyNumber: this.getParsedCopyNumber(row.copyNumber),
+        sequence: this.getNormalizedSequence(row)
+      })),
+      fastaContent: this.generatedFastaContent(),
+      ...this.buildToolSettingsPayload()
+    };
+  }
+
+  private buildSamplesheetId(): string {
+    return "single_prediction";
+  }
+
+  private getFastaSequenceId(
+    type: MoleculeType,
+    sequenceNumber: number
+  ): string {
+    return `${this.getMoleculeTypePrefix(type)}_${sequenceNumber}`;
+  }
+
+  private getMoleculeTypePrefix(type: MoleculeType): string {
+    switch (type) {
+      case "protein":
+        return "pro";
+      case "rna":
+        return "rna";
+      case "dna":
+        return "dna";
+      case "ligand":
+        return "ligand";
+      case "ccd":
+        return "ccd";
+    }
   }
 
   private validateSequenceByMoleculeType(

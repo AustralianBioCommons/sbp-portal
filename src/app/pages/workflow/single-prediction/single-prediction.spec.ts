@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
+import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
   lookupCcdCompound,
@@ -17,6 +18,7 @@ describe("SinglePredictionComponent", () => {
   let component: SinglePredictionComponent;
   let fixture: ComponentFixture<SinglePredictionComponent>;
   let datasetUploadService: jasmine.SpyObj<DatasetUploadService>;
+  let fastaUploadService: jasmine.SpyObj<FastaUploadService>;
   let workflowSubmissionService: {
     isSubmitting: ReturnType<typeof signal<boolean>>;
     showSuccessDialog: ReturnType<typeof signal<boolean>>;
@@ -40,6 +42,19 @@ describe("SinglePredictionComponent", () => {
         datasetId: "dataset-1",
       })
     );
+    fastaUploadService = jasmine.createSpyObj("FastaUploadService", [
+      "uploadFastaFile",
+    ]);
+    fastaUploadService.uploadFastaFile.and.returnValue(
+      of({
+        success: true,
+        message: "ok",
+        fileId: "input/single_prediction.fasta",
+        fileName: "single_prediction.fasta",
+        s3Uri: "s3://bucket/input/single_prediction.fasta",
+        presignedUrl: "https://signed.example/input/single_prediction.fasta",
+      })
+    );
 
     workflowSubmissionService = {
       isSubmitting: signal(false),
@@ -59,6 +74,7 @@ describe("SinglePredictionComponent", () => {
       providers: [
         { provide: AuthService, useValue: authService },
         { provide: DatasetUploadService, useValue: datasetUploadService },
+        { provide: FastaUploadService, useValue: fastaUploadService },
         {
           provide: WorkflowSubmissionService,
           useValue: workflowSubmissionService,
@@ -329,10 +345,10 @@ describe("SinglePredictionComponent", () => {
 
     expect(component.isStep1Valid()).toBe(true);
     expect(component.generatedFastaContent()).toContain(
-      ">entity_1_copy_1|dna"
+      ">dna_1"
     );
     expect(component.generatedFastaContent()).toContain(
-      ">entity_1_copy_2|dna"
+      ">dna_2"
     );
   });
 
@@ -475,7 +491,16 @@ describe("SinglePredictionComponent", () => {
 
     component.submitWorkflow();
 
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalled();
     expect(datasetUploadService.uploadDataset).toHaveBeenCalled();
+    expect(datasetUploadService.uploadDataset).toHaveBeenCalledWith({
+      formData: {
+        id: "single_prediction",
+        fasta: "https://signed.example/input/single_prediction.fasta",
+      },
+      datasetName: "single_prediction-samplesheet",
+      datasetDescription: "Single prediction samplesheet",
+    });
     expect(
       workflowSubmissionService.submitWorkflowWithDataset
     ).toHaveBeenCalled();
@@ -486,7 +511,11 @@ describe("SinglePredictionComponent", () => {
     expect(payload["mode"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
-    expect(payload["fastaContent"]).toContain(">entity_1_copy_1|protein");
+    expect(payload["fastaContent"]).toContain(">pro_1");
+    expect(payload["fastaFileUrl"]).toBe(
+      "https://signed.example/input/single_prediction.fasta"
+    );
+    expect(payload["samplesheetId"]).toBe("single_prediction");
     expect(component.canSubmit()).toBe(true);
   });
 
@@ -497,6 +526,7 @@ describe("SinglePredictionComponent", () => {
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("Submission is disabled");
+    expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
     expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
   });
 
@@ -506,6 +536,21 @@ describe("SinglePredictionComponent", () => {
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("Please fix");
+    expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
+    expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
+  });
+
+  it("should show an error when FASTA upload fails", () => {
+    fillValidProteinRow();
+    component.isToolAvailable = () => true;
+    fastaUploadService.uploadFastaFile.and.returnValue(
+      throwError(() => new Error("fasta upload failed"))
+    );
+
+    component.submitWorkflow();
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("fasta upload failed");
     expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
   });
 
