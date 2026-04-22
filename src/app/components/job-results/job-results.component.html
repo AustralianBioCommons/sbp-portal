@@ -196,7 +196,19 @@
                       @for (setting of settingsItems(); track setting.label) {
                         <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                           <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ setting.label }}</dt>
+                          @if (setting.url) {
+                          <dd class="mt-1 text-sm">
+                            <a
+                              [href]="setting.url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download
+                              class="text-blue-700 underline hover:text-blue-900 break-all"
+                            >{{ setting.value }}</a>
+                          </dd>
+                          } @else {
                           <dd class="mt-1 break-words text-sm text-slate-900">{{ setting.value }}</dd>
+                          }
                           @if (setting.details.length > 0) {
                             <div class="mt-2 space-y-1">
                               @for (detail of setting.details; track detail) {

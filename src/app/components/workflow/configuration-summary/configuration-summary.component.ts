@@ -5,6 +5,8 @@ export interface SummaryItem {
   label: string;
   value: string;
   fieldName: string;
+  /** Optional download URL — when set, value is rendered as a clickable link. */
+  url?: string;
 }
 
 @Component({
@@ -46,9 +48,19 @@ export interface SummaryItem {
             <span class="text-sm font-medium text-gray-700 sm:w-1/3"
               >{{ item.label }}:</span
             >
+            @if (item.url) {
+            <a
+              [href]="item.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              class="text-sm text-blue-700 underline hover:text-blue-900 sm:w-2/3 break-all"
+            >{{ item.value }}</a>
+            } @else {
             <span class="text-sm text-gray-600 sm:w-2/3 break-words">{{
               item.value
             }}</span>
+            }
           </div>
           }
         </div>

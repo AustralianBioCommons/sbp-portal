@@ -24,7 +24,7 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 import { environment } from "../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
-type JobSettingItem = { label: string; value: string; details: string[] };
+type JobSettingItem = { label: string; value: string; details: string[]; url?: string };
 
 @Component({
   selector: "app-job-results",
@@ -363,18 +363,35 @@ export class JobResultsComponent implements OnChanges {
         details.push("Required");
       }
       details.push(...this.formatValidationDetails(value.validation));
+      const rawValue = this.formatSettingValue(value.value);
+      const isPdb = this.isPdbSettingKey(key);
       return {
         label: value.label || this.formatSettingLabel(key),
-        value: this.formatSettingValue(value.value),
-        details
+        value: isPdb ? this.extractFilename(rawValue) : rawValue,
+        details,
+        ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {})
       };
     }
 
+    const rawValue = this.formatSettingValue(value);
+    const isPdb = this.isPdbSettingKey(key);
     return {
       label: this.formatSettingLabel(key),
-      value: this.formatSettingValue(value),
-      details: []
+      value: isPdb ? this.extractFilename(rawValue) : rawValue,
+      details: [],
+      ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {})
     };
+  }
+
+  private isPdbSettingKey(key: string): boolean {
+    return key.toLowerCase().includes("pdb");
+  }
+
+  private extractFilename(path: string): string {
+    if (!path || path === "N/A") return path;
+    const withoutQuery = path.split(/[?#]/)[0];
+    const parts = withoutQuery.split(/[/\\]/);
+    return parts.filter((p) => p.length > 0).pop() ?? path;
   }
 
   private formatSettingLabel(key: string): string {

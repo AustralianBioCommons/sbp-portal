@@ -85,12 +85,10 @@ describe("ResultsService", () => {
   });
 
   it("should return a trusted resource URL for the report", () => {
-    const trustedUrl = service.getSafeReportResourceUrl(
-      `${environment.apiBaseUrl}/report.html`
-    );
+    const trustedUrl = service.getSafeReportResourceUrl("/api/results/job-1/report");
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
-      `${environment.apiBaseUrl}/report.html`
+      new URL("/api/results/job-1/report", apiBase).href
     );
   });
 
