@@ -136,7 +136,7 @@ export class SinglePredictionComponent {
     { id: "alphafold2", label: "AlphaFold2" },
     { id: "boltz", label: "Boltz" }
   ];
-  isToolAvailable = () => false;
+  isToolAvailable = () => true;
   selectedTool = signal<ToolId>("colabfold");
   selectedToolLabel: Signal<string> = computed(
     () =>
@@ -494,7 +494,7 @@ export class SinglePredictionComponent {
       if (!this.isStep1Valid()) {
         return;
       }
-      this.prepareSinglePredictionInput(() => this.advanceStep());
+      this.advanceStep();
       return;
     }
 
@@ -817,7 +817,7 @@ export class SinglePredictionComponent {
 
         this.datasetUploadService.uploadDataset({
           formData: samplesheet,
-          datasetName: `${samplesheetId}-samplesheet`,
+          datasetName: `${samplesheetId}-samplesheet-${Date.now()}`,
           datasetDescription: "Single prediction samplesheet"
         }).subscribe({
           next: (datasetResponse) => {
@@ -873,7 +873,7 @@ export class SinglePredictionComponent {
 
   private buildWorkflowPayload(): Record<string, unknown> {
     return {
-      tool: this.selectedToolLabel(),
+      tool: "Proteinfold",
       mode: this.selectedTool(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,
