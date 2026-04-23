@@ -801,18 +801,18 @@ export class SinglePredictionComponent {
 
     this.fastaUploadService.uploadFastaFile({ file: fastaFile }).subscribe({
       next: (response) => {
-        const presignedFastaUrl = response.presignedUrl;
-        if (!presignedFastaUrl) {
+        const fastaS3Uri = response.s3Uri;
+        if (!fastaS3Uri) {
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            "FASTA upload succeeded but no pre-signed URL was returned."
+            "FASTA upload succeeded but no S3 URI was returned."
           );
           return;
         }
 
         const samplesheet = {
           id: samplesheetId,
-          fasta: presignedFastaUrl
+          fasta: fastaS3Uri
         };
 
         this.datasetUploadService.uploadDataset({
@@ -831,7 +831,7 @@ export class SinglePredictionComponent {
             }
 
             this.preparedFastaContent.set(fastaContent);
-            this.preparedFastaUrl.set(presignedFastaUrl);
+            this.preparedFastaUrl.set(fastaS3Uri);
             this.preparedSamplesheetDatasetId.set(datasetId);
             onPrepared();
           },
