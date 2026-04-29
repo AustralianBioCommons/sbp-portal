@@ -97,11 +97,11 @@ describe("NotFoundComponent", () => {
     expect(window.history.back).toHaveBeenCalled();
   });
 
-  it("should have four popular links", () => {
+  it("should have three popular links", () => {
     const popularLinks = fixture.debugElement.queryAll(
       By.css(".link-grid app-button"),
     );
-    expect(popularLinks.length).toBe(4);
+    expect(popularLinks.length).toBe(3);
 
     const expectedTexts = [
       "Binder Design",
@@ -193,7 +193,6 @@ describe("NotFoundComponent", () => {
 
     spyOn(component, "navigateToBinderDesign");
     spyOn(component, "navigateToStructurePrediction");
-    spyOn(component, "navigateToStructureSearch");
     spyOn(component, "navigateToSingleStructurePrediction");
 
     popularLinks[0].nativeElement.click();
@@ -203,9 +202,6 @@ describe("NotFoundComponent", () => {
     expect(component.navigateToStructurePrediction).toHaveBeenCalled();
 
     popularLinks[2].nativeElement.click();
-    expect(component.navigateToStructureSearch).toHaveBeenCalled();
-
-    popularLinks[3].nativeElement.click();
     expect(component.navigateToSingleStructurePrediction).toHaveBeenCalled();
   });
 });

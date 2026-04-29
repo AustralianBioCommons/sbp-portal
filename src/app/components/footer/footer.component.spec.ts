@@ -21,35 +21,6 @@ describe("FooterSectionsComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  describe("onSubmitSearch", () => {
-    it("should emit searchSubmit event with trimmed search term", () => {
-      spyOn(component.searchSubmit, "emit");
-      component.searchTerm = "  test query  ";
-
-      component.onSubmitSearch();
-
-      expect(component.searchSubmit.emit).toHaveBeenCalledWith("test query");
-    });
-
-    it("should emit empty string when search term is only whitespace", () => {
-      spyOn(component.searchSubmit, "emit");
-      component.searchTerm = "   ";
-
-      component.onSubmitSearch();
-
-      expect(component.searchSubmit.emit).toHaveBeenCalledWith("");
-    });
-
-    it("should emit empty string when search term is empty", () => {
-      spyOn(component.searchSubmit, "emit");
-      component.searchTerm = "";
-
-      component.onSubmitSearch();
-
-      expect(component.searchSubmit.emit).toHaveBeenCalledWith("");
-    });
-  });
-
   describe("data properties", () => {
     it("should have correct logos data", () => {
       expect(component.logos.length).toBe(3);
@@ -63,7 +34,7 @@ describe("FooterSectionsComponent", () => {
     it("should have correct link groups data", () => {
       expect(component.linkGroups.length).toBe(3);
       expect(component.linkGroups[0].heading).toBe("Themes");
-      expect(component.linkGroups[0].links.length).toBe(3);
+      expect(component.linkGroups[0].links.length).toBe(2);
       expect(component.linkGroups[0].links[0]).toEqual({
         label: "Binder design",
         href: "/themes?tab=binder-design",
@@ -75,16 +46,12 @@ describe("FooterSectionsComponent", () => {
       expect(component.socialLinks[0]).toEqual({
         href: "https://linkedin.com/company/australianbiocommons",
         label: "LinkedIn",
-        iconName: "lucideLinkedin",
+        iconName: "bootstrapLinkedin",
       });
     });
   });
 
   describe("template integration", () => {
-    it("should initialize searchTerm as empty string", () => {
-      expect(component.searchTerm).toBe("");
-    });
-
     it("should render all logo links", () => {
       const logoElements = fixture.debugElement.queryAll(
         By.css('img[alt*="logo"]')
