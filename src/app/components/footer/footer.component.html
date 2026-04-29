@@ -126,13 +126,13 @@
       <div class="flex justify-center gap-4 pt-12">
         @for (social of socialLinks; track social.href) {
         <a
-          class="footer-social-link inline-flex h-10 w-10 items-center justify-center rounded-full border"
+          class="inline-flex h-12 w-12 items-center justify-center rounded-full border"
           [href]="social.href"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
         >
           <span class="sr-only">{{ social.label }}</span>
-          <ng-icon [name]="social.iconName" class="h-5 w-5" aria-hidden="true">
+          <ng-icon [name]="social.iconName" class="h-6 w-6" aria-hidden="true">
           </ng-icon>
         </a>
         }

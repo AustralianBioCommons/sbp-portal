@@ -1,9 +1,13 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Output } from "@angular/core";
+import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroMagnifyingGlass } from "@ng-icons/heroicons/outline";
-import { lucideLinkedin, lucideYoutube, lucideGithub } from "@ng-icons/lucide";
+import {
+  bootstrapLinkedin,
+  bootstrapYoutube,
+  bootstrapGithub,
+} from "@ng-icons/bootstrap-icons";
 
 type FooterLink = {
   label: string;
@@ -35,9 +39,9 @@ type SocialLink = {
   providers: [
     provideIcons({
       heroMagnifyingGlass,
-      lucideLinkedin,
-      lucideYoutube,
-      lucideGithub,
+      bootstrapLinkedin,
+      bootstrapYoutube,
+      bootstrapGithub,
     }),
   ],
   templateUrl: "./footer.component.html",
@@ -105,17 +109,17 @@ export class FooterSectionsComponent {
     {
       href: "https://linkedin.com/company/australianbiocommons",
       label: "LinkedIn",
-      iconName: "lucideLinkedin",
+      iconName: "bootstrapLinkedin",
     },
     {
       href: "https://www.youtube.com/c/AustralianBioCommonsChannel",
       label: "YouTube",
-      iconName: "lucideYoutube",
+      iconName: "bootstrapYoutube",
     },
     {
       href: "https://github.com/AustralianBioCommons",
       label: "GitHub",
-      iconName: "lucideGithub",
+      iconName: "bootstrapGithub",
     },
   ];
 }

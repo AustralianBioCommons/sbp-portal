@@ -1,81 +1,77 @@
 <!-- Binder Design Content -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
-  <div class="space-y-12">
-    <!-- Page Title -->
-    <div class="text-center">
-      <h1 class="text-4xl font-semibold text-gray-900 mb-6">
-        Protein Binder Design
-      </h1>
-      <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-        Synthetic protein binders are emerging as powerful tools in
-        therapeutics, diagnostics, and fundamental research, offering a highly
-        tunable alternative to traditional antibody development. This platform
-        has been developed to support the design and optimization of synthetic
-        protein binders through state-of-the-art AI workflows. By integrating
-        modern protein modeling, sequence design, and quality control methods,
-        it enables reproducible and efficient in silico experimentation for
-        academic research. Researchers can investigate new binding modalities,
-        benchmark computational protocols, and accelerate the progression from
-        sequence design to structural insight.
-      </p>
-    </div>
+<div
+  class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 space-y-12"
+>
+  <!-- Page Title -->
+  <div class="text-center space-y-6">
+    <h1 class="text-4xl font-semibold text-gray-900">Protein Binder Design</h1>
+    <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+      Synthetic protein binders are emerging as powerful tools in therapeutics,
+      diagnostics, and fundamental research, offering a highly tunable
+      alternative to traditional antibody development. This platform has been
+      developed to support the design and optimization of synthetic protein
+      binders through state-of-the-art AI workflows. By integrating modern
+      protein modeling, sequence design, and quality control methods, it enables
+      reproducible and efficient in silico experimentation for academic
+      research. Researchers can investigate new binding modalities, benchmark
+      computational protocols, and accelerate the progression from sequence
+      design to structural insight.
+    </p>
+  </div>
 
-    <!-- Preconfig Workflows Section -->
-    <div>
-      <h2 class="text-2xl font-semibold text-gray-900 mb-6">Workflows</h2>
-      <div class="flex flex-wrap gap-4">
-        @for (workflow of workflows; track workflow.id) {
-        <app-button
-          variant="secondary"
-          widthClass="w-auto"
-          borderRadius="rounded-full"
-          colorClasses="!px-6 !py-3 text-sm font-medium !border shadow hover:shadow-md hover:-translate-y-0.5 !bg-white !text-blue-900 hover:!text-gray-700"
-          [disabled]="workflow.disabled"
-          (click)="navigateToWorkflow(workflow.id)"
-        >
-          {{ workflow.label }}
-        </app-button>
-        }
-      </div>
+  <!-- Preconfig Workflows Section -->
+  <div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Workflows</h2>
+    <div class="flex flex-wrap gap-4">
+      @for (workflow of workflows; track workflow.id) {
+      <app-button
+        variant="secondary"
+        widthClass="w-auto"
+        borderRadius="rounded-full"
+        colorClasses="!px-6 !py-3 text-sm font-medium !border shadow hover:shadow-md hover:-translate-y-0.5 !bg-white !text-blue-900 hover:!text-gray-700"
+        [disabled]="workflow.disabled"
+        (click)="navigateToWorkflow(workflow.id)"
+      >
+        {{ workflow.label }}
+      </app-button>
+      }
     </div>
+  </div>
 
-    <!-- Tools Section -->
-    <div>
-      <h2 class="text-2xl font-semibold text-gray-900 mb-6">Tools</h2>
-      <div class="flex flex-wrap gap-3">
-        @for (tool of tools; track tool.id) {
-        <app-button
-          variant="secondary"
-          widthClass="w-auto"
-          borderRadius="rounded-full"
-          colorClasses="!px-6 !py-3 text-sm font-medium shadow hover:shadow-md hover:-translate-y-0.5 !border !bg-white !text-blue-900 hover:!text-gray-700"
-          [disabled]="tool.disabled"
-          (click)="navigateToTool(tool.id)"
-        >
-          {{ tool.label }}
-        </app-button>
-        }
-      </div>
+  <!-- Tools Section -->
+  <div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Tools</h2>
+    <div class="flex flex-wrap gap-4">
+      @for (tool of tools; track tool.id) {
+      <app-button
+        variant="secondary"
+        widthClass="w-auto"
+        borderRadius="rounded-full"
+        colorClasses="!px-6 !py-3 text-sm font-medium shadow hover:shadow-md hover:-translate-y-0.5 !border !bg-white !text-blue-900 hover:!text-gray-700"
+        [disabled]="tool.disabled"
+        (click)="navigateToTool(tool.id)"
+      >
+        {{ tool.label }}
+      </app-button>
+      }
     </div>
+  </div>
 
-    <!-- Community Resources Section -->
-    <div>
-      <h2 class="text-2xl font-semibold text-gray-900 mb-6">
-        Community Resources
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        @for (resource of communityResources; track resource.href) {
-        <a
-          [href]="resource.href"
-          class="bg-white rounded-lg border space-y-4 p-6 shadow hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer block"
-        >
-          <h3 class="text-lg font-semibold text-gray-900">
-            {{ resource.title }}
-          </h3>
-          <p class="text-gray-600 text-sm">{{ resource.description }}</p>
-        </a>
-        }
-      </div>
+  <!-- Community Resources Section -->
+  <div class="space-y-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Community Resources</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      @for (resource of communityResources; track resource.href) {
+      <a
+        [href]="resource.href"
+        class="bg-white rounded-lg border space-y-4 p-6 shadow hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer block"
+      >
+        <h3 class="text-lg font-semibold text-gray-900">
+          {{ resource.title }}
+        </h3>
+        <p class="text-gray-600 text-sm">{{ resource.description }}</p>
+      </a>
+      }
     </div>
   </div>
 </div>
