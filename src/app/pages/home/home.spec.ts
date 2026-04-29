@@ -162,7 +162,7 @@ describe("Home", () => {
 
       const container = fixture.nativeElement.querySelector(".min-h-screen");
       expect(container?.classList.contains("structure-prediction-bg")).toBe(
-        true
+        true,
       );
       expect(container?.classList.contains("bg-gray-50")).toBe(false);
     });
@@ -187,11 +187,7 @@ describe("Home", () => {
     });
 
     it("should have consistent tab structure with expected IDs", () => {
-      const expectedIds = [
-        "binder-design",
-        "structure-prediction",
-        "tools",
-      ];
+      const expectedIds = ["binder-design", "structure-prediction", "tools"];
       const actualIds = component.tabs.map((tab) => tab.id);
 
       expect(actualIds).toEqual(expectedIds);
