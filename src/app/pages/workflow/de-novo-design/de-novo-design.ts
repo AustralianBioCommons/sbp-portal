@@ -20,7 +20,6 @@ import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { FormFieldComponent } from "../../../components/workflow/form-field/form-field.component";
-import { FormStatusComponent } from "../../../components/workflow/form-status/form-status.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
   Step,
@@ -62,7 +61,6 @@ type StepItem = Step;
     StepContentComponent,
     FormFieldComponent,
     ConfigurationSummaryComponent,
-    FormStatusComponent,
     MolstarViewerComponent,
     LengthRangeSliderComponent,
   ],
@@ -146,10 +144,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
   );
   selectedToolData: Signal<ToolChip | undefined> = computed(() =>
-    this.tools.find((t) => t.id === this.selectedTool())
+    this.tools.find((t) => t.id === this.selectedTool()),
   );
 
   // Tool-specific parameter definitions (no params for any tool yet)
@@ -227,7 +225,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     // Slider bound and min/max values stay at schema defaults regardless of PDB length.
   }
 
-  onLengthRangeChange(rowId: string, range: { min: number; max: number }): void {
+  onLengthRangeChange(
+    rowId: string,
+    range: { min: number; max: number },
+  ): void {
     this.updateRowValueWithValidation(rowId, "min_length", range.min);
     this.updateRowValueWithValidation(rowId, "max_length", range.max);
   }
@@ -238,18 +239,28 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    */
   onResiduesSelected(rowId: string, residues: string): void {
     if (residues) {
-      this.updateRowValueWithValidation(rowId, "target_hotspot_residues", residues);
+      this.updateRowValueWithValidation(
+        rowId,
+        "target_hotspot_residues",
+        residues,
+      );
       // Derive chains from the leading letter(s) of each residue token
-      const chains = [...new Set(
-        residues.split(",").map(r => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "").filter(Boolean)
-      )].sort().join(",");
+      const chains = [
+        ...new Set(
+          residues
+            .split(",")
+            .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
+            .filter(Boolean),
+        ),
+      ]
+        .sort()
+        .join(",");
       if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
     } else {
       this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
       this.updateRowValueWithValidation(rowId, "chains", "");
     }
   }
-
 
   // Steps marked complete only when user presses Next on that step
   completedSteps = signal<number[]>([]);
@@ -340,8 +351,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
               file,
               metadata: {
                 fieldName: "starting_pdb",
-                uploadedAt: new Date().toISOString()
-              }
+                uploadedAt: new Date().toISOString(),
+              },
             })
             .subscribe({
               next: (response) => {
@@ -361,12 +372,12 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
               error: (error) => {
                 this.isPdbUploading.set(false);
                 const msg =
-                  error?.error?.message ??
-                  error?.message ??
-                  "Unknown error";
-                this.showError(`Failed to upload PDB file: ${msg}. Please try again.`);
-              }
-            })
+                  error?.error?.message ?? error?.message ?? "Unknown error";
+                this.showError(
+                  `Failed to upload PDB file: ${msg}. Please try again.`,
+                );
+              },
+            }),
         );
         return;
       }
@@ -377,7 +388,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   private advanceStep(current: number): void {
     this.completedSteps.update((arr) =>
-      arr.includes(current) ? arr : [...arr, current]
+      arr.includes(current) ? arr : [...arr, current],
     );
     this.currentStep.update((v) => v + 1);
   }
@@ -405,11 +416,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.auth.isLoading$
         .pipe(
           filter((isLoading) => !isLoading),
-          take(1)
+          take(1),
         )
         .subscribe(() => {
           this.loadInputSchema();
-        })
+        }),
     );
 
     // Fallback: If auth doesn't initialize within 5 seconds, load anyway
@@ -441,11 +452,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         this.initializeFormData(defaultValues);
 
         // Seed slider bounds from schema defaults so they never change with PDB load.
-        if (typeof defaultValues['max_length'] === 'number') {
-          this.pdbSequenceLength.set(defaultValues['max_length'] as number);
+        if (typeof defaultValues["max_length"] === "number") {
+          this.pdbSequenceLength.set(defaultValues["max_length"] as number);
         }
-        if (typeof defaultValues['min_length'] === 'number') {
-          this.pdbSequenceMin.set(defaultValues['min_length'] as number);
+        if (typeof defaultValues["min_length"] === "number") {
+          this.pdbSequenceMin.set(defaultValues["min_length"] as number);
         }
 
         // Initialize table with one default row
@@ -457,12 +468,12 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_filters",
-              defaultValues.settings_filters
+              defaultValues.settings_filters,
             );
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_advanced",
-              defaultValues.settings_advanced
+              defaultValues.settings_advanced,
             );
           }
 
@@ -473,7 +484,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       },
       (error) => {
         console.error("Failed to load schema:", error);
-      }
+      },
     );
   }
 
@@ -491,7 +502,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     this.datasetUploadService
       .uploadDataset({
-        formData
+        formData,
       })
       .subscribe({
         next: (response) => {
@@ -502,14 +513,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             console.error("Dataset upload succeeded but no datasetId returned");
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned."
+              "Dataset upload succeeded but no dataset ID was returned.",
             );
             return;
           }
 
           const workflowFormData = {
             ...formData,
-            tool: this.selectedToolLabel()
+            tool: this.selectedToolLabel(),
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(
@@ -518,24 +529,24 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             (error) => {
               console.error(
                 "Workflow launch failed after dataset upload",
-                error
+                error,
               );
               this.workflowSubmission.isSubmitting.set(false);
               this.showError(
                 `Workflow launch failed after dataset upload: ${
                   error.message || "Unknown error"
-                }`
+                }`,
               );
-            }
+            },
           );
         },
         error: (error) => {
           console.error("Dataset upload failed", error);
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            `Failed to upload dataset: ${error.message || "Unknown error"}`
+            `Failed to upload dataset: ${error.message || "Unknown error"}`,
           );
-        }
+        },
       });
   }
 
@@ -635,7 +646,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     } else {
       this.formErrors.set({
         ...currentErrors,
-        [fieldName]: validationResult.errors[0] || "Invalid value"
+        [fieldName]: validationResult.errors[0] || "Invalid value",
       });
     }
   }
@@ -727,7 +738,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     // Merge current data with optional defaults (without pipeline)
     return {
       ...optionalDefaults,
-      ...currentData
+      ...currentData,
     };
   }
 
@@ -736,7 +747,12 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     const data = this.formData();
     const fields = this.schemaLoader.inputSchemaFields();
     const localPdb = this.localPdbFile();
-    const summary: { label: string; value: string; fieldName: string; url?: string }[] = [];
+    const summary: {
+      label: string;
+      value: string;
+      fieldName: string;
+      url?: string;
+    }[] = [];
 
     // Fields to exclude from summary
     const excludedFields = ["settings_filters", "settings_advanced"];
@@ -771,7 +787,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           label: field.label || field.name,
           value: displayValue,
           fieldName: field.name,
-          ...(downloadUrl ? { url: downloadUrl } : {})
+          ...(downloadUrl ? { url: downloadUrl } : {}),
         });
       }
     });
@@ -793,7 +809,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       hasParameters: this.selectedToolHasParams(),
       totalFields: this.schemaLoader.inputSchemaFields().length,
       filledFields: this.formSummary().length,
-      requiredFields: this.schemaLoader.requiredInputFields().length
+      requiredFields: this.schemaLoader.requiredInputFields().length,
     };
   }
 
@@ -828,7 +844,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     return this.schemaLoader.getRowValue(rowId, fieldName);
   }
 
-  getRowNumberValue(rowId: string, fieldName: string, defaultVal: number): number {
+  getRowNumberValue(
+    rowId: string,
+    fieldName: string,
+    defaultVal: number,
+  ): number {
     const val = this.getRowValue(rowId, fieldName);
     if (typeof val === "number" && Number.isFinite(val)) return val;
     if (typeof val === "string" && val !== "") {
@@ -862,7 +882,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       // Add error for this specific cell
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: validationResult.errors[0] || "Invalid value"
+        [errorKey]: validationResult.errors[0] || "Invalid value",
       });
     }
 
@@ -911,7 +931,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   updateRowValueWithValidation(
     rowId: string,
     fieldName: string,
-    value: unknown
+    value: unknown,
   ): void {
     this.updateRowValue(rowId, fieldName, value);
     this.validateRowField(rowId, fieldName);
@@ -929,7 +949,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     return {
       valid: this.isFormValid(),
       errorCount: Object.keys(errors).length,
-      rowCount: rows.length
+      rowCount: rows.length,
     };
   }
 }

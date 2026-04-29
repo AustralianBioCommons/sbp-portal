@@ -1,4 +1,4 @@
-<div class="space-y-2">
+<div class="space-y-1">
   <!-- Alert (Error) -->
   @if (showAlert()) {
   <app-alert
@@ -41,14 +41,14 @@
           <span class="text-red-400"> • Required</span>
           }
         </div>
-        @if (field.validation?.min !== undefined || field.validation?.max !== undefined) {
+        @if (field.validation?.min !== undefined || field.validation?.max !==
+        undefined) {
         <div class="text-gray-400 text-xs mt-1">
-          @if (field.validation.min !== undefined && field.validation.max !== undefined) {
-            Range: {{ field.validation.min }} - {{ field.validation.max }}
-          } @else if (field.validation.min !== undefined) {
-            Min: {{ field.validation.min }}
-          } @else if (field.validation.max !== undefined) {
-            Max: {{ field.validation.max }}
+          @if (field.validation.min !== undefined && field.validation.max !==
+          undefined) { Range: {{ field.validation.min }} -
+          {{ field.validation.max }} } @else if (field.validation.min !==
+          undefined) { Min: {{ field.validation.min }} } @else if
+          (field.validation.max !== undefined) { Max: {{ field.validation.max }}
           }
         </div>
         }
@@ -65,7 +65,10 @@
       [id]="fieldId"
       type="text"
       [class]="getInputClasses()"
-      [placeholder]="field.placeholder || 'Enter ' + (field.label || field.name).toLowerCase()"
+      [placeholder]="
+        field.placeholder ||
+        'Enter ' + (field.label || field.name).toLowerCase()
+      "
       [value]="value"
       [required]="field.required"
       [minlength]="field.validation?.minLength"
@@ -99,7 +102,10 @@
       <input
         [id]="fieldId"
         type="checkbox"
-        [class]="'h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 ' + (hasError ? 'border-red-300' : '')"
+        [class]="
+          'h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 ' +
+          (hasError ? 'border-red-300' : '')
+        "
         [checked]="value === true"
         (change)="onValueChange($any($event.target).checked)"
         (blur)="onBlur()"
@@ -119,13 +125,12 @@
       (blur)="onBlur()"
     >
       <option value="">Select {{ getDisplayFieldLabel() }}</option>
-      @for (option of field.options; track option) {
-        @if (typeof option === 'string') {
-        <option [value]="option">{{ option }}</option>
-        } @else {
-        <option [value]="option.value">{{ option.label || option.value }}</option>
-        }
-      }
+      @for (option of field.options; track option) { @if (typeof option ===
+      'string') {
+      <option [value]="option">{{ option }}</option>
+      } @else {
+      <option [value]="option.value">{{ option.label || option.value }}</option>
+      } }
     </select>
     }
 
@@ -143,19 +148,19 @@
 
     <!-- Field Error -->
     @if (hasError && errorMessage) {
-    <div class="mt-1 text-sm text-red-600">{{ errorMessage }}</div>
+    <div class="mt-1 text-xs text-red-600">{{ errorMessage }}</div>
     }
   </div>
 
   <!-- Field Help Text -->
-  @if (field.validation?.min !== undefined || field.validation?.max !== undefined) {
+  @if (field.validation?.min !== undefined || field.validation?.max !==
+  undefined) {
   <div class="text-xs text-gray-500">
-    @if (field.validation.min !== undefined && field.validation.max !== undefined) {
-      Range: {{ field.validation.min }} - {{ field.validation.max }}
-    } @else if (field.validation.min !== undefined) {
-      Minimum: {{ field.validation.min }}
-    } @else if (field.validation.max !== undefined) {
-      Maximum: {{ field.validation.max }}
+    @if (field.validation.min !== undefined && field.validation.max !==
+    undefined) { Range: {{ field.validation.min }} -
+    {{ field.validation.max }} } @else if (field.validation.min !== undefined) {
+    Minimum: {{ field.validation.min }} } @else if (field.validation.max !==
+    undefined) { Maximum: {{ field.validation.max }}
     }
   </div>
   }
