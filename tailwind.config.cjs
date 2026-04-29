@@ -23,12 +23,6 @@ module.exports = {
         success: "#10b981",
         error: "#ef4444",
       },
-      borderRadius: {
-        "DEFAULT-10": "10px",
-      },
-      borderWidth: {
-        3: "3px",
-      },
     },
   },
   plugins: [],

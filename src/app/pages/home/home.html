@@ -1,12 +1,11 @@
 <!-- Themes Page Container -->
 <div
-  class="min-h-screen"
-  [class.bg-gray-50]="!isActiveTab('binder-design') && !isActiveTab('structure-prediction')"
+  class="min-h-screen bg-gray-100"
   [class.binder-design-bg]="isActiveTab('binder-design')"
   [class.structure-prediction-bg]="isActiveTab('structure-prediction')"
 >
   <!-- Content Section -->
-  <div class="max-w-7xl mx-auto py-12">
+  <div class="max-w-7xl px-6 mx-auto py-12">
     <!-- Tab Content -->
     <!-- Binder Design Tab -->
     @if (isActiveTab('binder-design')) {

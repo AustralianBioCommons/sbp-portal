@@ -8,7 +8,7 @@
   ></app-alert>
   }
 
-  <div class="max-w-7xl mx-auto py-12">
+  <div class="max-w-7xl px-6 mx-auto py-12">
     <nav class="flex justify-center" aria-label="Tabs">
       <ul class="flex space-x-1">
         @for (tab of tabs; track tab.id) {
@@ -53,7 +53,7 @@
 
       @if (isActiveTab('overview')) {
       <div class="mt-6 space-y-6">
-        <div class="rounded-DEFAULT-10 p-4">
+        <div class="rounded-[10px] p-4">
           <h2 class="text-base font-semibold text-gray-900">Description</h2>
           <p class="mt-1 text-sm text-gray-600">
             Single Prediction is designed for structure-prediction runs from
@@ -82,7 +82,7 @@
       <div class="mt-6 relative">
         @if ((auth.isAuthenticated$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-DEFAULT-10 border border-gray-200 flex items-center justify-center"
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center"
         >
           <div class="text-center p-4">
             <p class="text-sm text-gray-600">
@@ -93,7 +93,7 @@
                 type="button"
                 variant="primary"
                 colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-900"
-                borderRadius="rounded-DEFAULT-10"
+                borderRadius="rounded-[10px]"
                 (click)="loginWithReturnUrl()"
               >
                 Log in
@@ -433,7 +433,7 @@
             variant="outline"
             (click)="previousStep()"
             [disabled]="!canGoPrev() || (auth.isAuthenticated$ | async) === false"
-            borderRadius="rounded-DEFAULT-10"
+            borderRadius="rounded-[10px]"
             colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
@@ -445,7 +445,7 @@
               variant="primary"
               (click)="nextStep()"
               [disabled]="!canGoNext() || (auth.isAuthenticated$ | async) === false"
-              borderRadius="rounded-DEFAULT-10"
+              borderRadius="rounded-[10px]"
               colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Next
@@ -456,7 +456,7 @@
               variant="primary"
               (click)="submitWorkflow()"
               [disabled]="!canSubmit() || !isToolAvailable() || (auth.isAuthenticated$ | async) === false"
-              borderRadius="rounded-DEFAULT-10"
+              borderRadius="rounded-[10px]"
               colorClasses="px-4 py-2 text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Submit
@@ -467,7 +467,7 @@
       </div>
       } @if (isActiveTab('output')) {
       <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
+        <div class="bg-gray-50 border border-gray-200 rounded-[10px] p-4">
           <h2 class="text-base font-semibold text-gray-900">Output</h2>
           <p class="mt-1 text-sm text-gray-600">
             Results, visualizations, and downloadable files will appear here
@@ -477,7 +477,7 @@
       </div>
       } @if (isActiveTab('papers')) {
       <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
+        <div class="bg-gray-50 border border-gray-200 rounded-[10px] p-4">
           <h2 class="text-base font-semibold text-gray-900">Papers</h2>
           <p class="mt-1 text-sm text-gray-600">
             Relevant publications and references for the selected prediction

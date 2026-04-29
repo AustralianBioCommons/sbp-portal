@@ -60,7 +60,7 @@ describe("StepContentComponent", () => {
   it("should have proper container structure", () => {
     fixture.detectChanges();
     const container = fixture.nativeElement.querySelector(
-      ".border.border-gray-200.rounded-DEFAULT-10"
+      ".border.border-gray-200.rounded-[10px]",
     );
     expect(container).toBeTruthy();
   });

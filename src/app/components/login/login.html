@@ -1,10 +1,10 @@
 <!-- Login Bar (Top bar for authentication) -->
-<div class="login-bar">
-  <div class="max-w-7xl mx-auto">
-    <div class="flex justify-end items-center py-2">
+<div class="bg-gray-100 border-b">
+  <div class="max-w-7xl px-6 py-4 mx-auto">
+    <div class="flex justify-end items-center">
       <!-- User Section (if authenticated) -->
       @if (isAuthenticated$ | async) {
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center gap-6">
         <!-- User Email -->
         <div class="text-sm font-bold">
           {{ (user$ | async)?.email || 'user@example.com' }}
@@ -13,20 +13,20 @@
         <!-- Profile Button -->
         <button
           (click)="openProfile()"
-          class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm text-blue-900 hover:text-blue-800 transition-colors duration-200"
+          class="flex items-center gap-1 rounded-md text-sm font-medium text-blue-900 hover:text-blue-800 transition-colors duration-200"
           type="button"
         >
-          <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
+          <ng-icon name="heroUser" class="w-6 h-6"></ng-icon>
           <span>Profile</span>
         </button>
 
         <!-- Logout Button -->
         <button
           (click)="logout()"
-          class="flex items-center space-x-1 px-3 py-1 rounded-md text-sm text-blue-900 hover:text-blue-800 transition-colors duration-200"
+          class="flex items-center gap-1 rounded-md text-sm font-medium text-blue-900 hover:text-blue-800 transition-colors duration-200"
           type="button"
         >
-          <ng-icon name="heroArrowRightOnRectangle" class="w-4 h-4"></ng-icon>
+          <ng-icon name="heroArrowRightOnRectangle" class="w-6 h-6"></ng-icon>
           <span>Log out</span>
         </button>
       </div>
@@ -36,9 +36,9 @@
           type="button"
           data-testid="login-button"
           (click)="login()"
-          class="flex items-center gap-2 text-sm font-semibold text-blue-900 bg-transparent rounded-md hover:text-blue-600 transition-all"
+          class="flex items-center gap-1 rounded-md text-sm font-medium text-blue-900 hover:text-blue-800 transition-colors duration-200"
         >
-          <ng-icon name="heroUser" class="w-4 h-4"></ng-icon>
+          <ng-icon name="heroUser" class="w-6 h-6"></ng-icon>
           <span>Log in</span>
         </button>
       </div>

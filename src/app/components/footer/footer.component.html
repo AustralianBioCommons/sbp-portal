@@ -1,21 +1,16 @@
-<footer class="bg-gray-50">
-  <div class="mx-auto max-w-7xl py-12">
+<footer class="bg-gray-100">
+  <div class="mx-auto max-w-7xl px-6 py-12">
     <!-- Main 6-column layout with first column bigger -->
-    <div class="w-full grid md:grid-cols-3 lg:grid-cols-6">
-      <!-- Column 1: Logos and Social Links (takes 2 columns) -->
-      <div class="lg:col-span-3 text-center">
-        <div class="grid grid-cols-3">
+    <div class="w-full grid md:grid-cols-6 gap-12 md:gap-6">
+      <!-- Column 1: Logos and Social Links (takes 3 columns) -->
+      <div class="md:col-span-3">
+        <div class="grid grid-cols-3 gap-6">
           @for (logo of logos; track logo.href) {
-          <a
-            class="group flex items-center justify-center transition hover:opacity-80"
-            [href]="logo.href"
-            target="_blank"
-            rel="noopener"
-          >
+          <a [href]="logo.href" target="_blank" rel="noopener noreferrer">
             <img
               [src]="logo.src"
               [alt]="logo.alt"
-              class="logo-image"
+              class="h-24 w-auto object-contain"
               loading="lazy"
             />
           </a>
@@ -23,55 +18,56 @@
         </div>
       </div>
 
-      <!-- Columns 3-5: Link Groups (each takes 1 column with centered text) -->
-      @for (group of linkGroups; track group.heading) {
-      <div class="flex flex-col justify-center">
-        <div class="space-y-6">
-          <p class="footer-heading text-sm">
-            {{ group.heading }}
-          </p>
-          <ul class="space-y-2 text-sm">
-            @for (link of group.links; track link.href) {
-            <li>
-              <a
-                class="footer-link"
-                [href]="link.href"
-                [attr.target]="link.external ? '_blank' : null"
-                [attr.rel]="link.external ? 'noopener noreferrer' : null"
-              >
-                {{ link.label }}
-              </a>
-            </li>
-            }
-          </ul>
+      <div class="md:col-span-3">
+        <div class="grid grid-cols-3 gap-6">
+          <!-- Columns 3-6: Link Groups (each takes 1 column with centered text) -->
+          @for (group of linkGroups; track group.heading) {
+          <div class="flex flex-col justify-start text-start text-sm gap-6">
+            <p class="uppercase">
+              {{ group.heading }}
+            </p>
+            <ul class="space-y-2">
+              @for (link of group.links; track link.href) {
+              <li>
+                <a
+                  [href]="link.href"
+                  [attr.target]="link.external ? '_blank' : null"
+                  [attr.rel]="link.external ? 'noopener noreferrer' : null"
+                >
+                  {{ link.label }}
+                </a>
+              </li>
+              }
+            </ul>
+          </div>
+          }
         </div>
       </div>
-      }
     </div>
 
     <!-- Bottom Legal Information -->
-    <div class="mt-16 border-t pt-8">
+    <div class="mt-12 border-t pt-12">
       <div
-        class="max-w-4xl mx-auto space-y-3 text-center text-sm footer-legal-text"
+        class="max-w-4xl mx-auto space-y-6 text-center text-sm footer-legal-text"
       >
         <p>
-          <a class="footer-legal-link" href="/homepage"
-            >Australian BioCommons</a
-          >
+          <a class="footer-legal-link" href="/homepage">
+            Australian BioCommons
+          </a>
           is supported by
           <a
             class="footer-legal-link"
             href="https://www.bioplatforms.com/"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
-            Bioplatforms Australia </a
+            Bioplatforms Australia</a
           >.
           <a
             class="footer-legal-link"
             href="https://www.bioplatforms.com/"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             Bioplatforms Australia
           </a>
@@ -80,7 +76,7 @@
             class="footer-legal-link"
             href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             NCRIS
           </a>
@@ -91,14 +87,14 @@
             class="footer-legal-link"
             href="https://www.unimelb.edu.au/"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             >University of Melbourne</a
           >, and hosted within the University's
           <a
             class="footer-legal-link"
             href="https://mdhs.unimelb.edu.au/research/research/other-research-partnerships,-networks,-centres-and-initiatives"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             Faculty of Medicine, Dentistry and Health Sciences
           </a>
@@ -109,24 +105,25 @@
             class="footer-legal-link"
             href="https://creativecommons.org/licenses/by/4.0/"
             target="_blank"
-            rel="noopener"
-            >Creative Commons Attribution 4.0 International (CC BY 4.0)
-            License</a
+            rel="noopener noreferrer"
           >
+            Creative Commons Attribution 4.0 International (CC BY 4.0) License
+          </a>
           |
           <a
             class="footer-legal-link"
             href="https://www.biocommons.org.au/privacy"
             target="_blank"
-            rel="noopener"
-            >Privacy</a
+            rel="noopener noreferrer"
           >
+            Privacy
+          </a>
           |
           <a class="footer-legal-link" href="/cookies">Cookies</a>
         </p>
       </div>
       <!-- Social Links -->
-      <div class="flex justify-center gap-3 pt-4">
+      <div class="flex justify-center gap-4 pt-12">
         @for (social of socialLinks; track social.href) {
         <a
           class="footer-social-link inline-flex h-10 w-10 items-center justify-center rounded-full border"

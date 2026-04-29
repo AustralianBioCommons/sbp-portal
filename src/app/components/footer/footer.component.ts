@@ -44,8 +44,6 @@ type SocialLink = {
   styleUrls: ["./footer.component.scss"],
 })
 export class FooterSectionsComponent {
-  @Output() readonly searchSubmit = new EventEmitter<string>();
-
   readonly logos: LogoLink[] = [
     {
       href: "http://biocommons.org.au",
@@ -120,11 +118,4 @@ export class FooterSectionsComponent {
       iconName: "lucideGithub",
     },
   ];
-
-  searchTerm = "";
-
-  onSubmitSearch(): void {
-    const trimmed = this.searchTerm.trim();
-    this.searchSubmit.emit(trimmed);
-  }
 }

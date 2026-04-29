@@ -1,6 +1,6 @@
 <!-- Main Navigation Bar -->
-<nav class="navbar relative">
-  <div class="max-w-7xl mx-auto">
+<nav class="relative">
+  <div class="max-w-7xl px-6 mx-auto">
     <div class="flex justify-between items-center py-2">
       <!-- Logo and Brand (Left corner) -->
       <button
@@ -19,16 +19,20 @@
         <app-button
           variant="secondary"
           widthClass="w-auto"
-          colorClasses="compact-menu-button relative p-2 hover:shadow-lg"
+          [colorClasses]="
+            isMobileMenuOpen()
+              ? 'relative p-2 hover:shadow-lg bg-blue-400 !text-gray-800 !border-blue-900 hover:!bg-blue-900 hover:opacity-90'
+              : 'relative p-2 hover:shadow-lg'
+          "
           borderRadius="rounded-lg"
           (click)="toggleMobileMenu(); $event.stopPropagation()"
-          [class.active]="isMobileMenuOpen()"
+          [active]="isMobileMenuOpen()"
           type="button"
         >
           <!-- Menu Icon using ng-icons -->
           <ng-icon
             [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
-            class="w-5 h-5 transition-transform duration-200 pointer-events-none"
+            class="w-12 h-12 transition-all pointer-events-none"
             [class.rotate-90]="isMobileMenuOpen()"
           >
           </ng-icon>
@@ -45,7 +49,7 @@
   <!-- Compact Navigation Menu (Right-aligned, Top-positioned) -->
   @if (isMobileMenuOpen()) {
   <div
-    class="compact-menu absolute top-0 right-0 w-80 z-50 bg-gray-50 border border-gray-200 shadow-xl rounded-lg"
+    class="absolute top-0 right-0 w-80 z-50 bg-gray-100 border border-gray-200 shadow-xl rounded-lg"
     [@slideInOut]
   >
     <!-- Menu Content -->
@@ -73,7 +77,7 @@
             <img
               [src]="item.image"
               [alt]="item.label + ' icon'"
-              class="w-4 h-4 object-contain"
+              class="w-4 h-4 object-contain grayscale hover:grayscale-0 transition-[filter] duration-200"
             />
             }
             <span>{{ item.label }}</span>
@@ -85,17 +89,32 @@
         @if (item.children) {
         <div class="mb-2">
           <div
-            class="flex items-center justify-between px-3 py-1.5 font-semibold text-black"
-            [class.nav-parent-active]="isParentNavItemActive(item)"
+            [class]="
+              'flex items-center justify-between px-3 py-1.5 font-semibold ' +
+              (isParentNavItemActive(item)
+                ? 'text-blue-900 font-bold'
+                : 'text-black')
+            "
           >
             <div class="flex items-center space-x-2">
               @if (item.icon && !item.image) {
-              <ng-icon [name]="item.icon" class="w-4 h-4"></ng-icon>
+              <ng-icon
+                [name]="item.icon"
+                [class]="
+                  'w-4 h-4 ' +
+                  (isParentNavItemActive(item) ? 'text-teal-500' : '')
+                "
+              ></ng-icon>
               } @if (item.image) {
               <img
                 [src]="item.image"
                 [alt]="item.label + ' icon'"
-                class="w-4 h-4 object-contain"
+                [class]="
+                  'w-4 h-4 object-contain ' +
+                  (isParentNavItemActive(item)
+                    ? '[filter:hue-rotate(180deg)_saturate(1.2)]'
+                    : '')
+                "
               />
               }
               <span>{{ item.label }}</span>
