@@ -138,7 +138,7 @@ export class SinglePredictionComponent {
     { id: "alphafold2", label: "AlphaFold2" },
     { id: "boltz", label: "Boltz" }
   ];
-  isToolAvailable = () => true;
+  isToolAvailable = signal(true);
   selectedTool = signal<ToolId>("colabfold");
   selectedToolLabel: Signal<string> = computed(
     () =>

@@ -496,7 +496,7 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow("ACDEFGHIK", "2");
     component.selectTool("alphafold2");
     component.alphafold2FullDbs.set(true);
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
 
     component.submitWorkflow();
 
@@ -528,7 +528,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should block submission when tools are unavailable", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => false;
+    component.isToolAvailable.set(false);
 
     component.submitWorkflow();
 
@@ -539,7 +539,7 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should show an error when submitting invalid input", () => {
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     component.submitWorkflow();
 
     expect(component.showAlert()).toBe(true);
@@ -550,7 +550,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show an error when FASTA upload fails", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     fastaUploadService.uploadFastaFile.and.returnValue(
       throwError(() => new Error("fasta upload failed"))
     );
@@ -564,7 +564,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show an error when dataset upload succeeds without dataset id", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     datasetUploadService.uploadDataset.and.returnValue(
       of(noDatasetIdResponse())
     );
@@ -577,7 +577,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show an error when dataset upload fails", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     datasetUploadService.uploadDataset.and.returnValue(
       throwError(() => new Error("upload failed"))
     );
@@ -590,7 +590,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show the workflow launch fallback error when the callback has no message", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
 
     component.submitWorkflow();
 
@@ -691,7 +691,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should use the cached FASTA/dataset on second submit without re-uploading", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
 
     component.submitWorkflow();
     expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
@@ -703,7 +703,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show error when FASTA upload returns no s3Uri", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     fastaUploadService.uploadFastaFile.and.returnValue(of(noS3UriResponse()));
 
     component.submitWorkflow();
@@ -714,7 +714,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should include colabfold_use_templates=false in submission payload (hidden param)", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     component.selectTool("colabfold");
 
     component.submitWorkflow();
