@@ -7,6 +7,7 @@ import {
   bootstrapLinkedin,
   bootstrapYoutube,
   bootstrapGithub,
+  bootstrapBluesky,
 } from "@ng-icons/bootstrap-icons";
 
 type FooterLink = {
@@ -42,6 +43,7 @@ type SocialLink = {
       bootstrapLinkedin,
       bootstrapYoutube,
       bootstrapGithub,
+      bootstrapBluesky,
     }),
   ],
   templateUrl: "./footer.component.html",
@@ -120,6 +122,11 @@ export class FooterSectionsComponent {
       href: "https://github.com/AustralianBioCommons",
       label: "GitHub",
       iconName: "bootstrapGithub",
+    },
+    {
+      href: "https://bsky.app/profile/ausbiocommons.bsky.social",
+      label: "Bluesky",
+      iconName: "bootstrapBluesky",
     },
   ];
 }

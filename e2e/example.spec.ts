@@ -6,7 +6,7 @@ test.describe("Basic app", () => {
   });
 
   test("has title", async ({ page }) => {
-    await expect(page).toHaveTitle(/SBP Portal|Angular/);
+    await expect(page).toHaveTitle(/Structural Biology Platform Portal/);
   });
 
   test("main content visible", async ({ page }) => {
