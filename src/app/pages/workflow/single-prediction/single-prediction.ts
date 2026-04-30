@@ -158,10 +158,13 @@ export class SinglePredictionComponent {
   stepOneTouched = signal(false);
   stepTwoTouched = signal(false);
 
+  runName = signal("");
+  runNameTouched = signal(false);
+
   alphafold2RandomSeed = signal("42");
   alphafold2FullDbs = signal(false);
   colabfoldNumRecycles = signal("3");
-  colabfoldUseTemplates = signal(true);
+  colabfoldUseTemplates = signal(false);
   boltzUsePotentials = signal(false);
   alphafold2RandomSeedTouched = signal(false);
   colabfoldNumRecyclesTouched = signal(false);
@@ -194,6 +197,7 @@ export class SinglePredictionComponent {
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
   readonly isStep1Valid = computed(
     () =>
+      this.runName().trim().length > 0 &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
         (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
@@ -434,11 +438,6 @@ export class SinglePredictionComponent {
             label: "colabfold_num_recycles",
             value: this.colabfoldNumRecycles(),
             fieldName: "colabfold_num_recycles"
-          },
-          {
-            label: "colabfold_use_templates",
-            value: this.colabfoldUseTemplates() ? "true" : "false",
-            fieldName: "colabfold_use_templates"
           }
         ];
       case "boltz":
@@ -647,6 +646,7 @@ export class SinglePredictionComponent {
 
   private touchAllEntityRows(): void {
     this.stepOneTouched.set(true);
+    this.runNameTouched.set(true);
     this.entityRows.update((rows) =>
       rows.map((row) => ({
         ...row,
@@ -871,9 +871,21 @@ export class SinglePredictionComponent {
     );
   }
 
+  private buildUniqueRunName(): string {
+    const base = this.runName().trim();
+    const slug = base.replace(/[^a-zA-Z0-9\-_]/g, "-").replace(/-{2,}/g, "-").replace(/^-|-$/g, "") || "run";
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const ts = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;
+    const rand = Math.random().toString(36).slice(2, 6);
+    return `${slug}-${ts}-${rand}`;
+  }
+
   private buildWorkflowPayload(): Record<string, unknown> {
     return {
       tool: "Proteinfold",
+      runName: this.runName().trim(),
+      seqeraRunName: this.buildUniqueRunName(),
       mode: this.selectedTool(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,

@@ -92,6 +92,7 @@ describe("SinglePredictionComponent", () => {
     copyNumber = "1"
   ): number {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
     component.updateRowSequence(rowId, sequence);
     component.updateRowCopyNumber(rowId, copyNumber);
     component.updateRowMoleculeType(rowId, "protein");
@@ -199,6 +200,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should validate DNA, RNA, and ligand formats", () => {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
     component.selectTool("boltz");
 
     component.updateRowSequence(rowId, "ACGT");
@@ -229,6 +231,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
@@ -337,6 +340,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should allow Boltz with non-protein molecules and generate FASTA-like content", () => {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
 
     component.selectTool("boltz");
     component.updateRowSequence(rowId, "ACGT");
@@ -359,16 +363,12 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should expose tool-specific settings for all tools", () => {
+    // colabfold_use_templates is hidden from UI — must NOT appear in summary
     expect(component.getToolSettingsSummaryItems()).toEqual([
       {
         label: "colabfold_num_recycles",
         value: "3",
         fieldName: "colabfold_num_recycles",
-      },
-      {
-        label: "colabfold_use_templates",
-        value: "true",
-        fieldName: "colabfold_use_templates",
       },
     ]);
 
@@ -493,14 +493,16 @@ describe("SinglePredictionComponent", () => {
 
     expect(fastaUploadService.uploadFastaFile).toHaveBeenCalled();
     expect(datasetUploadService.uploadDataset).toHaveBeenCalled();
-    expect(datasetUploadService.uploadDataset).toHaveBeenCalledWith({
-      formData: {
-        id: "single_prediction",
-        fasta: "https://signed.example/input/single_prediction.fasta",
-      },
-      datasetName: "single_prediction-samplesheet",
-      datasetDescription: "Single prediction samplesheet",
-    });
+    expect(datasetUploadService.uploadDataset).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        formData: {
+          id: "single_prediction",
+          fasta: "s3://bucket/input/single_prediction.fasta",
+        },
+        datasetName: jasmine.stringMatching(/^single_prediction-samplesheet-\d+$/),
+        datasetDescription: "Single prediction samplesheet",
+      })
+    );
     expect(
       workflowSubmissionService.submitWorkflowWithDataset
     ).toHaveBeenCalled();
@@ -508,12 +510,14 @@ describe("SinglePredictionComponent", () => {
     const payload =
       workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
         .args[0];
+    expect(payload["runName"]).toBe("test-run");
+    expect(payload["seqeraRunName"]).toMatch(/^test-run-\d{8}-\d{6}-[a-z0-9]{4}$/);
     expect(payload["mode"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
     expect(payload["fastaContent"]).toContain(">pro_1");
     expect(payload["fastaFileUrl"]).toBe(
-      "https://signed.example/input/single_prediction.fasta"
+      "s3://bucket/input/single_prediction.fasta"
     );
     expect(payload["samplesheetId"]).toBe("single_prediction");
     expect(component.canSubmit()).toBe(true);
@@ -521,6 +525,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should block submission when tools are unavailable", () => {
     fillValidProteinRow();
+    component.isToolAvailable = () => false;
 
     component.submitWorkflow();
 
@@ -639,4 +644,93 @@ describe("SinglePredictionComponent", () => {
     const errors = component.entityValidationResults()[0];
     expect(errors["copyNumber"]).toContain("greater than or equal to 1");
   });
+
+  it("should require runName in step 1 validation", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+
+    // No runName set — step 1 invalid
+    component.runName.set("");
+    expect(component.isStep1Valid()).toBe(false);
+
+    // Set runName — step 1 valid
+    component.runName.set("my-run");
+    expect(component.isStep1Valid()).toBe(true);
+  });
+
+  it("should show run name required error after touching", () => {
+    component.runNameTouched.set(true);
+    component.runName.set("");
+    expect(component.runNameTouched()).toBe(true);
+
+    // nextStep should touch runName when runName is empty
+    component.nextStep();
+    expect(component.runNameTouched()).toBe(true);
+  });
+
+  it("should not advance to step 2 until runName is filled", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+    component.runName.set("");
+
+    component.nextStep();
+    expect(component.currentStep()).toBe(1);
+
+    component.runName.set("valid-run");
+    component.nextStep();
+    expect(component.currentStep()).toBe(2);
+  });
+
+  it("should generate seqeraRunName with timestamp and random suffix", () => {
+    component.runName.set("My Prediction");
+    const unique = component["buildUniqueRunName"]();
+    // spaces become hyphens, uppercase preserved (regex allows a-z A-Z 0-9 - _)
+    expect(unique).toMatch(/^My-Prediction-\d{8}-\d{6}-[a-z0-9]{4}$/);
+  });
+
+  it("should use 'run' slug when runName is empty in buildUniqueRunName", () => {
+    component.runName.set("");
+    const unique = component["buildUniqueRunName"]();
+    expect(unique).toMatch(/^run-\d{8}-\d{6}-[a-z0-9]{4}$/);
+  });
+
+  it("should use the cached FASTA/dataset on second submit without re-uploading", () => {
+    fillValidProteinRow();
+    component.isToolAvailable = () => true;
+
+    component.submitWorkflow();
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+
+    // Second submit — same FASTA, should reuse cache
+    component.submitWorkflow();
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+    expect(datasetUploadService.uploadDataset).toHaveBeenCalledTimes(1);
+  });
+
+  it("should show error when FASTA upload returns no s3Uri", () => {
+    fillValidProteinRow();
+    component.isToolAvailable = () => true;
+    fastaUploadService.uploadFastaFile.and.returnValue(
+      of({ success: true, message: "ok", fileId: "x", fileName: "x", s3Uri: "", presignedUrl: "" })
+    );
+
+    component.submitWorkflow();
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("no S3 URI");
+  });
+
+  it("should include colabfold_use_templates=false in submission payload (hidden param)", () => {
+    fillValidProteinRow();
+    component.isToolAvailable = () => true;
+    component.selectTool("colabfold");
+
+    component.submitWorkflow();
+
+    const payload =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+        .args[0];
+    expect(payload["colabfold_use_templates"]).toBe(false);
+  });
+
 });
