@@ -2,8 +2,14 @@ import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
-import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
-import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
+import {
+  DatasetUploadResponse,
+  DatasetUploadService,
+} from "../../../cores/services/dataset-upload.service";
+import {
+  FastaUploadResponse,
+  FastaUploadService,
+} from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
   lookupCcdCompound,
@@ -13,6 +19,35 @@ import {
   validateRnaSequence
 } from "../../../cores/utils/fasta.utils";
 import { SinglePredictionComponent } from "./single-prediction";
+
+// ── Typed mock responses conforming to service interfaces ──────────────────
+
+const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
+  success: true,
+  message: "FASTA file uploaded successfully",
+  fileId: "input/single_prediction.fasta",
+  fileName: "single_prediction.fasta",
+  s3Uri: "s3://bucket/input/single_prediction.fasta",
+  presignedUrl: "https://signed.example/input/single_prediction.fasta",
+};
+
+const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
+  success: true,
+  message: "Dataset uploaded successfully",
+  datasetId: "dataset-1",
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function noS3UriResponse(): FastaUploadResponse {
+  return { ...MOCK_FASTA_RESPONSE, s3Uri: "", presignedUrl: "" };
+}
+
+function noDatasetIdResponse(): DatasetUploadResponse {
+  return { success: true, message: "ok" };
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 
 describe("SinglePredictionComponent", () => {
   let component: SinglePredictionComponent;
@@ -32,29 +67,17 @@ describe("SinglePredictionComponent", () => {
   };
 
   beforeEach(async () => {
-    datasetUploadService = jasmine.createSpyObj("DatasetUploadService", [
-      "uploadDataset",
-    ]);
-    datasetUploadService.uploadDataset.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-        datasetId: "dataset-1",
-      })
+    datasetUploadService = jasmine.createSpyObj<DatasetUploadService>(
+      "DatasetUploadService",
+      ["uploadDataset"]
     );
-    fastaUploadService = jasmine.createSpyObj("FastaUploadService", [
-      "uploadFastaFile",
-    ]);
-    fastaUploadService.uploadFastaFile.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-        fileId: "input/single_prediction.fasta",
-        fileName: "single_prediction.fasta",
-        s3Uri: "s3://bucket/input/single_prediction.fasta",
-        presignedUrl: "https://signed.example/input/single_prediction.fasta",
-      })
+    datasetUploadService.uploadDataset.and.returnValue(of(MOCK_DATASET_RESPONSE));
+
+    fastaUploadService = jasmine.createSpyObj<FastaUploadService>(
+      "FastaUploadService",
+      ["uploadFastaFile"]
     );
+    fastaUploadService.uploadFastaFile.and.returnValue(of(MOCK_FASTA_RESPONSE));
 
     workflowSubmissionService = {
       isSubmitting: signal(false),
@@ -75,10 +98,7 @@ describe("SinglePredictionComponent", () => {
         { provide: AuthService, useValue: authService },
         { provide: DatasetUploadService, useValue: datasetUploadService },
         { provide: FastaUploadService, useValue: fastaUploadService },
-        {
-          provide: WorkflowSubmissionService,
-          useValue: workflowSubmissionService,
-        },
+        { provide: WorkflowSubmissionService, useValue: workflowSubmissionService },
       ],
     }).compileComponents();
 
@@ -155,19 +175,13 @@ describe("SinglePredictionComponent", () => {
     const secondRowId = component.entityRows()[1].id;
     component.updateRowSequence(secondRowId, "SECOND");
 
-    component.dropEntityRow({
-      previousIndex: 0,
-      currentIndex: 1,
-    } as never);
+    component.dropEntityRow({ previousIndex: 0, currentIndex: 1 } as never);
     expect(component.entityRows().map((row) => row.sequence)).toEqual([
       "SECOND",
       "FIRST",
     ]);
 
-    component.dropEntityRow({
-      previousIndex: 1,
-      currentIndex: 1,
-    } as never);
+    component.dropEntityRow({ previousIndex: 1, currentIndex: 1 } as never);
     expect(component.entityRows().map((row) => row.sequence)).toEqual([
       "SECOND",
       "FIRST",
@@ -334,7 +348,7 @@ describe("SinglePredictionComponent", () => {
 
     expect(lookupCcdCompound("ATP")).toEqual({
       valid: true,
-      name: "Adenosine triphosphate"
+      name: "Adenosine triphosphate",
     });
   });
 
@@ -348,17 +362,12 @@ describe("SinglePredictionComponent", () => {
     component.updateRowCopyNumber(rowId, "2");
 
     expect(component.isStep1Valid()).toBe(true);
-    expect(component.generatedFastaContent()).toContain(
-      ">dna_1"
-    );
-    expect(component.generatedFastaContent()).toContain(
-      ">dna_2"
-    );
+    expect(component.generatedFastaContent()).toContain(">dna_1");
+    expect(component.generatedFastaContent()).toContain(">dna_2");
   });
 
   it("should normalize protein sequence content in summary", () => {
     fillValidProteinRow("ac de fg");
-
     expect(component.formSummary()[0].value).toContain("ACDEFG");
   });
 
@@ -492,33 +501,27 @@ describe("SinglePredictionComponent", () => {
     component.submitWorkflow();
 
     expect(fastaUploadService.uploadFastaFile).toHaveBeenCalled();
-    expect(datasetUploadService.uploadDataset).toHaveBeenCalled();
     expect(datasetUploadService.uploadDataset).toHaveBeenCalledWith(
       jasmine.objectContaining({
         formData: {
           id: "single_prediction",
-          fasta: "s3://bucket/input/single_prediction.fasta",
+          fasta: MOCK_FASTA_RESPONSE.s3Uri,
         },
         datasetName: jasmine.stringMatching(/^single_prediction-samplesheet-\d+$/),
         datasetDescription: "Single prediction samplesheet",
       })
     );
-    expect(
-      workflowSubmissionService.submitWorkflowWithDataset
-    ).toHaveBeenCalled();
+    expect(workflowSubmissionService.submitWorkflowWithDataset).toHaveBeenCalled();
 
     const payload =
-      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
-        .args[0];
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent().args[0];
     expect(payload["runName"]).toBe("test-run");
     expect(payload["seqeraRunName"]).toMatch(/^test-run-\d{8}-\d{6}-[a-z0-9]{4}$/);
     expect(payload["mode"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
     expect(payload["fastaContent"]).toContain(">pro_1");
-    expect(payload["fastaFileUrl"]).toBe(
-      "s3://bucket/input/single_prediction.fasta"
-    );
+    expect(payload["fastaFileUrl"]).toBe(MOCK_FASTA_RESPONSE.s3Uri);
     expect(payload["samplesheetId"]).toBe("single_prediction");
     expect(component.canSubmit()).toBe(true);
   });
@@ -563,10 +566,7 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow();
     component.isToolAvailable = () => true;
     datasetUploadService.uploadDataset.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-      })
+      of(noDatasetIdResponse())
     );
 
     component.submitWorkflow();
@@ -595,8 +595,7 @@ describe("SinglePredictionComponent", () => {
     component.submitWorkflow();
 
     const onWorkflowError =
-      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
-        .args[2];
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent().args[2];
     onWorkflowError({});
 
     expect(component.showAlert()).toBe(true);
@@ -649,11 +648,9 @@ describe("SinglePredictionComponent", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
-    // No runName set — step 1 invalid
     component.runName.set("");
     expect(component.isStep1Valid()).toBe(false);
 
-    // Set runName — step 1 valid
     component.runName.set("my-run");
     expect(component.isStep1Valid()).toBe(true);
   });
@@ -663,7 +660,6 @@ describe("SinglePredictionComponent", () => {
     component.runName.set("");
     expect(component.runNameTouched()).toBe(true);
 
-    // nextStep should touch runName when runName is empty
     component.nextStep();
     expect(component.runNameTouched()).toBe(true);
   });
@@ -684,7 +680,6 @@ describe("SinglePredictionComponent", () => {
   it("should generate seqeraRunName with timestamp and random suffix", () => {
     component.runName.set("My Prediction");
     const unique = component["buildUniqueRunName"]();
-    // spaces become hyphens, uppercase preserved (regex allows a-z A-Z 0-9 - _)
     expect(unique).toMatch(/^My-Prediction-\d{8}-\d{6}-[a-z0-9]{4}$/);
   });
 
@@ -701,7 +696,6 @@ describe("SinglePredictionComponent", () => {
     component.submitWorkflow();
     expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
 
-    // Second submit — same FASTA, should reuse cache
     component.submitWorkflow();
     expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
     expect(datasetUploadService.uploadDataset).toHaveBeenCalledTimes(1);
@@ -710,9 +704,7 @@ describe("SinglePredictionComponent", () => {
   it("should show error when FASTA upload returns no s3Uri", () => {
     fillValidProteinRow();
     component.isToolAvailable = () => true;
-    fastaUploadService.uploadFastaFile.and.returnValue(
-      of({ success: true, message: "ok", fileId: "x", fileName: "x", s3Uri: "", presignedUrl: "" })
-    );
+    fastaUploadService.uploadFastaFile.and.returnValue(of(noS3UriResponse()));
 
     component.submitWorkflow();
 
@@ -728,8 +720,7 @@ describe("SinglePredictionComponent", () => {
     component.submitWorkflow();
 
     const payload =
-      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
-        .args[0];
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent().args[0];
     expect(payload["colabfold_use_templates"]).toBe(false);
   });
 
