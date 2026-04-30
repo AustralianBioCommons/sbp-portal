@@ -33,11 +33,6 @@ export class Home implements OnInit {
       description: "Predict protein structures using advanced algorithms",
     },
     {
-      id: "structure-search",
-      label: "Structure Search",
-      description: "Search and compare protein structures in databases",
-    },
-    {
       id: "tools",
       label: "Tools",
       description: "Access various computational biology tools and utilities",

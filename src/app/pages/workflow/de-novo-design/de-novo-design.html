@@ -9,10 +9,10 @@
   ></app-alert>
   }
 
-  <div class="w-4/5 mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl px-6 mx-auto py-12">
     <!-- Browser-style Tabs attached to container -->
     <nav class="flex justify-center" aria-label="Tabs">
-      <ul class="flex space-x-1">
+      <ul class="flex md:gap-6 gap-2">
         @for (tab of tabs; track tab.id; let i = $index) {
         <li class="relative">
           <button
@@ -22,7 +22,7 @@
                 ? 'bg-white border-t border-l border-r border-gray-200 text-gray-900 font-semibold relative z-10'
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
-            class="px-6 py-3 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
+            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
             type="button"
           >
             {{ tab.label }}
@@ -38,64 +38,66 @@
       </ul>
     </nav>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <!-- Page header -->
-      <header class="w-full">
-        <div class="px-4 py-4">
-          <h1 class="text-2xl font-semibold text-gray-900">De Novo Design</h1>
-          <p class="mt-2 text-sm text-gray-500">
-            Predict a single protein structure using your preferred tool.
-            Configure inputs, tweak parameters, and review before submission.
-          </p>
-        </div>
-      </header>
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
+    >
+      <div>
+        <h1 class="text-3xl font-semibold text-gray-900">De Novo Design</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Design a protein binder to your target protein using your preferred
+          tool. Configure inputs, choose parameters, and review before
+          submission.
+        </p>
+      </div>
 
       <!-- Overview Tab Content -->
       @if (isActiveTab('overview')) {
-      <div class="mt-6 space-y-6">
-        <!-- Description placeholder -->
-        <div class="rounded-DEFAULT-10 p-4">
-          <h2 class="text-base font-semibold text-gray-900">Description</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            This workflow enables the de novo design of protein binders by
-            defining hotspot residues on the surface of the target. Choose a
-            tool from the options below and configure the necessary job
-            parameters to execute the workflow.
-          </p>
-        </div>
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900">Description</h2>
+        <p class="mt-2 text-sm text-gray-600">
+          This workflow enables the de novo design of protein binders by
+          defining hotspot residues on the surface of the target. Choose a tool
+          from the options below and configure the necessary job parameters to
+          execute the workflow.
+        </p>
+      </div>
 
-        <!-- Tool Selection Component -->
+      <div>
+        <h1 class="mb-6 text-xl font-semibold text-gray-900">
+          Execute this workflow
+        </h1>
         <app-tool-selection
           [tools]="tools"
           [selectedToolId]="selectedTool()"
           (toolSelect)="selectTool($event)"
         ></app-tool-selection>
-
-        <div class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+        <div
+          class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+        >
           <p class="text-sm text-amber-800">
-            Only <strong>BindCraft</strong> is available right now.
-            {{ unavailableToolLabels.join(" and ") }} are temporarily unavailable.
+            Only <strong>BindCraft</strong> is available right now. {{
+            unavailableToolLabels.join(" and ") }} are temporarily unavailable.
           </p>
         </div>
       </div>
 
       <!-- Stepper -->
-      <div class="mt-6 relative">
+      <div class="relative">
         <!-- Lock overlay if not authenticated -->
         @if ((auth.isAuthenticated$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-DEFAULT-10 border border-gray-200 flex items-center justify-center"
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] rounded-[10px] border flex items-center justify-center"
         >
           <div class="text-center p-4">
             <p class="text-sm text-gray-600">
               You must be logged in to configure options and run the workflow.
             </p>
-            <div class="mt-3 flex justify-center">
+            <div class="mt-4 flex justify-center">
               <app-button
                 type="button"
                 variant="primary"
                 colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-900"
-                borderRadius="rounded-DEFAULT-10"
+                borderRadius="rounded-[10px]"
                 (click)="loginWithReturnUrl()"
               >
                 Log in
@@ -128,9 +130,7 @@
               @for (row of schemaLoader.inputRows(); track row.id; let i =
               $index) {
 
-              <div
-                class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
-              >
+              <div class="bg-white border rounded-lg p-4">
                 <div class="mb-4">
                   <h4 class="text-base font-medium text-gray-900">
                     Input Parameters
@@ -138,12 +138,14 @@
                 </div>
 
                 <div class="flex flex-col lg:flex-row gap-4 items-start">
-
                   <!-- Left half: PDB viewer -->
-                  <div class="w-full lg:w-1/2 overflow-hidden rounded-lg border border-gray-200">
-
+                  <div
+                    class="w-full lg:w-1/2 overflow-hidden rounded-lg border border-gray-200"
+                  >
                     <!-- Header row -->
-                    <div class="flex items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3">
+                    <div
+                      class="flex items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3"
+                    >
                       <div>
                         <p class="block text-sm font-medium text-gray-700">
                           Target PDB file
@@ -151,25 +153,31 @@
                         </p>
                         <p class="mt-0.5 text-xs text-gray-500">
                           Click residues in the preview to set hotspot targets.
-                          The file is uploaded when you click <strong>Next</strong>.
+                          The file is uploaded when you click
+                          <strong>Next</strong>.
                         </p>
                       </div>
                       @if (localPdbFile()) {
-                        <div class="flex shrink-0 items-center gap-2">
-                          <span class="max-w-48 truncate text-xs text-gray-500">{{ localPdbFile()!.name }}</span>
-                          <button
-                            type="button"
-                            class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600"
-                            (click)="clearLocalPdb(row.id)"
-                          >Clear</button>
-                        </div>
+                      <div class="flex shrink-0 items-center gap-2">
+                        <span class="max-w-48 truncate text-xs text-gray-500"
+                          >{{ localPdbFile()!.name }}</span
+                        >
+                        <button
+                          type="button"
+                          class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600"
+                          (click)="clearLocalPdb(row.id)"
+                        >
+                          Clear
+                        </button>
+                      </div>
                       }
                     </div>
 
-                    @if (hasRowFieldError(row.id, 'starting_pdb') && !localPdbFile()) {
-                      <p class="px-4 pt-2 text-sm text-red-600">
-                        {{ getRowFieldError(row.id, 'starting_pdb') }}
-                      </p>
+                    @if (hasRowFieldError(row.id, 'starting_pdb') &&
+                    !localPdbFile()) {
+                    <p class="px-4 pt-2 text-sm text-red-600">
+                      {{ getRowFieldError(row.id, 'starting_pdb') }}
+                    </p>
                     }
 
                     <div class="p-4">
@@ -185,46 +193,39 @@
 
                   <!-- Right half: all other fields -->
                   <div class="w-full lg:w-1/2 min-w-0 flex flex-col gap-4">
-                    @for (field of schemaLoader.requiredInputFields(); track field.name) {
-                      @if (field.name === 'starting_pdb' || field.name === 'max_length') {
-                        <!-- skip: viewer on left, max_length handled by slider -->
-                      } @else if (field.name === 'min_length') {
-                      <div class="rounded-lg border border-gray-200 px-4 py-3">
-                        <p class="block text-sm font-medium text-gray-700 mb-1">
-                          Binder Length Range <span class="text-red-500">*</span>
-                        </p>
-                        <app-length-range-slider
-                          [min]="pdbSequenceMin()"
-                          [max]="pdbSequenceLength()"
-                          [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
-                          [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
-                          [disabled]="isPdbUploading()"
-                          (rangeChange)="onLengthRangeChange(row.id, $event)"
-                        ></app-length-range-slider>
-                      </div>
-                      } @else {
-                      <app-form-field
-                        [field]="field"
-                        [value]="getRowValue(row.id, field.name)"
-                        [hasError]="hasRowFieldError(row.id, field.name)"
-                        [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                        (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                        (fieldBlur)="validateRowField(row.id, field.name)"
-                      ></app-form-field>
-                      }
-                    }
+                    @for (field of schemaLoader.requiredInputFields(); track
+                    field.name) { @if (field.name === 'starting_pdb' ||
+                    field.name === 'max_length') {
+                    <!-- skip: viewer on left, max_length handled by slider -->
+                    } @else if (field.name === 'min_length') {
+                    <div class="rounded-lg border border-gray-200 px-4 py-3">
+                      <p class="block text-sm font-medium text-gray-700 mb-1">
+                        Binder Length Range <span class="text-red-500">*</span>
+                      </p>
+                      <app-length-range-slider
+                        [min]="pdbSequenceMin()"
+                        [max]="pdbSequenceLength()"
+                        [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
+                        [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
+                        [disabled]="isPdbUploading()"
+                        (rangeChange)="onLengthRangeChange(row.id, $event)"
+                      ></app-length-range-slider>
+                    </div>
+                    } @else {
+                    <app-form-field
+                      [field]="field"
+                      [value]="getRowValue(row.id, field.name)"
+                      [hasError]="hasRowFieldError(row.id, field.name)"
+                      [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                      (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                      (fieldBlur)="validateRowField(row.id, field.name)"
+                    ></app-form-field>
+                    } }
                   </div>
-
                 </div>
               </div>
               }
             </div>
-
-            <!-- Form Status Component -->
-            <app-form-status
-              [isValid]="isFormValid()"
-              [validationSummary]="getFormValidationSummary()"
-            ></app-form-status>
           </div>
           }
         </app-step-content>
@@ -316,7 +317,7 @@
             variant="outline"
             (click)="previousStep()"
             [disabled]="!canGoPrev() || (auth.isAuthenticated$ | async) === false"
-            borderRadius="rounded-DEFAULT-10"
+            borderRadius="rounded-[10px]"
             colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
@@ -328,7 +329,7 @@
               variant="primary"
               (click)="nextStep()"
               [disabled]="!canGoNext() || isPdbUploading() || (auth.isAuthenticated$ | async) === false"
-              borderRadius="rounded-DEFAULT-10"
+              borderRadius="rounded-[10px]"
               colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               @if (isPdbUploading()) { Uploading… } @else { Next }
@@ -339,7 +340,7 @@
               variant="primary"
               (click)="submitWorkflow()"
               [disabled]="(auth.isAuthenticated$ | async) === false"
-              borderRadius="rounded-DEFAULT-10"
+              borderRadius="rounded-[10px]"
               colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed"
             >
               Submit
@@ -352,31 +353,27 @@
 
       <!-- Output Tab Content -->
       @if (isActiveTab('output')) {
-      <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
-          <h2 class="text-base font-semibold text-gray-900">Output</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Results, visualizations, and downloadable files will appear here
-            after submission.
-          </p>
-        </div>
+      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+        <h2 class="text-base font-semibold text-gray-900">Output</h2>
+        <p class="text-sm text-gray-600">
+          Results, visualizations, and downloadable files will appear here after
+          submission.
+        </p>
       </div>
       }
 
       <!-- Papers Tab Content -->
       @if (isActiveTab('papers')) {
-      <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-DEFAULT-10 p-4">
-          <h2 class="text-base font-semibold text-gray-900">Papers</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Relevant publications and references related to the selected tools.
-          </p>
-          <ul class="mt-2 list-disc list-inside text-sm text-gray-600">
-            <li>AlphaFold: Jumper et al., 2021</li>
-            <li>ColabFold: Mirdita et al., 2022</li>
-            <li>BindCraft: Project documentation</li>
-          </ul>
-        </div>
+      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+        <h2 class="text-base font-semibold text-gray-900">Papers</h2>
+        <p class="text-sm text-gray-600">
+          Relevant publications and references related to the selected tools.
+        </p>
+        <ul class="list-disc list-inside text-sm text-gray-600">
+          <li>AlphaFold: Jumper et al., 2021</li>
+          <li>ColabFold: Mirdita et al., 2022</li>
+          <li>BindCraft: Project documentation</li>
+        </ul>
       </div>
       }
     </div>

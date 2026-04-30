@@ -12,7 +12,7 @@ export interface FormValidationSummary {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="mt-4 p-3 bg-gray-50 rounded-DEFAULT-10">
+    <div class="mt-4 p-3 bg-gray-50 rounded-[10px]">
       <div class="flex items-center justify-between">
         <span class="text-sm text-gray-600">Form Status:</span>
         <span

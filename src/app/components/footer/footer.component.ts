@@ -1,9 +1,14 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Output } from "@angular/core";
+import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroMagnifyingGlass } from "@ng-icons/heroicons/outline";
-import { lucideLinkedin, lucideYoutube, lucideGithub } from "@ng-icons/lucide";
+import {
+  bootstrapLinkedin,
+  bootstrapYoutube,
+  bootstrapGithub,
+  bootstrapBluesky,
+} from "@ng-icons/bootstrap-icons";
 
 type FooterLink = {
   label: string;
@@ -29,23 +34,22 @@ type SocialLink = {
 };
 
 @Component({
-  selector: "app-footer-sections",
+  selector: "app-footer",
   standalone: true,
   imports: [CommonModule, FormsModule, NgIconComponent],
   providers: [
     provideIcons({
       heroMagnifyingGlass,
-      lucideLinkedin,
-      lucideYoutube,
-      lucideGithub,
+      bootstrapLinkedin,
+      bootstrapYoutube,
+      bootstrapGithub,
+      bootstrapBluesky,
     }),
   ],
   templateUrl: "./footer.component.html",
   styleUrls: ["./footer.component.scss"],
 })
 export class FooterSectionsComponent {
-  @Output() readonly searchSubmit = new EventEmitter<string>();
-
   readonly logos: LogoLink[] = [
     {
       href: "http://biocommons.org.au",
@@ -73,11 +77,10 @@ export class FooterSectionsComponent {
           label: "Structure prediction",
           href: "/themes?tab=structure-prediction",
         },
-        { label: "Structure search", href: "/themes?tab=structure-search" },
       ],
     },
     {
-      heading: "Pre-config workflows",
+      heading: "Workflows",
       links: [
         {
           label: "De novo design",
@@ -108,24 +111,22 @@ export class FooterSectionsComponent {
     {
       href: "https://linkedin.com/company/australianbiocommons",
       label: "LinkedIn",
-      iconName: "lucideLinkedin",
+      iconName: "bootstrapLinkedin",
     },
     {
       href: "https://www.youtube.com/c/AustralianBioCommonsChannel",
       label: "YouTube",
-      iconName: "lucideYoutube",
+      iconName: "bootstrapYoutube",
     },
     {
       href: "https://github.com/AustralianBioCommons",
       label: "GitHub",
-      iconName: "lucideGithub",
+      iconName: "bootstrapGithub",
+    },
+    {
+      href: "https://bsky.app/profile/ausbiocommons.bsky.social",
+      label: "Bluesky",
+      iconName: "bootstrapBluesky",
     },
   ];
-
-  searchTerm = "";
-
-  onSubmitSearch(): void {
-    const trimmed = this.searchTerm.trim();
-    this.searchSubmit.emit(trimmed);
-  }
 }

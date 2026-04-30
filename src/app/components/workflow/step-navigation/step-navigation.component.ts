@@ -15,7 +15,7 @@ export interface Step {
   template: `
     <!-- Stepper header -->
     <ol
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-4 rounded-DEFAULT-10 border border-gray-200"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-4 rounded-[10px] border border-gray-200"
     >
       @for (s of steps; track s.id) {
       <li class="flex items-center gap-2">
@@ -24,7 +24,7 @@ export interface Step {
           variant="secondary"
           (click)="onStepClick(s.id)"
           [disabled]="isDisabled"
-          borderRadius="rounded-DEFAULT-10"
+          borderRadius="rounded-[10px]"
           widthClass="w-full"
           colorClasses="flex items-center gap-2 p-2 border transition-colors disabled:opacity-60 disabled:cursor-not-allowed {{
             isStepInvalid(s.id)

@@ -71,13 +71,13 @@ describe("Header", () => {
     });
 
     it("should have correct tabs configuration", () => {
-      expect(component.tabs.length).toBe(4);
+      expect(component.tabs.length).toBe(3);
       expect(component.tabs[0]).toEqual({
         id: "binder-design",
         label: "Binder Design",
         description: "Design and optimize protein binders for specific targets",
       });
-      expect(component.tabs[3]).toEqual({
+      expect(component.tabs[2]).toEqual({
         id: "tools",
         label: "Tools",
         description: "Access various computational biology tools and utilities",
@@ -193,7 +193,7 @@ describe("Header", () => {
       const navigationEnd = new NavigationEnd(
         1,
         "/themes?tab=structure-search",
-        "/themes?tab=structure-search"
+        "/themes?tab=structure-search",
       );
 
       mockRouter.parseUrl.and.returnValue({
@@ -297,7 +297,7 @@ describe("Header", () => {
       } as unknown as UrlTree);
 
       component["checkRoute"](
-        "/themes?tab=structure-prediction&filter=active&page=2"
+        "/themes?tab=structure-prediction&filter=active&page=2",
       );
 
       expect(component.activeTab()).toBe("structure-prediction");

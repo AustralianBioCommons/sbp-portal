@@ -39,13 +39,13 @@ describe("Home", () => {
     });
 
     it("should have correct tabs configuration", () => {
-      expect(component.tabs.length).toBe(4);
+      expect(component.tabs.length).toBe(3);
       expect(component.tabs[0]).toEqual({
         id: "binder-design",
         label: "Binder Design",
         description: "Design and optimize protein binders for specific targets",
       });
-      expect(component.tabs[3]).toEqual({
+      expect(component.tabs[2]).toEqual({
         id: "tools",
         label: "Tools",
         description: "Access various computational biology tools and utilities",
@@ -162,7 +162,7 @@ describe("Home", () => {
 
       const container = fixture.nativeElement.querySelector(".min-h-screen");
       expect(container?.classList.contains("structure-prediction-bg")).toBe(
-        true
+        true,
       );
       expect(container?.classList.contains("bg-gray-50")).toBe(false);
     });
@@ -187,12 +187,7 @@ describe("Home", () => {
     });
 
     it("should have consistent tab structure with expected IDs", () => {
-      const expectedIds = [
-        "binder-design",
-        "structure-prediction",
-        "structure-search",
-        "tools",
-      ];
+      const expectedIds = ["binder-design", "structure-prediction", "tools"];
       const actualIds = component.tabs.map((tab) => tab.id);
 
       expect(actualIds).toEqual(expectedIds);
