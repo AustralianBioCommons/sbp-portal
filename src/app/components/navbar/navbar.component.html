@@ -1,53 +1,45 @@
 <!-- Main Navigation Bar -->
-<nav class="navbar relative">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center">
-      <!-- Logo and Brand (Left corner) -->
-      <div class="flex items-center">
-        <button
-          class="flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
-          (click)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
-          aria-label="Navigate to home page"
-        >
-          <img class="w-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
-        </button>
-      </div>
+<nav class="relative">
+  <div class="max-w-7xl px-6 mx-auto flex justify-between items-center py-2">
+    <!-- Logo and Brand (Left side) -->
+    <button
+      class="-mx-4 flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
+      (click)="navigate('/themes', { tab: 'binder-design' })"
+      (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
+      (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
+      aria-label="Navigate to home page"
+    >
+      <img class="w-60 h-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
+    </button>
 
-      <!-- Compact Menu Button (Right side) -->
-      <div class="flex items-center ml-auto">
-        <!-- Compact Menu Toggle Button -->
-        <app-button
-          variant="secondary"
-          widthClass="w-auto"
-          colorClasses="compact-menu-button relative p-2 hover:shadow-lg"
-          borderRadius="rounded-lg"
-          (click)="toggleMobileMenu(); $event.stopPropagation()"
-          [class.active]="isMobileMenuOpen()"
-          type="button"
-        >
-          <!-- Menu Icon using ng-icons -->
-          <ng-icon
-            [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
-            class="w-5 h-5 transition-transform duration-200 pointer-events-none"
-            [class.rotate-90]="isMobileMenuOpen()"
-          >
-          </ng-icon>
+    <!-- Menu Toggle Button (Right side) -->
+    <app-button
+      type="button"
+      variant="secondary"
+      widthClass="w-auto !p-0 hover:translate-x-0"
+      borderRadius="rounded-lg"
+      [active]="isMobileMenuOpen()"
+      (click)="toggleMobileMenu(); $event.stopPropagation()"
+    >
+      <ng-icon
+        [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
+        size="24"
+        class="transition-all pointer-events-none"
+        [class.rotate-90]="isMobileMenuOpen()"
+      >
+      </ng-icon>
 
-          <!-- Menu Label -->
-          <span class="sr-only">{{
-            isMobileMenuOpen() ? "Close menu" : "Open menu"
-          }}</span>
-        </app-button>
-      </div>
-    </div>
+      <!-- Menu Label -->
+      <span class="sr-only">
+        {{ isMobileMenuOpen() ? "Close menu" : "Open menu" }}
+      </span>
+    </app-button>
   </div>
 
   <!-- Compact Navigation Menu (Right-aligned, Top-positioned) -->
   @if (isMobileMenuOpen()) {
   <div
-    class="compact-menu absolute top-0 right-0 w-80 z-50 bg-gray-50 border border-gray-200 shadow-xl rounded-lg"
+    class="absolute top-0 right-0 w-80 z-50 bg-gray-100 border border-gray-200 shadow-xl rounded-lg"
     [@slideInOut]
   >
     <!-- Menu Content -->
@@ -75,7 +67,7 @@
             <img
               [src]="item.image"
               [alt]="item.label + ' icon'"
-              class="w-4 h-4 object-contain"
+              class="w-4 h-4 object-contain grayscale hover:grayscale-0 transition-[filter] duration-200"
             />
             }
             <span>{{ item.label }}</span>
@@ -87,17 +79,32 @@
         @if (item.children) {
         <div class="mb-2">
           <div
-            class="flex items-center justify-between px-3 py-1.5 font-semibold text-black"
-            [class.nav-parent-active]="isParentNavItemActive(item)"
+            [class]="
+              'flex items-center justify-between px-3 py-1.5 font-semibold ' +
+              (isParentNavItemActive(item)
+                ? 'text-blue-900 font-bold'
+                : 'text-black')
+            "
           >
             <div class="flex items-center space-x-2">
               @if (item.icon && !item.image) {
-              <ng-icon [name]="item.icon" class="w-4 h-4"></ng-icon>
+              <ng-icon
+                [name]="item.icon"
+                [class]="
+                  'w-4 h-4 ' +
+                  (isParentNavItemActive(item) ? 'text-teal-500' : '')
+                "
+              ></ng-icon>
               } @if (item.image) {
               <img
                 [src]="item.image"
                 [alt]="item.label + ' icon'"
-                class="w-4 h-4 object-contain"
+                [class]="
+                  'w-4 h-4 object-contain ' +
+                  (isParentNavItemActive(item)
+                    ? '[filter:hue-rotate(180deg)_saturate(1.2)]'
+                    : '')
+                "
               />
               }
               <span>{{ item.label }}</span>

@@ -16,7 +16,7 @@ describe("NotFoundComponent", () => {
       ["navigate", "createUrlTree", "serializeUrl"],
       {
         events: of({}),
-      }
+      },
     );
     routerSpy.createUrlTree.and.returnValue({});
     routerSpy.serializeUrl.and.returnValue("/test-url");
@@ -53,20 +53,20 @@ describe("NotFoundComponent", () => {
   it('should display "Page Not Found" subtitle', () => {
     const errorSubtitle = fixture.debugElement.query(By.css(".error-subtitle"));
     expect(errorSubtitle.nativeElement.textContent.trim()).toBe(
-      "Page Not Found"
+      "Page Not Found",
     );
   });
 
   it("should display Australian BioCommons Portal title", () => {
     const brandTitle = fixture.debugElement.query(By.css(".brand-title"));
     expect(brandTitle.nativeElement.textContent.trim()).toBe(
-      "Australian BioCommons Portal"
+      "Australian BioCommons Portal",
     );
   });
 
   it("should have three suggestion cards", () => {
     const suggestionCards = fixture.debugElement.queryAll(
-      By.css(".suggestion-card")
+      By.css(".suggestion-card"),
     );
     expect(suggestionCards.length).toBe(3);
   });
@@ -97,16 +97,15 @@ describe("NotFoundComponent", () => {
     expect(window.history.back).toHaveBeenCalled();
   });
 
-  it("should have four popular links", () => {
+  it("should have three popular links", () => {
     const popularLinks = fixture.debugElement.queryAll(
-      By.css(".link-grid app-button")
+      By.css(".link-grid app-button"),
     );
-    expect(popularLinks.length).toBe(4);
+    expect(popularLinks.length).toBe(3);
 
     const expectedTexts = [
       "Binder Design",
       "Structure Prediction",
-      "Structure Search",
       "Single Structure Prediction",
     ];
 
@@ -117,10 +116,10 @@ describe("NotFoundComponent", () => {
 
   it("should have support email link", () => {
     const supportLink = fixture.debugElement.query(
-      By.css("a[href='mailto:support@biocommons.org.au']")
+      By.css("a[href='mailto:support@biocommons.org.au']"),
     );
     expect(supportLink.nativeElement.getAttribute("href")).toBe(
-      "mailto:support@biocommons.org.au"
+      "mailto:support@biocommons.org.au",
     );
   });
 
@@ -128,7 +127,7 @@ describe("NotFoundComponent", () => {
     spyOn(component, "goHome");
 
     const homeButton = fixture.debugElement.query(
-      By.css(".suggestion-cards app-button button")
+      By.css(".suggestion-cards app-button button"),
     );
     homeButton.nativeElement.click();
 
@@ -139,7 +138,7 @@ describe("NotFoundComponent", () => {
     spyOn(component, "goBack");
 
     const backButtons = fixture.debugElement.queryAll(
-      By.css(".suggestion-cards app-button button")
+      By.css(".suggestion-cards app-button button"),
     );
     backButtons[1].nativeElement.click(); // Second button is "Go back"
 
@@ -150,7 +149,7 @@ describe("NotFoundComponent", () => {
     spyOn(component, "searchResources");
 
     const searchButtons = fixture.debugElement.queryAll(
-      By.css(".suggestion-cards app-button button")
+      By.css(".suggestion-cards app-button button"),
     );
     searchButtons[2].nativeElement.click(); // Third button is "Search portal"
 
@@ -177,16 +176,6 @@ describe("NotFoundComponent", () => {
     });
   });
 
-  it("should navigate to structure search when navigateToStructureSearch is called", () => {
-    mockRouter.navigate.and.returnValue(Promise.resolve(true));
-
-    component.navigateToStructureSearch();
-
-    expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
-      queryParams: { tab: "structure-search" },
-    });
-  });
-
   it("should navigate to single structure prediction when navigateToSingleStructurePrediction is called", () => {
     mockRouter.navigate.and.returnValue(Promise.resolve(true));
 
@@ -199,12 +188,11 @@ describe("NotFoundComponent", () => {
 
   it("should trigger navigation when popular links are clicked", () => {
     const popularLinks = fixture.debugElement.queryAll(
-      By.css(".link-grid app-button button")
+      By.css(".link-grid app-button button"),
     );
 
     spyOn(component, "navigateToBinderDesign");
     spyOn(component, "navigateToStructurePrediction");
-    spyOn(component, "navigateToStructureSearch");
     spyOn(component, "navigateToSingleStructurePrediction");
 
     popularLinks[0].nativeElement.click();
@@ -214,9 +202,6 @@ describe("NotFoundComponent", () => {
     expect(component.navigateToStructurePrediction).toHaveBeenCalled();
 
     popularLinks[2].nativeElement.click();
-    expect(component.navigateToStructureSearch).toHaveBeenCalled();
-
-    popularLinks[3].nativeElement.click();
     expect(component.navigateToSingleStructurePrediction).toHaveBeenCalled();
   });
 });

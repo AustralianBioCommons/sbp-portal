@@ -5,10 +5,16 @@
 
 <!-- AlertComponent - shows success/error messages for 3 seconds (Centered overlay) -->
 @if (showBanner$ | async) {
-<div class="fixed inset-0 z-[1002] flex items-center justify-center pointer-events-none bg-black bg-opacity-25">
+<div
+  class="fixed inset-0 z-[1002] flex items-center justify-center pointer-events-none bg-black bg-opacity-25"
+>
   <div class="pointer-events-auto centered-alert">
-    <app-alert [type]="(bannerType$ | async) || 'error'" [message]="(bannerMessage$ | async) || ''" [dismissible]="true"
-      (dismissed)="dismissError()">
+    <app-alert
+      [type]="(bannerType$ | async) || 'error'"
+      [message]="(bannerMessage$ | async) || ''"
+      [dismissible]="true"
+      (dismissed)="dismissError()"
+    >
     </app-alert>
   </div>
 </div>
@@ -23,7 +29,7 @@
 </main>
 
 <!-- Footer -->
-<app-footer-sections (search)="onSearch($event)"></app-footer-sections>
+<app-footer (search)="onSearch($event)"></app-footer>
 
 <!-- Logout Confirmation Dialog -->
 <app-dialog

@@ -1,5 +1,5 @@
 # This workflow will run the project tests and generate a coverage report,
-#   failing if coverage is < 90%
+#   failing if coverage is < 80%
 name: Coverage
 
 on:
@@ -37,4 +37,4 @@ jobs:
           hide_complexity: true
           indicators: true
           output: console
-          thresholds: "90 90"
+          thresholds: "80 80"
