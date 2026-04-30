@@ -42,7 +42,7 @@ describe("FooterSectionsComponent", () => {
     });
 
     it("should have correct social links data", () => {
-      expect(component.socialLinks.length).toBe(3);
+      expect(component.socialLinks.length).toBe(4);
       expect(component.socialLinks[0]).toEqual({
         href: "https://linkedin.com/company/australianbiocommons",
         label: "LinkedIn",
