@@ -1,3 +1,4 @@
+import { switchMap, map } from "rxjs";
 import { CommonModule } from "@angular/common";
 import {
   CdkDragDrop,
@@ -112,6 +113,7 @@ export class SinglePredictionComponent {
     ([code, name]) => ({ value: code, label: `${code} - ${name}` })
   );
 
+  private readonly samplesheetId = "single_prediction";
   private nextRowId = 1;
   ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
   ccdLookupNames = signal<Record<number, string>>({}); // compound name resolved from the local CCD dictionary via lookupCcdCompound()
@@ -547,14 +549,7 @@ export class SinglePredictionComponent {
 
     this.workflowSubmission.isSubmitting.set(true);
 
-    this.prepareSinglePredictionInput(() => {
-      const datasetId = this.preparedSamplesheetDatasetId();
-      const fastaUrl = this.preparedFastaUrl();
-      if (!datasetId || !fastaUrl) {
-        this.workflowSubmission.isSubmitting.set(false);
-        this.showError("Single prediction input preparation did not complete.");
-        return;
-      }
+    this.prepareSinglePredictionInput((fastaUrl, datasetId) => {
       this.submitPreparedWorkflow(datasetId, fastaUrl);
     });
   }
@@ -781,76 +776,49 @@ export class SinglePredictionComponent {
     }
   }
 
-  private prepareSinglePredictionInput(onPrepared: () => void): void {
+  private prepareSinglePredictionInput(
+    onPrepared: (fastaUrl: string, datasetId: string) => void
+  ): void {
     const fastaContent = this.generatedFastaContent();
     const cachedDatasetId = this.preparedSamplesheetDatasetId();
     const cachedFastaUrl = this.preparedFastaUrl();
-    if (
-      cachedDatasetId &&
-      cachedFastaUrl &&
-      this.preparedFastaContent() === fastaContent
-    ) {
-      onPrepared();
+    if (cachedDatasetId && cachedFastaUrl && this.preparedFastaContent() === fastaContent) {
+      onPrepared(cachedFastaUrl, cachedDatasetId);
       return;
     }
 
-    const samplesheetId = this.buildSamplesheetId();
-    const fastaFile = new File([fastaContent], `${samplesheetId}.fasta`, {
+    const fastaFile = new File([fastaContent], `${this.samplesheetId}.fasta`, {
       type: "text/plain"
     });
 
-    this.fastaUploadService.uploadFastaFile({ file: fastaFile }).subscribe({
-      next: (response) => {
-        const fastaS3Uri = response.s3Uri;
-        if (!fastaS3Uri) {
+    this.fastaUploadService.uploadFastaFile({ file: fastaFile }).pipe(
+      switchMap((response) => {
+        if (!response.s3Uri) {
+          throw new Error("FASTA upload succeeded but no S3 URI was returned.");
+        }
+        return this.datasetUploadService.uploadDataset({
+          formData: { id: this.samplesheetId, fasta: response.s3Uri },
+          datasetName: `${this.samplesheetId}-samplesheet-${Date.now()}`,
+          datasetDescription: "Single prediction samplesheet",
+        }).pipe(map((datasetResponse) => ({ fastaUrl: response.s3Uri, datasetResponse })));
+      })
+    ).subscribe({
+      next: ({ fastaUrl, datasetResponse }) => {
+        const datasetId = datasetResponse.datasetId;
+        if (!datasetId) {
           this.workflowSubmission.isSubmitting.set(false);
-          this.showError(
-            "FASTA upload succeeded but no S3 URI was returned."
-          );
+          this.showError("Dataset upload succeeded but no dataset ID was returned.");
           return;
         }
-
-        const samplesheet = {
-          id: samplesheetId,
-          fasta: fastaS3Uri
-        };
-
-        this.datasetUploadService.uploadDataset({
-          formData: samplesheet,
-          datasetName: `${samplesheetId}-samplesheet-${Date.now()}`,
-          datasetDescription: "Single prediction samplesheet"
-        }).subscribe({
-          next: (datasetResponse) => {
-            const datasetId = datasetResponse.datasetId;
-            if (!datasetId) {
-              this.workflowSubmission.isSubmitting.set(false);
-              this.showError(
-                "Dataset upload succeeded but no dataset ID was returned."
-              );
-              return;
-            }
-
-            this.preparedFastaContent.set(fastaContent);
-            this.preparedFastaUrl.set(fastaS3Uri);
-            this.preparedSamplesheetDatasetId.set(datasetId);
-            onPrepared();
-          },
-          error: (error) => {
-            this.workflowSubmission.isSubmitting.set(false);
-            this.showError(
-              `Failed to upload samplesheet dataset: ${
-                error.message || "Unknown error"
-              }`
-            );
-          }
-        });
+        this.preparedFastaContent.set(fastaContent);
+        this.preparedFastaUrl.set(fastaUrl);
+        this.preparedSamplesheetDatasetId.set(datasetId);
+        onPrepared(fastaUrl, datasetId);
       },
-      error: (error) => {
+      error: (error: Error) => {
         this.workflowSubmission.isSubmitting.set(false);
-        this.showError(
-          `Failed to upload FASTA file: ${error.message || "Unknown error"}`
-        );
-      }
+        this.showError(error.message || "Unknown error");
+      },
     });
   }
 
@@ -859,7 +827,7 @@ export class SinglePredictionComponent {
       {
         ...this.buildWorkflowPayload(),
         fastaFileUrl: fastaUrl,
-        samplesheetId: this.buildSamplesheetId()
+        samplesheetId: this.samplesheetId
       },
       datasetId,
       (error) => {
@@ -898,30 +866,11 @@ export class SinglePredictionComponent {
     };
   }
 
-  private buildSamplesheetId(): string {
-    return "single_prediction";
-  }
-
-  private getFastaSequenceId(
-    type: MoleculeType,
-    sequenceNumber: number
-  ): string {
-    return `${this.getMoleculeTypePrefix(type)}_${sequenceNumber}`;
-  }
-
-  private getMoleculeTypePrefix(type: MoleculeType): string {
-    switch (type) {
-      case "protein":
-        return "pro";
-      case "rna":
-        return "rna";
-      case "dna":
-        return "dna";
-      case "ligand":
-        return "ligand";
-      case "ccd":
-        return "ccd";
-    }
+  private getFastaSequenceId(type: MoleculeType, sequenceNumber: number): string {
+    const prefixes: Record<MoleculeType, string> = {
+      protein: "pro", rna: "rna", dna: "dna", ligand: "ligand", ccd: "ccd",
+    };
+    return `${prefixes[type]}_${sequenceNumber}`;
   }
 
   private validateSequenceByMoleculeType(
