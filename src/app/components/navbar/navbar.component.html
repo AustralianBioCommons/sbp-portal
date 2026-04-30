@@ -1,49 +1,39 @@
 <!-- Main Navigation Bar -->
 <nav class="relative">
-  <div class="max-w-7xl px-6 mx-auto">
-    <div class="flex justify-between items-center py-2">
-      <!-- Logo and Brand (Left corner) -->
-      <button
-        class="-mx-4 flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
-        (click)="navigate('/themes', { tab: 'binder-design' })"
-        (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
-        (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
-        aria-label="Navigate to home page"
+  <div class="max-w-7xl px-6 mx-auto flex justify-between items-center py-2">
+    <!-- Logo and Brand (Left side) -->
+    <button
+      class="-mx-4 flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
+      (click)="navigate('/themes', { tab: 'binder-design' })"
+      (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
+      (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
+      aria-label="Navigate to home page"
+    >
+      <img class="w-60 h-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
+    </button>
+
+    <!-- Menu Toggle Button (Right side) -->
+    <app-button
+      type="button"
+      variant="secondary"
+      widthClass="w-auto !p-0 hover:translate-x-0"
+      borderRadius="rounded-lg"
+      [active]="isMobileMenuOpen()"
+      (click)="toggleMobileMenu(); $event.stopPropagation()"
+    >
+      <ng-icon
+        [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
+        size="24"
+        class="transition-all pointer-events-none"
+        [class.rotate-90]="isMobileMenuOpen()"
       >
-        <img class="w-60 h-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
-      </button>
+      </ng-icon>
 
-      <!-- Compact Menu Button (Right side) -->
-      <div class="flex items-center ml-auto">
-        <!-- Compact Menu Toggle Button -->
-        <app-button
-          variant="secondary"
-          widthClass="w-auto"
-          [colorClasses]="
-            isMobileMenuOpen()
-              ? 'relative p-2 hover:shadow-lg bg-blue-400 !text-gray-800 !border-blue-900 hover:!bg-blue-900 hover:opacity-90'
-              : 'relative p-2 hover:shadow-lg'
-          "
-          borderRadius="rounded-lg"
-          (click)="toggleMobileMenu(); $event.stopPropagation()"
-          [active]="isMobileMenuOpen()"
-          type="button"
-        >
-          <!-- Menu Icon using ng-icons -->
-          <ng-icon
-            [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
-            class="w-12 h-12 transition-all pointer-events-none"
-            [class.rotate-90]="isMobileMenuOpen()"
-          >
-          </ng-icon>
-
-          <!-- Menu Label -->
-          <span class="sr-only">{{
-            isMobileMenuOpen() ? "Close menu" : "Open menu"
-          }}</span>
-        </app-button>
-      </div>
-    </div>
+      <!-- Menu Label -->
+      <span class="sr-only">
+        {{ isMobileMenuOpen() ? "Close menu" : "Open menu" }}
+      </span>
+    </app-button>
   </div>
 
   <!-- Compact Navigation Menu (Right-aligned, Top-positioned) -->
