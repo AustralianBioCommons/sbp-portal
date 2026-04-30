@@ -2,7 +2,14 @@ import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
-import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
+import {
+  DatasetUploadResponse,
+  DatasetUploadService,
+} from "../../../cores/services/dataset-upload.service";
+import {
+  FastaUploadResponse,
+  FastaUploadService,
+} from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import {
   lookupCcdCompound,
@@ -13,10 +20,40 @@ import {
 } from "../../../cores/utils/fasta.utils";
 import { SinglePredictionComponent } from "./single-prediction";
 
+// ── Typed mock responses conforming to service interfaces ──────────────────
+
+const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
+  success: true,
+  message: "FASTA file uploaded successfully",
+  fileId: "input/single_prediction.fasta",
+  fileName: "single_prediction.fasta",
+  s3Uri: "s3://bucket/input/single_prediction.fasta",
+  presignedUrl: "https://signed.example/input/single_prediction.fasta",
+};
+
+const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
+  success: true,
+  message: "Dataset uploaded successfully",
+  datasetId: "dataset-1",
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function noS3UriResponse(): FastaUploadResponse {
+  return { ...MOCK_FASTA_RESPONSE, s3Uri: "", presignedUrl: "" };
+}
+
+function noDatasetIdResponse(): DatasetUploadResponse {
+  return { success: true, message: "ok" };
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+
 describe("SinglePredictionComponent", () => {
   let component: SinglePredictionComponent;
   let fixture: ComponentFixture<SinglePredictionComponent>;
   let datasetUploadService: jasmine.SpyObj<DatasetUploadService>;
+  let fastaUploadService: jasmine.SpyObj<FastaUploadService>;
   let workflowSubmissionService: {
     isSubmitting: ReturnType<typeof signal<boolean>>;
     showSuccessDialog: ReturnType<typeof signal<boolean>>;
@@ -30,16 +67,17 @@ describe("SinglePredictionComponent", () => {
   };
 
   beforeEach(async () => {
-    datasetUploadService = jasmine.createSpyObj("DatasetUploadService", [
-      "uploadDataset",
-    ]);
-    datasetUploadService.uploadDataset.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-        datasetId: "dataset-1",
-      })
+    datasetUploadService = jasmine.createSpyObj<DatasetUploadService>(
+      "DatasetUploadService",
+      ["uploadDataset"]
     );
+    datasetUploadService.uploadDataset.and.returnValue(of(MOCK_DATASET_RESPONSE));
+
+    fastaUploadService = jasmine.createSpyObj<FastaUploadService>(
+      "FastaUploadService",
+      ["uploadFastaFile"]
+    );
+    fastaUploadService.uploadFastaFile.and.returnValue(of(MOCK_FASTA_RESPONSE));
 
     workflowSubmissionService = {
       isSubmitting: signal(false),
@@ -59,10 +97,8 @@ describe("SinglePredictionComponent", () => {
       providers: [
         { provide: AuthService, useValue: authService },
         { provide: DatasetUploadService, useValue: datasetUploadService },
-        {
-          provide: WorkflowSubmissionService,
-          useValue: workflowSubmissionService,
-        },
+        { provide: FastaUploadService, useValue: fastaUploadService },
+        { provide: WorkflowSubmissionService, useValue: workflowSubmissionService },
       ],
     }).compileComponents();
 
@@ -76,6 +112,7 @@ describe("SinglePredictionComponent", () => {
     copyNumber = "1"
   ): number {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
     component.updateRowSequence(rowId, sequence);
     component.updateRowCopyNumber(rowId, copyNumber);
     component.updateRowMoleculeType(rowId, "protein");
@@ -138,19 +175,13 @@ describe("SinglePredictionComponent", () => {
     const secondRowId = component.entityRows()[1].id;
     component.updateRowSequence(secondRowId, "SECOND");
 
-    component.dropEntityRow({
-      previousIndex: 0,
-      currentIndex: 1,
-    } as never);
+    component.dropEntityRow({ previousIndex: 0, currentIndex: 1 } as never);
     expect(component.entityRows().map((row) => row.sequence)).toEqual([
       "SECOND",
       "FIRST",
     ]);
 
-    component.dropEntityRow({
-      previousIndex: 1,
-      currentIndex: 1,
-    } as never);
+    component.dropEntityRow({ previousIndex: 1, currentIndex: 1 } as never);
     expect(component.entityRows().map((row) => row.sequence)).toEqual([
       "SECOND",
       "FIRST",
@@ -183,6 +214,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should validate DNA, RNA, and ligand formats", () => {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
     component.selectTool("boltz");
 
     component.updateRowSequence(rowId, "ACGT");
@@ -213,6 +245,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
@@ -315,12 +348,13 @@ describe("SinglePredictionComponent", () => {
 
     expect(lookupCcdCompound("ATP")).toEqual({
       valid: true,
-      name: "Adenosine triphosphate"
+      name: "Adenosine triphosphate",
     });
   });
 
   it("should allow Boltz with non-protein molecules and generate FASTA-like content", () => {
     const rowId = component.entityRows()[0].id;
+    component.runName.set("test-run");
 
     component.selectTool("boltz");
     component.updateRowSequence(rowId, "ACGT");
@@ -328,31 +362,22 @@ describe("SinglePredictionComponent", () => {
     component.updateRowCopyNumber(rowId, "2");
 
     expect(component.isStep1Valid()).toBe(true);
-    expect(component.generatedFastaContent()).toContain(
-      ">entity_1_copy_1|dna"
-    );
-    expect(component.generatedFastaContent()).toContain(
-      ">entity_1_copy_2|dna"
-    );
+    expect(component.generatedFastaContent()).toContain(">dna_1");
+    expect(component.generatedFastaContent()).toContain(">dna_2");
   });
 
   it("should normalize protein sequence content in summary", () => {
     fillValidProteinRow("ac de fg");
-
     expect(component.formSummary()[0].value).toContain("ACDEFG");
   });
 
   it("should expose tool-specific settings for all tools", () => {
+    // colabfold_use_templates is hidden from UI — must NOT appear in summary
     expect(component.getToolSettingsSummaryItems()).toEqual([
       {
         label: "colabfold_num_recycles",
         value: "3",
         fieldName: "colabfold_num_recycles",
-      },
-      {
-        label: "colabfold_use_templates",
-        value: "true",
-        fieldName: "colabfold_use_templates",
       },
     ]);
 
@@ -471,52 +496,77 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow("ACDEFGHIK", "2");
     component.selectTool("alphafold2");
     component.alphafold2FullDbs.set(true);
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
 
     component.submitWorkflow();
 
-    expect(datasetUploadService.uploadDataset).toHaveBeenCalled();
-    expect(
-      workflowSubmissionService.submitWorkflowWithDataset
-    ).toHaveBeenCalled();
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalled();
+    expect(datasetUploadService.uploadDataset).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        formData: {
+          id: "single_prediction",
+          fasta: MOCK_FASTA_RESPONSE.s3Uri,
+        },
+        datasetName: jasmine.stringMatching(/^single_prediction-samplesheet-\d+$/),
+        datasetDescription: "Single prediction samplesheet",
+      })
+    );
+    expect(workflowSubmissionService.submitWorkflowWithDataset).toHaveBeenCalled();
 
     const payload =
-      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
-        .args[0];
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent().args[0];
+    expect(payload["runName"]).toBe("test-run");
+    expect(payload["seqeraRunName"]).toMatch(/^test-run-\d{8}-\d{6}-[a-z0-9]{4}$/);
     expect(payload["mode"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
-    expect(payload["fastaContent"]).toContain(">entity_1_copy_1|protein");
+    expect(payload["fastaContent"]).toContain(">pro_1");
+    expect(payload["fastaFileUrl"]).toBe(MOCK_FASTA_RESPONSE.s3Uri);
+    expect(payload["samplesheetId"]).toBe("single_prediction");
     expect(component.canSubmit()).toBe(true);
   });
 
   it("should block submission when tools are unavailable", () => {
     fillValidProteinRow();
+    component.isToolAvailable.set(false);
 
     component.submitWorkflow();
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("Submission is disabled");
+    expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
     expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
   });
 
   it("should show an error when submitting invalid input", () => {
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     component.submitWorkflow();
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("Please fix");
+    expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
+    expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
+  });
+
+  it("should show an error when FASTA upload fails", () => {
+    fillValidProteinRow();
+    component.isToolAvailable.set(true);
+    fastaUploadService.uploadFastaFile.and.returnValue(
+      throwError(() => new Error("fasta upload failed"))
+    );
+
+    component.submitWorkflow();
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("fasta upload failed");
     expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
   });
 
   it("should show an error when dataset upload succeeds without dataset id", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     datasetUploadService.uploadDataset.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-      })
+      of(noDatasetIdResponse())
     );
 
     component.submitWorkflow();
@@ -527,7 +577,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should show an error when dataset upload fails", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
     datasetUploadService.uploadDataset.and.returnValue(
       throwError(() => new Error("upload failed"))
     );
@@ -540,13 +590,12 @@ describe("SinglePredictionComponent", () => {
 
   it("should show the workflow launch fallback error when the callback has no message", () => {
     fillValidProteinRow();
-    component.isToolAvailable = () => true;
+    component.isToolAvailable.set(true);
 
     component.submitWorkflow();
 
     const onWorkflowError =
-      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
-        .args[2];
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent().args[2];
     onWorkflowError({});
 
     expect(component.showAlert()).toBe(true);
@@ -594,4 +643,85 @@ describe("SinglePredictionComponent", () => {
     const errors = component.entityValidationResults()[0];
     expect(errors["copyNumber"]).toContain("greater than or equal to 1");
   });
+
+  it("should require runName in step 1 validation", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+
+    component.runName.set("");
+    expect(component.isStep1Valid()).toBe(false);
+
+    component.runName.set("my-run");
+    expect(component.isStep1Valid()).toBe(true);
+  });
+
+  it("should show run name required error after touching", () => {
+    component.runNameTouched.set(true);
+    component.runName.set("");
+    expect(component.runNameTouched()).toBe(true);
+
+    component.nextStep();
+    expect(component.runNameTouched()).toBe(true);
+  });
+
+  it("should not advance to step 2 until runName is filled", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+    component.runName.set("");
+
+    component.nextStep();
+    expect(component.currentStep()).toBe(1);
+
+    component.runName.set("valid-run");
+    component.nextStep();
+    expect(component.currentStep()).toBe(2);
+  });
+
+  it("should generate seqeraRunName with timestamp and random suffix", () => {
+    component.runName.set("My Prediction");
+    const unique = component["buildUniqueRunName"]();
+    expect(unique).toMatch(/^My-Prediction-\d{8}-\d{6}-[a-z0-9]{4}$/);
+  });
+
+  it("should use 'run' slug when runName is empty in buildUniqueRunName", () => {
+    component.runName.set("");
+    const unique = component["buildUniqueRunName"]();
+    expect(unique).toMatch(/^run-\d{8}-\d{6}-[a-z0-9]{4}$/);
+  });
+
+  it("should use the cached FASTA/dataset on second submit without re-uploading", () => {
+    fillValidProteinRow();
+    component.isToolAvailable.set(true);
+
+    component.submitWorkflow();
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+
+    component.submitWorkflow();
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+    expect(datasetUploadService.uploadDataset).toHaveBeenCalledTimes(1);
+  });
+
+  it("should show error when FASTA upload returns no s3Uri", () => {
+    fillValidProteinRow();
+    component.isToolAvailable.set(true);
+    fastaUploadService.uploadFastaFile.and.returnValue(of(noS3UriResponse()));
+
+    component.submitWorkflow();
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("no S3 URI");
+  });
+
+  it("should include colabfold_use_templates=false in submission payload (hidden param)", () => {
+    fillValidProteinRow();
+    component.isToolAvailable.set(true);
+    component.selectTool("colabfold");
+
+    component.submitWorkflow();
+
+    const payload =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent().args[0];
+    expect(payload["colabfold_use_templates"]).toBe(false);
+  });
+
 });
