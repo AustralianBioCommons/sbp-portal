@@ -374,6 +374,26 @@ describe("JobsComponent", () => {
     expect(component.showStatusDropdown()).toBeFalse();
   });
 
+  it("should not expose the page root as a button and should close overlays on Escape", () => {
+    const root = fixture.debugElement.query(By.css(".min-h-screen"));
+
+    expect(root.nativeElement.getAttribute("role")).toBeNull();
+    expect(root.nativeElement.getAttribute("tabindex")).toBeNull();
+
+    component.showStatusDropdown.set(true);
+    component.openActionMenuId.set(mockJob.id);
+    component.actionMenuStyle.set({ left: "10px", top: "20px" });
+    fixture.detectChanges();
+
+    root.nativeElement.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
+    );
+
+    expect(component.showStatusDropdown()).toBeFalse();
+    expect(component.openActionMenuId()).toBeNull();
+    expect(component.actionMenuStyle()).toEqual({});
+  });
+
   it("should open the action menu with viewport-aware style", fakeAsync(() => {
     const trigger = {
       getBoundingClientRect: () => ({

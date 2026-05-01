@@ -1,10 +1,7 @@
 <div
   class="min-h-screen bg-gray-50 py-8"
-  role="button"
-  tabindex="0"
   (click)="closeStatusDropdown(); closeActionMenu()"
-  (keydown.enter)="closeStatusDropdown(); closeActionMenu()"
-  (keydown.space)="closeStatusDropdown(); closeActionMenu()"
+  (keydown.escape)="closeStatusDropdown(); closeActionMenu()"
 >
   <div class="max-w-7xl px-6 mx-auto">
     <!-- Page Header -->

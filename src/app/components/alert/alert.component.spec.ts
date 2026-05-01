@@ -30,7 +30,11 @@ describe("AlertComponent", () => {
     const messageDiv = fixture.debugElement.query(By.css("div.text-success"));
 
     expect(alertDiv.nativeElement).toHaveClass("bg-green-50");
+    expect(alertDiv.nativeElement.getAttribute("role")).toBe("status");
+    expect(alertDiv.nativeElement.getAttribute("aria-live")).toBe("polite");
+    expect(alertDiv.nativeElement.getAttribute("aria-atomic")).toBe("true");
     expect(icon).toBeTruthy();
+    expect(icon.nativeElement.getAttribute("aria-hidden")).toBe("true");
     expect(messageDiv.nativeElement.textContent.trim()).toBe("Success message");
   });
 
@@ -44,7 +48,11 @@ describe("AlertComponent", () => {
     const messageDiv = fixture.debugElement.query(By.css("div.text-error"));
 
     expect(alertDiv.nativeElement).toHaveClass("bg-red-50");
+    expect(alertDiv.nativeElement.getAttribute("role")).toBe("alert");
+    expect(alertDiv.nativeElement.getAttribute("aria-live")).toBe("assertive");
+    expect(alertDiv.nativeElement.getAttribute("aria-atomic")).toBe("true");
     expect(icon).toBeTruthy();
+    expect(icon.nativeElement.getAttribute("aria-hidden")).toBe("true");
     expect(messageDiv.nativeElement.textContent.trim()).toBe("Error message");
   });
 
