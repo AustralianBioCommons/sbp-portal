@@ -374,11 +374,11 @@ describe("JobsComponent", () => {
     expect(component.showStatusDropdown()).toBeFalse();
   });
 
-  it("should not expose the page root as a button and should close overlays on Escape", () => {
+  it("should keep the page root focusable and close overlays on Escape", () => {
     const root = fixture.debugElement.query(By.css(".min-h-screen"));
 
     expect(root.nativeElement.getAttribute("role")).toBeNull();
-    expect(root.nativeElement.getAttribute("tabindex")).toBeNull();
+    expect(root.nativeElement.getAttribute("tabindex")).toBe("0");
 
     component.showStatusDropdown.set(true);
     component.openActionMenuId.set(mockJob.id);
