@@ -521,6 +521,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           const workflowFormData = {
             ...formData,
             tool: this.selectedToolLabel(),
+            binder_name: (formData["id"] as string) || "",
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(
@@ -666,6 +667,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     // Validate each required field to show specific errors
     for (const field of requiredFields) {
+      if (field.name === "binder_name") continue;
       const value = currentData[field.name];
       this.validateField(field.name, value);
     }
@@ -680,6 +682,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     // Check if all required fields have values
     for (const field of requiredFields) {
+      if (field.name === "binder_name") continue;
       const value = currentData[field.name];
       if (value === undefined || value === null || value === "") {
         isValid = false;
@@ -755,7 +758,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     }[] = [];
 
     // Fields to exclude from summary
-    const excludedFields = ["settings_filters", "settings_advanced"];
+    const excludedFields = ["settings_filters", "settings_advanced", "binder_name"];
 
     fields.forEach((field) => {
       // Skip excluded fields
@@ -898,6 +901,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     // Check each row for required field completeness
     for (const row of rows) {
       for (const field of requiredFields) {
+        if (field.name === "binder_name") continue;
         const value = row.values[field.name];
         if (value === undefined || value === null || value === "") {
           hasErrors = true;
