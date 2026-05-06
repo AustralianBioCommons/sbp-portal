@@ -1,4 +1,6 @@
-<section class="interaction-screening-bg">
+<section
+  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-[length:100%_auto] bg-top bg-fixed"
+>
   <!-- Error Alert -->
   @if (showAlert()) {
   <app-alert
@@ -12,7 +14,7 @@
   <div class="max-w-7xl px-6 mx-auto py-12">
     <!-- Browser-style Tabs attached to container -->
     <nav class="flex justify-center" aria-label="Tabs">
-      <ul class="flex space-x-1">
+      <ul class="flex md:gap-6 gap-2">
         @for (tab of tabs; track tab.id; let i = $index) {
         <li class="relative">
           <button
@@ -22,7 +24,7 @@
                 ? 'bg-white border-t border-l border-r border-gray-200 text-gray-900 font-semibold relative z-10'
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
-            class="px-6 py-3 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
+            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
             type="button"
           >
             {{ tab.label }}
@@ -38,35 +40,33 @@
       </ul>
     </nav>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <!-- Page header -->
-      <header class="w-full">
-        <div class="px-4 py-4">
-          <h1 class="text-2xl font-semibold text-gray-900">
-            Interaction Screening
-          </h1>
-          <p class="mt-2 text-sm text-gray-500">
-            Screen protein–protein interactions using the wisps pipeline.
-            Provide query and target protein sequences, choose a prediction
-            tool, and submit your job.
-          </p>
-        </div>
-      </header>
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
+    >
+      <div>
+        <h1 class="text-3xl font-semibold text-gray-900">
+          Interaction Screening
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Screen protein–protein interactions using the wisps pipeline. Provide
+          query and target protein sequences, choose a prediction tool, and
+          submit your job.
+        </p>
+      </div>
 
       <!-- Overview Tab Content -->
       @if (isActiveTab('overview')) {
-      <div class="mt-6 space-y-6">
-        <!-- Description -->
-        <div class="rounded-[10px] p-4">
-          <h2 class="text-base font-semibold text-gray-900">Description</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            This workflow screens all pairwise interactions between the provided
-            query sequences and target sequences. Each query–target pair is
-            evaluated using the selected structure prediction tool (Boltz or
-            ColabFold) to predict structural geometry.
-          </p>
-        </div>
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900">Description</h2>
+        <p class="mt-2 text-sm text-gray-600">
+          This workflow screens all pairwise interactions between the provided
+          query sequences and target sequences. Each query–target pair is
+          evaluated using the selected structure prediction tool (Boltz or
+          ColabFold) to predict structural geometry.
+        </p>
+      </div>
 
+      <div>
         <!-- Tool Selection Component -->
         <app-tool-selection
           [tools]="tools"
@@ -75,7 +75,7 @@
         ></app-tool-selection>
 
         <div
-          class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+          class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
         >
           <p class="text-sm text-amber-800">
             {{ unavailableToolLabels.join(" and ") }} are temporarily
@@ -85,7 +85,7 @@
       </div>
 
       <!-- Stepper -->
-      <div class="mt-6 relative">
+      <div class="relative">
         <!-- Lock overlay if not authenticated -->
         @if ((auth.isAuthenticated$ | async) === false) {
         <div
@@ -217,7 +217,7 @@
         >
           <div class="mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
             <div class="flex items-start">
-              <div class="flex-shrink-0">
+              <div class="shrink-0">
                 <svg
                   class="h-5 w-5 text-blue-400"
                   viewBox="0 0 20 20"
@@ -308,27 +308,23 @@
 
       <!-- Output Tab Content -->
       @if (isActiveTab('output')) {
-      <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-[10px] p-4">
-          <h2 class="text-base font-semibold text-gray-900">Output</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Results, visualizations, and downloadable files will appear here
-            after submission.
-          </p>
-        </div>
+      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+        <h2 class="text-base font-semibold text-gray-900">Output</h2>
+        <p class="text-sm text-gray-600">
+          Results, visualizations, and downloadable files will appear here after
+          submission.
+        </p>
       </div>
       }
 
       <!-- Papers Tab Content -->
       @if (isActiveTab('papers')) {
-      <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-[10px] p-4">
-          <h2 class="text-base font-semibold text-gray-900">Papers</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Relevant publications and references for the tools used in this
-            workflow will appear here.
-          </p>
-        </div>
+      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+        <h2 class="text-base font-semibold text-gray-900">Papers</h2>
+        <p class="text-sm text-gray-600">
+          Relevant publications and references for the tools used in this
+          workflow will appear here.
+        </p>
       </div>
       }
     </div>

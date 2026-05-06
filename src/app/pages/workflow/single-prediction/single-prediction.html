@@ -1,4 +1,6 @@
-<section class="single-prediction-bg">
+<section
+  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-[length:100%_auto] bg-top bg-fixed"
+>
   @if (showAlert()) {
   <app-alert
     [type]="'error'"
@@ -10,7 +12,7 @@
 
   <div class="max-w-7xl px-6 mx-auto py-12">
     <nav class="flex justify-center" aria-label="Tabs">
-      <ul class="flex space-x-1">
+      <ul class="flex md:gap-6 gap-2">
         @for (tab of tabs; track tab.id) {
         <li class="relative">
           <button
@@ -20,7 +22,7 @@
                 ? 'bg-white border-t border-l border-r border-gray-200 text-gray-900 font-semibold relative z-10'
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
-            class="px-6 py-3 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
+            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
             type="button"
           >
             {{ tab.label }}
@@ -36,42 +38,39 @@
       </ul>
     </nav>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <header class="w-full">
-        <div class="px-4 py-4">
-          <h1 class="text-2xl font-semibold text-gray-900">
-            Single Prediction
-          </h1>
-          <p class="mt-2 text-sm text-gray-500">
-            This workflow provides a bioinformatics best-practice analysis
-            experience for protein 3D structure prediction. Configure one or
-            more entities, validate inputs against the selected tool, then
-            review the generated FASTA and settings before submission.
-          </p>
-        </div>
-      </header>
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
+    >
+      <div>
+        <h1 class="text-3xl font-semibold text-gray-900">Single Prediction</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          This workflow provides a bioinformatics best-practice analysis
+          experience for protein 3D structure prediction. Configure one or more
+          entities, validate inputs against the selected tool, then review the
+          generated FASTA and settings before submission.
+        </p>
+      </div>
 
       @if (isActiveTab('overview')) {
-      <div class="mt-6 space-y-6">
-        <div class="rounded-[10px] p-4">
-          <h2 class="text-base font-semibold text-gray-900">Description</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Single Prediction is designed for structure-prediction runs from
-            curated biological inputs. Define entities row by row with sequence,
-            copy number, and molecule type, then proceed through tool settings
-            and review before launch.
-          </p>
-        </div>
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900">Description</h2>
+        <p class="mt-2 text-sm text-gray-600">
+          Single Prediction is designed for structure-prediction runs from
+          curated biological inputs. Define entities row by row with sequence,
+          copy number, and molecule type, then proceed through tool settings and
+          review before launch.
+        </p>
+      </div>
 
+      <div>
         <app-tool-selection
           [tools]="tools"
           [selectedToolId]="selectedTool()"
           (toolSelect)="selectTool($event)"
         ></app-tool-selection>
-        
       </div>
 
-      <div class="mt-6 relative">
+      <div class="relative">
         @if ((auth.isAuthenticated$ | async) === false) {
         <div
           class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center"
@@ -402,7 +401,6 @@
                 {{ toolSettingErrors().colabfoldNumRecycles }}
               </p>
               }
-
             </div>
             } @if (selectedTool() === 'boltz') {
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -478,24 +476,20 @@
         </div>
       </div>
       } @if (isActiveTab('output')) {
-      <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-[10px] p-4">
-          <h2 class="text-base font-semibold text-gray-900">Output</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Results, visualizations, and downloadable files will appear here
-            after submission.
-          </p>
-        </div>
+      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+        <h2 class="text-base font-semibold text-gray-900">Output</h2>
+        <p class="text-sm text-gray-600">
+          Results, visualizations, and downloadable files will appear here after
+          submission.
+        </p>
       </div>
       } @if (isActiveTab('papers')) {
-      <div class="mt-6">
-        <div class="bg-gray-50 border border-gray-200 rounded-[10px] p-4">
-          <h2 class="text-base font-semibold text-gray-900">Papers</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            Relevant publications and references for the selected prediction
-            engine will appear here.
-          </p>
-        </div>
+      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+        <h2 class="text-base font-semibold text-gray-900">Papers</h2>
+        <p class="text-sm text-gray-600">
+          Relevant publications and references for the selected prediction
+          engine will appear here.
+        </p>
       </div>
       }
     </div>
