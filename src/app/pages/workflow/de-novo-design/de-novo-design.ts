@@ -494,7 +494,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const formData = this.getFormData();
+    const rawFormData = this.getFormData();
+    const formData = {
+      ...rawFormData,
+      binder_name: (rawFormData["id"] as string) || "",
+    };
 
     console.log("Starting workflow submission with dataset upload...");
 
@@ -521,7 +525,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           const workflowFormData = {
             ...formData,
             tool: this.selectedToolLabel(),
-            binder_name: (formData["id"] as string) || "",
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(
