@@ -8,7 +8,7 @@ import { Component, ElementRef, input, output, ViewChild } from "@angular/core";
   template: `
     <div
       #menuContainer
-      class="fixed z-30 w-52 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+      class="fixed z-30 w-52 rounded-md bg-white shadow-lg ring-1 ring-black/5"
       [ngStyle]="menuStyle()"
       (mousedown)="$event.stopPropagation()"
     >
@@ -38,7 +38,7 @@ import { Component, ElementRef, input, output, ViewChild } from "@angular/core";
         </button>
       </div>
     </div>
-  `
+  `,
 })
 export class JobsActionMenuComponent {
   menuStyle = input<Record<string, string>>({});

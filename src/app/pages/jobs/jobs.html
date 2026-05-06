@@ -94,7 +94,7 @@
             <!-- Dropdown Menu -->
             @if (showStatusDropdown()) {
             <div
-              class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+              class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black/5 z-10"
             >
               <div class="py-1" role="menu">
                 @for (status of statusOptions; track status) {
@@ -510,7 +510,7 @@
     class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
   >
     <div
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+      class="fixed inset-0 bg-gray-500/75 transition-opacity"
       role="button"
       tabindex="0"
       (click)="closeDeleteDialog()"
@@ -531,7 +531,7 @@
       <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
         <div class="sm:flex sm:items-start">
           <div
-            class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
+            class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
           >
             <svg
               class="h-6 w-6 text-red-600"

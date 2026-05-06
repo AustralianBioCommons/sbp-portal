@@ -3,7 +3,7 @@
   <div class="max-w-7xl px-6 mx-auto flex justify-between items-center py-2">
     <!-- Logo and Brand (Left side) -->
     <button
-      class="-mx-4 flex-shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
+      class="-mx-4 shrink-0 !p-0 !border-0 !bg-transparent hover:!bg-transparent"
       (click)="navigate('/themes', { tab: 'binder-design' })"
       (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
       (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
@@ -16,7 +16,7 @@
     <app-button
       type="button"
       variant="secondary"
-      widthClass="w-auto !p-0 hover:translate-x-0"
+      widthClass="w-auto !p-0 !hover:translate-x-0"
       borderRadius="rounded-lg"
       [active]="isMobileMenuOpen()"
       (click)="toggleMobileMenu(); $event.stopPropagation()"
@@ -24,7 +24,7 @@
       <ng-icon
         [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
         size="24"
-        class="transition-all pointer-events-none"
+        class="transition-all pointer-events-none !hover:translate-x-0"
         [class.rotate-90]="isMobileMenuOpen()"
       >
       </ng-icon>
@@ -86,7 +86,7 @@
                 : 'text-black')
             "
           >
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center gap-2">
               @if (item.icon && !item.image) {
               <ng-icon
                 [name]="item.icon"

@@ -64,9 +64,6 @@ type StepItem = Step;
     MolstarViewerComponent,
     LengthRangeSliderComponent,
   ],
-  host: {
-    class: "block w-full de-novo-design-bg",
-  },
   templateUrl: "./de-novo-design.html",
   styleUrls: ["./de-novo-design.scss"],
 })

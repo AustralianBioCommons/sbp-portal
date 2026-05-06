@@ -3,19 +3,6 @@
   display: block;
 }
 
-button {
-  transition: background-color 0.15s ease, color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.single-prediction-bg {
-  background-image: url("/assets/denovo-design.png");
-  background-repeat: no-repeat;
-  background-size: 100% auto;
-  background-position: top center;
-  background-attachment: fixed;
-}
-
 .sequence-list {
   position: relative;
 }
@@ -48,7 +35,11 @@ button {
   display: block;
   width: 12px;
   height: 18px;
-  background-image: radial-gradient(circle, currentColor 1.5px, transparent 2px);
+  background-image: radial-gradient(
+    circle,
+    currentColor 1.5px,
+    transparent 2px
+  );
   background-size: 6px 6px;
   background-position: 0 0;
 }

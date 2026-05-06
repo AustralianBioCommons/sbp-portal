@@ -1,12 +1,14 @@
-@let base = "flex items-center space-x-2 px-3 py-2.5 text-left text-sm
-font-medium transition-all duration-200 disabled:cursor-not-allowed
-disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-1
-whitespace-nowrapoverflow-hidden"; @let color = colorClasses()?.trim(); @let
+@let base = "flex items-center gap-2 px-3 py-2.5 text-left text-sm font-medium
+transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50
+focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2
+focus-visible:ring-offset-1 whitespace-nowrap overflow-hidden
+[&:disabled:hover]:shadow-none [&:disabled:hover]:translate-y-0
+[&:disabled:hover]:translate-x-0"; @let color = colorClasses()?.trim(); @let
 activeClasses = active() ? "btn-active" : ""; @let variantClasses = variant()
 === "primary" ? "text-white justify-center " + (color || "bg-blue-800
-hover:bg-blue-700 focus:ring-blue-500") : "border-0 bg-transparent
+hover:bg-blue-700 focus-visible:ring-blue-500") : "border-0 bg-transparent
 hover:bg-white " + (color || "text-blue-900 hover:text-blue-600
-focus:ring-blue-500 hover:translate-x-1");
+focus-visible:ring-blue-500 hover:translate-x-1");
 
 <button
   [type]="type()"
@@ -26,7 +28,7 @@ focus:ring-blue-500 hover:translate-x-1");
   "
 >
   @if (loading()) {
-  <div class="flex items-center justify-center space-x-2">
+  <div class="flex items-center justify-center gap-2">
     <svg
       class="h-4 w-4 animate-spin"
       xmlns="http://www.w3.org/2000/svg"
