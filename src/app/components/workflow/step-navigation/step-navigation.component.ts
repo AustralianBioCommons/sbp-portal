@@ -45,7 +45,7 @@ export interface Step {
                 isStepComplete(s.id) &&
                 currentStep !== s.id &&
                 !isStepInvalid(s.id),
-              'bg-white border border-gray-200 !text-gray-600':
+              'bg-white border border-gray-200 text-gray-600!':
                 !isStepComplete(s.id) &&
                 currentStep !== s.id &&
                 !isStepInvalid(s.id)
