@@ -48,11 +48,15 @@ describe("LoadingComponent", () => {
     it("should update displayed message when input changes", () => {
       fixture.componentRef.setInput("message", "Loading files...");
       fixture.detectChanges();
-      expect(compiled.querySelector("p")?.textContent?.trim()).toBe("Loading files...");
+      expect(compiled.querySelector("p")?.textContent?.trim()).toBe(
+        "Loading files...",
+      );
 
       fixture.componentRef.setInput("message", "Loading logs...");
       fixture.detectChanges();
-      expect(compiled.querySelector("p")?.textContent?.trim()).toBe("Loading logs...");
+      expect(compiled.querySelector("p")?.textContent?.trim()).toBe(
+        "Loading logs...",
+      );
     });
   });
 
@@ -98,7 +102,9 @@ describe("LoadingComponent", () => {
 
     it("should have primary, accent and secondary pulse dots", () => {
       expect(compiled.querySelector(".bg-pink-500.animate-pulse")).toBeTruthy();
-      expect(compiled.querySelector(".bg-orange-500.animate-pulse")).toBeTruthy();
+      expect(
+        compiled.querySelector(".bg-orange-500.animate-pulse"),
+      ).toBeTruthy();
       expect(compiled.querySelector(".bg-blue-500.animate-pulse")).toBeTruthy();
     });
 
