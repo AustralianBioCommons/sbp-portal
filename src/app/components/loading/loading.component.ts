@@ -1,14 +1,12 @@
-import { Component, Input } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
 @Component({
   selector: "app-loading",
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: "./loading.component.html",
-  styleUrls: ["./loading.component.scss"],
+  styleUrl: "./loading.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoadingComponent {
-  @Input() message: string = "Loading...";
-  @Input() inline: boolean = false;
+  message = input<string>("Loading...");
+  inline = input<boolean>(false);
 }

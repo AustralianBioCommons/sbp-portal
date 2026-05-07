@@ -15,6 +15,10 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
+
+  a {
+    @apply text-blue-900 hover:text-blue-700 transition-all underline;
+  }
 }
 
 @layer utilities {

@@ -46,19 +46,19 @@ describe("NotFoundComponent", () => {
   });
 
   it("should display 404 error number", () => {
-    const errorNumber = fixture.debugElement.query(By.css(".error-number"));
+    const errorNumber = fixture.debugElement.query(By.css(".text-8xl"));
     expect(errorNumber.nativeElement.textContent.trim()).toBe("404");
   });
 
   it('should display "Page Not Found" subtitle', () => {
-    const errorSubtitle = fixture.debugElement.query(By.css(".error-subtitle"));
+    const errorSubtitle = fixture.debugElement.query(By.css(".text-2xl"));
     expect(errorSubtitle.nativeElement.textContent.trim()).toBe(
       "Page Not Found",
     );
   });
 
   it("should display Australian BioCommons Portal title", () => {
-    const brandTitle = fixture.debugElement.query(By.css(".brand-title"));
+    const brandTitle = fixture.debugElement.query(By.css("h1"));
     expect(brandTitle.nativeElement.textContent.trim()).toBe(
       "Australian BioCommons Portal",
     );
@@ -66,7 +66,7 @@ describe("NotFoundComponent", () => {
 
   it("should have three suggestion cards", () => {
     const suggestionCards = fixture.debugElement.queryAll(
-      By.css(".suggestion-card"),
+      By.css(".rounded-2xl"),
     );
     expect(suggestionCards.length).toBe(3);
   });
@@ -99,7 +99,7 @@ describe("NotFoundComponent", () => {
 
   it("should have three popular links", () => {
     const popularLinks = fixture.debugElement.queryAll(
-      By.css(".link-grid app-button"),
+      By.css("app-button[variant='secondary']"),
     );
     expect(popularLinks.length).toBe(3);
 
@@ -127,7 +127,7 @@ describe("NotFoundComponent", () => {
     spyOn(component, "goHome");
 
     const homeButton = fixture.debugElement.query(
-      By.css(".suggestion-cards app-button button"),
+      By.css("app-button[variant='primary'] button"),
     );
     homeButton.nativeElement.click();
 
@@ -138,7 +138,7 @@ describe("NotFoundComponent", () => {
     spyOn(component, "goBack");
 
     const backButtons = fixture.debugElement.queryAll(
-      By.css(".suggestion-cards app-button button"),
+      By.css("app-button[variant='primary'] button"),
     );
     backButtons[1].nativeElement.click(); // Second button is "Go back"
 
@@ -149,7 +149,7 @@ describe("NotFoundComponent", () => {
     spyOn(component, "searchResources");
 
     const searchButtons = fixture.debugElement.queryAll(
-      By.css(".suggestion-cards app-button button"),
+      By.css("app-button[variant='primary'] button"),
     );
     searchButtons[2].nativeElement.click(); // Third button is "Search portal"
 
@@ -188,7 +188,7 @@ describe("NotFoundComponent", () => {
 
   it("should trigger navigation when popular links are clicked", () => {
     const popularLinks = fixture.debugElement.queryAll(
-      By.css(".link-grid app-button button"),
+      By.css("app-button[variant='secondary'] button"),
     );
 
     spyOn(component, "navigateToBinderDesign");
