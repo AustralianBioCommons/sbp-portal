@@ -12,8 +12,9 @@ describe("StepNavigationComponent", () => {
     { id: 3, title: "Review", description: "Review and submit" },
   ];
 
-  const mockIsStepComplete = (stepId: number) => stepId < 2;
+  const mockisStepCompleted = (stepId: number) => stepId < 2;
   const mockIsStepInvalid = (stepId: number) => stepId === 3;
+  const mockIsStepVisited = (stepId: number) => stepId === 1;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -23,11 +24,11 @@ describe("StepNavigationComponent", () => {
     fixture = TestBed.createComponent(StepNavigationComponent);
     component = fixture.componentInstance;
 
-    // Set required inputs
-    component.steps = mockSteps;
-    component.currentStep = 2;
-    component.isStepComplete = mockIsStepComplete;
-    component.isStepInvalid = mockIsStepInvalid;
+    fixture.componentRef.setInput("steps", mockSteps);
+    fixture.componentRef.setInput("currentStep", 2);
+    fixture.componentRef.setInput("isStepCompleted", mockisStepCompleted);
+    fixture.componentRef.setInput("isStepInvalid", mockIsStepInvalid);
+    fixture.componentRef.setInput("isStepVisited", mockIsStepVisited);
   });
 
   it("should create", () => {
@@ -49,7 +50,7 @@ describe("StepNavigationComponent", () => {
   });
 
   it("should handle empty steps array", () => {
-    component.steps = [];
+    fixture.componentRef.setInput("steps", []);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("No steps defined");
@@ -57,18 +58,18 @@ describe("StepNavigationComponent", () => {
 
   it("should apply correct styling based on step state", () => {
     fixture.detectChanges();
-    const buttons = fixture.nativeElement.querySelectorAll("app-button");
+    const buttons = fixture.nativeElement.querySelectorAll("button");
 
     // Should have buttons for each step
     expect(buttons.length).toBe(3);
   });
 
   it("should handle disabled state", () => {
-    component.isDisabled = true;
-    expect(component.isDisabled).toBe(true);
+    fixture.componentRef.setInput("isDisabled", true);
+    expect(component.isDisabled()).toBe(true);
   });
 
   it("should have correct current step", () => {
-    expect(component.currentStep).toBe(2);
+    expect(component.currentStep()).toBe(2);
   });
 });

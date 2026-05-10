@@ -261,6 +261,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   // Steps marked complete only when user presses Next on that step
   completedSteps = signal<number[]>([]);
+  visitedSteps = signal<number[]>([1]);
+  isStepVisited = (id: number) => this.visitedSteps().includes(id);
 
   // Check if a step has validation errors
   isStepInvalid = (id: number) => {
@@ -275,7 +277,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   private attemptedStep1 = signal<boolean>(false);
   hasAttemptedStep1 = () => this.attemptedStep1();
 
-  isStepComplete = (id: number) => {
+  isStepCompleted = (id: number) => {
     // Step 2 is automatically completed if the selected tool has no parameters
     if (id === 2 && !this.selectedToolHasParams()) {
       return true;
@@ -388,10 +390,17 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       arr.includes(current) ? arr : [...arr, current],
     );
     this.currentStep.update((v) => v + 1);
+    this.visitedSteps.update((arr) => {
+      const next = current + 1;
+      return arr.includes(next) ? arr : [...arr, next];
+    });
   }
   goToStep(step: number) {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
+      this.visitedSteps.update((arr) =>
+        arr.includes(step) ? arr : [...arr, step],
+      );
     }
   }
 
@@ -759,7 +768,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     }[] = [];
 
     // Fields to exclude from summary
-    const excludedFields = ["settings_filters", "settings_advanced", "binder_name"];
+    const excludedFields = [
+      "settings_filters",
+      "settings_advanced",
+      "binder_name",
+    ];
 
     fields.forEach((field) => {
       // Skip excluded fields

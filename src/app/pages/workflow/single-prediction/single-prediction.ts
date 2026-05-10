@@ -5,13 +5,7 @@ import {
   DragDropModule,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import {
-  Component,
-  computed,
-  inject,
-  Signal,
-  signal,
-} from "@angular/core";
+import { Component, computed, inject, Signal, signal } from "@angular/core";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -20,7 +14,7 @@ import { ConfigurationSummaryComponent } from "../../../components/workflow/conf
 import { FormStatusComponent } from "../../../components/workflow/form-status/form-status.component";
 import {
   ListboxSelectComponent,
-  ListboxSelectOption
+  ListboxSelectOption,
 } from "../../../components/workflow/listbox-select/listbox-select.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
@@ -41,7 +35,7 @@ import {
   lookupCcdCompound,
   validateDnaSequence,
   validateProteinSequence,
-  validateRnaSequence
+  validateRnaSequence,
 } from "../../../cores/utils/fasta.utils";
 
 interface TabItem {
@@ -95,13 +89,13 @@ interface ToolSettingErrors {
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
-    FormStatusComponent
+    FormStatusComponent,
   ],
   host: {
-    class: "block w-full single-prediction-bg"
+    class: "block w-full single-prediction-bg",
   },
   templateUrl: "./single-prediction.html",
-  styleUrls: ["./single-prediction.scss"]
+  styleUrls: ["./single-prediction.scss"],
 })
 export class SinglePredictionComponent {
   public auth = inject(AuthService);
@@ -109,9 +103,9 @@ export class SinglePredictionComponent {
   private datasetUploadService = inject(DatasetUploadService);
   private fastaUploadService = inject(FastaUploadService);
 
-  readonly ccdOptions: ListboxSelectOption[] = Object.entries(CCD_COMPOUNDS).map(
-    ([code, name]) => ({ value: code, label: `${code} - ${name}` })
-  );
+  readonly ccdOptions: ListboxSelectOption[] = Object.entries(
+    CCD_COMPOUNDS,
+  ).map(([code, name]) => ({ value: code, label: `${code} - ${name}` }));
 
   private readonly samplesheetId = "single_prediction";
   private nextRowId = 1;
@@ -128,7 +122,7 @@ export class SinglePredictionComponent {
   readonly tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
     { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" }
+    { id: "papers", label: "Papers" },
   ];
   activeTab = signal<TabItem["id"]>("overview");
   isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
@@ -136,13 +130,13 @@ export class SinglePredictionComponent {
   readonly tools: ToolChip[] = [
     { id: "colabfold", label: "ColabFold" },
     { id: "alphafold2", label: "AlphaFold2" },
-    { id: "boltz", label: "Boltz" }
+    { id: "boltz", label: "Boltz" },
   ];
   isToolAvailable = signal(true);
   selectedTool = signal<ToolId>("colabfold");
   selectedToolLabel: Signal<string> = computed(
     () =>
-      this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? ""
+      this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? "",
   );
 
   readonly moleculeTypes: { value: MoleculeType; label: string }[] = [
@@ -150,10 +144,10 @@ export class SinglePredictionComponent {
     { value: "rna", label: "RNA" },
     { value: "dna", label: "DNA" },
     { value: "ligand", label: "Ligand (SMILES)" },
-    { value: "ccd", label: "Ligand (CCD)" }
+    { value: "ccd", label: "Ligand (CCD)" },
   ];
   readonly moleculeTypeOptions: ListboxSelectOption[] = this.moleculeTypes.map(
-    (item) => ({ value: item.value, label: item.label })
+    (item) => ({ value: item.value, label: item.label }),
   );
 
   entityRows = signal<EntityRow[]>([this.createEntityRow()]);
@@ -176,25 +170,27 @@ export class SinglePredictionComponent {
       id: 1,
       title: "Input Configuration",
       description:
-        "Define one or more entities with sequence, copies, and molecule type"
+        "Define one or more entities with sequence, copies, and molecule type",
     },
     {
       id: 2,
       title: "Tool Settings",
-      description: "Configure only the settings required by the selected tool"
+      description: "Configure only the settings required by the selected tool",
     },
     {
       id: 3,
       title: "Review & Submit",
       description:
-        "Review entities, settings, and generated FASTA content before submission"
-    }
+        "Review entities, settings, and generated FASTA content before submission",
+    },
   ];
   currentStep = signal<number>(1);
   completedSteps = signal<number[]>([]);
+  visitedSteps = signal<number[]>([1]);
+  isStepVisited = (id: number) => this.visitedSteps().includes(id);
 
   readonly entityValidationResults = computed(() =>
-    this.entityRows().map((row) => this.validateEntityRow(row))
+    this.entityRows().map((row) => this.validateEntityRow(row)),
   );
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
   readonly isStep1Valid = computed(
@@ -202,14 +198,14 @@ export class SinglePredictionComponent {
       this.runName().trim().length > 0 &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
-        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
-      )
+        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool,
+      ),
   );
   readonly isStep2Valid = computed(
-    () => Object.keys(this.toolSettingErrors()).length === 0
+    () => Object.keys(this.toolSettingErrors()).length === 0,
   );
   readonly isFormValid = computed(
-    () => this.isStep1Valid() && this.isStep2Valid()
+    () => this.isStep1Valid() && this.isStep2Valid(),
   );
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -224,18 +220,18 @@ export class SinglePredictionComponent {
   });
 
   readonly canSubmit = computed(
-    () => this.isFormValid() && this.isToolAvailable()
+    () => this.isFormValid() && this.isToolAvailable(),
   );
 
   readonly formSummary = computed(() => {
     const entityItems = this.entityRows().map((row, index) => ({
       label: `Entity ${index + 1}`,
       value: `${this.getMoleculeTypeLabel(
-        row.moleculeType
+        row.moleculeType,
       )} x${this.getParsedCopyNumber(
-        row.copyNumber
+        row.copyNumber,
       )} • ${this.getNormalizedSequence(row)}`,
-      fieldName: `entity_${row.id}`
+      fieldName: `entity_${row.id}`,
     }));
 
     const settingItems = this.getToolSettingsSummaryItems();
@@ -259,8 +255,8 @@ export class SinglePredictionComponent {
         fastaRecords.push(
           [
             `>${this.getFastaSequenceId(row.moleculeType, sequenceNumber)}`,
-            sequence
-          ].join("\n")
+            sequence,
+          ].join("\n"),
         );
         sequenceNumber += 1;
       }
@@ -366,7 +362,7 @@ export class SinglePredictionComponent {
     return false;
   };
 
-  isStepComplete = (id: number) => {
+  isStepCompleted = (id: number) => {
     if (id === 1) {
       return (
         this.isStep1Valid() &&
@@ -387,8 +383,8 @@ export class SinglePredictionComponent {
       rows.map((row) =>
         row.id === id
           ? { ...row, touched: { ...row.touched, [field]: true } }
-          : row
-      )
+          : row,
+      ),
     );
   }
 
@@ -398,7 +394,7 @@ export class SinglePredictionComponent {
 
   shouldShowRowFieldError(
     row: EntityRow,
-    field: keyof EntityRow["touched"]
+    field: keyof EntityRow["touched"],
   ): boolean {
     if (field === "sequence" && row.sequence.trim().length > 0) {
       return true;
@@ -426,29 +422,29 @@ export class SinglePredictionComponent {
           {
             label: "alphafold2_random_seed",
             value: this.alphafold2RandomSeed(),
-            fieldName: "alphafold2_random_seed"
+            fieldName: "alphafold2_random_seed",
           },
           {
             label: "alphafold2_full_dbs",
             value: this.alphafold2FullDbs() ? "true" : "false",
-            fieldName: "alphafold2_full_dbs"
-          }
+            fieldName: "alphafold2_full_dbs",
+          },
         ];
       case "colabfold":
         return [
           {
             label: "colabfold_num_recycles",
             value: this.colabfoldNumRecycles(),
-            fieldName: "colabfold_num_recycles"
-          }
+            fieldName: "colabfold_num_recycles",
+          },
         ];
       case "boltz":
         return [
           {
             label: "boltz_use_potentials",
             value: this.boltzUsePotentials() ? "true" : "false",
-            fieldName: "boltz_use_potentials"
-          }
+            fieldName: "boltz_use_potentials",
+          },
         ];
     }
 
@@ -464,22 +460,22 @@ export class SinglePredictionComponent {
       (count, rowErrors) =>
         count +
         Object.values(rowErrors).filter((value) => Boolean(value)).length,
-      0
+      0,
     );
     const toolErrorCount = Object.values(this.toolSettingErrors()).filter(
-      (value) => Boolean(value)
+      (value) => Boolean(value),
     ).length;
 
     return {
       valid: this.isFormValid(),
       errorCount: entityErrorCount + toolErrorCount,
-      rowCount: this.entityRows().length
+      rowCount: this.entityRows().length,
     };
   }
 
   getToolSettingsErrorCount(): number {
     return Object.values(this.toolSettingErrors()).filter((value) =>
-      Boolean(value)
+      Boolean(value),
     ).length;
   }
 
@@ -512,6 +508,9 @@ export class SinglePredictionComponent {
   goToStep(step: number) {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
+      this.visitedSteps.update((arr) =>
+        arr.includes(step) ? arr : [...arr, step],
+      );
     }
   }
 
@@ -534,7 +533,7 @@ export class SinglePredictionComponent {
   submitWorkflow() {
     if (!this.isToolAvailable()) {
       this.showError(
-        "Tools are currently not available. Submission is disabled."
+        "Tools are currently not available. Submission is disabled.",
       );
       return;
     }
@@ -587,14 +586,14 @@ export class SinglePredictionComponent {
       touched: {
         sequence: false,
         copyNumber: false,
-        moleculeType: false
-      }
+        moleculeType: false,
+      },
     };
   }
 
   private patchRow(id: number, patch: Partial<EntityRow>): void {
     this.entityRows.update((rows) =>
-      rows.map((row) => (row.id === id ? { ...row, ...patch } : row))
+      rows.map((row) => (row.id === id ? { ...row, ...patch } : row)),
     );
   }
 
@@ -617,7 +616,7 @@ export class SinglePredictionComponent {
     const result = lookupCcdCompound(code);
     this.ccdLookupState.update((s) => ({
       ...s,
-      [id]: result.valid ? "valid" : "invalid"
+      [id]: result.valid ? "valid" : "invalid",
     }));
     if (result.valid && result.name) {
       this.ccdLookupNames.update((s) => ({ ...s, [id]: result.name }));
@@ -629,7 +628,7 @@ export class SinglePredictionComponent {
     } else if (!result.valid && result.errorMessage) {
       this.ccdLookupErrors.update((s) => ({
         ...s,
-        [id]: result.errorMessage
+        [id]: result.errorMessage,
       }));
       this.ccdLookupNames.update((s) => {
         const next = { ...s };
@@ -648,9 +647,9 @@ export class SinglePredictionComponent {
         touched: {
           sequence: true,
           copyNumber: true,
-          moleculeType: true
-        }
-      }))
+          moleculeType: true,
+        },
+      })),
     );
   }
 
@@ -669,7 +668,7 @@ export class SinglePredictionComponent {
     } else {
       const sequenceValidation = this.validateSequenceByMoleculeType(
         normalizedSequence,
-        row.moleculeType
+        row.moleculeType,
       );
       if (!sequenceValidation.valid) {
         errors.sequence = sequenceValidation.errorMessage;
@@ -705,7 +704,7 @@ export class SinglePredictionComponent {
       if (!Number.isInteger(value) || value < 0) {
         return {
           alphafold2RandomSeed:
-            "alphafold2_random_seed must be a whole number greater than or equal to 0."
+            "alphafold2_random_seed must be a whole number greater than or equal to 0.",
         };
       }
     }
@@ -715,7 +714,7 @@ export class SinglePredictionComponent {
       if (!Number.isInteger(value) || value < 1) {
         return {
           colabfoldNumRecycles:
-            "colabfold_num_recycles must be a whole number greater than or equal to 1."
+            "colabfold_num_recycles must be a whole number greater than or equal to 1.",
         };
       }
     }
@@ -729,21 +728,21 @@ export class SinglePredictionComponent {
         return {
           alphafold2_random_seed: Number.parseInt(
             this.alphafold2RandomSeed(),
-            10
+            10,
           ),
-          alphafold2_full_dbs: this.alphafold2FullDbs()
+          alphafold2_full_dbs: this.alphafold2FullDbs(),
         };
       case "colabfold":
         return {
           colabfold_num_recycles: Number.parseInt(
             this.colabfoldNumRecycles(),
-            10
+            10,
           ),
-          colabfold_use_templates: this.colabfoldUseTemplates()
+          colabfold_use_templates: this.colabfoldUseTemplates(),
         };
       case "boltz":
         return {
-          boltz_use_potentials: this.boltzUsePotentials()
+          boltz_use_potentials: this.boltzUsePotentials(),
         };
     }
 
@@ -770,56 +769,78 @@ export class SinglePredictionComponent {
     const current = this.currentStep();
     if (current < this.steps.length) {
       this.completedSteps.update((steps) =>
-        steps.includes(current) ? steps : [...steps, current]
+        steps.includes(current) ? steps : [...steps, current],
       );
       this.currentStep.update((value) => value + 1);
+      this.visitedSteps.update((arr) => {
+        const next = current + 1;
+        return arr.includes(next) ? arr : [...arr, next];
+      });
     }
   }
 
   private prepareSinglePredictionInput(
-    onPrepared: (fastaUrl: string, datasetId: string) => void
+    onPrepared: (fastaUrl: string, datasetId: string) => void,
   ): void {
     const fastaContent = this.generatedFastaContent();
     const cachedDatasetId = this.preparedSamplesheetDatasetId();
     const cachedFastaUrl = this.preparedFastaUrl();
-    if (cachedDatasetId && cachedFastaUrl && this.preparedFastaContent() === fastaContent) {
+    if (
+      cachedDatasetId &&
+      cachedFastaUrl &&
+      this.preparedFastaContent() === fastaContent
+    ) {
       onPrepared(cachedFastaUrl, cachedDatasetId);
       return;
     }
 
     const fastaFile = new File([fastaContent], `${this.samplesheetId}.fasta`, {
-      type: "text/plain"
+      type: "text/plain",
     });
 
-    this.fastaUploadService.uploadFastaFile({ file: fastaFile }).pipe(
-      switchMap((response) => {
-        if (!response.s3Uri) {
-          throw new Error("FASTA upload succeeded but no S3 URI was returned.");
-        }
-        return this.datasetUploadService.uploadDataset({
-          formData: { id: this.samplesheetId, fasta: response.s3Uri },
-          datasetName: `${this.samplesheetId}-samplesheet-${Date.now()}`,
-          datasetDescription: "Single prediction samplesheet",
-        }).pipe(map((datasetResponse) => ({ fastaUrl: response.s3Uri, datasetResponse })));
-      })
-    ).subscribe({
-      next: ({ fastaUrl, datasetResponse }) => {
-        const datasetId = datasetResponse.datasetId;
-        if (!datasetId) {
+    this.fastaUploadService
+      .uploadFastaFile({ file: fastaFile })
+      .pipe(
+        switchMap((response) => {
+          if (!response.s3Uri) {
+            throw new Error(
+              "FASTA upload succeeded but no S3 URI was returned.",
+            );
+          }
+          return this.datasetUploadService
+            .uploadDataset({
+              formData: { id: this.samplesheetId, fasta: response.s3Uri },
+              datasetName: `${this.samplesheetId}-samplesheet-${Date.now()}`,
+              datasetDescription: "Single prediction samplesheet",
+            })
+            .pipe(
+              map((datasetResponse) => ({
+                fastaUrl: response.s3Uri,
+                datasetResponse,
+              })),
+            );
+        }),
+      )
+      .subscribe({
+        next: ({ fastaUrl, datasetResponse }) => {
+          const datasetId = datasetResponse.datasetId;
+          if (!datasetId) {
+            this.workflowSubmission.isSubmitting.set(false);
+            this.showError(
+              "Dataset upload succeeded but no dataset ID was returned.",
+            );
+            return;
+          }
+          this.preparedFastaContent.set(fastaContent);
+          this.preparedFastaUrl.set(fastaUrl);
+          this.preparedSamplesheetDatasetId.set(datasetId);
+          onPrepared(fastaUrl, datasetId);
+        },
+        error: (error: Error) => {
           this.workflowSubmission.isSubmitting.set(false);
-          this.showError("Dataset upload succeeded but no dataset ID was returned.");
-          return;
-        }
-        this.preparedFastaContent.set(fastaContent);
-        this.preparedFastaUrl.set(fastaUrl);
-        this.preparedSamplesheetDatasetId.set(datasetId);
-        onPrepared(fastaUrl, datasetId);
-      },
-      error: (error: Error) => {
-        this.workflowSubmission.isSubmitting.set(false);
-        this.showError(error.message || "Unknown error");
-      },
-    });
+          this.showError(error.message || "Unknown error");
+        },
+      });
   }
 
   private submitPreparedWorkflow(datasetId: string, fastaUrl: string): void {
@@ -827,24 +848,32 @@ export class SinglePredictionComponent {
       {
         ...this.buildWorkflowPayload(),
         fastaFileUrl: fastaUrl,
-        samplesheetId: this.samplesheetId
+        samplesheetId: this.samplesheetId,
       },
       datasetId,
       (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(
-          `Workflow launch failed: ${error.message || "Unknown error"}`
+          `Workflow launch failed: ${error.message || "Unknown error"}`,
         );
-      }
+      },
     );
   }
 
   private buildUniqueRunName(): string {
     const base = this.runName().trim();
-    const slug = base.replace(/[^a-zA-Z0-9\-_]/g, "-").replace(/-{2,}/g, "-").replace(/^-|-$/g, "") || "run";
+    const slug =
+      base
+        .replace(/[^a-zA-Z0-9\-_]/g, "-")
+        .replace(/-{2,}/g, "-")
+        .replace(/^-|-$/g, "") || "run";
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
-    const ts = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;
+    const ts = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(
+      now.getUTCDate(),
+    )}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(
+      now.getUTCSeconds(),
+    )}`;
     const rand = Math.random().toString(36).slice(2, 6);
     return `${slug}-${ts}-${rand}`;
   }
@@ -859,23 +888,30 @@ export class SinglePredictionComponent {
         id: `entity_${index + 1}`,
         moleculeType: row.moleculeType,
         copyNumber: this.getParsedCopyNumber(row.copyNumber),
-        sequence: this.getNormalizedSequence(row)
+        sequence: this.getNormalizedSequence(row),
       })),
       fastaContent: this.generatedFastaContent(),
-      ...this.buildToolSettingsPayload()
+      ...this.buildToolSettingsPayload(),
     };
   }
 
-  private getFastaSequenceId(type: MoleculeType, sequenceNumber: number): string {
+  private getFastaSequenceId(
+    type: MoleculeType,
+    sequenceNumber: number,
+  ): string {
     const prefixes: Record<MoleculeType, string> = {
-      protein: "pro", rna: "rna", dna: "dna", ligand: "ligand", ccd: "ccd",
+      protein: "pro",
+      rna: "rna",
+      dna: "dna",
+      ligand: "ligand",
+      ccd: "ccd",
     };
     return `${prefixes[type]}_${sequenceNumber}`;
   }
 
   private validateSequenceByMoleculeType(
     value: string,
-    moleculeType: MoleculeType
+    moleculeType: MoleculeType,
   ): { valid: boolean; errorMessage?: string } {
     switch (moleculeType) {
       case "protein":
@@ -889,7 +925,7 @@ export class SinglePredictionComponent {
           ? { valid: true }
           : {
               valid: false,
-              errorMessage: "Ligand sequence must be a valid SMILES string."
+              errorMessage: "Ligand sequence must be a valid SMILES string.",
             };
       case "ccd":
         return { valid: true };
@@ -897,7 +933,7 @@ export class SinglePredictionComponent {
 
     return {
       valid: false,
-      errorMessage: "Sequence format is invalid."
+      errorMessage: "Sequence format is invalid.",
     };
   }
 

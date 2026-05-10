@@ -17,8 +17,7 @@ export interface FormValidationSummary {
         <span class="text-sm text-gray-600">Form Status:</span>
         <span
           class="text-sm font-medium"
-          [class]="isValid ? 'text-success' : 'text-error text-pink-600'"
-        >
+          [class]="isValid ? 'text-green-500' : 'text-red-500'">
           {{ isValid ? "Valid" : "Invalid" }}
         </span>
       </div>
@@ -33,7 +32,7 @@ export interface FormValidationSummary {
       </div>
 
       @if (!isValid && validationSummary.errorCount > 0) {
-      <div class="mt-2 text-xs text-error text-pink-600">
+      <div class="mt-2 text-xs text-red-500">
         <p>Please fix the validation errors in the forms above.</p>
       </div>
       }

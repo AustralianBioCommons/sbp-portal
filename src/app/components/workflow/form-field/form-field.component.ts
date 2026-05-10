@@ -5,7 +5,7 @@ import {
   inject,
   Input,
   Output,
-  signal
+  signal,
 } from "@angular/core";
 import { InputSchemaField } from "../../../cores/input-schema.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
@@ -23,7 +23,7 @@ export class FormFieldComponent {
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
-  alertType = signal<'error' | 'success' | 'warning' | 'info'>('error');
+  alertType = signal<"error" | "success" | "warning" | "info">("error");
 
   @Input({ required: true }) field!: InputSchemaField;
   @Input() value: unknown = "";
@@ -51,7 +51,7 @@ export class FormFieldComponent {
 
   private showError(message: string): void {
     this.alertMessage.set(message);
-    this.alertType.set('error');
+    this.alertType.set("error");
     this.showAlert.set(true);
   }
 
@@ -99,7 +99,7 @@ export class FormFieldComponent {
 
   getInputClasses(): string {
     return (
-      "w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent " +
+      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent " +
       (this.hasError
         ? "border-red-300 bg-red-50 text-red-900 placeholder-red-300"
         : "border-gray-300 bg-white text-gray-900 placeholder-gray-500")
@@ -108,7 +108,7 @@ export class FormFieldComponent {
 
   getSelectClasses(): string {
     return (
-      "w-full px-3 py-2 border rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent " +
+      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent " +
       (this.hasError
         ? "border-red-300 bg-red-50 text-red-900"
         : "border-gray-300 bg-white text-gray-900")

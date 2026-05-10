@@ -6,18 +6,16 @@
   (keydown.escape)="onCancel()"
   tabindex="0"
   role="button"
-  aria-label="Close dialog"
->
+  aria-label="Close dialog">
   <!-- Dialog Container -->
   <div
     class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all"
     role="dialog"
     aria-modal="true"
-    [attr.aria-labelledby]="title ? 'dialog-title' : null"
-  >
+    [attr.aria-labelledby]="title ? 'dialog-title' : null">
     <!-- Dialog Header -->
     @if (title) {
-    <div class="px-6 py-4 border-b border-border-light">
+    <div class="px-6 py-4 border-b">
       <h3 id="dialog-title" class="text-lg font-semibold text-black">
         {{ title }}
       </h3>
@@ -26,18 +24,15 @@
 
     <!-- Dialog Content -->
     <div class="px-6 py-4">
-      <p class="text-text-secondary">{{ message }}</p>
+      <p class="text-gray-600">{{ message }}</p>
     </div>
 
     <!-- Dialog Actions -->
-    <div
-      class="px-6 py-4 text-sm border-t border-border-light flex justify-end gap-3"
-    >
+    <div class="px-6 py-4 text-sm border-t flex justify-end gap-3">
       <app-button
         (click)="onCancel()"
         [variant]="'secondary'"
-        [borderRadius]="'rounded-[10px]'"
-      >
+        [borderRadius]="'rounded-[10px]'">
         {{ cancelText }}
       </app-button>
 
@@ -45,8 +40,7 @@
         (click)="onConfirm()"
         [variant]="confirmVariant"
         [colorClasses]="confirmColorClasses"
-        [borderRadius]="'rounded-[10px]'"
-      >
+        [borderRadius]="'rounded-[10px]'">
         {{ confirmText }}
       </app-button>
     </div>
