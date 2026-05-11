@@ -1,14 +1,14 @@
-import { CommonModule } from "@angular/common";
-import { Component, input } from "@angular/core";
+import { ChangeDetectionStrategy, Component, input } from "@angular/core";
 
 export type ButtonType = "button" | "submit";
 export type ButtonVariant = "primary" | "secondary";
 
 @Component({
   selector: "app-button",
-  imports: [CommonModule],
+  imports: [],
   templateUrl: "./button.component.html",
   styleUrl: "./button.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonComponent {
   type = input<ButtonType>("button");

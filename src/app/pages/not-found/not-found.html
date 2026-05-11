@@ -1,34 +1,57 @@
-<div class="not-found-container">
-  <div class="not-found-content">
+<div
+  class="min-h-screen flex items-center justify-center bg-linear-to-br from-teal-500/5 to-pink-500/5 px-4 py-8"
+>
+  <div class="max-w-300 w-full text-center">
     <!-- 404 Visual -->
-    <div class="error-visual">
-      <div class="error-number">404</div>
-      <div class="error-subtitle">Page Not Found</div>
+    <div class="mb-12">
+      <div
+        class="text-8xl md:text-9xl font-black bg-linear-to-tr from-pink-500 to-teal-500 bg-clip-text text-transparent leading-none mb-4"
+      >
+        404
+      </div>
+      <div class="text-2xl text-blue-900 font-semibold mb-8">
+        Page Not Found
+      </div>
     </div>
 
     <!-- Australian BioCommons Branding -->
-    <div class="brand-section">
-      <h1 class="brand-title">Australian BioCommons Portal</h1>
-      <p class="error-message">
+    <div class="mb-16">
+      <h1 class="text-3xl md:text-4xl text-blue-600 font-bold mb-4">
+        Australian BioCommons Portal
+      </h1>
+      <p class="text-lg text-gray-600 max-w-150 mx-auto leading-relaxed">
         Oops! The page you're looking for doesn't exist or has been moved.
       </p>
     </div>
 
     <!-- Helpful Suggestions -->
-    <div class="suggestions">
-      <h2 class="suggestions-title">What can you do?</h2>
-      <div class="suggestion-cards grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="suggestion-card flex flex-col h-full">
+    <div class="mb-16">
+      <h2 class="text-3xl text-blue-600 font-semibold mb-8">
+        What can you do?
+      </h2>
+      <div
+        class="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-8 mb-12"
+      >
+        <div
+          class="flex flex-col h-full bg-white rounded-2xl p-8 shadow-md border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+        >
           <div class="grow">
-            <ng-icon name="heroHome" class="suggestion-icon"></ng-icon>
-            <h3>Go to Themes</h3>
-            <p>Explore our protein binder design tools and workflows</p>
+            <ng-icon
+              name="heroHome"
+              class="w-12 h-12 text-teal-500 mb-4"
+            ></ng-icon>
+            <h3 class="text-xl font-semibold text-blue-600 mb-2">
+              Go to Themes
+            </h3>
+            <p class="text-gray-600 mb-6 leading-normal">
+              Explore our protein binder design tools and workflows
+            </p>
           </div>
           <div class="mt-auto">
             <app-button
               variant="primary"
               widthClass="w-full"
-              colorClasses="suggestion-button bg-pink-600 hover:bg-pink-500"
+              colorClasses="bg-pink-600 hover:bg-pink-500"
               (click)="goHome()"
             >
               Take me home
@@ -36,17 +59,24 @@
           </div>
         </div>
 
-        <div class="suggestion-card flex flex-col h-full">
+        <div
+          class="flex flex-col h-full bg-white rounded-2xl p-8 shadow-md border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+        >
           <div class="grow">
-            <ng-icon name="heroArrowLeft" class="suggestion-icon"></ng-icon>
-            <h3>Go Back</h3>
-            <p>Return to the previous page you were viewing</p>
+            <ng-icon
+              name="heroArrowLeft"
+              class="w-12 h-12 text-teal-500 mb-4"
+            ></ng-icon>
+            <h3 class="text-xl font-semibold text-blue-600 mb-2">Go Back</h3>
+            <p class="text-gray-600 mb-6 leading-normal">
+              Return to the previous page you were viewing
+            </p>
           </div>
           <div class="mt-auto">
             <app-button
               variant="primary"
               widthClass="w-full"
-              colorClasses="suggestion-button bg-blue-900 hover:bg-blue-800"
+              colorClasses="bg-blue-900 hover:bg-blue-800"
               (click)="goBack()"
             >
               Go back
@@ -54,20 +84,26 @@
           </div>
         </div>
 
-        <div class="suggestion-card flex flex-col h-full">
+        <div
+          class="flex flex-col h-full bg-white rounded-2xl p-8 shadow-md border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+        >
           <div class="grow">
             <ng-icon
               name="heroMagnifyingGlass"
-              class="suggestion-icon"
+              class="w-12 h-12 text-teal-500 mb-4"
             ></ng-icon>
-            <h3>Search Resources</h3>
-            <p>Find tools, workflows, and documentation</p>
+            <h3 class="text-xl font-semibold text-blue-600 mb-2">
+              Search Resources
+            </h3>
+            <p class="text-gray-600 mb-6 leading-normal">
+              Find tools, workflows, and documentation
+            </p>
           </div>
           <div class="mt-auto">
             <app-button
               variant="primary"
               widthClass="w-full"
-              colorClasses="suggestion-button bg-teal-600 hover:bg-teal-500"
+              colorClasses="bg-teal-600 hover:bg-teal-500"
               (click)="searchResources()"
             >
               Search portal
@@ -78,9 +114,13 @@
     </div>
 
     <!-- Popular Links -->
-    <div class="popular-links">
-      <h3>Popular Destinations</h3>
-      <div class="link-grid">
+    <div class="mb-12">
+      <h3 class="text-xl text-blue-900 font-semibold mb-6">
+        Popular Destinations
+      </h3>
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-100 sm:max-w-150 mx-auto"
+      >
         <app-button
           variant="secondary"
           widthClass="w-full h-full"
@@ -109,8 +149,8 @@
     </div>
 
     <!-- Contact Support -->
-    <div class="support-section">
-      <p class="support-text">
+    <div class="pt-8 border-t border-gray-200">
+      <p class="text-gray-600">
         Still can't find what you're looking for?
         <a href="mailto:support@biocommons.org.au">
           Contact our support team

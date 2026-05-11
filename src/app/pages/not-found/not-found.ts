@@ -1,5 +1,4 @@
-import { CommonModule } from "@angular/common";
-import { Component, inject } from "@angular/core";
+import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
 import { Router, RouterModule } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
@@ -11,11 +10,11 @@ import { ButtonComponent } from "src/app/components/button/button.component";
 
 @Component({
   selector: "app-not-found",
-  standalone: true,
-  imports: [CommonModule, NgIconComponent, ButtonComponent, RouterModule],
+  imports: [NgIconComponent, ButtonComponent, RouterModule],
   providers: [provideIcons({ heroHome, heroArrowLeft, heroMagnifyingGlass })],
   templateUrl: "./not-found.html",
-  styleUrls: ["./not-found.scss"],
+  styleUrl: "./not-found.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotFoundComponent {
   private router = inject(Router);

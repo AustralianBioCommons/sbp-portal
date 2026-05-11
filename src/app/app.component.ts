@@ -12,7 +12,7 @@ import { AuthService } from "./cores/auth.service";
   selector: "app-root",
   standalone: true,
   host: {
-    class: "block w-full min-h-screen bg-bg-primary text-text-primary",
+    class: "block w-full min-h-screen bg-white",
   },
   imports: [
     CommonModule,

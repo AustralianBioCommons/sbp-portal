@@ -24,81 +24,88 @@ describe("LoadingComponent", () => {
 
   describe("default inputs", () => {
     it("should default message to 'Loading...'", () => {
-      expect(component.message).toBe("Loading...");
+      expect(component.message()).toBe("Loading...");
     });
 
     it("should default inline to false", () => {
-      expect(component.inline).toBe(false);
+      expect(component.inline()).toBe(false);
     });
   });
 
   describe("message input", () => {
     it("should display default message", () => {
-      const loadingTitle = compiled.querySelector(".loading-title");
-      expect(loadingTitle?.textContent?.trim()).toBe("Loading...");
+      const messageEl = compiled.querySelector("p");
+      expect(messageEl?.textContent?.trim()).toBe("Loading...");
     });
 
     it("should display custom message", () => {
-      component.message = "Loading report...";
+      fixture.componentRef.setInput("message", "Loading report...");
       fixture.detectChanges();
-      const loadingTitle = compiled.querySelector(".loading-title");
-      expect(loadingTitle?.textContent?.trim()).toBe("Loading report...");
+      const messageEl = compiled.querySelector("p");
+      expect(messageEl?.textContent?.trim()).toBe("Loading report...");
     });
 
     it("should update displayed message when input changes", () => {
-      component.message = "Loading files...";
+      fixture.componentRef.setInput("message", "Loading files...");
       fixture.detectChanges();
-      expect(compiled.querySelector(".loading-title")?.textContent?.trim()).toBe("Loading files...");
+      expect(compiled.querySelector("p")?.textContent?.trim()).toBe(
+        "Loading files...",
+      );
 
-      component.message = "Loading logs...";
+      fixture.componentRef.setInput("message", "Loading logs...");
       fixture.detectChanges();
-      expect(compiled.querySelector(".loading-title")?.textContent?.trim()).toBe("Loading logs...");
+      expect(compiled.querySelector("p")?.textContent?.trim()).toBe(
+        "Loading logs...",
+      );
     });
   });
 
   describe("inline input", () => {
-    it("should render loading-overlay by default (inline = false)", () => {
-      expect(compiled.querySelector(".loading-overlay")).toBeTruthy();
-      expect(compiled.querySelector(".loading-inline")).toBeFalsy();
+    it("should render overlay by default (inline = false)", () => {
+      const wrapper = compiled.querySelector("div") as HTMLElement;
+      expect(wrapper.classList.contains("fixed")).toBeTrue();
+      expect(wrapper.classList.contains("p-4")).toBeFalse();
     });
 
     it("should use Tailwind inline classes when inline is true", () => {
-      component.inline = true;
+      fixture.componentRef.setInput("inline", true);
       fixture.detectChanges();
       const wrapper = compiled.querySelector("div") as HTMLElement;
       expect(wrapper.classList.contains("flex")).toBeTrue();
       expect(wrapper.classList.contains("items-center")).toBeTrue();
       expect(wrapper.classList.contains("justify-center")).toBeTrue();
       expect(wrapper.classList.contains("p-4")).toBeTrue();
-      expect(compiled.querySelector(".loading-overlay")).toBeFalsy();
+      expect(wrapper.classList.contains("fixed")).toBeFalse();
     });
 
-    it("should switch back to loading-overlay when inline is set to false", () => {
-      component.inline = true;
+    it("should switch back to overlay when inline is set to false", () => {
+      fixture.componentRef.setInput("inline", true);
       fixture.detectChanges();
-      component.inline = false;
+      fixture.componentRef.setInput("inline", false);
       fixture.detectChanges();
       const wrapper = compiled.querySelector("div") as HTMLElement;
-      expect(wrapper.classList.contains("loading-overlay")).toBeTrue();
-      expect(wrapper.classList.contains("flex")).toBeFalse();
+      expect(wrapper.classList.contains("fixed")).toBeTrue();
+      expect(wrapper.classList.contains("p-4")).toBeFalse();
     });
   });
 
   describe("spinner elements", () => {
     it("should render spinner background and foreground", () => {
-      expect(compiled.querySelector(".spinner-background")).toBeTruthy();
-      expect(compiled.querySelector(".spinner-foreground")).toBeTruthy();
+      expect(compiled.querySelector(".border-gray-100")).toBeTruthy();
+      expect(compiled.querySelector(".animate-spin")).toBeTruthy();
     });
 
     it("should have three pulse dots", () => {
-      const pulseDots = compiled.querySelectorAll(".pulse-dot");
+      const pulseDots = compiled.querySelectorAll(".animate-pulse");
       expect(pulseDots.length).toBe(3);
     });
 
     it("should have primary, accent and secondary pulse dots", () => {
-      expect(compiled.querySelector(".dot-primary")).toBeTruthy();
-      expect(compiled.querySelector(".dot-accent")).toBeTruthy();
-      expect(compiled.querySelector(".dot-secondary")).toBeTruthy();
+      expect(compiled.querySelector(".bg-pink-500.animate-pulse")).toBeTruthy();
+      expect(
+        compiled.querySelector(".bg-orange-500.animate-pulse"),
+      ).toBeTruthy();
+      expect(compiled.querySelector(".bg-blue-500.animate-pulse")).toBeTruthy();
     });
 
     it("should not render a subtitle element", () => {
@@ -108,26 +115,21 @@ describe("LoadingComponent", () => {
 
   describe("overlay mode styles", () => {
     it("should be fixed and full viewport", () => {
-      const overlay = compiled.querySelector(".loading-overlay") as HTMLElement;
-      const style = window.getComputedStyle(overlay);
-      expect(style.position).toBe("fixed");
-      expect(style.top).toBe("0px");
-      expect(style.left).toBe("0px");
-      expect(style.right).toBe("0px");
-      expect(style.bottom).toBe("0px");
+      const overlay = compiled.querySelector("div") as HTMLElement;
+      expect(overlay.classList.contains("fixed")).toBeTrue();
+      expect(overlay.classList.contains("inset-0")).toBeTrue();
     });
 
     it("should have z-index 1000", () => {
-      const overlay = compiled.querySelector(".loading-overlay") as HTMLElement;
-      expect(window.getComputedStyle(overlay).zIndex).toBe("1000");
+      const overlay = compiled.querySelector("div") as HTMLElement;
+      expect(overlay.classList.contains("z-1000")).toBeTrue();
     });
 
     it("should be centred with flexbox", () => {
-      const overlay = compiled.querySelector(".loading-overlay") as HTMLElement;
-      const style = window.getComputedStyle(overlay);
-      expect(style.display).toBe("flex");
-      expect(style.alignItems).toBe("center");
-      expect(style.justifyContent).toBe("center");
+      const overlay = compiled.querySelector("div") as HTMLElement;
+      expect(overlay.classList.contains("flex")).toBeTrue();
+      expect(overlay.classList.contains("items-center")).toBeTrue();
+      expect(overlay.classList.contains("justify-center")).toBeTrue();
     });
   });
 });

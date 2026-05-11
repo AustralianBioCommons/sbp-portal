@@ -1,18 +1,12 @@
 import { CommonModule } from "@angular/common";
-import {
-  Component,
-  computed,
-  inject,
-  Signal,
-  signal,
-} from "@angular/core";
+import { Component, computed, inject, Signal, signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   ValidationErrors,
-  ValidatorFn
+  ValidatorFn,
 } from "@angular/forms";
 import { startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
@@ -32,14 +26,14 @@ import {
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import {
   SequenceValidationResult,
-  validateProteinSequence
+  validateProteinSequence,
 } from "../../../cores/utils/fasta.utils";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
 function fastaValidator(
-  validate: (seq: string) => SequenceValidationResult
+  validate: (seq: string) => SequenceValidationResult,
 ): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const result = validate(control.value ?? "");
@@ -72,13 +66,13 @@ type StepItem = Step;
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
-    FormStatusComponent
+    FormStatusComponent,
   ],
   host: {
-    class: "block w-full interaction-screening-bg"
+    class: "block w-full interaction-screening-bg",
   },
   templateUrl: "./interaction-screening.html",
-  styleUrls: ["./interaction-screening.scss"]
+  styleUrls: ["./interaction-screening.scss"],
 })
 export class InteractionScreeningComponent {
   // Auth
@@ -91,13 +85,13 @@ export class InteractionScreeningComponent {
   private fb = inject(NonNullableFormBuilder);
   readonly form = this.fb.group({
     queryFasta: ["", fastaValidator(validateProteinSequence)],
-    targetFasta: ["", fastaValidator(validateProteinSequence)]
+    targetFasta: ["", fastaValidator(validateProteinSequence)],
   });
   private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status))
+    this.form.statusChanges.pipe(startWith(this.form.status)),
   );
   private formValue = toSignal(
-    this.form.valueChanges.pipe(startWith(this.form.value))
+    this.form.valueChanges.pipe(startWith(this.form.value)),
   );
   // Alert state
   showAlert = signal(false);
@@ -107,7 +101,7 @@ export class InteractionScreeningComponent {
   readonly tabs: TabItem[] = [
     { id: "overview", label: "Overview" },
     { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" }
+    { id: "papers", label: "Papers" },
   ];
   activeTab = signal<TabItem["id"]>("overview");
   isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
@@ -118,7 +112,7 @@ export class InteractionScreeningComponent {
   // No tools are currently available
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
-    { id: "colabfold", label: "ColabFold" }
+    { id: "colabfold", label: "ColabFold" },
   ];
   readonly unavailableToolLabels: string[] = this.tools.map((t) => t.label);
   isToolAvailable = () => false;
@@ -132,7 +126,7 @@ export class InteractionScreeningComponent {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
   );
 
   // ─── Steps ───────────────────────────────────────────────────────────────
@@ -140,21 +134,23 @@ export class InteractionScreeningComponent {
     {
       id: 1,
       title: "Input Configuration",
-      description: "Add query and target protein sequences"
+      description: "Add query and target protein sequences",
     },
     {
       id: 2,
       title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool"
+      description: "Configure parameters specific to the selected tool",
     },
     {
       id: 3,
       title: "Review & Submit",
-      description: "Review all settings and run the job"
-    }
+      description: "Review all settings and run the job",
+    },
   ];
   currentStep = signal<number>(1);
   completedSteps = signal<number[]>([]);
+  visitedSteps = signal<number[]>([1]);
+  isStepVisited = (id: number) => this.visitedSteps().includes(id);
   isFormValid = computed(() => this.formStatus() === "VALID");
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -172,7 +168,7 @@ export class InteractionScreeningComponent {
   };
 
   // Step 2 auto-completes — no tool parameters for now
-  isStepComplete = (id: number) => {
+  isStepCompleted = (id: number) => {
     if (id === 2) return true;
     return this.completedSteps().includes(id);
   };
@@ -188,7 +184,7 @@ export class InteractionScreeningComponent {
         value:
           queryFasta.trim().slice(0, 40) +
           (queryFasta.trim().length > 40 ? "…" : ""),
-        fieldName: "query_sequence"
+        fieldName: "query_sequence",
       });
     }
     if (validateProteinSequence(targetFasta).valid) {
@@ -197,7 +193,7 @@ export class InteractionScreeningComponent {
         value:
           targetFasta.trim().slice(0, 40) +
           (targetFasta.trim().length > 40 ? "…" : ""),
-        fieldName: "target_sequence"
+        fieldName: "target_sequence",
       });
     }
     return items;
@@ -227,14 +223,23 @@ export class InteractionScreeningComponent {
         if (!this.isFormValid()) return;
       }
       this.completedSteps.update((arr) =>
-        arr.includes(current) ? arr : [...arr, current]
+        arr.includes(current) ? arr : [...arr, current],
       );
       this.currentStep.update((v) => v + 1);
+      this.visitedSteps.update((arr) => {
+        const next = current + 1;
+        return arr.includes(next) ? arr : [...arr, next];
+      });
     }
   }
 
   goToStep(step: number) {
-    if (step >= 1 && step <= this.steps.length) this.currentStep.set(step);
+    if (step >= 1 && step <= this.steps.length) {
+      this.currentStep.set(step);
+      this.visitedSteps.update((arr) =>
+        arr.includes(step) ? arr : [...arr, step],
+      );
+    }
   }
 
   // ─── Query / Target FASTA error helpers ──────────────────────────────────
@@ -273,13 +278,13 @@ export class InteractionScreeningComponent {
       {
         id: "query",
         sequence: (this.form.value.queryFasta ?? "").replace(/\s+/g, ""),
-        group: "query"
+        group: "query",
       },
       {
         id: "target",
         sequence: (this.form.value.targetFasta ?? "").replace(/\s+/g, ""),
-        group: "target"
-      }
+        group: "target",
+      },
     ];
   }
 
@@ -292,14 +297,14 @@ export class InteractionScreeningComponent {
     const sequences = this.buildWispsPayload();
     const payload: Record<string, unknown> = {
       sequences,
-      tool: this.selectedToolLabel()
+      tool: this.selectedToolLabel(),
     };
 
     console.log("Starting interaction screening submission…", {
       tool: payload["tool"],
       hasSequences: Array.isArray(sequences)
         ? sequences.length > 0
-        : !!sequences
+        : !!sequences,
     });
     this.workflowSubmission.isSubmitting.set(true);
 
@@ -309,7 +314,7 @@ export class InteractionScreeningComponent {
         if (!datasetId) {
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            "Dataset upload succeeded but no dataset ID was returned."
+            "Dataset upload succeeded but no dataset ID was returned.",
           );
           return;
         }
@@ -320,17 +325,17 @@ export class InteractionScreeningComponent {
           (error) => {
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              `Workflow launch failed: ${error.message || "Unknown error"}`
+              `Workflow launch failed: ${error.message || "Unknown error"}`,
             );
-          }
+          },
         );
       },
       error: (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(
-          `Failed to upload dataset: ${error.message || "Unknown error"}`
+          `Failed to upload dataset: ${error.message || "Unknown error"}`,
         );
-      }
+      },
     });
   }
 

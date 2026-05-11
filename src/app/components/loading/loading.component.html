@@ -1,21 +1,33 @@
-<div [class]="inline ? 'flex items-center justify-center p-4' : 'loading-overlay'">
-  <div class="loading-container">
+<div
+  [class]="
+    inline()
+      ? 'flex items-center justify-center p-4'
+      : 'fixed inset-0 bg-white/95 flex items-center justify-center z-1000'
+  "
+>
+  <div class="text-center">
     <!-- Australian BioCommons branded spinner -->
-    <div class="spinner-container">
-      <div class="spinner-background"></div>
-      <div class="spinner-foreground"></div>
+    <div class="relative mx-auto mb-6 w-20 h-20">
+      <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+      <div
+        class="absolute inset-0 border-4 border-transparent border-t-pink-500 rounded-full animate-spin"
+      ></div>
     </div>
 
     <!-- Loading text with brand colors -->
-    <div class="loading-text">
-      <p class="loading-title">{{ message }}</p>
+    <div class="mb-8">
+      <p class="text-blue-900 text-xl font-semibold mb-2">{{ message() }}</p>
     </div>
 
     <!-- Subtle pulse animation for additional visual feedback -->
-    <div class="pulse-dots">
-      <div class="pulse-dot dot-primary"></div>
-      <div class="pulse-dot dot-accent"></div>
-      <div class="pulse-dot dot-secondary"></div>
+    <div class="flex justify-center gap-2">
+      <div class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+      <div
+        class="w-2 h-2 rounded-full bg-orange-500 animate-pulse [animation-delay:0.2s]"
+      ></div>
+      <div
+        class="w-2 h-2 rounded-full bg-blue-500 animate-pulse [animation-delay:0.4s]"
+      ></div>
     </div>
   </div>
 </div>

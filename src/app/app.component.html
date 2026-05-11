@@ -8,8 +8,9 @@
 <div
   class="fixed inset-0 z-1002 flex items-center justify-center pointer-events-none bg-black/25"
 >
-  <div class="pointer-events-auto centered-alert">
+  <div class="pointer-events-auto">
     <app-alert
+      [position]="'static'"
       [type]="(bannerType$ | async) || 'error'"
       [message]="(bannerMessage$ | async) || ''"
       [dismissible]="true"
