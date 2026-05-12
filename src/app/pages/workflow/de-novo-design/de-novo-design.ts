@@ -172,6 +172,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  Actual upload to S3 is deferred until the user clicks Next. */
   localPdbFile = signal<File | null>(null);
 
+  /** Parsed chain → residue-number set from the loaded PDB.  Populated
+   *  asynchronously after the user picks a file; null until then. */
+  pdbResidueMap = signal<Map<string, Set<number>> | null>(null);
+
   /** Reference to the File object that was last successfully uploaded.
    *  Used to skip re-upload when the user navigates Back then Next again. */
   private uploadedPdbFile = signal<File | null>(null);
@@ -198,20 +202,176 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (this.localPdbFile()) {
       this.updateRowValue(rowId, "chains", "");
       this.updateRowValue(rowId, "target_hotspot_residues", "");
+      this.programmaticViewerSelection.set("");
     }
     this.localPdbFile.set(file);
     // New file picked — reset upload tracking so Next will upload this file.
     this.uploadedPdbFile.set(null);
     // Use filename as placeholder value so schema required-check passes.
     this.updateRowValueWithValidation(rowId, "starting_pdb", file.name);
+    // Parse PDB residues for manual-entry validation (async, non-blocking).
+    void this.parsePdbResidues(file);
   }
 
   clearLocalPdb(rowId: string): void {
     this.localPdbFile.set(null);
     this.uploadedPdbFile.set(null);
+    this.pdbResidueMap.set(null);
+    this.programmaticViewerSelection.set("");
     this.updateRowValueWithValidation(rowId, "starting_pdb", "");
     this.updateRowValueWithValidation(rowId, "chains", "");
     this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
+  }
+
+  /** Return sorted, deduplicated chain letters from a residue string like "A56,B12-B20". */
+  private chainsFromResidues(residues: string): string {
+    return [
+      ...new Set(
+        residues
+          .split(",")
+          .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
+          .filter(Boolean),
+      ),
+    ]
+      .sort()
+      .join(",");
+  }
+
+  /** Parse ATOM/HETATM records from the PDB file to build a chain→residue map
+   *  used for validating manually entered hotspot residues. */
+  private async parsePdbResidues(file: File): Promise<void> {
+    try {
+      const text = await file.text();
+      const residueMap = new Map<string, Set<number>>();
+      for (const line of text.split("\n")) {
+        const recordType = line.substring(0, 6).trim();
+        if (recordType !== "ATOM" && recordType !== "HETATM") continue;
+        if (line.length < 26) continue;
+        const chain = line[21];
+        const resNum = parseInt(line.substring(22, 26).trim(), 10);
+        if (!chain || !chain.trim() || isNaN(resNum)) continue;
+        const key = chain.trim();
+        if (!residueMap.has(key)) residueMap.set(key, new Set());
+        residueMap.get(key)!.add(resNum);
+      }
+      this.pdbResidueMap.set(residueMap.size > 0 ? residueMap : null);
+    } catch {
+      // Non-critical: PDB-based validation is skipped when parsing fails.
+      this.pdbResidueMap.set(null);
+    }
+  }
+
+  /** Validate the Chains field value.
+   *  Rules:
+   *  1. Each token must be letters only (e.g. "A", "AB").
+   *  2. If a PDB is loaded, each token must be a known chain.
+   *  3. Every chain letter used in target_hotspot_residues must appear here.
+   *  Returns an error string, or null if valid. */
+  private validateChains(rowId: string, value: string): string | null {
+    if (!value || !value.trim()) return null;
+
+    const tokens = value.split(",").map((t) => t.trim()).filter(Boolean);
+
+    for (const token of tokens) {
+      if (!/^[A-Za-z]+$/.test(token)) {
+        return `Invalid chain "${token}". Use letter identifiers only, e.g. "A" or "A,B".`;
+      }
+    }
+
+    const residueMap = this.pdbResidueMap();
+    if (residueMap) {
+      for (const token of tokens) {
+        if (!residueMap.has(token)) {
+          const available = [...residueMap.keys()].sort().join(", ");
+          return `Chain "${token}" not found in PDB. Available chains: ${available}.`;
+        }
+      }
+    }
+
+    // Every chain letter that appears in hotspot residues must be listed here.
+    const hotspot = (this.getRowValue(rowId, "target_hotspot_residues") as string) ?? "";
+    if (hotspot.trim()) {
+      const chainsSet = new Set(tokens);
+      for (const hChain of this.chainsFromResidues(hotspot).split(",").filter(Boolean)) {
+        if (!chainsSet.has(hChain)) {
+          return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains.`;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /** Validate hotspot residue tokens against PDB chain/residue data.
+   *  Returns an error string, or null if valid. */
+  private validateHotspotResidues(value: string): string | null {
+    if (!value || !value.trim()) return null;
+
+    const tokens = value.split(",").map((t) => t.trim()).filter(Boolean);
+    const residueMap = this.pdbResidueMap();
+
+    for (const token of tokens) {
+      // Range: A12-A14
+      const rangeMatch = token.match(/^([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)$/);
+      // Single: A56 or A-5
+      const singleMatch = !rangeMatch && token.match(/^([A-Za-z]+)(-?\d+)$/);
+
+      if (!rangeMatch && !singleMatch) {
+        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14".`;
+      }
+
+      if (residueMap) {
+        if (singleMatch) {
+          const chain = singleMatch[1];
+          const resNum = parseInt(singleMatch[2], 10);
+          const chainResidues = residueMap.get(chain);
+          if (!chainResidues) {
+            const available = [...residueMap.keys()].sort().join(", ");
+            return `Chain "${chain}" not found in PDB. Available chains: ${available}.`;
+          }
+          if (!chainResidues.has(resNum)) {
+            return `Residue ${resNum} not found in chain "${chain}" of the PDB file.`;
+          }
+        } else if (rangeMatch) {
+          const chainStart = rangeMatch[1];
+          const resStart = parseInt(rangeMatch[2], 10);
+          const chainEnd = rangeMatch[3];
+          const resEnd = parseInt(rangeMatch[4], 10);
+          if (chainStart !== chainEnd) {
+            return `Range "${token}" spans different chains; use single-chain ranges like "A12-A14".`;
+          }
+          const chainResidues = residueMap.get(chainStart);
+          if (!chainResidues) {
+            const available = [...residueMap.keys()].sort().join(", ");
+            return `Chain "${chainStart}" not found in PDB. Available chains: ${available}.`;
+          }
+          if (!chainResidues.has(resStart)) {
+            return `Start residue ${resStart} not found in chain "${chainStart}" of the PDB file.`;
+          }
+          if (!chainResidues.has(resEnd)) {
+            return `End residue ${resEnd} not found in chain "${chainStart}" of the PDB file.`;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /** Drives the [externalSelection] input on the Mol* viewer.  Only updated
+   *  by manual form input — never by viewer-originated selection — so there
+   *  is no circular feedback loop. */
+  programmaticViewerSelection = signal<string>("");
+
+  /** Called when the user manually edits the target_hotspot_residues field.
+   *  Updates the value, auto-derives chains, validates against the PDB, and
+   *  pushes the new selection string to the Mol* viewer. */
+  onHotspotResiduesManualChange(rowId: string, value: unknown): void {
+    const residues = (value as string) ?? "";
+    this.updateRowValueWithValidation(rowId, "target_hotspot_residues", residues);
+    const chains = this.chainsFromResidues(residues);
+    if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
+    this.programmaticViewerSelection.set(residues);
   }
 
   onChainsDetected(rowId: string, chains: string): void {
@@ -235,28 +395,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  and auto-fills the chains field. e.g. "A56,B12" → chains = "A,B".
    */
   onResiduesSelected(rowId: string, residues: string): void {
-    if (residues) {
-      this.updateRowValueWithValidation(
-        rowId,
-        "target_hotspot_residues",
-        residues,
-      );
-      // Derive chains from the leading letter(s) of each residue token
-      const chains = [
-        ...new Set(
-          residues
-            .split(",")
-            .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
-            .filter(Boolean),
-        ),
-      ]
-        .sort()
-        .join(",");
-      if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
-    } else {
-      this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
-      this.updateRowValueWithValidation(rowId, "chains", "");
-    }
+    this.updateRowValueWithValidation(rowId, "target_hotspot_residues", residues);
+    const chains = this.chainsFromResidues(residues);
+    this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
   // Steps marked complete only when user presses Next on that step
@@ -332,6 +473,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (current === 1) {
       this.attemptedStep1.set(true);
       this.validateAllRequiredFields();
+      // Ensure row-level validation (including PDB-based hotspot checks) runs.
+      for (const row of this.schemaLoader.inputRows()) {
+        this.validateRowField(row.id, "target_hotspot_residues");
+        this.validateRowField(row.id, "chains");
+      }
       this.validateForm();
 
       if (!this.isFormValid()) {
@@ -895,6 +1041,18 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     const currentErrors = this.formErrors();
 
     if (validationResult.valid) {
+      // Custom field-level validators (PDB-aware).
+      let customError: string | null = null;
+      if (fieldName === "target_hotspot_residues") {
+        customError = this.validateHotspotResidues(value as string);
+      } else if (fieldName === "chains") {
+        customError = this.validateChains(rowId, value as string);
+      }
+      if (customError) {
+        this.formErrors.set({ ...currentErrors, [errorKey]: customError });
+        this.validateAllRows();
+        return;
+      }
       // Remove error for this specific cell
       const updatedErrors = { ...currentErrors };
       delete updatedErrors[errorKey];

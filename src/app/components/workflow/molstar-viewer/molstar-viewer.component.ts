@@ -17,7 +17,7 @@ import { Viewer } from "molstar/lib/apps/viewer/app";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { StructureSelectionManager } from "molstar/lib/mol-plugin-state/manager/structure/selection";
 import { InteractivityManager } from "molstar/lib/mol-plugin-state/manager/interactivity";
-import { Structure, Unit } from "molstar/lib/mol-model/structure";
+import { StructureElement, Structure, Unit } from "molstar/lib/mol-model/structure";
 import { OrderedSet } from "molstar/lib/mol-data/int";
 
 @Component({
@@ -41,6 +41,17 @@ export class MolstarViewerComponent
   /** Emits total residue count of the loaded structure (use as slider max). */
   @Output() sequenceLengthDetected = new EventEmitter<number>();
 
+  /** Programmatically select residues from outside (e.g. manual form input).
+   *  Accepts the same comma-separated token format the viewer emits:
+   *  "A56,B12" or ranges "A12-A14". Set to "" to clear the selection. */
+  @Input() set externalSelection(value: string) {
+    if (this._externalSelection === value) return;
+    this._externalSelection = value;
+    if (this.status() === "loaded") {
+      this.zone.runOutsideAngular(() => void this.applyExternalSelection(value));
+    }
+  }
+
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
   readonly errorMessage = signal("");
   readonly selectedResidues = signal<string[]>([]);
@@ -49,6 +60,11 @@ export class MolstarViewerComponent
   private selectionSub: { unsubscribe(): void } | null = null;
   private formSubmitAbortCtrl: AbortController | null = null;
   private readonly zone = inject(NgZone);
+  /** Stores the last value received via [externalSelection] binding. */
+  private _externalSelection = "";
+  /** True while a programmatic selection is being applied — suppresses the
+   *  residuesSelected event so it doesn't echo back to the parent. */
+  private _applyingExternalSelection = false;
 
   private static instanceCount = 0;
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
@@ -145,6 +161,10 @@ export class MolstarViewerComponent
       this.showSequencePanel();
       this.status.set("loaded");
       this.emitSequenceLength();
+      // Apply any selection that arrived before or while the structure was loading.
+      if (this._externalSelection) {
+        void this.applyExternalSelection(this._externalSelection);
+      }
     } catch (err) {
       this.errorMessage.set(err instanceof Error ? err.message : "Could not render PDB file.");
       this.status.set("error");
@@ -170,6 +190,8 @@ export class MolstarViewerComponent
     try {
       const selMgr = this.selectionManager;
       this.selectionSub = selMgr.events.changed.subscribe(() => {
+        // Suppress echo-back while we are applying an external selection.
+        if (this._applyingExternalSelection) return;
         const residues = this.readCurrentSelection(selMgr);
         const compressed = this.compressToRanges(residues);
         this.zone.run(() => {
@@ -179,6 +201,94 @@ export class MolstarViewerComponent
       });
     } catch {
       console.warn("Mol* selection hook unavailable; hotspot auto-fill disabled.");
+    }
+  }
+
+  /** Programmatically select the residues described by a comma-separated token
+   *  string (e.g. "A56,B12" or ranges "A12-A14").  Suppresses the outgoing
+   *  residuesSelected event so the parent form is not overwritten. */
+  private async applyExternalSelection(residueString: string): Promise<void> {
+    if (!this.plugin || this.status() !== "loaded") return;
+
+    this._applyingExternalSelection = true;
+    try {
+      const lociSelects = this.plugin.managers.interactivity
+        .lociSelects as InteractivityManager.LociSelectManager;
+      lociSelects.deselectAll();
+
+      if (!residueString.trim()) return;
+
+      // Parse tokens → chain → Set<residueNumber>
+      const targetResidues = new Map<string, Set<number>>();
+      for (const token of residueString.split(",").map((t) => t.trim()).filter(Boolean)) {
+        const range = token.match(/^([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)$/);
+        const single = !range && token.match(/^([A-Za-z]+)(-?\d+)$/);
+        if (range && range[1] === range[3]) {
+          const chain = range[1];
+          const lo = Math.min(parseInt(range[2]), parseInt(range[4]));
+          const hi = Math.max(parseInt(range[2]), parseInt(range[4]));
+          if (!targetResidues.has(chain)) targetResidues.set(chain, new Set());
+          for (let i = lo; i <= hi; i++) targetResidues.get(chain)!.add(i);
+        } else if (single) {
+          const chain = single[1];
+          const resNum = parseInt(single[2]);
+          if (!targetResidues.has(chain)) targetResidues.set(chain, new Set());
+          targetResidues.get(chain)!.add(resNum);
+        }
+      }
+      if (targetResidues.size === 0) return;
+
+      // Walk loaded structures and build StructureElement.Loci for matching atoms.
+      const structures =
+        this.plugin.managers.structure.hierarchy.current?.structures ?? [];
+      for (const s of structures) {
+        const structure = s.cell.obj?.data as Structure | undefined;
+        if (!structure) continue;
+
+        const elementGroups: { unit: Unit; indices: number[] }[] = [];
+
+        for (const unit of structure.units) {
+          if (!Unit.isAtomic(unit)) continue;
+          try {
+            const { atomicHierarchy } = unit.model;
+            const residueIdx = atomicHierarchy.residueAtomSegments.index;
+            const chainIdx = atomicHierarchy.chainAtomSegments.index;
+            const seqIdVal = atomicHierarchy.residues.auth_seq_id.value;
+            const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
+
+            const matchingUnitIndices: number[] = [];
+            // Second arg to forEach is the unit-local index (UnitIndex).
+            OrderedSet.forEach(unit.elements, (elemIdx: number, unitIdx: number) => {
+              const chain = chainIdVal(chainIdx[elemIdx]);
+              const resNum = seqIdVal(residueIdx[elemIdx]);
+              if (targetResidues.get(chain)?.has(resNum)) {
+                matchingUnitIndices.push(unitIdx);
+              }
+            });
+
+            if (matchingUnitIndices.length > 0) {
+              elementGroups.push({ unit, indices: matchingUnitIndices });
+            }
+          } catch { /* skip unit */ }
+        }
+
+        if (elementGroups.length === 0) continue;
+
+        const elements = elementGroups.map(({ unit, indices }) => ({
+          unit,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          indices: OrderedSet.ofSortedArray(new Int32Array(indices.sort((a, b) => a - b)) as any) as any,
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const loci = StructureElement.Loci(structure, elements as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.selectionManager.fromLoci("add", loci as any);
+      }
+    } catch (e) {
+      console.warn("Mol* external selection failed:", e);
+    } finally {
+      // Allow selection events to drain before re-enabling the hook.
+      setTimeout(() => { this._applyingExternalSelection = false; }, 120);
     }
   }
 

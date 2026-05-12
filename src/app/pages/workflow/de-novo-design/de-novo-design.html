@@ -173,6 +173,7 @@
                       <app-molstar-viewer
                         [pdbFile]="localPdbFile()"
                         [disabled]="isPdbUploading()"
+                        [externalSelection]="programmaticViewerSelection()"
                         (filePicked)="onPdbFilePicked($event, row.id)"
                         (residuesSelected)="onResiduesSelected(row.id, $event)"
                         (sequenceLengthDetected)="onSequenceLengthDetected($event)"></app-molstar-viewer>
@@ -199,6 +200,14 @@
                         [disabled]="isPdbUploading()"
                         (rangeChange)="onLengthRangeChange(row.id, $event)"></app-length-range-slider>
                     </div>
+                    } @else if (field.name === 'target_hotspot_residues') {
+                    <app-form-field
+                      [field]="field"
+                      [value]="getRowValue(row.id, field.name)"
+                      [hasError]="hasRowFieldError(row.id, field.name)"
+                      [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                      (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
+                      (fieldBlur)="validateRowField(row.id, field.name)"></app-form-field>
                     } @else {
                     <app-form-field
                       [field]="field"
