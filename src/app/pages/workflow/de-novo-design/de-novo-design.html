@@ -176,6 +176,7 @@
                         [externalSelection]="programmaticViewerSelection()"
                         (filePicked)="onPdbFilePicked($event, row.id)"
                         (residuesSelected)="onResiduesSelected(row.id, $event)"
+                        (structureResiduesDetected)="onStructureResiduesDetected($event)"
                         (sequenceLengthDetected)="onSequenceLengthDetected($event)"></app-molstar-viewer>
                     </div>
                   </div>

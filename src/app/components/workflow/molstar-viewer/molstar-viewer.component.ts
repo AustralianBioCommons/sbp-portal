@@ -17,7 +17,9 @@ import { Viewer } from "molstar/lib/apps/viewer/app";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { StructureSelectionManager } from "molstar/lib/mol-plugin-state/manager/structure/selection";
 import { InteractivityManager } from "molstar/lib/mol-plugin-state/manager/interactivity";
-import { StructureElement, Structure, Unit } from "molstar/lib/mol-model/structure";
+import { StructureSelection, QueryContext, Structure, Unit } from "molstar/lib/mol-model/structure";
+import { MolScriptBuilder as MS } from "molstar/lib/mol-script/language/builder";
+import { compile } from "molstar/lib/mol-script/runtime/query/compiler";
 import { OrderedSet } from "molstar/lib/mol-data/int";
 
 @Component({
@@ -40,6 +42,9 @@ export class MolstarViewerComponent
   @Output() filePicked = new EventEmitter<File>();
   /** Emits total residue count of the loaded structure (use as slider max). */
   @Output() sequenceLengthDetected = new EventEmitter<number>();
+  /** Emits the full chain→residue-number map after a structure loads.
+   *  The parent can use this for validation without re-parsing the PDB file. */
+  @Output() structureResiduesDetected = new EventEmitter<Map<string, Set<number>>>();
 
   /** Programmatically select residues from outside (e.g. manual form input).
    *  Accepts the same comma-separated token format the viewer emits:
@@ -160,7 +165,7 @@ export class MolstarViewerComponent
       await this.applyBallAndStick();
       this.showSequencePanel();
       this.status.set("loaded");
-      this.emitSequenceLength();
+      this.emitStructureInfo();
       // Apply any selection that arrived before or while the structure was loading.
       if (this._externalSelection) {
         void this.applyExternalSelection(this._externalSelection);
@@ -238,56 +243,36 @@ export class MolstarViewerComponent
       }
       if (targetResidues.size === 0) return;
 
-      // Walk loaded structures and build StructureElement.Loci for matching atoms.
+      // Build one MolScript atomGroups expression per chain, then merge.
+      const chainExprs = Array.from(targetResidues.entries()).map(([chain, residues]) =>
+        MS.struct.generator.atomGroups({
+          "chain-test": MS.core.rel.eq([MS.ammp("auth_asym_id"), chain]),
+          "residue-test": MS.core.set.has([
+            MS.set(...Array.from(residues)),
+            MS.ammp("auth_seq_id"),
+          ]),
+        })
+      );
+      const expr =
+        chainExprs.length === 1
+          ? chainExprs[0]
+          : MS.struct.combinator.merge(chainExprs);
+      const query = compile<StructureSelection>(expr);
+
+      // Run the query against every loaded structure and apply the result.
       const structures =
         this.plugin.managers.structure.hierarchy.current?.structures ?? [];
       for (const s of structures) {
         const structure = s.cell.obj?.data as Structure | undefined;
         if (!structure) continue;
-
-        const elementGroups: { unit: Unit; indices: number[] }[] = [];
-
-        for (const unit of structure.units) {
-          if (!Unit.isAtomic(unit)) continue;
-          try {
-            const { atomicHierarchy } = unit.model;
-            const residueIdx = atomicHierarchy.residueAtomSegments.index;
-            const chainIdx = atomicHierarchy.chainAtomSegments.index;
-            const seqIdVal = atomicHierarchy.residues.auth_seq_id.value;
-            const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
-
-            const matchingUnitIndices: number[] = [];
-            // Second arg to forEach is the unit-local index (UnitIndex).
-            OrderedSet.forEach(unit.elements, (elemIdx: number, unitIdx: number) => {
-              const chain = chainIdVal(chainIdx[elemIdx]);
-              const resNum = seqIdVal(residueIdx[elemIdx]);
-              if (targetResidues.get(chain)?.has(resNum)) {
-                matchingUnitIndices.push(unitIdx);
-              }
-            });
-
-            if (matchingUnitIndices.length > 0) {
-              elementGroups.push({ unit, indices: matchingUnitIndices });
-            }
-          } catch { /* skip unit */ }
-        }
-
-        if (elementGroups.length === 0) continue;
-
-        const elements = elementGroups.map(({ unit, indices }) => ({
-          unit,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          indices: OrderedSet.ofSortedArray(new Int32Array(indices.sort((a, b) => a - b)) as any) as any,
-        }));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const loci = StructureElement.Loci(structure, elements as any);
+        const sel = query(new QueryContext(structure));
+        const loci = StructureSelection.toLociWithSourceUnits(sel);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.selectionManager.fromLoci("add", loci as any);
       }
     } catch (e) {
       console.warn("Mol* external selection failed:", e);
     } finally {
-      // Allow selection events to drain before re-enabling the hook.
       setTimeout(() => { this._applyingExternalSelection = false; }, 120);
     }
   }
@@ -370,11 +355,12 @@ export class MolstarViewerComponent
     } catch { /* non-critical — default visual still shows */ }
   }
 
-  /** Count unique residues and emit for any consumers that want a sequence length. */
-  private emitSequenceLength(): void {
+  /** Walk the loaded structure once, then emit the chain→residue map and total
+   *  residue count.  Replaces separate emitSequenceLength + parsePdbResidues. */
+  private emitStructureInfo(): void {
     try {
       const structures = this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
-      const residuesSeen = new Set<string>();
+      const residueMap = new Map<string, Set<number>>();
 
       for (const s of structures) {
         const structure = s.cell.obj?.data as Structure | undefined;
@@ -388,14 +374,21 @@ export class MolstarViewerComponent
             const seqIdVal = atomicHierarchy.residues.auth_seq_id.value;
             const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
             OrderedSet.forEach(unit.elements, (atomIdx) => {
-              residuesSeen.add(`${chainIdVal(chainIdx[atomIdx])}_${seqIdVal(residueIdx[atomIdx])}`);
+              const chain = chainIdVal(chainIdx[atomIdx]);
+              const resNum = seqIdVal(residueIdx[atomIdx]);
+              if (!residueMap.has(chain)) residueMap.set(chain, new Set());
+              residueMap.get(chain)!.add(resNum);
             });
           } catch { /* skip unit */ }
         }
       }
 
-      if (residuesSeen.size > 0) {
-        this.zone.run(() => this.sequenceLengthDetected.emit(residuesSeen.size));
+      if (residueMap.size > 0) {
+        const total = [...residueMap.values()].reduce((n, s) => n + s.size, 0);
+        this.zone.run(() => {
+          this.structureResiduesDetected.emit(residueMap);
+          this.sequenceLengthDetected.emit(total);
+        });
       }
     } catch { /* non-critical */ }
   }

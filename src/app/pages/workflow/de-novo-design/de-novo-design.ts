@@ -209,8 +209,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.uploadedPdbFile.set(null);
     // Use filename as placeholder value so schema required-check passes.
     this.updateRowValueWithValidation(rowId, "starting_pdb", file.name);
-    // Parse PDB residues for manual-entry validation (async, non-blocking).
-    void this.parsePdbResidues(file);
   }
 
   clearLocalPdb(rowId: string): void {
@@ -237,28 +235,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       .join(",");
   }
 
-  /** Parse ATOM/HETATM records from the PDB file to build a chain→residue map
-   *  used for validating manually entered hotspot residues. */
-  private async parsePdbResidues(file: File): Promise<void> {
-    try {
-      const text = await file.text();
-      const residueMap = new Map<string, Set<number>>();
-      for (const line of text.split("\n")) {
-        const recordType = line.substring(0, 6).trim();
-        if (recordType !== "ATOM" && recordType !== "HETATM") continue;
-        if (line.length < 26) continue;
-        const chain = line[21];
-        const resNum = parseInt(line.substring(22, 26).trim(), 10);
-        if (!chain || !chain.trim() || isNaN(resNum)) continue;
-        const key = chain.trim();
-        if (!residueMap.has(key)) residueMap.set(key, new Set());
-        residueMap.get(key)!.add(resNum);
-      }
-      this.pdbResidueMap.set(residueMap.size > 0 ? residueMap : null);
-    } catch {
-      // Non-critical: PDB-based validation is skipped when parsing fails.
-      this.pdbResidueMap.set(null);
-    }
+  /** Receives the chain→residue map emitted by the Mol* viewer after it
+   *  parses the PDB structure — no need to re-parse the file ourselves. */
+  onStructureResiduesDetected(residues: Map<string, Set<number>>): void {
+    this.pdbResidueMap.set(residues.size > 0 ? residues : null);
   }
 
   /** Validate the Chains field value.
