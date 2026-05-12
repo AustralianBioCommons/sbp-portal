@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { ButtonComponent } from "../../components/button/button.component";
+import { THEMES } from "../../cores/config/themes.config";
 
 @Component({
   selector: "app-binder-design",
@@ -43,47 +44,9 @@ export class BinderDesignComponent {
     console.log(`Navigating to resource: ${href}`);
   }
 
-  // Preconfid workflows
-  workflows = [
-    {
-      id: "de-novo-design",
-      label: "De Novo Design",
-      href: "/de-novo-design",
-    },
-    {
-      id: "motif-scaffolding",
-      label: "Motif Scaffolding",
-      href: "/motif-scaffolding",
-      disabled: true,
-    },
-    {
-      id: "partial-diffusion",
-      label: "Partial Diffusion",
-      href: "/partial-diffusion",
-      disabled: true,
-    },
-  ];
-
-  // Tools
-  tools = [
-    {
-      id: "bindcraft",
-      label: "BindCraft",
-      href: "/de-novo-design",
-    },
-    {
-      id: "rfdiffusion",
-      label: "RFdiffusion",
-      href: "/tools/rfdiffusion",
-      disabled: true,
-    },
-    {
-      id: "boltzgen",
-      label: "BoltzGen",
-      href: "/tools/boltzgen",
-      disabled: true,
-    },
-  ];
+  private readonly theme = THEMES.find((t) => t.id === "binder-design")!;
+  workflows = this.theme.workflows;
+  tools = this.theme.tools;
 
   // Community resources
   communityResources = [
