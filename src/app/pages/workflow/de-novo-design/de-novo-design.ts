@@ -317,8 +317,21 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
-  onSequenceLengthDetected(_: number): void {
-    // Slider bound and min/max values stay at schema defaults regardless of PDB length.
+  onSequenceLengthDetected(count: number): void {
+    const rowId = this.schemaLoader.inputRows()[0]?.id;
+    if (!rowId) return;
+    const errorKey = `${rowId}_starting_pdb`;
+    const currentErrors = this.formErrors();
+    if (count < 50) {
+      this.formErrors.set({ ...currentErrors, [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required.` });
+    } else if (count > 300) {
+      this.formErrors.set({ ...currentErrors, [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed.` });
+    } else {
+      const updated = { ...currentErrors };
+      delete updated[errorKey];
+      this.formErrors.set(updated);
+    }
+    this.validateAllRows();
   }
 
   onLengthRangeChange(

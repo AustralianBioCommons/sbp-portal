@@ -162,11 +162,13 @@
                       }
                     </div>
 
-                    @if (hasRowFieldError(row.id, 'starting_pdb') &&
-                    !localPdbFile()) {
-                    <p class="px-4 pt-2 text-sm text-red-600">
-                      {{ getRowFieldError(row.id, 'starting_pdb') }}
-                    </p>
+                    @if (hasRowFieldError(row.id, 'starting_pdb')) {
+                    <div class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+                      <svg class="mt-0.5 h-4 w-4 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                      </svg>
+                      <p class="text-sm text-red-600">{{ getRowFieldError(row.id, 'starting_pdb') }}</p>
+                    </div>
                     }
 
                     <div class="p-4">
@@ -327,7 +329,7 @@
               type="button"
               variant="primary"
               (click)="submitWorkflow()"
-              [disabled]="(auth.isAuthenticated$ | async) === false"
+              [disabled]="!isFormValid() || (auth.isAuthenticated$ | async) === false"
               borderRadius="rounded-[10px]"
               colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed">
               Submit
