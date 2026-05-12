@@ -338,48 +338,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         console.log("Cannot proceed: Input configuration validation failed");
         return;
       }
-
-      // Upload the PDB file to S3 before moving on, if one is pending.
-      const file = this.localPdbFile();
-      const rowId = this.schemaLoader.inputRows()[0]?.id;
-      if (file && rowId && file !== this.uploadedPdbFile()) {
-        this.isPdbUploading.set(true);
-        this.subscription.add(
-          this.pdbUploadService
-            .uploadPdbFile({
-              file,
-              metadata: {
-                fieldName: "starting_pdb",
-                uploadedAt: new Date().toISOString(),
-              },
-            })
-            .subscribe({
-              next: (response) => {
-                const s3Uri =
-                  response.s3Uri ??
-                  response.fileUrl ??
-                  response.fileId ??
-                  response.fileName ??
-                  file.name;
-                // Replace placeholder filename with the real S3 path.
-                this.updateRowValueWithValidation(rowId, "starting_pdb", s3Uri);
-                // Record the uploaded file so Back+Next doesn't re-upload it.
-                this.uploadedPdbFile.set(file);
-                this.isPdbUploading.set(false);
-                this.advanceStep(current);
-              },
-              error: (error) => {
-                this.isPdbUploading.set(false);
-                const msg =
-                  error?.error?.message ?? error?.message ?? "Unknown error";
-                this.showError(
-                  `Failed to upload PDB file: ${msg}. Please try again.`,
-                );
-              },
-            }),
-        );
-        return;
-      }
     }
 
     this.advanceStep(current);
@@ -500,6 +458,52 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const file = this.localPdbFile();
+    const rowId = this.schemaLoader.inputRows()[0]?.id;
+
+    if (file && rowId && file !== this.uploadedPdbFile()) {
+      this.isPdbUploading.set(true);
+      this.workflowSubmission.isSubmitting.set(true);
+      this.subscription.add(
+        this.pdbUploadService
+          .uploadPdbFile({
+            file,
+            metadata: {
+              fieldName: "starting_pdb",
+              uploadedAt: new Date().toISOString(),
+            },
+          })
+          .subscribe({
+            next: (response) => {
+              const s3Uri =
+                response.s3Uri ??
+                response.fileUrl ??
+                response.fileId ??
+                response.fileName ??
+                file.name;
+              this.updateRowValueWithValidation(rowId, "starting_pdb", s3Uri);
+              this.uploadedPdbFile.set(file);
+              this.isPdbUploading.set(false);
+              this.doSubmitWorkflow();
+            },
+            error: (error) => {
+              this.isPdbUploading.set(false);
+              this.workflowSubmission.isSubmitting.set(false);
+              const msg =
+                error?.error?.message ?? error?.message ?? "Unknown error";
+              this.showError(
+                `Failed to upload PDB file: ${msg}. Please try again.`,
+              );
+            },
+          }),
+      );
+      return;
+    }
+
+    this.doSubmitWorkflow();
+  }
+
+  private doSubmitWorkflow(): void {
     const rawFormData = this.getFormData();
     const formData = {
       ...rawFormData,
