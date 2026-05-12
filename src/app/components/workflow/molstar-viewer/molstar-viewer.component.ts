@@ -226,20 +226,10 @@ export class MolstarViewerComponent
       // Parse tokens → chain → Set<residueNumber>
       const targetResidues = new Map<string, Set<number>>();
       for (const token of residueString.split(",").map((t) => t.trim()).filter(Boolean)) {
-        const range = token.match(/^([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)$/);
-        const single = !range && token.match(/^([A-Za-z]+)(-?\d+)$/);
-        if (range && range[1] === range[3]) {
-          const chain = range[1];
-          const lo = Math.min(parseInt(range[2]), parseInt(range[4]));
-          const hi = Math.max(parseInt(range[2]), parseInt(range[4]));
-          if (!targetResidues.has(chain)) targetResidues.set(chain, new Set());
-          for (let i = lo; i <= hi; i++) targetResidues.get(chain)!.add(i);
-        } else if (single) {
-          const chain = single[1];
-          const resNum = parseInt(single[2]);
-          if (!targetResidues.has(chain)) targetResidues.set(chain, new Set());
-          targetResidues.get(chain)!.add(resNum);
-        }
+        const parsed = MolstarViewerComponent.parseResidueToken(token);
+        if (!parsed) continue;
+        if (!targetResidues.has(parsed.chain)) targetResidues.set(parsed.chain, new Set());
+        for (let i = parsed.resStart; i <= parsed.resEnd; i++) targetResidues.get(parsed.chain)!.add(i);
       }
       if (targetResidues.size === 0) return;
 
@@ -450,6 +440,22 @@ export class MolstarViewerComponent
   private cleanupSubscription(): void {
     this.selectionSub?.unsubscribe();
     this.selectionSub = null;
+  }
+
+  /** Parse a residue token ("A56" or same-chain range "A12-A14") into
+   *  { chain, resStart, resEnd }, or null for an unrecognised format. */
+  static parseResidueToken(token: string): { chain: string; resStart: number; resEnd: number } | null {
+    const range = token.match(/^([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)$/);
+    if (range) {
+      if (range[1] !== range[3]) return null;
+      return { chain: range[1], resStart: parseInt(range[2], 10), resEnd: parseInt(range[4], 10) };
+    }
+    const single = token.match(/^([A-Za-z]+)(-?\d+)$/);
+    if (single) {
+      const n = parseInt(single[2], 10);
+      return { chain: single[1], resStart: n, resEnd: n };
+    }
+    return null;
   }
 
   private parseResidueLabel(label: string): { chain: string; seq: number } | null {

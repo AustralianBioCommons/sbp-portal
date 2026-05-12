@@ -241,15 +241,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.pdbResidueMap.set(residues.size > 0 ? residues : null);
   }
 
-  /** Validate the Chains field value.
-   *  Rules:
-   *  1. Each token must be letters only (e.g. "A", "AB").
-   *  2. If a PDB is loaded, each token must be a known chain.
-   *  3. Every chain letter used in target_hotspot_residues must appear here.
-   *  Returns an error string, or null if valid. */
   private validateChains(rowId: string, value: string): string | null {
-    if (!value || !value.trim()) return null;
-
+    if (!value?.trim()) return null;
     const tokens = value.split(",").map((t) => t.trim()).filter(Boolean);
 
     for (const token of tokens) {
@@ -262,13 +255,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (residueMap) {
       for (const token of tokens) {
         if (!residueMap.has(token)) {
-          const available = [...residueMap.keys()].sort().join(", ");
-          return `Chain "${token}" not found in PDB. Available chains: ${available}.`;
+          return `Chain "${token}" not found in PDB. Available: ${[...residueMap.keys()].sort().join(", ")}.`;
         }
       }
     }
 
-    // Every chain letter that appears in hotspot residues must be listed here.
     const hotspot = (this.getRowValue(rowId, "target_hotspot_residues") as string) ?? "";
     if (hotspot.trim()) {
       const chainsSet = new Set(tokens);
@@ -278,63 +269,31 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         }
       }
     }
-
     return null;
   }
 
-  /** Validate hotspot residue tokens against PDB chain/residue data.
-   *  Returns an error string, or null if valid. */
   private validateHotspotResidues(value: string): string | null {
-    if (!value || !value.trim()) return null;
-
-    const tokens = value.split(",").map((t) => t.trim()).filter(Boolean);
+    if (!value?.trim()) return null;
     const residueMap = this.pdbResidueMap();
 
-    for (const token of tokens) {
-      // Range: A12-A14
-      const rangeMatch = token.match(/^([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)$/);
-      // Single: A56 or A-5
-      const singleMatch = !rangeMatch && token.match(/^([A-Za-z]+)(-?\d+)$/);
-
-      if (!rangeMatch && !singleMatch) {
+    for (const token of value.split(",").map((t) => t.trim()).filter(Boolean)) {
+      const parsed = MolstarViewerComponent.parseResidueToken(token);
+      if (!parsed) {
         return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14".`;
       }
+      if (!residueMap) continue;
 
-      if (residueMap) {
-        if (singleMatch) {
-          const chain = singleMatch[1];
-          const resNum = parseInt(singleMatch[2], 10);
-          const chainResidues = residueMap.get(chain);
-          if (!chainResidues) {
-            const available = [...residueMap.keys()].sort().join(", ");
-            return `Chain "${chain}" not found in PDB. Available chains: ${available}.`;
-          }
-          if (!chainResidues.has(resNum)) {
-            return `Residue ${resNum} not found in chain "${chain}" of the PDB file.`;
-          }
-        } else if (rangeMatch) {
-          const chainStart = rangeMatch[1];
-          const resStart = parseInt(rangeMatch[2], 10);
-          const chainEnd = rangeMatch[3];
-          const resEnd = parseInt(rangeMatch[4], 10);
-          if (chainStart !== chainEnd) {
-            return `Range "${token}" spans different chains; use single-chain ranges like "A12-A14".`;
-          }
-          const chainResidues = residueMap.get(chainStart);
-          if (!chainResidues) {
-            const available = [...residueMap.keys()].sort().join(", ");
-            return `Chain "${chainStart}" not found in PDB. Available chains: ${available}.`;
-          }
-          if (!chainResidues.has(resStart)) {
-            return `Start residue ${resStart} not found in chain "${chainStart}" of the PDB file.`;
-          }
-          if (!chainResidues.has(resEnd)) {
-            return `End residue ${resEnd} not found in chain "${chainStart}" of the PDB file.`;
-          }
-        }
+      const chainResidues = residueMap.get(parsed.chain);
+      if (!chainResidues) {
+        return `Chain "${parsed.chain}" not found in PDB. Available: ${[...residueMap.keys()].sort().join(", ")}.`;
+      }
+      if (!chainResidues.has(parsed.resStart)) {
+        return `Residue ${parsed.resStart} not found in chain "${parsed.chain}".`;
+      }
+      if (parsed.resStart !== parsed.resEnd && !chainResidues.has(parsed.resEnd)) {
+        return `End residue ${parsed.resEnd} not found in chain "${parsed.chain}".`;
       }
     }
-
     return null;
   }
 
