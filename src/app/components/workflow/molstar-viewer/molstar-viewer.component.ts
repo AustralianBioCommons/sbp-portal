@@ -1,16 +1,15 @@
 import {
   AfterViewInit,
   Component,
-  EventEmitter,
-  Input,
   NgZone,
-  OnChanges,
   OnDestroy,
-  Output,
-  SimpleChanges,
   ViewEncapsulation,
+  effect,
   inject,
-  signal
+  input,
+  output,
+  signal,
+  untracked,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { Viewer } from "molstar/lib/apps/viewer/app";
@@ -30,32 +29,24 @@ import { OrderedSet } from "molstar/lib/mol-data/int";
   templateUrl: "./molstar-viewer.component.html",
   host: { class: "block" },
 })
-export class MolstarViewerComponent
-  implements AfterViewInit, OnChanges, OnDestroy
-{
-  @Input() pdbFile: File | null = null;
-  /** Emits a comma-separated residue string (e.g. "A42,A43,B11") on each selection change. */
-  @Output() residuesSelected = new EventEmitter<string>();
+export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
+  pdbFile = input<File | null>(null);
   /** Disables the file picker embedded in the idle placeholder. */
-  @Input() disabled = false;
-  /** Emits the chosen File when the user picks one from the idle placeholder. */
-  @Output() filePicked = new EventEmitter<File>();
-  /** Emits total residue count of the loaded structure (use as slider max). */
-  @Output() sequenceLengthDetected = new EventEmitter<number>();
-  /** Emits the full chain→residue-number map after a structure loads.
-   *  The parent can use this for validation without re-parsing the PDB file. */
-  @Output() structureResiduesDetected = new EventEmitter<Map<string, Set<number>>>();
-
+  disabled = input(false);
   /** Programmatically select residues from outside (e.g. manual form input).
    *  Accepts the same comma-separated token format the viewer emits:
    *  "A56,B12" or ranges "A12-A14". Set to "" to clear the selection. */
-  @Input() set externalSelection(value: string) {
-    if (this._externalSelection === value) return;
-    this._externalSelection = value;
-    if (this.status() === "loaded") {
-      this.zone.runOutsideAngular(() => void this.applyExternalSelection(value));
-    }
-  }
+  externalSelection = input("");
+
+  /** Emits a comma-separated residue string (e.g. "A42,A43,B11") on each selection change. */
+  residuesSelected = output<string>();
+  /** Emits the chosen File when the user picks one from the idle placeholder. */
+  filePicked = output<File>();
+  /** Emits total residue count of the loaded structure (use as slider max). */
+  sequenceLengthDetected = output<number>();
+  /** Emits the full chain→residue-number map after a structure loads.
+   *  The parent can use this for validation without re-parsing the PDB file. */
+  structureResiduesDetected = output<Map<string, Set<number>>>();
 
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
   readonly errorMessage = signal("");
@@ -65,14 +56,36 @@ export class MolstarViewerComponent
   private selectionSub: { unsubscribe(): void } | null = null;
   private formSubmitAbortCtrl: AbortController | null = null;
   private readonly zone = inject(NgZone);
-  /** Stores the last value received via [externalSelection] binding. */
-  private _externalSelection = "";
   /** True while a programmatic selection is being applied — suppresses the
    *  residuesSelected event so it doesn't echo back to the parent. */
   private _applyingExternalSelection = false;
+  private _viewInitialized = false;
 
   private static instanceCount = 0;
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
+
+  constructor() {
+    // Replaces ngOnChanges: react to pdbFile changes after view is ready.
+    effect(() => {
+      const file = this.pdbFile();
+      untracked(() => {
+        if (!this._viewInitialized) return;
+        if (file) void this.loadFile(file);
+        else this.clearViewer();
+      });
+    });
+
+    // Replaces the externalSelection setter.
+    effect(() => {
+      const sel = this.externalSelection();
+      untracked(() => {
+        if (!this._viewInitialized) return;
+        if (this.status() === "loaded") {
+          this.zone.runOutsideAngular(() => void this.applyExternalSelection(sel));
+        }
+      });
+    });
+  }
 
   // ── File input (idle placeholder) ────────────────────────────────────────
 
@@ -89,18 +102,9 @@ export class MolstarViewerComponent
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngAfterViewInit(): void {
-    if (this.pdbFile) {
-      void this.loadFile(this.pdbFile);
-    }
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (!changes["pdbFile"] || changes["pdbFile"].isFirstChange()) return;
-    if (this.pdbFile) {
-      void this.loadFile(this.pdbFile);
-    } else {
-      this.clearViewer();
-    }
+    this._viewInitialized = true;
+    const file = this.pdbFile();
+    if (file) void this.loadFile(file);
   }
 
   ngOnDestroy(): void {
@@ -167,8 +171,9 @@ export class MolstarViewerComponent
       this.status.set("loaded");
       this.emitStructureInfo();
       // Apply any selection that arrived before or while the structure was loading.
-      if (this._externalSelection) {
-        void this.applyExternalSelection(this._externalSelection);
+      const pendingSel = this.externalSelection();
+      if (pendingSel) {
+        void this.applyExternalSelection(pendingSel);
       }
     } catch (err) {
       this.errorMessage.set(err instanceof Error ? err.message : "Could not render PDB file.");
