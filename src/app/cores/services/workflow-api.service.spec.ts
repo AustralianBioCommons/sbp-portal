@@ -41,12 +41,10 @@ describe("WorkflowApiService", () => {
     };
     const formData = { tool: "ColabFold", fastaContent: ">entity_1\nMKT" };
 
-    service
-      .launchWorkflow(launch, formData, "dataset-1")
-      .subscribe((response) => {
-        expect(response.runId).toBe("run-1");
-        expect(response.status).toBe("SUBMITTED");
-      });
+    service.launchWorkflow(launch, formData, "dataset-1").subscribe((response) => {
+      expect(response.runId).toBe("run-1");
+      expect(response.status).toBe("SUBMITTED");
+    });
 
     const req = httpMock.expectOne(
       `${environment.apiBaseUrl}/api/workflows/launch`

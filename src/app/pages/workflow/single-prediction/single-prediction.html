@@ -1,13 +1,11 @@
 <section
-  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-size-[100%_auto] bg-top bg-fixed"
->
+  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-size-[100%_auto] bg-top bg-fixed">
   @if (showAlert()) {
   <app-alert
     [type]="'error'"
     [message]="alertMessage()"
     [dismissible]="true"
-    (dismissed)="closeAlert()"
-  ></app-alert>
+    (dismissed)="closeAlert()"></app-alert>
   }
 
   <div class="max-w-7xl px-6 mx-auto py-12">
@@ -23,15 +21,13 @@
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
             class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
-            type="button"
-          >
+            type="button">
             {{ tab.label }}
           </button>
         </li>
         } @empty {
         <li
-          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg"
-        >
+          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg">
           No tabs available
         </li>
         }
@@ -39,8 +35,7 @@
     </nav>
 
     <div
-      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
-    >
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12">
       <div>
         <h1 class="text-3xl font-semibold text-gray-900">Single Prediction</h1>
         <p class="mt-2 text-sm text-gray-600">
@@ -66,38 +61,27 @@
         <app-tool-selection
           [tools]="tools"
           [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"
-        ></app-tool-selection>
+          (toolSelect)="selectTool($event)"></app-tool-selection>
       </div>
 
       <div class="relative">
-        @if ((auth.canExecuteWorkflows$ | async) === false) {
+        @if ((auth.isAuthenticated$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center"
-        >
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center">
           <div class="text-center p-4">
-            <p class="text-base font-semibold text-gray-900 mb-2">
-              Access Restricted
-            </p>
             <p class="text-sm text-gray-600">
-              To use this tool, please log in or register for a BioCommons
-              Access account and add the SBP Workflow Execution bundle to your
-              profile.
+              You must be logged in to configure options and run the workflow.
             </p>
-            @if ((auth.isAuthenticated$ | async) === false) {
             <div class="mt-3 flex justify-center">
               <app-button
                 type="button"
                 variant="primary"
-                widthClass="w-[218px]"
-                colorClasses="h-[47px] text-white bg-[#205A86] hover:bg-[#1a4a6e] justify-center"
+                colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-900"
                 borderRadius="rounded-[10px]"
-                (click)="loginWithReturnUrl()"
-              >
-                Log in or Register
+                (click)="loginWithReturnUrl()">
+                Log in
               </app-button>
             </div>
-            }
           </div>
         </div>
         }
@@ -105,23 +89,20 @@
         <app-step-navigation
           [steps]="steps"
           [currentStep]="currentStep()"
-          [isDisabled]="(auth.canExecuteWorkflows$ | async) === false"
+          [isDisabled]="(auth.isAuthenticated$ | async) === false"
           [isStepInvalid]="isStepInvalid"
           [isStepCompleted]="isStepCompleted"
           [isStepVisited]="isStepVisited"
-          (stepClick)="goToStep($event)"
-        ></app-step-navigation>
+          (stepClick)="goToStep($event)"></app-step-navigation>
 
         @if (currentStep() === 1) {
         <app-step-content
           title="Input Configuration"
-          description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
-        >
+          description="Add one or more entities. Each row requires sequence, copy number, and molecule type.">
           <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
             <label
               for="run-name"
-              class="block text-sm font-medium text-gray-700"
-            >
+              class="block text-sm font-medium text-gray-700">
               Run name
               <span class="ml-1 text-red-500">*</span>
             </label>
@@ -137,8 +118,7 @@
                   ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                   : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
               "
-              class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 transition-colors"
-            />
+              class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 transition-colors" />
             @if (runNameTouched() && !runName().trim()) {
             <p class="mt-1 text-xs text-red-600" role="alert">
               Run name is required.
@@ -151,22 +131,18 @@
             cdkDropList
             cdkDropListOrientation="vertical"
             [cdkDropListData]="entityRows()"
-            (cdkDropListDropped)="dropEntityRow($event)"
-          >
+            (cdkDropListDropped)="dropEntityRow($event)">
             @for (row of entityRows(); track row.id; let i = $index) {
             <div
               class="entity-row rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:bg-slate-50/60"
               cdkDrag
               cdkDragLockAxis="y"
               cdkDragBoundary=".sequence-list"
-              cdkDragPreviewContainer="parent"
-            >
+              cdkDragPreviewContainer="parent">
               <div
-                class="grid gap-3 lg:grid-cols-[44px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
-              >
+                class="grid gap-3 lg:grid-cols-[44px_170px_110px_minmax(0,1fr)_40px] lg:items-start">
                 <div
-                  class="entity-row__handle flex flex-col items-center gap-1 pt-1"
-                >
+                  class="entity-row__handle flex flex-col items-center gap-1 pt-1">
                   <span class="text-[11px] font-semibold text-slate-500"
                     >#{{ i + 1 }}</span
                   >
@@ -174,8 +150,7 @@
                     class="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                     cdkDragHandle
                     title="Drag row"
-                    aria-label="Drag row"
-                  >
+                    aria-label="Drag row">
                     <span class="drag-dots"></span>
                   </div>
                 </div>
@@ -183,8 +158,7 @@
                 <div>
                   <label
                     [for]="'molecule-type-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
-                  >
+                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500">
                     Type
                   </label>
                   <app-listbox-select
@@ -192,15 +166,13 @@
                     [options]="moleculeTypeOptions"
                     [value]="row.moleculeType"
                     (valueChange)="updateRowMoleculeType(row.id, $event)"
-                    (blurred)="touchRowField(row.id, 'moleculeType')"
-                  ></app-listbox-select>
+                    (blurred)="touchRowField(row.id, 'moleculeType')"></app-listbox-select>
                 </div>
 
                 <div>
                   <label
                     [for]="'copy-number-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
-                  >
+                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500">
                     Copies
                   </label>
                   <input
@@ -216,8 +188,7 @@
                         ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                         : 'border-slate-300 focus:ring-blue-500 focus:border-blue-500'
                     "
-                    class="block h-11 w-full rounded-xl border bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-1 transition-colors"
-                  />
+                    class="block h-11 w-full rounded-xl border bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-1 transition-colors" />
                   @if (shouldShowRowFieldError(row, 'copyNumber') &&
                   getRowErrors(i).copyNumber) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
@@ -229,8 +200,7 @@
                 <div class="min-w-0">
                   <label
                     [for]="'sequence-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
-                  >
+                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500">
                     Sequence
                   </label>
                   @if (row.moleculeType === 'ccd') {
@@ -241,8 +211,7 @@
                     [placeholder]="'Select a ligand...'"
                     [invalid]="!!(shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence)"
                     (valueChange)="updateRowSequence(row.id, $event)"
-                    (blurred)="touchRowField(row.id, 'sequence')"
-                  ></app-listbox-select>
+                    (blurred)="touchRowField(row.id, 'sequence')"></app-listbox-select>
                   } @else {
                   <input
                     [id]="'sequence-' + row.id"
@@ -268,8 +237,7 @@
                           : row.moleculeType === 'rna'
                             ? 'AUGCGU'
                             : 'ACDEFGHIKLMNPQRSTVWY'
-                    "
-                  />
+                    " />
                   } @if (shouldShowRowFieldError(row, 'sequence') &&
                   getRowErrors(i).sequence) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
@@ -289,21 +257,18 @@
                     [disabled]="entityRows().length === 1"
                     (click)="removeEntityRow(row.id)"
                     [attr.aria-label]="'Delete entity ' + (i + 1)"
-                    title="Delete row"
-                  >
+                    title="Delete row">
                     <svg
                       class="h-4 w-4"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
-                      aria-hidden="true"
-                    >
+                      aria-hidden="true">
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
                 </div>
@@ -312,8 +277,7 @@
             }
 
             <div
-              class="flex items-center justify-between rounded-lg border border-dashed border-blue-300 bg-blue-50 px-4 py-3"
-            >
+              class="flex items-center justify-between rounded-lg border border-dashed border-blue-300 bg-blue-50 px-4 py-3">
               <p class="text-sm text-blue-900">
                 Add another entity row to define a multicomponent prediction
                 input.
@@ -323,30 +287,26 @@
                 variant="primary"
                 (click)="addEntityRow()"
                 borderRadius="rounded-md"
-                colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700"
-              >
+                colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700">
                 Add Entity
               </app-button>
             </div>
 
             <app-form-status
               [isValid]="isStep1Valid()"
-              [validationSummary]="getFormValidationSummary()"
-            ></app-form-status>
+              [validationSummary]="getFormValidationSummary()"></app-form-status>
           </div>
         </app-step-content>
         } @if (currentStep() === 2) {
         <app-step-content
           title="Tool Settings — {{ selectedToolLabel() }}"
-          description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}."
-        >
+          description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}.">
           <div class="mt-6 space-y-4">
             @if (selectedTool() === 'alphafold2') {
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <label
                 for="alphafold2-random-seed"
-                class="block text-sm font-medium text-gray-700"
-              >
+                class="block text-sm font-medium text-gray-700">
                 alphafold2_random_seed
               </label>
               <input
@@ -362,8 +322,7 @@
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
-                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 transition-colors"
-              />
+                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 transition-colors" />
               @if ((stepTwoTouched() || alphafold2RandomSeedTouched()) &&
               toolSettingErrors().alphafold2RandomSeed) {
               <p class="mt-1 text-xs text-red-600" role="alert">
@@ -376,8 +335,7 @@
                   type="checkbox"
                   class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   [checked]="alphafold2FullDbs()"
-                  (change)="alphafold2FullDbs.set($any($event.target).checked)"
-                />
+                  (change)="alphafold2FullDbs.set($any($event.target).checked)" />
                 <span>alphafold2_full_dbs</span>
               </label>
             </div>
@@ -385,8 +343,7 @@
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <label
                 for="colabfold-num-recycles"
-                class="block text-sm font-medium text-gray-700"
-              >
+                class="block text-sm font-medium text-gray-700">
                 colabfold_num_recycles
               </label>
               <input
@@ -402,8 +359,7 @@
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
-                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 transition-colors"
-              />
+                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 transition-colors" />
               @if ((stepTwoTouched() || colabfoldNumRecyclesTouched()) &&
               toolSettingErrors().colabfoldNumRecycles) {
               <p class="mt-1 text-xs text-red-600" role="alert">
@@ -418,8 +374,7 @@
                   type="checkbox"
                   class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   [checked]="boltzUsePotentials()"
-                  (change)="boltzUsePotentials.set($any($event.target).checked)"
-                />
+                  (change)="boltzUsePotentials.set($any($event.target).checked)" />
                 <span>boltz_use_potentials</span>
               </label>
             </div>
@@ -427,22 +382,19 @@
 
             <app-form-status
               [isValid]="isStep2Valid()"
-              [validationSummary]="{ valid: isStep2Valid(), errorCount: getToolSettingsErrorCount(), rowCount: 1 }"
-            ></app-form-status>
+              [validationSummary]="{ valid: isStep2Valid(), errorCount: getToolSettingsErrorCount(), rowCount: 1 }"></app-form-status>
           </div>
         </app-step-content>
         } @if (currentStep() === 3) {
         <app-step-content
           title="Review & Submit"
-          description="Confirm the entity rows, selected tool, generated FASTA content, and tool-specific settings."
-        >
+          description="Confirm the entity rows, selected tool, generated FASTA content, and tool-specific settings.">
           <app-configuration-summary
             [selectedTool]="selectedToolLabel()"
             [hasParameters]="true"
             [summaryItems]="formSummary()"
             [requiredFieldCount]="entityRows().length * 3 + getToolSettingsSummaryItems().length"
-            [isValid]="isFormValid()"
-          ></app-configuration-summary>
+            [isValid]="isFormValid()"></app-configuration-summary>
         </app-step-content>
         }
 
@@ -451,10 +403,9 @@
             type="button"
             variant="outline"
             (click)="previousStep()"
-            [disabled]="!canGoPrev() || (auth.canExecuteWorkflows$ | async) === false"
+            [disabled]="!canGoPrev() || (auth.isAuthenticated$ | async) === false"
             borderRadius="rounded-[10px]"
-            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
             Previous
           </app-button>
           <div class="flex items-center gap-2">
@@ -463,10 +414,9 @@
               type="button"
               variant="primary"
               (click)="nextStep()"
-              [disabled]="!canGoNext() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="!canGoNext() || (auth.isAuthenticated$ | async) === false"
               borderRadius="rounded-[10px]"
-              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
+              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed">
               Next
             </app-button>
             } @if (currentStep() === steps.length) {
@@ -474,10 +424,9 @@
               type="button"
               variant="primary"
               (click)="submitWorkflow()"
-              [disabled]="!canSubmit() || !isToolAvailable() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="!canSubmit() || !isToolAvailable() || (auth.isAuthenticated$ | async) === false"
               borderRadius="rounded-[10px]"
-              colorClasses="px-4 py-2 text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
+              colorClasses="px-4 py-2 text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed">
               Submit
             </app-button>
             }
@@ -516,5 +465,4 @@
   [confirmText]="'View Jobs'"
   [cancelText]="'New Job'"
   (confirmed)="goToJobs()"
-  (cancelled)="submitNewJob()"
-></app-dialog>
+  (cancelled)="submitNewJob()"></app-dialog>

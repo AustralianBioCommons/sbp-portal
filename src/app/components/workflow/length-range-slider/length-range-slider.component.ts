@@ -81,11 +81,7 @@ export class LengthRangeSliderComponent {
 
   onMinInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const val = this.clamp(
-      Number(input.value),
-      this._min(),
-      this.currentMax() - 1
-    );
+    const val = this.clamp(Number(input.value), this._min(), this.currentMax() - 1);
     this.currentMin.set(val);
     input.value = String(val);
     this.rangeChange.emit({ min: val, max: this.currentMax() });
@@ -93,11 +89,7 @@ export class LengthRangeSliderComponent {
 
   onMaxInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const val = this.clamp(
-      Number(input.value),
-      this.currentMin() + 1,
-      this._max()
-    );
+    const val = this.clamp(Number(input.value), this.currentMin() + 1, this._max());
     this.currentMax.set(val);
     input.value = String(val);
     this.rangeChange.emit({ min: this.currentMin(), max: val });

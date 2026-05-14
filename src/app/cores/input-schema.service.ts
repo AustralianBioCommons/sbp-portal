@@ -236,7 +236,7 @@ export class InputSchemaService {
    * Parse fields from schema
    */
   private static readonly LABEL_OVERRIDES: Record<string, string> = {
-    starting_pdb: "Target PDB",
+    starting_pdb: 'Target PDB',
   };
 
   private parseFields(fields: Record<string, unknown>[]): InputSchemaField[] {

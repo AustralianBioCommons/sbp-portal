@@ -10,7 +10,7 @@ import {
   SimpleChanges,
   ViewEncapsulation,
   inject,
-  signal,
+  signal
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { Viewer } from "molstar/lib/apps/viewer/app";
@@ -125,17 +125,11 @@ export class MolstarViewerComponent
           viewportShowControls: false,
         });
         try {
-          this.plugin?.managers.interactivity.setProps({
-            granularity: "residue",
-          });
-        } catch {
-          /* non-critical */
-        }
+          this.plugin?.managers.interactivity.setProps({ granularity: "residue" });
+        } catch { /* non-critical */ }
         try {
           this.plugin!.selectionMode = true;
-        } catch {
-          /* non-critical */
-        }
+        } catch { /* non-critical */ }
         this.hookSelection();
         this.preventButtonFormSubmit();
       } else {
@@ -145,18 +139,14 @@ export class MolstarViewerComponent
       }
 
       const content = await file.text();
-      await this.viewer.loadStructureFromData(content, "pdb", {
-        dataLabel: file.name,
-      });
+      await this.viewer.loadStructureFromData(content, "pdb", { dataLabel: file.name });
 
       await this.applyBallAndStick();
       this.showSequencePanel();
       this.status.set("loaded");
       this.emitSequenceLength();
     } catch (err) {
-      this.errorMessage.set(
-        err instanceof Error ? err.message : "Could not render PDB file."
-      );
+      this.errorMessage.set(err instanceof Error ? err.message : "Could not render PDB file.");
       this.status.set("error");
     }
   }
@@ -188,9 +178,7 @@ export class MolstarViewerComponent
         });
       });
     } catch {
-      console.warn(
-        "Mol* selection hook unavailable; hotspot auto-fill disabled."
-      );
+      console.warn("Mol* selection hook unavailable; hotspot auto-fill disabled.");
     }
   }
 
@@ -201,9 +189,7 @@ export class MolstarViewerComponent
         const structure = entry.structure;
         if (structure) this.visitStructureUnits(structure, residueAtomIndex);
       }
-    } catch {
-      /* swallow */
-    }
+    } catch { /* swallow */ }
 
     return Array.from(residueAtomIndex.keys()).sort((a, b) => {
       const pa = this.parseResidueLabel(a) ?? { chain: a, seq: 0 };
@@ -217,10 +203,7 @@ export class MolstarViewerComponent
    * Walk a sub-Structure's units collecting chain+seqId residue labels.
    * unit.elements is a SortedArray of GLOBAL atom indices into the model hierarchy.
    */
-  private visitStructureUnits(
-    structure: Structure,
-    out: Map<string, number>
-  ): void {
+  private visitStructureUnits(structure: Structure, out: Map<string, number>): void {
     for (const unit of structure.units) {
       if (!Unit.isAtomic(unit)) continue;
       try {
@@ -231,14 +214,10 @@ export class MolstarViewerComponent
         const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
 
         OrderedSet.forEach(unit.elements, (atomIdx) => {
-          const label = `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(
-            residueIdx[atomIdx]
-          )}`;
+          const label = `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(residueIdx[atomIdx])}`;
           if (!out.has(label)) out.set(label, atomIdx);
         });
-      } catch {
-        /* skip unit on hierarchy mismatch */
-      }
+      } catch { /* skip unit on hierarchy mismatch */ }
     }
   }
 
@@ -252,12 +231,8 @@ export class MolstarViewerComponent
     if (!this.plugin) return;
     try {
       const regionState = this.plugin.layout.state.regionState;
-      this.plugin.layout.setProps({
-        regionState: { ...regionState, top: "full" },
-      });
-    } catch {
-      /* non-critical */
-    }
+      this.plugin.layout.setProps({ regionState: { ...regionState, top: "full" } });
+    } catch { /* non-critical */ }
   }
 
   /**
@@ -266,19 +241,15 @@ export class MolstarViewerComponent
   private async applyBallAndStick(): Promise<void> {
     if (!this.plugin) return;
     try {
-      const { hierarchy, component: componentMgr } =
-        this.plugin.managers.structure;
+      const { hierarchy, component: componentMgr } = this.plugin.managers.structure;
       const reprBuilder = this.plugin.builders.structure.representation;
       const structures = hierarchy.current?.structures ?? [];
 
       for (const s of structures) {
         await componentMgr.removeRepresentations(s.components);
-        const polymer =
-          await this.plugin.builders.structure.tryCreateComponentStatic(
-            s.cell,
-            "polymer",
-            { label: "Polymer" }
-          );
+        const polymer = await this.plugin.builders.structure.tryCreateComponentStatic(
+          s.cell, "polymer", { label: "Polymer" }
+        );
         if (!polymer) continue;
         await reprBuilder.addRepresentation(polymer, { type: "cartoon" });
         await reprBuilder.addRepresentation(polymer, {
@@ -286,16 +257,13 @@ export class MolstarViewerComponent
           typeParams: { sizeFactor: 0.18, sizeAspectRatio: 0.7 },
         });
       }
-    } catch {
-      /* non-critical — default visual still shows */
-    }
+    } catch { /* non-critical — default visual still shows */ }
   }
 
   /** Count unique residues and emit for any consumers that want a sequence length. */
   private emitSequenceLength(): void {
     try {
-      const structures =
-        this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
+      const structures = this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
       const residuesSeen = new Set<string>();
 
       for (const s of structures) {
@@ -310,26 +278,16 @@ export class MolstarViewerComponent
             const seqIdVal = atomicHierarchy.residues.auth_seq_id.value;
             const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
             OrderedSet.forEach(unit.elements, (atomIdx) => {
-              residuesSeen.add(
-                `${chainIdVal(chainIdx[atomIdx])}_${seqIdVal(
-                  residueIdx[atomIdx]
-                )}`
-              );
+              residuesSeen.add(`${chainIdVal(chainIdx[atomIdx])}_${seqIdVal(residueIdx[atomIdx])}`);
             });
-          } catch {
-            /* skip unit */
-          }
+          } catch { /* skip unit */ }
         }
       }
 
       if (residuesSeen.size > 0) {
-        this.zone.run(() =>
-          this.sequenceLengthDetected.emit(residuesSeen.size)
-        );
+        this.zone.run(() => this.sequenceLengthDetected.emit(residuesSeen.size));
       }
-    } catch {
-      /* non-critical */
-    }
+    } catch { /* non-critical */ }
   }
 
   /**
@@ -349,26 +307,18 @@ export class MolstarViewerComponent
     let i = 0;
     while (i < parsed.length) {
       const cur = parsed[i];
-      if (!cur) {
-        result.push(residues[i++]);
-        continue;
-      }
+      if (!cur) { result.push(residues[i++]); continue; }
 
       let j = i + 1;
       while (j < parsed.length) {
         const prev = parsed[j - 1] as Parsed;
         const next = parsed[j];
-        if (!next || next.chain !== cur.chain || next.seq !== prev.seq + 1)
-          break;
+        if (!next || next.chain !== cur.chain || next.seq !== prev.seq + 1) break;
         j++;
       }
 
       const last = parsed[j - 1] as Parsed;
-      result.push(
-        j - i === 1
-          ? cur.label
-          : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`
-      );
+      result.push(j - i === 1 ? cur.label : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`);
       i = j;
     }
     return result;
@@ -382,20 +332,16 @@ export class MolstarViewerComponent
     const container = document.getElementById(this.containerId);
     if (!container) return;
     this.formSubmitAbortCtrl = new AbortController();
-    container.addEventListener(
-      "click",
-      (event) => {
-        const btn = (event.target as Element | null)?.closest?.("button");
-        if (btn && container.contains(btn)) {
-          const t = (btn.getAttribute("type") ?? "").toLowerCase();
-          if (!t || t === "submit") {
-            btn.setAttribute("type", "button");
-            event.preventDefault();
-          }
+    container.addEventListener("click", (event) => {
+      const btn = (event.target as Element | null)?.closest?.("button");
+      if (btn && container.contains(btn)) {
+        const t = (btn.getAttribute("type") ?? "").toLowerCase();
+        if (!t || t === "submit") {
+          btn.setAttribute("type", "button");
+          event.preventDefault();
         }
-      },
-      { capture: true, signal: this.formSubmitAbortCtrl.signal }
-    );
+      }
+    }, { capture: true, signal: this.formSubmitAbortCtrl.signal });
   }
 
   private cleanupSubscription(): void {
@@ -403,9 +349,7 @@ export class MolstarViewerComponent
     this.selectionSub = null;
   }
 
-  private parseResidueLabel(
-    label: string
-  ): { chain: string; seq: number } | null {
+  private parseResidueLabel(label: string): { chain: string; seq: number } | null {
     const m = label.match(/^([A-Za-z]+)(-?\d+)$/);
     return m ? { chain: m[1], seq: parseInt(m[2], 10) } : null;
   }

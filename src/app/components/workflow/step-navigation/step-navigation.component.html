@@ -16,8 +16,7 @@
           (isStepCompleted()(s.id) ? ', completed' : '') +
           (isStepInvalid()(s.id) ? ', has errors' : '')
         "
-        class="flex items-center gap-2 p-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-      >
+        class="flex items-center gap-2 p-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed">
         <!-- Circle icon -->
         <span
           class="inline-flex items-center justify-center w-8 h-8 text-sm font-semibold rounded-full border-2 shrink-0 transition-all"
@@ -54,8 +53,7 @@
             s.id > currentStep() &&
             isStepInvalid()(s.id)
           "
-          [class.text-white]="s.id < currentStep()"
-        >
+          [class.text-white]="s.id < currentStep()">
           @if (isStepInvalid()(s.id) && currentStep() !== s.id && (s.id <
           currentStep() || isStepVisited()(s.id))) { ! } @else if
           (!isStepInvalid()(s.id) && currentStep() !== s.id && (s.id <
@@ -78,8 +76,7 @@
       <div
         class="flex-1 h-0.5 mx-2 transition-colors"
         [class.bg-blue-500]="s.id < currentStep()"
-        [class.bg-gray-200]="s.id >= currentStep()"
-      ></div>
+        [class.bg-gray-200]="s.id >= currentStep()"></div>
       }
     </li>
     } @empty {

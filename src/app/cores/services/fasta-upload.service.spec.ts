@@ -1,7 +1,4 @@
-import {
-  HttpClientTestingModule,
-  HttpTestingController,
-} from "@angular/common/http/testing";
+import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 import { FastaUploadService } from "./fasta-upload.service";
 
@@ -27,9 +24,7 @@ describe("FastaUploadService", () => {
   });
 
   it("should POST the file as FormData to the upload endpoint", () => {
-    const mockFile = new File(["content"], "test.fasta", {
-      type: "text/plain",
-    });
+    const mockFile = new File(["content"], "test.fasta", { type: "text/plain" });
     const mockResponse = {
       message: "FASTA file uploaded successfully",
       success: true,
@@ -45,30 +40,22 @@ describe("FastaUploadService", () => {
       expect(res.s3Uri).toBe("s3://bucket/input/test.fasta");
     });
 
-    const req = httpController.expectOne((r) =>
-      r.url.includes("/fasta/upload")
-    );
+    const req = httpController.expectOne((r) => r.url.includes("/fasta/upload"));
     expect(req.request.method).toBe("POST");
     expect(req.request.body instanceof FormData).toBe(true);
     req.flush(mockResponse);
   });
 
   it("should propagate HTTP errors to the caller", () => {
-    const mockFile = new File(["content"], "test.fasta", {
-      type: "text/plain",
-    });
+    const mockFile = new File(["content"], "test.fasta", { type: "text/plain" });
     let errorCaught = false;
 
     service.uploadFastaFile({ file: mockFile }).subscribe({
       next: () => fail("Expected error"),
-      error: () => {
-        errorCaught = true;
-      },
+      error: () => { errorCaught = true; },
     });
 
-    const req = httpController.expectOne((r) =>
-      r.url.includes("/fasta/upload")
-    );
+    const req = httpController.expectOne((r) => r.url.includes("/fasta/upload"));
     req.flush("S3 error", { status: 502, statusText: "Bad Gateway" });
     expect(errorCaught).toBe(true);
   });

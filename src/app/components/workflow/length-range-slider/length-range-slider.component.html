@@ -41,7 +41,7 @@
     border-radius: 50%;
     background: #3b82f6;
     border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     cursor: pointer;
   }
   input[type="range"]::-moz-range-thumb {
@@ -51,7 +51,7 @@
     border-radius: 50%;
     background: #3b82f6;
     border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     cursor: pointer;
   }
   input[type="range"]:disabled::-webkit-slider-thumb {
@@ -66,40 +66,14 @@
 
 <div class="w-full min-w-0">
   <div class="flex items-center justify-between mb-2">
-    <span class="text-xs text-gray-500"
-      >Min length:
-      <strong class="text-gray-700">{{ currentMin() }}</strong></span
-    >
-    <span class="text-xs text-gray-500"
-      >Max length:
-      <strong class="text-gray-700">{{ currentMax() }}</strong></span
-    >
+    <span class="text-xs text-gray-500">Min length: <strong class="text-gray-700">{{ currentMin() }}</strong></span>
+    <span class="text-xs text-gray-500">Max length: <strong class="text-gray-700">{{ currentMax() }}</strong></span>
   </div>
   <div class="slider-track">
     <div class="slider-track-bar"></div>
-    <div
-      class="slider-fill"
-      [style.margin-left.%]="fillLeft()"
-      [style.margin-right.%]="fillRight()"
-    ></div>
-    <input
-      type="range"
-      aria-label="Minimum length"
-      [min]="_min()"
-      [max]="_max()"
-      [value]="currentMin()"
-      [disabled]="disabled()"
-      (input)="onMinInput($event)"
-    />
-    <input
-      type="range"
-      aria-label="Maximum length"
-      [min]="_min()"
-      [max]="_max()"
-      [value]="currentMax()"
-      [disabled]="disabled()"
-      (input)="onMaxInput($event)"
-    />
+    <div class="slider-fill" [style.margin-left.%]="fillLeft()" [style.margin-right.%]="fillRight()"></div>
+    <input type="range" aria-label="Minimum length" [min]="_min()" [max]="_max()" [value]="currentMin()" [disabled]="disabled()" (input)="onMinInput($event)" />
+    <input type="range" aria-label="Maximum length" [min]="_min()" [max]="_max()" [value]="currentMax()" [disabled]="disabled()" (input)="onMaxInput($event)" />
   </div>
   <div class="flex items-center justify-between mt-1">
     <span class="text-xs text-gray-400">{{ _min() }}</span>

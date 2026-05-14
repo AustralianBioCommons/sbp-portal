@@ -38,7 +38,7 @@ export const CCD_COMPOUNDS: Record<string, string> = {
   CLA: "Chlorophyll A",
   CHL: "Chlorophyll B",
   BCL: "Bacteriochlorophyll A",
-  BCB: "Bacteriochlorophyll B",
+  BCB: "Bacteriochlorophyll B"
 };
 
 function createSequenceValidator(
@@ -88,8 +88,7 @@ export function lookupCcdCompound(code: string): CcdLookupResult {
   if (!/^[A-Z0-9]{1,5}$/.test(normalized)) {
     return {
       valid: false,
-      errorMessage:
-        "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM).",
+      errorMessage: "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM)."
     };
   }
 
@@ -100,7 +99,7 @@ export function lookupCcdCompound(code: string): CcdLookupResult {
 
   return {
     valid: false,
-    errorMessage: `"${normalized}" is not in the supported CCD list.`,
+    errorMessage: `"${normalized}" is not in the supported CCD list.`
   };
 }
 
@@ -116,7 +115,7 @@ export function isValidSmiles(value: string): boolean {
   const stack: string[] = [];
   const pairs: Record<string, string> = {
     ")": "(",
-    "]": "[",
+    "]": "["
   };
 
   for (const char of value) {
@@ -132,3 +131,4 @@ export function isValidSmiles(value: string): boolean {
 
   return stack.length === 0 && /[A-Za-z]/.test(value);
 }
+

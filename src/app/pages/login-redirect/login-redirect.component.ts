@@ -6,8 +6,7 @@ import { AuthService } from "../../cores/auth.service";
   standalone: true,
   template: `
     <div
-      class="flex min-h-screen items-center justify-center bg-white p-8 text-center"
-    >
+      class="flex min-h-screen items-center justify-center bg-white p-8 text-center">
       <div>
         <p class="text-lg font-semibold">
           Redirecting you to the Structural Biology Platform login…

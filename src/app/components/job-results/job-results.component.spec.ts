@@ -18,9 +18,7 @@ type JobResultsPrivateApi = {
   ) => Array<{ label: string; value: string; details: string[]; url?: string }>;
   formatSettingLabel: (key: string) => string;
   formatSettingValue: (value: unknown) => string;
-  formatValidationDetails: (
-    validation: Record<string, unknown> | undefined
-  ) => string[];
+  formatValidationDetails: (validation: Record<string, unknown> | undefined) => string[];
   isPdbSettingKey: (key: string) => boolean;
   extractFilename: (path: string) => string;
 };
@@ -56,7 +54,7 @@ describe("JobResultsComponent", () => {
       "getJobReport",
       "getJobDownloads",
       "getJobSettingParams",
-      "getJobLogs",
+      "getJobLogs"
     ]);
 
     await TestBed.configureTestingModule({
@@ -151,9 +149,7 @@ describe("JobResultsComponent", () => {
   it("should build and render the job report iframe", () => {
     expect(resultsService.getJobReport).toHaveBeenCalledWith(mockJob.id);
     expect(fixture.nativeElement.textContent).toContain("Job name");
-    const iframe = fixture.nativeElement.querySelector(
-      "iframe"
-    ) as HTMLIFrameElement;
+    const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
     expect(iframe).not.toBeNull();
     expect(iframe.title).toContain(mockJob.jobName);
   });
@@ -187,7 +183,7 @@ describe("JobResultsComponent", () => {
 
     expect(component.activeTab()).toBe("results");
     expect(resultsService.getJobReport.calls.mostRecent().args).toEqual([
-      fallbackJob.id,
+      fallbackJob.id
     ]);
     expect(resultsService.getJobSettingParams.calls.mostRecent().args).toEqual([
       fallbackJob.id,
@@ -226,9 +222,7 @@ describe("JobResultsComponent", () => {
 
   it("should clear report state when closed", () => {
     component.reportUrl.set(
-      sanitizer.bypassSecurityTrustResourceUrl(
-        "https://example.test/ready.html"
-      )
+      sanitizer.bypassSecurityTrustResourceUrl("https://example.test/ready.html")
     );
     component.reportError.set("error");
 
@@ -257,9 +251,7 @@ describe("JobResultsComponent", () => {
     component.setActiveTab("logs");
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain(
-      "Loading nextflow/25.10.3"
-    );
+    expect(fixture.nativeElement.textContent).toContain("Loading nextflow/25.10.3");
     expect(fixture.nativeElement.textContent).toContain(
       "Loading requirement: java/jdk-17.0.2"
     );
@@ -301,9 +293,7 @@ describe("JobResultsComponent", () => {
   });
 
   it("should stop loading when the report iframe loads", () => {
-    const iframe = fixture.nativeElement.querySelector(
-      "iframe"
-    ) as HTMLIFrameElement;
+    const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
 
     iframe.dispatchEvent(new Event("load"));
     fixture.detectChanges();
@@ -313,17 +303,13 @@ describe("JobResultsComponent", () => {
   });
 
   it("should handle report iframe loading errors", () => {
-    const iframe = fixture.nativeElement.querySelector(
-      "iframe"
-    ) as HTMLIFrameElement;
+    const iframe = fixture.nativeElement.querySelector("iframe") as HTMLIFrameElement;
 
     iframe.dispatchEvent(new Event("error"));
     fixture.detectChanges();
 
     expect(component.reportError()).toBe("Failed to load report.");
-    expect(fixture.nativeElement.textContent).toContain(
-      "Failed to load report."
-    );
+    expect(fixture.nativeElement.textContent).toContain("Failed to load report.");
   });
 
   it("should handle report fetch errors", () => {
@@ -366,15 +352,9 @@ describe("JobResultsComponent", () => {
     expect(fixture.nativeElement.textContent).toContain("60");
     expect(fixture.nativeElement.textContent).toContain("Max: 500");
     expect(fixture.nativeElement.textContent).not.toContain("Settings Filters");
-    expect(fixture.nativeElement.textContent).not.toContain(
-      "Settings Advanced"
-    );
-    expect(fixture.nativeElement.textContent).not.toContain(
-      "default_filters.json"
-    );
-    expect(fixture.nativeElement.textContent).not.toContain(
-      "default_advanced.json"
-    );
+    expect(fixture.nativeElement.textContent).not.toContain("Settings Advanced");
+    expect(fixture.nativeElement.textContent).not.toContain("default_filters.json");
+    expect(fixture.nativeElement.textContent).not.toContain("default_advanced.json");
     expect(fixture.nativeElement.textContent).not.toContain("fallback_local");
     expect(fixture.nativeElement.textContent).not.toContain("Source");
   });
@@ -519,7 +499,9 @@ describe("JobResultsComponent", () => {
 
     const circular: Record<string, unknown> = {};
     circular["self"] = circular;
-    expect(privateApi.formatSettingValue(circular)).toBe("[object Object]");
+    expect(privateApi.formatSettingValue(circular)).toBe(
+      "[object Object]"
+    );
   });
 
   it("should return empty validation details when no validation is provided", () => {
@@ -553,14 +535,14 @@ describe("JobResultsComponent", () => {
         currentValue: true,
         previousValue: false,
         firstChange: true,
-        isFirstChange: () => true,
+        isFirstChange: () => true
       },
       job: {
         currentValue: mockJob,
         previousValue: null,
         firstChange: true,
-        isFirstChange: () => true,
-      },
+        isFirstChange: () => true
+      }
     });
     fixture.detectChanges();
 
@@ -578,15 +560,15 @@ describe("JobResultsComponent", () => {
             label: "Results CSV",
             key: "results_csv",
             url: "https://cdn.test/results.csv",
-            category: "stat_csv",
+            category: "stat_csv"
           },
           {
             label: "Structure PDB",
             key: "structure_pdb",
             url: "https://cdn.test/struct.pdb",
-            category: "pdb_files",
-          },
-        ],
+            category: "pdb_files"
+          }
+        ]
       })
     );
 
@@ -599,14 +581,14 @@ describe("JobResultsComponent", () => {
         currentValue: true,
         previousValue: false,
         firstChange: true,
-        isFirstChange: () => true,
+        isFirstChange: () => true
       },
       job: {
         currentValue: mockJob,
         previousValue: null,
         firstChange: true,
-        isFirstChange: () => true,
-      },
+        isFirstChange: () => true
+      }
     });
     fixture.detectChanges();
 
@@ -626,9 +608,9 @@ describe("JobResultsComponent", () => {
             label: "Results CSV",
             key: "results_csv",
             url: "/api/results/job-1/downloads/results.csv",
-            category: "stat_csv",
-          },
-        ],
+            category: "stat_csv"
+          }
+        ]
       })
     );
 
@@ -641,14 +623,14 @@ describe("JobResultsComponent", () => {
         currentValue: true,
         previousValue: false,
         firstChange: true,
-        isFirstChange: () => true,
+        isFirstChange: () => true
       },
       job: {
         currentValue: mockJob,
         previousValue: null,
         firstChange: true,
-        isFirstChange: () => true,
-      },
+        isFirstChange: () => true
+      }
     });
     fixture.detectChanges();
 
@@ -671,14 +653,14 @@ describe("JobResultsComponent", () => {
         currentValue: true,
         previousValue: false,
         firstChange: true,
-        isFirstChange: () => true,
+        isFirstChange: () => true
       },
       job: {
         currentValue: mockJob,
         previousValue: null,
         firstChange: true,
-        isFirstChange: () => true,
-      },
+        isFirstChange: () => true
+      }
     });
     fixture.detectChanges();
 
@@ -691,7 +673,7 @@ describe("JobResultsComponent", () => {
     component.filesItems.set([
       { label: "File A", url: "https://cdn.test/a.csv", category: "stat_csv" },
       { label: "File B", url: "https://cdn.test/b.pdb", category: "pdb_files" },
-      { label: "File C", url: "https://cdn.test/c.csv", category: "stat_csv" },
+      { label: "File C", url: "https://cdn.test/c.csv", category: "stat_csv" }
     ]);
 
     const groups = component.getFilesByCategory();
@@ -756,23 +738,17 @@ describe("JobResultsComponent", () => {
 
     it("should extract filename from an HTTP URL", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
-      expect(
-        privateApi.extractFilename("https://api.example.com/files/target.pdb")
-      ).toBe("target.pdb");
+      expect(privateApi.extractFilename("https://api.example.com/files/target.pdb")).toBe("target.pdb");
     });
 
     it("should extract filename from an S3 URI", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
-      expect(
-        privateApi.extractFilename("s3://my-bucket/uploads/2026/target.pdb")
-      ).toBe("target.pdb");
+      expect(privateApi.extractFilename("s3://my-bucket/uploads/2026/target.pdb")).toBe("target.pdb");
     });
 
     it("should extract filename from a plain file path", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
-      expect(privateApi.extractFilename("/data/inputs/target.pdb")).toBe(
-        "target.pdb"
-      );
+      expect(privateApi.extractFilename("/data/inputs/target.pdb")).toBe("target.pdb");
     });
 
     it("should return the value unchanged when there is no path separator", () => {
@@ -794,7 +770,7 @@ describe("JobResultsComponent", () => {
     it("should show only filename and set url for a PDB key with an HTTP value", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       const items = privateApi.normalizeSettings({
-        starting_pdb: "https://api.example.com/uploads/target.pdb",
+        starting_pdb: "https://api.example.com/uploads/target.pdb"
       });
 
       expect(items.length).toBe(1);
@@ -805,7 +781,7 @@ describe("JobResultsComponent", () => {
     it("should show only filename and omit url for a PDB key with an S3 URI", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       const items = privateApi.normalizeSettings({
-        starting_pdb: "s3://my-bucket/uploads/target.pdb",
+        starting_pdb: "s3://my-bucket/uploads/target.pdb"
       });
 
       expect(items.length).toBe(1);
@@ -818,8 +794,8 @@ describe("JobResultsComponent", () => {
       const items = privateApi.normalizeSettings({
         starting_pdb: {
           label: "Starting PDB",
-          value: "https://api.example.com/uploads/target.pdb",
-        },
+          value: "https://api.example.com/uploads/target.pdb"
+        }
       });
 
       expect(items.length).toBe(1);
@@ -832,8 +808,8 @@ describe("JobResultsComponent", () => {
       const items = privateApi.normalizeSettings({
         starting_pdb: {
           label: "Starting PDB",
-          value: "s3://my-bucket/uploads/target.pdb",
-        },
+          value: "s3://my-bucket/uploads/target.pdb"
+        }
       });
 
       expect(items.length).toBe(1);
@@ -844,7 +820,7 @@ describe("JobResultsComponent", () => {
     it("should not set url on non-PDB settings keys", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       const items = privateApi.normalizeSettings({
-        binder_name: "PDL1",
+        binder_name: "PDL1"
       });
 
       expect(items.length).toBe(1);
@@ -857,8 +833,8 @@ describe("JobResultsComponent", () => {
         of({
           runId: mockJob.id,
           settingParams: {
-            starting_pdb: "https://api.example.com/uploads/target.pdb",
-          },
+            starting_pdb: "https://api.example.com/uploads/target.pdb"
+          }
         })
       );
 
@@ -867,25 +843,13 @@ describe("JobResultsComponent", () => {
       component.isOpen = true;
       component.job = mockJob;
       component.ngOnChanges({
-        isOpen: {
-          currentValue: true,
-          previousValue: false,
-          firstChange: true,
-          isFirstChange: () => true,
-        },
-        job: {
-          currentValue: mockJob,
-          previousValue: null,
-          firstChange: true,
-          isFirstChange: () => true,
-        },
+        isOpen: { currentValue: true, previousValue: false, firstChange: true, isFirstChange: () => true },
+        job: { currentValue: mockJob, previousValue: null, firstChange: true, isFirstChange: () => true }
       });
       component.setActiveTab("settings");
       fixture.detectChanges();
 
-      const anchor = fixture.nativeElement.querySelector(
-        "a[download]"
-      ) as HTMLAnchorElement;
+      const anchor = fixture.nativeElement.querySelector("a[download]") as HTMLAnchorElement;
       expect(anchor).not.toBeNull();
       expect(anchor.textContent?.trim()).toBe("target.pdb");
       expect(anchor.href).toContain("api.example.com/uploads/target.pdb");

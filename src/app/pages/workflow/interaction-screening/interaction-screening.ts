@@ -33,7 +33,7 @@ import { DatasetUploadService } from "../../../cores/services/dataset-upload.ser
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
 function fastaValidator(
-  validate: (seq: string) => SequenceValidationResult
+  validate: (seq: string) => SequenceValidationResult,
 ): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const result = validate(control.value ?? "");
@@ -88,12 +88,11 @@ export class InteractionScreeningComponent {
     targetFasta: ["", fastaValidator(validateProteinSequence)],
   });
   private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status))
+    this.form.statusChanges.pipe(startWith(this.form.status)),
   );
-  private formValue: Signal<{ queryFasta: string; targetFasta: string }> =
-    toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())), {
-      initialValue: this.form.getRawValue(),
-    });
+  private formValue = toSignal(
+    this.form.valueChanges.pipe(startWith(this.form.value)),
+  );
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
@@ -127,7 +126,7 @@ export class InteractionScreeningComponent {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
   );
 
   // ─── Steps ───────────────────────────────────────────────────────────────
@@ -224,7 +223,7 @@ export class InteractionScreeningComponent {
         if (!this.isFormValid()) return;
       }
       this.completedSteps.update((arr) =>
-        arr.includes(current) ? arr : [...arr, current]
+        arr.includes(current) ? arr : [...arr, current],
       );
       this.currentStep.update((v) => v + 1);
       this.visitedSteps.update((arr) => {
@@ -238,7 +237,7 @@ export class InteractionScreeningComponent {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
       this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
+        arr.includes(step) ? arr : [...arr, step],
       );
     }
   }
@@ -315,7 +314,7 @@ export class InteractionScreeningComponent {
         if (!datasetId) {
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            "Dataset upload succeeded but no dataset ID was returned."
+            "Dataset upload succeeded but no dataset ID was returned.",
           );
           return;
         }
@@ -326,15 +325,15 @@ export class InteractionScreeningComponent {
           (error) => {
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              `Workflow launch failed: ${error.message || "Unknown error"}`
+              `Workflow launch failed: ${error.message || "Unknown error"}`,
             );
-          }
+          },
         );
       },
       error: (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(
-          `Failed to upload dataset: ${error.message || "Unknown error"}`
+          `Failed to upload dataset: ${error.message || "Unknown error"}`,
         );
       },
     });

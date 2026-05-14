@@ -52,10 +52,7 @@ describe("JobsService", () => {
     );
     expect(req.request.method).toBe("GET");
     expect(req.request.params.get("search")).toBe("binder");
-    expect(req.request.params.getAll("status")).toEqual([
-      "Completed",
-      "Failed",
-    ]);
+    expect(req.request.params.getAll("status")).toEqual(["Completed", "Failed"]);
     expect(req.request.params.get("limit")).toBe("25");
     expect(req.request.params.get("offset")).toBe("50");
     req.flush({ jobs: [], total: 0, limit: 25, offset: 50 });
@@ -83,9 +80,7 @@ describe("JobsService", () => {
   it("should delete a job by encoded id", () => {
     service.deleteJob("job/1").subscribe();
 
-    const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/jobs/job%2F1`
-    );
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/api/jobs/job%2F1`);
     expect(req.request.method).toBe("DELETE");
     req.flush({
       runId: "job/1",
@@ -105,4 +100,5 @@ describe("JobsService", () => {
     expect(req.request.body).toEqual({ runIds: ["job-1", "job-2"] });
     req.flush({ deleted: ["job-1", "job-2"], failed: {} });
   });
+
 });

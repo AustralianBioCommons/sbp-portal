@@ -4,7 +4,7 @@ import {
   isValidSmiles,
   validateDnaSequence,
   validateProteinSequence,
-  validateRnaSequence,
+  validateRnaSequence
 } from "./fasta.utils";
 
 describe("fasta.utils", () => {
@@ -16,7 +16,7 @@ describe("fasta.utils", () => {
     it("rejects empty protein input", () => {
       expect(validateProteinSequence(" \n\t ")).toEqual({
         valid: false,
-        errorMessage: "Protein sequence is required.",
+        errorMessage: "Protein sequence is required."
       });
     });
 
@@ -24,7 +24,7 @@ describe("fasta.utils", () => {
       expect(validateProteinSequence("ATG123")).toEqual({
         valid: false,
         errorMessage:
-          "Protein sequence must contain only the 20 canonical amino acid letters.",
+          "Protein sequence must contain only the 20 canonical amino acid letters."
       });
     });
   });
@@ -37,7 +37,7 @@ describe("fasta.utils", () => {
     it("rejects empty DNA input", () => {
       expect(validateDnaSequence("")).toEqual({
         valid: false,
-        errorMessage: "DNA sequence is required.",
+        errorMessage: "DNA sequence is required."
       });
     });
 
@@ -45,7 +45,7 @@ describe("fasta.utils", () => {
       expect(validateDnaSequence("AUGC")).toEqual({
         valid: false,
         errorMessage:
-          "DNA sequence must use valid DNA characters only (A, T, G, C).",
+          "DNA sequence must use valid DNA characters only (A, T, G, C)."
       });
     });
   });
@@ -58,7 +58,7 @@ describe("fasta.utils", () => {
     it("rejects empty RNA input", () => {
       expect(validateRnaSequence("")).toEqual({
         valid: false,
-        errorMessage: "RNA sequence is required.",
+        errorMessage: "RNA sequence is required."
       });
     });
 
@@ -66,7 +66,7 @@ describe("fasta.utils", () => {
       expect(validateRnaSequence("ATGC")).toEqual({
         valid: false,
         errorMessage:
-          "RNA sequence must use valid RNA characters only (A, U, G, C).",
+          "RNA sequence must use valid RNA characters only (A, U, G, C)."
       });
     });
   });
@@ -75,21 +75,21 @@ describe("fasta.utils", () => {
     it("returns the compound name for a known code", () => {
       expect(lookupCcdCompound("ATP")).toEqual({
         valid: true,
-        name: "Adenosine triphosphate",
+        name: "Adenosine triphosphate"
       });
     });
 
     it("normalizes the code to uppercase before lookup", () => {
       expect(lookupCcdCompound("atp")).toEqual({
         valid: true,
-        name: "Adenosine triphosphate",
+        name: "Adenosine triphosphate"
       });
     });
 
     it("returns an error for an unsupported code", () => {
       expect(lookupCcdCompound("XYZ")).toEqual({
         valid: false,
-        errorMessage: '"XYZ" is not in the supported CCD list.',
+        errorMessage: "\"XYZ\" is not in the supported CCD list."
       });
     });
 
@@ -97,7 +97,7 @@ describe("fasta.utils", () => {
       Object.entries(CCD_COMPOUNDS).forEach(([code, name]) => {
         expect(lookupCcdCompound(code)).withContext(code).toEqual({
           valid: true,
-          name,
+          name
         });
       });
     });
@@ -105,8 +105,7 @@ describe("fasta.utils", () => {
     it("rejects invalid CCD formats", () => {
       expect(lookupCcdCompound("AT!")).toEqual({
         valid: false,
-        errorMessage:
-          "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM).",
+        errorMessage: "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM)."
       });
     });
 
@@ -117,7 +116,7 @@ describe("fasta.utils", () => {
     it("trims whitespace before lookup", () => {
       expect(lookupCcdCompound("  HEM  ")).toEqual({
         valid: true,
-        name: "Heme",
+        name: "Heme"
       });
     });
   });

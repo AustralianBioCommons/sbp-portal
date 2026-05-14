@@ -47,13 +47,13 @@ export interface NavItem {
         style({ transform: "translateY(-10px)", opacity: 0 }),
         animate(
           "250ms ease-out",
-          style({ transform: "translateY(0)", opacity: 1 })
+          style({ transform: "translateY(0)", opacity: 1 }),
         ),
       ]),
       transition(":leave", [
         animate(
           "200ms ease-in",
-          style({ transform: "translateY(-10px)", opacity: 0 })
+          style({ transform: "translateY(-10px)", opacity: 0 }),
         ),
       ]),
     ]),
@@ -156,7 +156,7 @@ export class Navbar {
             route = route.firstChild;
           }
           return route;
-        })
+        }),
       )
       .subscribe(() => {
         this.updateRouteState();
@@ -196,7 +196,7 @@ export class Navbar {
       "Navigate to:",
       path,
       queryParams ? "with params:" : "",
-      queryParams || ""
+      queryParams || "",
     );
 
     if (queryParams) {

@@ -55,8 +55,7 @@ export interface SummaryItem {
               rel="noopener noreferrer"
               download
               class="text-sm text-blue-700 underline hover:text-blue-900 sm:w-2/3 break-all"
-              >{{ item.value }}</a
-            >
+            >{{ item.value }}</a>
             } @else {
             <span class="text-sm text-gray-600 sm:w-2/3 break-words">{{
               item.value

@@ -1,9 +1,4 @@
-import {
-  ComponentFixture,
-  fakeAsync,
-  TestBed,
-  tick,
-} from "@angular/core/testing";
+import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { DomSanitizer } from "@angular/platform-browser";
 import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
@@ -86,11 +81,7 @@ describe("JobsComponent", () => {
 
     sanitizer = TestBed.inject(DomSanitizer);
     mockResultsService.getJobReport.and.returnValue(
-      of(
-        sanitizer.bypassSecurityTrustResourceUrl(
-          "https://example.test/report.html"
-        )
-      )
+      of(sanitizer.bypassSecurityTrustResourceUrl("https://example.test/report.html"))
     );
     mockResultsService.getJobDownloads.and.returnValue(
       of({ runId: mockJob.id, downloads: [] })
@@ -272,12 +263,7 @@ describe("JobsComponent", () => {
   it("should fall back to submittedAt order when both scores are null during score sort", () => {
     component.jobs.set([
       { ...mockJob, id: "a", score: null, submittedAt: "2026-03-12T11:00:00Z" },
-      {
-        ...secondJob,
-        id: "b",
-        score: null,
-        submittedAt: "2026-03-12T10:00:00Z",
-      },
+      { ...secondJob, id: "b", score: null, submittedAt: "2026-03-12T10:00:00Z" },
       { ...mockJob, id: "c", score: 0.8, submittedAt: "2026-03-12T09:00:00Z" },
     ]);
 
@@ -306,20 +292,14 @@ describe("JobsComponent", () => {
   });
 
   it("should return status classes and helpers", () => {
-    expect(component.getStatusClass("Completed")).toBe(
-      "bg-green-100 text-green-800"
-    );
+    expect(component.getStatusClass("Completed")).toBe("bg-green-100 text-green-800");
     expect(component.getStatusClass("In progress")).toBe("text-gray-700");
     expect(component.getStatusClass("In queue")).toBe(
       "bg-white text-black border border-black"
     );
     expect(component.getStatusClass("Failed")).toBe("bg-red-600 text-white");
-    expect(component.getStatusClass("Stopped")).toBe(
-      "bg-yellow-100 text-red-700"
-    );
-    expect(component.getStatusClass("Unknown")).toBe(
-      "bg-gray-100 text-gray-800"
-    );
+    expect(component.getStatusClass("Stopped")).toBe("bg-yellow-100 text-red-700");
+    expect(component.getStatusClass("Unknown")).toBe("bg-gray-100 text-gray-800");
     expect(component.isInProgress("In progress")).toBeTrue();
     expect(component.isCancelable("In progress")).toBeTrue();
     expect(component.isCancelable("In queue")).toBeTrue();
@@ -373,9 +353,9 @@ describe("JobsComponent", () => {
 
   it("should clean up viewport listeners on destroy", () => {
     const cleanupSpy = jasmine.createSpy("cleanup");
-    (
-      component as unknown as { viewportListeners: Array<() => void> }
-    ).viewportListeners = [cleanupSpy];
+    (component as unknown as { viewportListeners: Array<() => void> }).viewportListeners = [
+      cleanupSpy,
+    ];
 
     component.ngOnDestroy();
 
@@ -406,20 +386,10 @@ describe("JobsComponent", () => {
     component.toggleActionMenu(mockJob.id, trigger);
     fixture.detectChanges();
 
-    const menuComponent = fixture.debugElement.query(
-      By.directive(JobsActionMenuComponent)
-    ).componentInstance as JobsActionMenuComponent;
-    spyOn(
-      menuComponent.menuContainer.nativeElement,
-      "getBoundingClientRect"
-    ).and.returnValue({
-      width: 208,
-      height: 140,
-      top: 0,
-      left: 0,
-      right: 208,
-      bottom: 140,
-    } as DOMRect);
+    const menuComponent = fixture.debugElement.query(By.directive(JobsActionMenuComponent)).componentInstance as JobsActionMenuComponent;
+    spyOn(menuComponent.menuContainer.nativeElement, "getBoundingClientRect").and.returnValue(
+      { width: 208, height: 140, top: 0, left: 0, right: 208, bottom: 140 } as DOMRect
+    );
 
     tick(0);
 
@@ -443,20 +413,10 @@ describe("JobsComponent", () => {
     component.toggleActionMenu(mockJob.id, trigger);
     fixture.detectChanges();
 
-    const menuComponent = fixture.debugElement.query(
-      By.directive(JobsActionMenuComponent)
-    ).componentInstance as JobsActionMenuComponent;
-    spyOn(
-      menuComponent.menuContainer.nativeElement,
-      "getBoundingClientRect"
-    ).and.returnValue({
-      width: 208,
-      height: 140,
-      top: 0,
-      left: 0,
-      right: 208,
-      bottom: 140,
-    } as DOMRect);
+    const menuComponent = fixture.debugElement.query(By.directive(JobsActionMenuComponent)).componentInstance as JobsActionMenuComponent;
+    spyOn(menuComponent.menuContainer.nativeElement, "getBoundingClientRect").and.returnValue(
+      { width: 208, height: 140, top: 0, left: 0, right: 208, bottom: 140 } as DOMRect
+    );
 
     tick(0);
 
@@ -479,20 +439,10 @@ describe("JobsComponent", () => {
     component.toggleActionMenu(mockJob.id, trigger);
     fixture.detectChanges();
 
-    const menuComponent = fixture.debugElement.query(
-      By.directive(JobsActionMenuComponent)
-    ).componentInstance as JobsActionMenuComponent;
-    spyOn(
-      menuComponent.menuContainer.nativeElement,
-      "getBoundingClientRect"
-    ).and.returnValue({
-      width: 208,
-      height: 140,
-      top: 0,
-      left: 0,
-      right: 208,
-      bottom: 140,
-    } as DOMRect);
+    const menuComponent = fixture.debugElement.query(By.directive(JobsActionMenuComponent)).componentInstance as JobsActionMenuComponent;
+    spyOn(menuComponent.menuContainer.nativeElement, "getBoundingClientRect").and.returnValue(
+      { width: 208, height: 140, top: 0, left: 0, right: 208, bottom: 140 } as DOMRect
+    );
 
     tick(0);
 
@@ -601,10 +551,7 @@ describe("JobsComponent", () => {
   });
 
   it("should clear selection and close the delete dialog when no jobs are selected", () => {
-    const closeDeleteDialogSpy = spyOn(
-      component,
-      "closeDeleteDialog"
-    ).and.callThrough();
+    const closeDeleteDialogSpy = spyOn(component, "closeDeleteDialog").and.callThrough();
 
     component.confirmDelete();
 
@@ -615,10 +562,7 @@ describe("JobsComponent", () => {
 
   it("should confirm delete and reload jobs", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-    const closeDeleteDialogSpy = spyOn(
-      component,
-      "closeDeleteDialog"
-    ).and.callThrough();
+    const closeDeleteDialogSpy = spyOn(component, "closeDeleteDialog").and.callThrough();
     component.selectedJobs.set([mockJob.id, secondJob.id]);
     mockJobsService.bulkDeleteJobs.and.returnValue(
       of({ deleted: [mockJob.id], failed: {} })

@@ -57,31 +57,17 @@ describe("FormFieldComponent", () => {
   // ── Display label ───────────────────────────────────────────────────────────
 
   it("should format Pdb as PDB in display label", () => {
-    component.field = {
-      name: "starting_pdb",
-      label: "Starting Pdb",
-      type: "string",
-      required: true,
-    };
+    component.field = { name: "starting_pdb", label: "Starting Pdb", type: "string", required: true };
     expect(component.getDisplayFieldLabel()).toBe("Starting PDB");
   });
 
   it("should fall back to field name when label is missing", () => {
-    component.field = {
-      name: "starting Pdb",
-      type: "string",
-      required: false,
-    } as InputSchemaField;
+    component.field = { name: "starting Pdb", type: "string", required: false } as InputSchemaField;
     expect(component.getDisplayFieldLabel()).toBe("starting PDB");
   });
 
   it("should leave label unchanged when no Pdb token exists", () => {
-    component.field = {
-      name: "starting_structure",
-      label: "Starting Structure",
-      type: "string",
-      required: true,
-    };
+    component.field = { name: "starting_structure", label: "Starting Structure", type: "string", required: true };
     expect(component.getDisplayFieldLabel()).toBe("Starting Structure");
   });
 
@@ -158,9 +144,7 @@ describe("FormFieldComponent", () => {
   it("should emit fileSelected with the File and valueChange with filename for a valid PDB", () => {
     spyOn(component.valueChange, "emit");
     spyOn(component.fileSelected, "emit");
-    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", {
-      type: "chemical/x-pdb",
-    });
+    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", { type: "chemical/x-pdb" });
     const event = { target: { files: [file] } } as unknown as Event;
 
     component.onFileChange(event);
@@ -172,9 +156,7 @@ describe("FormFieldComponent", () => {
   });
 
   it("should not show a success alert after picking a valid PDB (no upload yet)", () => {
-    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", {
-      type: "chemical/x-pdb",
-    });
+    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", { type: "chemical/x-pdb" });
     const event = { target: { files: [file] } } as unknown as Event;
 
     component.onFileChange(event);
@@ -186,12 +168,8 @@ describe("FormFieldComponent", () => {
 
   it("should show an error alert and emit null when validation throws", () => {
     spyOn(component.valueChange, "emit");
-    spyOn(component["pdbUploadService"], "validatePdbFile").and.throwError(
-      "Unexpected"
-    );
-    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", {
-      type: "chemical/x-pdb",
-    });
+    spyOn(component["pdbUploadService"], "validatePdbFile").and.throwError("Unexpected");
+    const file = new File(["ATOM   1  N   ALA A   1"], "structure.pdb", { type: "chemical/x-pdb" });
     const event = { target: { files: [file] } } as unknown as Event;
 
     component.onFileChange(event);
@@ -216,47 +194,24 @@ describe("FormFieldComponent", () => {
   // ── Field type helpers (state assertions) ───────────────────────────────────
 
   it("should handle number field type", () => {
-    component.field = {
-      name: "n",
-      label: "N",
-      type: "number",
-      required: true,
-      validation: { min: 0, max: 100 },
-    };
+    component.field = { name: "n", label: "N", type: "number", required: true, validation: { min: 0, max: 100 } };
     expect(component.field.type).toBe("number");
   });
 
   it("should handle boolean field type", () => {
-    component.field = {
-      name: "b",
-      label: "B",
-      type: "boolean",
-      required: false,
-    };
+    component.field = { name: "b", label: "B", type: "boolean", required: false };
     expect(component.field.type).toBe("boolean");
   });
 
   it("should handle select field with string options", () => {
-    component.field = {
-      name: "s",
-      label: "S",
-      type: "string",
-      required: true,
-      options: ["a", "b", "c"],
-    };
+    component.field = { name: "s", label: "S", type: "string", required: true, options: ["a", "b", "c"] };
     expect(component.field.options?.length).toBe(3);
   });
 
   it("should handle select field with object options", () => {
     component.field = {
-      name: "s",
-      label: "S",
-      type: "string",
-      required: true,
-      options: [
-        { value: "v1", label: "L1" },
-        { value: "v2", label: "L2" },
-      ],
+      name: "s", label: "S", type: "string", required: true,
+      options: [{ value: "v1", label: "L1" }, { value: "v2", label: "L2" }],
     };
     expect(component.field.options?.length).toBe(2);
   });
@@ -274,23 +229,12 @@ describe("FormFieldComponent", () => {
   });
 
   it("should handle field with description", () => {
-    component.field = {
-      name: "t",
-      label: "T",
-      type: "string",
-      description: "desc",
-      required: true,
-    };
+    component.field = { name: "t", label: "T", type: "string", description: "desc", required: true };
     expect(component.field.description).toBe("desc");
   });
 
   it("should handle optional field", () => {
-    component.field = {
-      name: "o",
-      label: "O",
-      type: "string",
-      required: false,
-    };
+    component.field = { name: "o", label: "O", type: "string", required: false };
     expect(component.field.required).toBe(false);
   });
 });

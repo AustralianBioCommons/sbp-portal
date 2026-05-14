@@ -39,10 +39,7 @@ export class WorkflowSubmissionService {
     onError?: (error: Error) => void
   ): void {
     // Generate a random run name with timestamp and random string
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, "-")
-      .slice(0, -5);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     const randomStr = Math.random().toString(36).substring(2, 8);
     const randomRunName = `run-${timestamp}-${randomStr}`;
 
@@ -78,32 +75,32 @@ export class WorkflowSubmissionService {
     this.workflowApiService
       .launchWorkflow(launch, formData, normalizedDatasetId)
       .subscribe({
-        next: (response) => {
-          console.log("Workflow launched successfully:", response);
-          // Hide loading state
-          this.isSubmitting.set(false);
-          // Show success dialog instead of alert
-          this.successDialogData.set({
-            runId: response.runId,
-            status: response.status,
-          });
-          this.showSuccessDialog.set(true);
-        },
-        error: (error) => {
-          console.error("Error launching workflow:", error);
-          // Hide loading state
-          this.isSubmitting.set(false);
+      next: (response) => {
+        console.log("Workflow launched successfully:", response);
+        // Hide loading state
+        this.isSubmitting.set(false);
+        // Show success dialog instead of alert
+        this.successDialogData.set({
+          runId: response.runId,
+          status: response.status,
+        });
+        this.showSuccessDialog.set(true);
+      },
+      error: (error) => {
+        console.error("Error launching workflow:", error);
+        // Hide loading state
+        this.isSubmitting.set(false);
 
-          // Call custom error handler if provided
-          if (onError) {
-            onError(error);
-          } else {
-            // Default error handling
-            alert(
-              `Failed to launch workflow: ${error.message || "Unknown error"}`
-            );
-          }
-        },
+        // Call custom error handler if provided
+        if (onError) {
+          onError(error);
+        } else {
+          // Default error handling
+          alert(
+            `Failed to launch workflow: ${error.message || "Unknown error"}`
+          );
+        }
+      },
       });
   }
 

@@ -71,15 +71,15 @@ describe("SinglePredictionComponent", () => {
   beforeEach(async () => {
     datasetUploadService = jasmine.createSpyObj<DatasetUploadService>(
       "DatasetUploadService",
-      ["uploadDataset"]
+      ["uploadDataset"],
     );
     datasetUploadService.uploadDataset.and.returnValue(
-      of(MOCK_DATASET_RESPONSE)
+      of(MOCK_DATASET_RESPONSE),
     );
 
     fastaUploadService = jasmine.createSpyObj<FastaUploadService>(
       "FastaUploadService",
-      ["uploadFastaFile"]
+      ["uploadFastaFile"],
     );
     fastaUploadService.uploadFastaFile.and.returnValue(of(MOCK_FASTA_RESPONSE));
 
@@ -116,7 +116,7 @@ describe("SinglePredictionComponent", () => {
 
   function fillValidProteinRow(
     sequence = "ACDEFGHIK",
-    copyNumber = "1"
+    copyNumber = "1",
   ): number {
     const rowId = component.entityRows()[0].id;
     component.runName.set("test-run");
@@ -305,7 +305,7 @@ describe("SinglePredictionComponent", () => {
 
     component.touchRowField(rowId, "copyNumber");
     expect(component.shouldShowRowToolError(component.entityRows()[0])).toBe(
-      true
+      true,
     );
   });
 
@@ -327,7 +327,7 @@ describe("SinglePredictionComponent", () => {
     expect(isValidSmiles("C?")).toBe(false);
     expect(isValidSmiles("12345")).toBe(false);
     expect(
-      component["validateSequenceByMoleculeType"]("ABC", "other" as never)
+      component["validateSequenceByMoleculeType"]("ABC", "other" as never),
     ).toEqual({
       valid: false,
       errorMessage: "Sequence format is invalid.",
@@ -419,7 +419,7 @@ describe("SinglePredictionComponent", () => {
     component.updateAlphafold2RandomSeed("-1");
     expect(component.isStep2Valid()).toBe(false);
     expect(component.toolSettingErrors().alphafold2RandomSeed).toContain(
-      "greater than or equal to 0"
+      "greater than or equal to 0",
     );
 
     component.updateAlphafold2RandomSeed("7");
@@ -517,13 +517,13 @@ describe("SinglePredictionComponent", () => {
           fasta: MOCK_FASTA_RESPONSE.s3Uri,
         },
         datasetName: jasmine.stringMatching(
-          /^single_prediction-samplesheet-\d+$/
+          /^single_prediction-samplesheet-\d+$/,
         ),
         datasetDescription: "Single prediction samplesheet",
-      })
+      }),
     );
     expect(
-      workflowSubmissionService.submitWorkflowWithDataset
+      workflowSubmissionService.submitWorkflowWithDataset,
     ).toHaveBeenCalled();
 
     const payload =
@@ -531,7 +531,7 @@ describe("SinglePredictionComponent", () => {
         .args[0];
     expect(payload["runName"]).toBe("test-run");
     expect(payload["seqeraRunName"]).toMatch(
-      /^test-run-\d{8}-\d{6}-[a-z0-9]{4}$/
+      /^test-run-\d{8}-\d{6}-[a-z0-9]{4}$/,
     );
     expect(payload["mode"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
@@ -568,7 +568,7 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow();
     component.isToolAvailable.set(true);
     fastaUploadService.uploadFastaFile.and.returnValue(
-      throwError(() => new Error("fasta upload failed"))
+      throwError(() => new Error("fasta upload failed")),
     );
 
     component.submitWorkflow();
@@ -582,7 +582,7 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow();
     component.isToolAvailable.set(true);
     datasetUploadService.uploadDataset.and.returnValue(
-      of(noDatasetIdResponse())
+      of(noDatasetIdResponse()),
     );
 
     component.submitWorkflow();
@@ -595,7 +595,7 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow();
     component.isToolAvailable.set(true);
     datasetUploadService.uploadDataset.and.returnValue(
-      throwError(() => new Error("upload failed"))
+      throwError(() => new Error("upload failed")),
     );
 
     component.submitWorkflow();
