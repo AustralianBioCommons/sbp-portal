@@ -7,11 +7,9 @@
 This repository contains the code for the Structural Biology Platform (SBP) web portal, which provides a user interface for accessing and managing structural biology resources.
 
 
-## Development
+## Frontend (Angular 20 + Tailwind)
 
-This repository now contains a minimal Angular (Angular 20 + Tailwind) application scaffold at the repository root. 
-
-To run it locally:
+This repository now contains a minimal Angular application scaffold at the repository root. To run it locally:
 
 1. Install Node.js (recommended: use nvm) so `node`, `npm`, and `npx` are available.
 2. Install dependencies:
@@ -34,10 +32,3 @@ npm test
 Notes:
 - Tailwind and PostCSS are configured via `tailwind.config.cjs` and `postcss.config.cjs`.
 - If you scaffolded with a different version of Angular CLI locally, some generated files may differ; these files are a minimal starting point created without running the Angular CLI in this environment.
-
-### Lint
-
-To run and fix lint locally:
-```bash
-npx prettier --write <directory-path-to-fix-linting>
-```
