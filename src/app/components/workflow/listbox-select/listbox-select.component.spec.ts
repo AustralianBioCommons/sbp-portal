@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import {
   ListboxSelectComponent,
-  ListboxSelectOption
+  ListboxSelectOption,
 } from "./listbox-select.component";
 
 describe("ListboxSelectComponent", () => {
@@ -12,12 +12,12 @@ describe("ListboxSelectComponent", () => {
   const options: ListboxSelectOption[] = [
     { value: "protein", label: "Protein" },
     { value: "dna", label: "DNA" },
-    { value: "rna", label: "RNA" }
+    { value: "rna", label: "RNA" },
   ];
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ListboxSelectComponent]
+      imports: [ListboxSelectComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ListboxSelectComponent);
@@ -80,7 +80,9 @@ describe("ListboxSelectComponent", () => {
     component.isOpen = true;
     fixture.detectChanges();
 
-    const optionButtons = fixture.debugElement.queryAll(By.css('[role="option"]'));
+    const optionButtons = fixture.debugElement.queryAll(
+      By.css('[role="option"]')
+    );
     optionButtons[1].nativeElement.click();
 
     expect(component.valueChange.emit).toHaveBeenCalledWith("dna");
@@ -93,12 +95,14 @@ describe("ListboxSelectComponent", () => {
     component.isOpen = true;
     fixture.detectChanges();
 
-    const wrapper = fixture.debugElement.query(By.css("div.relative")).nativeElement as HTMLElement;
-    const trigger = fixture.debugElement.query(By.css("button")).nativeElement as HTMLButtonElement;
+    const wrapper = fixture.debugElement.query(By.css("div.relative"))
+      .nativeElement as HTMLElement;
+    const trigger = fixture.debugElement.query(By.css("button"))
+      .nativeElement as HTMLButtonElement;
 
     component.handleFocusOut({
       currentTarget: wrapper,
-      relatedTarget: trigger
+      relatedTarget: trigger,
     } as unknown as FocusEvent);
 
     expect(component.blurred.emit).not.toHaveBeenCalled();
@@ -111,7 +115,7 @@ describe("ListboxSelectComponent", () => {
 
     component.handleFocusOut({
       currentTarget: document.createElement("div"),
-      relatedTarget: null
+      relatedTarget: null,
     } as unknown as FocusEvent);
 
     expect(component.blurred.emit).toHaveBeenCalled();

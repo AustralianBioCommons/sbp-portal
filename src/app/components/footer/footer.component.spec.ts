@@ -54,7 +54,7 @@ describe("FooterSectionsComponent", () => {
   describe("template integration", () => {
     it("should render all logo links", () => {
       const logoElements = fixture.debugElement.queryAll(
-        By.css('img[alt*="logo"]'),
+        By.css('img[alt*="logo"]')
       );
       expect(logoElements.length).toBeGreaterThan(0);
     });
