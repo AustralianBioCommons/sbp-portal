@@ -571,7 +571,8 @@ describe("AuthService", () => {
           done();
         }
       });
-      idTokenClaimsSubject.next(null);
+      // BehaviorSubject already emits the initial null → false on subscribe (results[0]).
+      // Only push the two value changes that complete the sequence.
       idTokenClaimsSubject.next({ [ROLES_CLAIM]: [WORKFLOW_ROLE] });
       idTokenClaimsSubject.next({ [ROLES_CLAIM]: ["biocommons/group/other"] });
     });
