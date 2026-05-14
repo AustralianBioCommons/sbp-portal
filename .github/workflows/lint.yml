@@ -3,9 +3,9 @@ name: Code Style/Lint
 
 on:
   push:
-    branches: ["main", "test"]
+    branches: ["main"]
   pull_request:
-    branches: ["main", "test"]
+    branches: ["main"]
 
 jobs:
   build:
