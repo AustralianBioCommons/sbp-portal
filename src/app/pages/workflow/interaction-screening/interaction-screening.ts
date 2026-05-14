@@ -90,8 +90,8 @@ export class InteractionScreeningComponent {
   private formStatus = toSignal(
     this.form.statusChanges.pipe(startWith(this.form.status))
   );
-  private formValue = toSignal(
-    this.form.valueChanges.pipe(startWith(this.form.value))
+  private formValue: Signal<{ queryFasta?: string; targetFasta?: string } | undefined> = toSignal(
+    this.form.valueChanges.pipe(startWith(this.form.getRawValue()))
   );
   // Alert state
   showAlert = signal(false);
