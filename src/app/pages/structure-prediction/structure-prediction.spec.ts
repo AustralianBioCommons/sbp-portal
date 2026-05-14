@@ -36,7 +36,7 @@ describe("StructurePredictionComponent", () => {
       id: "interaction-screening",
       label: "Interaction Screening",
       href: "/interaction-screening",
-      disabled: false
+      disabled: false,
     });
   });
 

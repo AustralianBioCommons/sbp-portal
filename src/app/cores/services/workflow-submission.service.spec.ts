@@ -125,7 +125,11 @@ describe("WorkflowSubmissionService", () => {
       throwError(() => new Error("launch failed"))
     );
 
-    service.submitWorkflowWithDataset({ tool: "Boltz" }, "dataset-789", onError);
+    service.submitWorkflowWithDataset(
+      { tool: "Boltz" },
+      "dataset-789",
+      onError
+    );
 
     expect(onError).toHaveBeenCalledWith(jasmine.any(Error));
     expect(service.isSubmitting()).toBeFalse();

@@ -85,7 +85,9 @@ describe("ResultsService", () => {
   });
 
   it("should return a trusted resource URL for the report", () => {
-    const trustedUrl = service.getSafeReportResourceUrl("/api/results/job-1/report");
+    const trustedUrl = service.getSafeReportResourceUrl(
+      "/api/results/job-1/report"
+    );
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
       new URL("/api/results/job-1/report", apiBase).href
@@ -140,7 +142,9 @@ describe("ResultsService", () => {
     );
 
     expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, trustedUrl)).toBe(
-      `${new URL("/reports/latest/index.html", apiBase).href}?token=test-token#summary`
+      `${
+        new URL("/reports/latest/index.html", apiBase).href
+      }?token=test-token#summary`
     );
   });
 
@@ -232,9 +236,9 @@ describe("ResultsService", () => {
           label: "Results CSV",
           key: "results_csv",
           url: "/files/results.csv",
-          category: "stat_csv"
-        }
-      ]
+          category: "stat_csv",
+        },
+      ],
     });
   });
 
@@ -264,8 +268,8 @@ describe("ResultsService", () => {
         label: "Report",
         key: "report",
         url: "/api/results/job%2F1/report?token=t",
-        category: "report"
-      }
+        category: "report",
+      },
     });
 
     expect(
@@ -286,8 +290,8 @@ describe("ResultsService", () => {
         label: "Report",
         key: "report",
         url: "https://cdn.example.test/report.html",
-        category: "report"
-      }
+        category: "report",
+      },
     });
 
     expect(
@@ -308,8 +312,8 @@ describe("ResultsService", () => {
         label: "Report",
         key: "report",
         url: "javascript:alert(1)",
-        category: "report"
-      }
+        category: "report",
+      },
     });
 
     expect(
@@ -330,8 +334,8 @@ describe("ResultsService", () => {
         label: "Report",
         key: "report",
         url: "http::///bad",
-        category: "report"
-      }
+        category: "report",
+      },
     });
 
     expect(

@@ -13,44 +13,91 @@
 
 <div class="space-y-2">
   <div class="flex items-center justify-between">
-    <h4 class="text-sm font-medium text-gray-700">
-      Target Structure Preview
-    </h4>
+    <h4 class="text-sm font-medium text-gray-700">Target Structure Preview</h4>
     @if (status() === 'loaded') {
     <label
       class="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
-      [ngClass]="{ 'cursor-pointer': !disabled, 'opacity-50 pointer-events-none': disabled }"
+      [ngClass]="{
+        'cursor-pointer': !disabled,
+        'opacity-50 pointer-events-none': disabled
+      }"
     >
-      <svg class="h-3.5 w-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      <svg
+        class="h-3.5 w-3.5 text-gray-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+        />
       </svg>
       Upload new structure
-      <input type="file" class="sr-only" accept=".pdb" [disabled]="disabled" (change)="onFileInputChange($event)" />
+      <input
+        type="file"
+        class="sr-only"
+        accept=".pdb"
+        [disabled]="disabled"
+        (change)="onFileInputChange($event)"
+      />
     </label>
     }
   </div>
 
   <!-- Idle placeholder -->
   @if (status() === 'idle') {
-  <div class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center">
-    <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-        d="M20 7l-8-4-8 4m16 0v10l-8 4m0-10L4 7m8 10V11" />
+  <div
+    class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-16 text-center"
+  >
+    <svg
+      class="h-10 w-10 text-gray-300"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M20 7l-8-4-8 4m16 0v10l-8 4m0-10L4 7m8 10V11"
+      />
     </svg>
     <p class="text-sm text-gray-400">
-      Load a <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file to preview the structure here
+      Load a
+      <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file to
+      preview the structure here
     </p>
     <label
       class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm"
-      [ngClass]="{ 'cursor-pointer': !disabled, 'opacity-50 pointer-events-none': disabled }"
+      [ngClass]="{
+        'cursor-pointer': !disabled,
+        'opacity-50 pointer-events-none': disabled
+      }"
     >
-      <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      <svg
+        class="h-4 w-4 text-gray-500"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+        />
       </svg>
       Choose .pdb file
-      <input type="file" class="sr-only" accept=".pdb" [disabled]="disabled" (change)="onFileInputChange($event)" />
+      <input
+        type="file"
+        class="sr-only"
+        accept=".pdb"
+        [disabled]="disabled"
+        (change)="onFileInputChange($event)"
+      />
     </label>
   </div>
   }
@@ -58,9 +105,25 @@
   <!-- Loading state -->
   @if (status() === 'loading') {
   <div class="flex items-center gap-2 text-sm text-gray-500 py-2">
-    <svg class="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    <svg
+      class="animate-spin h-4 w-4 text-blue-600"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      ></path>
     </svg>
     Loading structure…
   </div>
@@ -68,11 +131,19 @@
 
   <!-- Error state -->
   @if (status() === 'error') {
-  <div class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3">
-    <svg class="mt-0.5 h-4 w-4 shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd"
+  <div
+    class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3"
+  >
+    <svg
+      class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fill-rule="evenodd"
         d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-        clip-rule="evenodd" />
+        clip-rule="evenodd"
+      />
     </svg>
     <p class="text-sm text-red-700">{{ errorMessage() }}</p>
   </div>
@@ -82,7 +153,9 @@
   <div
     [id]="containerId"
     class="relative w-full h-[360px] min-h-[360px] overflow-hidden border border-gray-200 rounded-lg bg-[#1e1e2e]"
-    [class.hidden]="status() === 'idle' || status() === 'loading' || status() === 'error'"
+    [class.hidden]="
+      status() === 'idle' || status() === 'loading' || status() === 'error'
+    "
   ></div>
 
   <!-- Selection bar -->
@@ -90,8 +163,14 @@
   <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm">
     <p class="font-medium text-blue-800">Hotspot residue selection</p>
     @if (selectedResidues().length > 0) {
-    <p class="mt-1 text-blue-700 font-mono break-all">{{ selectedResidues().join(",") }}</p>
-    <button type="button" class="mt-2 text-xs text-blue-600 underline hover:text-blue-800" (click)="clearSelection()">
+    <p class="mt-1 text-blue-700 font-mono break-all">
+      {{ selectedResidues().join(",") }}
+    </p>
+    <button
+      type="button"
+      class="mt-2 text-xs text-blue-600 underline hover:text-blue-800"
+      (click)="clearSelection()"
+    >
       Clear selection
     </button>
     } @else {

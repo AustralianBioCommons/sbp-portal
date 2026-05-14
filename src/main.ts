@@ -22,15 +22,15 @@ bootstrapApplication(AppComponent, {
       { path: "themes", component: Home },
       {
         path: "de-novo-design",
-        component: DeNovoDesignComponent
+        component: DeNovoDesignComponent,
       },
       {
         path: "interaction-screening",
-        component: InteractionScreeningComponent
+        component: InteractionScreeningComponent,
       },
       {
         path: "single-structure-prediction",
-        component: SinglePredictionComponent
+        component: SinglePredictionComponent,
       },
       {
         path: "jobs",

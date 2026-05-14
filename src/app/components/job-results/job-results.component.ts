@@ -24,14 +24,19 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 import { environment } from "../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
-type JobSettingItem = { label: string; value: string; details: string[]; url?: string };
+type JobSettingItem = {
+  label: string;
+  value: string;
+  details: string[];
+  url?: string;
+};
 
 @Component({
   selector: "app-job-results",
   standalone: true,
   imports: [CommonModule, NgIconComponent, LoadingComponent],
   templateUrl: "./job-results.component.html",
-  providers: [provideIcons({ heroArrowDownTray })]
+  providers: [provideIcons({ heroArrowDownTray })],
 })
 export class JobResultsComponent implements OnChanges {
   private resultsService = inject(ResultsService);
@@ -63,7 +68,7 @@ export class JobResultsComponent implements OnChanges {
     { id: "files", label: "Files" },
     { id: "settings", label: "Settings" },
     { id: "logs", label: "Logs" },
-    { id: "citations", label: "Citations" }
+    { id: "citations", label: "Citations" },
   ];
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -94,8 +99,8 @@ export class JobResultsComponent implements OnChanges {
       { label: "Status", value: job.status },
       {
         label: "Score",
-        value: job.score === null ? "N/A" : job.score.toFixed(3)
-      }
+        value: job.score === null ? "N/A" : job.score.toFixed(3),
+      },
     ];
   }
 
@@ -103,50 +108,63 @@ export class JobResultsComponent implements OnChanges {
     return [
       `${job.jobName.replace(/\s+/g, "_").toLowerCase()}_summary.json`,
       `${job.id}_metadata.txt`,
-      `${job.id}_results_archive.zip`
+      `${job.id}_results_archive.zip`,
     ];
   }
 
   getCitations(job: JobListItem): string[] {
     return [
       `${job.workflowType || "Workflow"} methods and generated outputs.`,
-      "SBP Portal platform and supporting infrastructure."
+      "SBP Portal platform and supporting infrastructure.",
     ];
   }
 
   formatCategoryName(category: string): string {
     // List of known file extensions and abbreviations that should be uppercase
-    const uppercaseWords = new Set(['pdb', 'csv', 'json', 'xml', 'html', 'pdf', 'zip', 'txt', 'tsv']);
-    
+    const uppercaseWords = new Set([
+      "pdb",
+      "csv",
+      "json",
+      "xml",
+      "html",
+      "pdf",
+      "zip",
+      "txt",
+      "tsv",
+    ]);
+
     // Replace underscores with spaces
-    const withSpaces = category.replace(/_/g, ' ');
-    
+    const withSpaces = category.replace(/_/g, " ");
+
     // Split into words and format each
-    const words = withSpaces.split(' ');
-    const formatted = words.map(word => {
+    const words = withSpaces.split(" ");
+    const formatted = words.map((word) => {
       const lower = word.toLowerCase();
       if (uppercaseWords.has(lower)) {
         return word.toUpperCase();
       }
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     });
-    
-    return formatted.join(' ');
+
+    return formatted.join(" ");
   }
 
-  getFilesByCategory(): Array<{ category: string; files: Array<{ label: string; url: string }> }> {
+  getFilesByCategory(): Array<{
+    category: string;
+    files: Array<{ label: string; url: string }>;
+  }> {
     const grouped = new Map<string, Array<{ label: string; url: string }>>();
-    
-    this.filesItems().forEach(file => {
+
+    this.filesItems().forEach((file) => {
       if (!grouped.has(file.category)) {
         grouped.set(file.category, []);
       }
       grouped.get(file.category)!.push({ label: file.label, url: file.url });
     });
-    
+
     return Array.from(grouped.entries()).map(([category, files]) => ({
       category: this.formatCategoryName(category),
-      files
+      files,
     }));
   }
 
@@ -248,7 +266,7 @@ export class JobResultsComponent implements OnChanges {
           response.downloads.map((download) => ({
             label: download.label,
             url: this.normalizeDownloadUrl(download.url),
-            category: download.category
+            category: download.category,
           }))
         );
         this.filesLoading.set(false);
@@ -334,13 +352,13 @@ export class JobResultsComponent implements OnChanges {
         ([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key)
       )
       .map(([key, value]) => ({
-        ...this.normalizeSettingItem(key, value)
+        ...this.normalizeSettingItem(key, value),
       }));
   }
 
   private static readonly HIDDEN_SETTING_KEYS = new Set([
     "settings_filters",
-    "settings_advanced"
+    "settings_advanced",
   ]);
 
   private shouldHideSettingKey(key: string): boolean {
@@ -369,7 +387,7 @@ export class JobResultsComponent implements OnChanges {
         label: value.label || this.formatSettingLabel(key),
         value: isPdb ? this.extractFilename(rawValue) : rawValue,
         details,
-        ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {})
+        ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {}),
       };
     }
 
@@ -379,7 +397,7 @@ export class JobResultsComponent implements OnChanges {
       label: this.formatSettingLabel(key),
       value: isPdb ? this.extractFilename(rawValue) : rawValue,
       details: [],
-      ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {})
+      ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {}),
     };
   }
 
