@@ -19,7 +19,6 @@ export class StructurePredictionComponent {
       return;
     }
 
-    console.log(`Navigating to workflow: ${workflowId}`);
     this.router.navigate([`/${workflowId}`]);
   }
 
@@ -29,7 +28,6 @@ export class StructurePredictionComponent {
       return;
     }
 
-    console.log(`Navigating to tool: ${toolId}`);
     this.router.navigateByUrl(tool.href);
   }
 

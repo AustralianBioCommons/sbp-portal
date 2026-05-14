@@ -300,12 +300,6 @@ export class InteractionScreeningComponent {
       tool: this.selectedToolLabel(),
     };
 
-    console.log("Starting interaction screening submission…", {
-      tool: payload["tool"],
-      hasSequences: Array.isArray(sequences)
-        ? sequences.length > 0
-        : !!sequences,
-    });
     this.workflowSubmission.isSubmitting.set(true);
 
     this.datasetUploadService.uploadDataset({ formData: payload }).subscribe({

@@ -20,7 +20,6 @@ export class BinderDesignComponent {
       return;
     }
 
-    console.log(`Navigating to workflow: ${workflowId}`);
     this.router.navigate([`/${workflowId}`]);
   }
 
@@ -30,18 +29,12 @@ export class BinderDesignComponent {
       return;
     }
 
-    console.log(`Navigating to tool: ${toolId}`);
-
     if (toolId === "bindcraft") {
       this.router.navigate(["/de-novo-design"]);
       return;
     }
 
     this.router.navigate(["/tools", toolId]);
-  }
-
-  navigateToResource(href: string) {
-    console.log(`Navigating to resource: ${href}`);
   }
 
   private readonly theme = THEMES.find((t) => t.id === "binder-design")!;

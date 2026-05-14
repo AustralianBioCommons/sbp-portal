@@ -204,20 +204,11 @@ describe("BinderDesignComponent", () => {
   });
 
   describe("navigation methods", () => {
-    beforeEach(() => {
-      spyOn(console, "log");
-    });
-
     describe("navigateToWorkflow", () => {
       it("should navigate to the specified workflow", () => {
-        const workflowId = "de-novo-design";
+        component.navigateToWorkflow("de-novo-design");
 
-        component.navigateToWorkflow(workflowId);
-
-        expect(mockRouter.navigate).toHaveBeenCalledWith([`/${workflowId}`]);
-        expect(console.log).toHaveBeenCalledWith(
-          `Navigating to workflow: ${workflowId}`
-        );
+        expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
       });
 
       it("should handle navigation to each workflow", () => {
@@ -241,14 +232,9 @@ describe("BinderDesignComponent", () => {
 
     describe("navigateToTool", () => {
       it("should navigate to the specified tool", () => {
-        const toolId = "bindcraft";
-
-        component.navigateToTool(toolId);
+        component.navigateToTool("bindcraft");
 
         expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
-        expect(console.log).toHaveBeenCalledWith(
-          `Navigating to tool: ${toolId}`
-        );
       });
 
       it("should handle navigation to each tool", () => {
@@ -280,31 +266,6 @@ describe("BinderDesignComponent", () => {
           "/tools",
           "rfdiffusion",
         ]);
-      });
-    });
-
-    describe("navigateToResource", () => {
-      it("should log navigation to resource", () => {
-        const href = "/docs";
-
-        component.navigateToResource(href);
-
-        expect(console.log).toHaveBeenCalledWith(
-          `Navigating to resource: ${href}`
-        );
-      });
-
-      it("should handle navigation to each resource", () => {
-        const hrefs = ["/docs", "/forum", "/best-practices", "/publications"];
-
-        hrefs.forEach((href) => {
-          component.navigateToResource(href);
-          expect(console.log).toHaveBeenCalledWith(
-            `Navigating to resource: ${href}`
-          );
-        });
-
-        expect(console.log).toHaveBeenCalledTimes(hrefs.length);
       });
     });
   });
