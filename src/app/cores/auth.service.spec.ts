@@ -580,7 +580,11 @@ describe("AuthService", () => {
 
     it("should emit true when roles array includes the workflow role alongside others", (done) => {
       mockAuth0Service.getAccessTokenSilently.and.returnValue(
-        of(mockAccessToken({ [ROLES_CLAIM]: ["biocommons/group/other", WORKFLOW_ROLE] }))
+        of(
+          mockAccessToken({
+            [ROLES_CLAIM]: ["biocommons/group/other", WORKFLOW_ROLE],
+          })
+        )
       );
       isAuthenticatedSubject.next(true);
       flushSync();
@@ -616,8 +620,8 @@ describe("AuthService", () => {
         }
       });
       // isAuthenticatedSubject starts false → results[0] = false on subscribe
-      isAuthenticatedSubject.next(true);  // fetches token with role → results[1] = true
-      flushSync();                        // clear the sync HTTP request
+      isAuthenticatedSubject.next(true); // fetches token with role → results[1] = true
+      flushSync(); // clear the sync HTTP request
       isAuthenticatedSubject.next(false); // unauthenticated → results[2] = false
     });
   });
