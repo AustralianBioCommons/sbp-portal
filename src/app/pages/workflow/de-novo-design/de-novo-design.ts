@@ -92,7 +92,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
-    "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/schema_input.json";
+    "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/schema_input.json";
 
   // Form data and validation
   formData = signal<Record<string, unknown>>({});
@@ -507,9 +507,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
         // Add default URLs for settings fields
         defaultValues.settings_filters =
-          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_filters.json";
+          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_filters.json";
         defaultValues.settings_advanced =
-          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_4stage_multimer.json";
+          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_4stage_multimer.json";
 
         this.initializeFormData(defaultValues);
 
