@@ -6,7 +6,7 @@ import {
   OnDestroy,
   OnInit,
   signal,
-  ViewChild
+  ViewChild,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { JobResultsComponent } from "../../components/job-results/job-results.component";
@@ -15,7 +15,7 @@ import { LoadingComponent } from "../../components/loading/loading.component";
 import {
   JobListItem,
   JobListQueryParams,
-  JobsService
+  JobsService,
 } from "../../cores/services/jobs.service";
 import { EMPTY } from "rxjs";
 import { catchError } from "rxjs/operators";
@@ -24,8 +24,14 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 @Component({
   selector: "app-jobs",
   standalone: true,
-  imports: [CommonModule, FormsModule, JobsActionMenuComponent, JobResultsComponent, LoadingComponent],
-  templateUrl: "./jobs.html"
+  imports: [
+    CommonModule,
+    FormsModule,
+    JobsActionMenuComponent,
+    JobResultsComponent,
+    LoadingComponent,
+  ],
+  templateUrl: "./jobs.html",
 })
 export class JobsComponent implements OnInit, OnDestroy {
   private jobsService = inject(JobsService);
@@ -82,7 +88,7 @@ export class JobsComponent implements OnInit, OnDestroy {
 
     const params: JobListQueryParams = {
       limit: this.pageSize(),
-      offset: (this.currentPage() - 1) * this.pageSize()
+      offset: (this.currentPage() - 1) * this.pageSize(),
     };
 
     if (this.searchQuery()) {
@@ -111,7 +117,7 @@ export class JobsComponent implements OnInit, OnDestroy {
           return {
             ...job,
             finalDesignCount:
-              rawJob.finalDesignCount ?? rawJob.final_design_count ?? null
+              rawJob.finalDesignCount ?? rawJob.final_design_count ?? null,
           };
         });
         this.jobs.set(this.sortJobs(normalizedJobs));
@@ -218,7 +224,8 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   toggleScoreSort(): void {
     const current = this.scoreSortDirection();
-    const next = current === "none" ? "desc" : current === "desc" ? "asc" : "none";
+    const next =
+      current === "none" ? "desc" : current === "desc" ? "asc" : "none";
     this.scoreSortDirection.set(next);
     this.jobs.set(this.sortJobs(this.jobs()));
   }
@@ -301,7 +308,7 @@ export class JobsComponent implements OnInit, OnDestroy {
   private setActionLoading(jobId: string, loading: boolean): void {
     this.actionLoading.update((current) => ({
       ...current,
-      [jobId]: loading
+      [jobId]: loading,
     }));
   }
 
@@ -403,7 +410,9 @@ export class JobsComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         const menuEl = this.actionMenu?.menuContainer?.nativeElement;
         if (menuEl) {
-          this.actionMenuStyle.set(this.getActionMenuStyle(capturedTrigger, menuEl));
+          this.actionMenuStyle.set(
+            this.getActionMenuStyle(capturedTrigger, menuEl)
+          );
         } else {
           this.closeActionMenu();
         }
@@ -434,7 +443,10 @@ export class JobsComponent implements OnInit, OnDestroy {
     this.viewportListeners = [];
   }
 
-  private getActionMenuStyle(trigger: HTMLElement, menuEl: HTMLElement): Record<string, string> {
+  private getActionMenuStyle(
+    trigger: HTMLElement,
+    menuEl: HTMLElement
+  ): Record<string, string> {
     const rect = trigger.getBoundingClientRect();
     const menuRect = menuEl.getBoundingClientRect();
     const menuWidth = menuRect.width;
@@ -443,16 +455,22 @@ export class JobsComponent implements OnInit, OnDestroy {
 
     const left = Math.max(
       viewportPadding,
-      Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)
+      Math.min(
+        rect.right - menuWidth,
+        window.innerWidth - menuWidth - viewportPadding
+      )
     );
 
     const spaceBelow = window.innerHeight - rect.bottom;
-    const openUpwards = spaceBelow < menuHeight + viewportPadding && rect.top > menuHeight;
-    const top = openUpwards ? rect.top - menuHeight - viewportPadding : rect.bottom + viewportPadding;
+    const openUpwards =
+      spaceBelow < menuHeight + viewportPadding && rect.top > menuHeight;
+    const top = openUpwards
+      ? rect.top - menuHeight - viewportPadding
+      : rect.bottom + viewportPadding;
 
     return {
       left: `${left}px`,
-      top: `${Math.max(viewportPadding, top)}px`
+      top: `${Math.max(viewportPadding, top)}px`,
     };
   }
 
@@ -485,7 +503,7 @@ export class JobsComponent implements OnInit, OnDestroy {
         this.error.set("Failed to delete jobs. Please try again.");
         this.bulkDeleting.set(false);
         this.closeDeleteDialog();
-      }
+      },
     });
   }
 
@@ -502,7 +520,7 @@ export class JobsComponent implements OnInit, OnDestroy {
         console.error("Error cancelling job:", err);
         this.error.set("Failed to cancel job. Please try again.");
         this.setActionLoading(job.id, false);
-      }
+      },
     });
   }
 

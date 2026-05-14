@@ -17,7 +17,8 @@ export interface FormValidationSummary {
         <span class="text-sm text-gray-600">Form Status:</span>
         <span
           class="text-sm font-medium"
-          [class]="isValid ? 'text-green-500' : 'text-red-500'">
+          [class]="isValid ? 'text-green-500' : 'text-red-500'"
+        >
           {{ isValid ? "Valid" : "Invalid" }}
         </span>
       </div>

@@ -16,7 +16,12 @@ import { Viewer } from "molstar/lib/apps/viewer/app";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { StructureSelectionManager } from "molstar/lib/mol-plugin-state/manager/structure/selection";
 import { InteractivityManager } from "molstar/lib/mol-plugin-state/manager/interactivity";
-import { StructureSelection, QueryContext, Structure, Unit } from "molstar/lib/mol-model/structure";
+import {
+  StructureSelection,
+  QueryContext,
+  Structure,
+  Unit,
+} from "molstar/lib/mol-model/structure";
 import { MolScriptBuilder as MS } from "molstar/lib/mol-script/language/builder";
 import { compile } from "molstar/lib/mol-script/runtime/query/compiler";
 import { OrderedSet } from "molstar/lib/mol-data/int";
@@ -81,7 +86,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       untracked(() => {
         if (!this._viewInitialized) return;
         if (this.status() === "loaded") {
-          this.zone.runOutsideAngular(() => void this.applyExternalSelection(sel));
+          this.zone.runOutsideAngular(
+            () => void this.applyExternalSelection(sel)
+          );
         }
       });
     });
@@ -150,11 +157,17 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           viewportShowControls: false,
         });
         try {
-          this.plugin?.managers.interactivity.setProps({ granularity: "residue" });
-        } catch { /* non-critical */ }
+          this.plugin?.managers.interactivity.setProps({
+            granularity: "residue",
+          });
+        } catch {
+          /* non-critical */
+        }
         try {
           this.plugin!.selectionMode = true;
-        } catch { /* non-critical */ }
+        } catch {
+          /* non-critical */
+        }
         this.hookSelection();
         this.preventButtonFormSubmit();
       } else {
@@ -164,7 +177,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       }
 
       const content = await file.text();
-      await this.viewer.loadStructureFromData(content, "pdb", { dataLabel: file.name });
+      await this.viewer.loadStructureFromData(content, "pdb", {
+        dataLabel: file.name,
+      });
 
       await this.applyBallAndStick();
       this.showSequencePanel();
@@ -176,7 +191,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         void this.applyExternalSelection(pendingSel);
       }
     } catch (err) {
-      this.errorMessage.set(err instanceof Error ? err.message : "Could not render PDB file.");
+      this.errorMessage.set(
+        err instanceof Error ? err.message : "Could not render PDB file."
+      );
       this.status.set("error");
     }
   }
@@ -210,7 +227,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         });
       });
     } catch {
-      console.warn("Mol* selection hook unavailable; hotspot auto-fill disabled.");
+      console.warn(
+        "Mol* selection hook unavailable; hotspot auto-fill disabled."
+      );
     }
   }
 
@@ -230,23 +249,29 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
       // Parse tokens → chain → Set<residueNumber>
       const targetResidues = new Map<string, Set<number>>();
-      for (const token of residueString.split(",").map((t) => t.trim()).filter(Boolean)) {
+      for (const token of residueString
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)) {
         const parsed = MolstarViewerComponent.parseResidueToken(token);
         if (!parsed) continue;
-        if (!targetResidues.has(parsed.chain)) targetResidues.set(parsed.chain, new Set());
-        for (let i = parsed.resStart; i <= parsed.resEnd; i++) targetResidues.get(parsed.chain)!.add(i);
+        if (!targetResidues.has(parsed.chain))
+          targetResidues.set(parsed.chain, new Set());
+        for (let i = parsed.resStart; i <= parsed.resEnd; i++)
+          targetResidues.get(parsed.chain)!.add(i);
       }
       if (targetResidues.size === 0) return;
 
       // Build one MolScript atomGroups expression per chain, then merge.
-      const chainExprs = Array.from(targetResidues.entries()).map(([chain, residues]) =>
-        MS.struct.generator.atomGroups({
-          "chain-test": MS.core.rel.eq([MS.ammp("auth_asym_id"), chain]),
-          "residue-test": MS.core.set.has([
-            MS.set(...Array.from(residues)),
-            MS.ammp("auth_seq_id"),
-          ]),
-        })
+      const chainExprs = Array.from(targetResidues.entries()).map(
+        ([chain, residues]) =>
+          MS.struct.generator.atomGroups({
+            "chain-test": MS.core.rel.eq([MS.ammp("auth_asym_id"), chain]),
+            "residue-test": MS.core.set.has([
+              MS.set(...Array.from(residues)),
+              MS.ammp("auth_seq_id"),
+            ]),
+          })
       );
       const expr =
         chainExprs.length === 1
@@ -268,7 +293,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     } catch (e) {
       console.warn("Mol* external selection failed:", e);
     } finally {
-      setTimeout(() => { this._applyingExternalSelection = false; }, 120);
+      setTimeout(() => {
+        this._applyingExternalSelection = false;
+      }, 120);
     }
   }
 
@@ -279,7 +306,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         const structure = entry.structure;
         if (structure) this.visitStructureUnits(structure, residueAtomIndex);
       }
-    } catch { /* swallow */ }
+    } catch {
+      /* swallow */
+    }
 
     return Array.from(residueAtomIndex.keys()).sort((a, b) => {
       const pa = this.parseResidueLabel(a) ?? { chain: a, seq: 0 };
@@ -293,7 +322,10 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
    * Walk a sub-Structure's units collecting chain+seqId residue labels.
    * unit.elements is a SortedArray of GLOBAL atom indices into the model hierarchy.
    */
-  private visitStructureUnits(structure: Structure, out: Map<string, number>): void {
+  private visitStructureUnits(
+    structure: Structure,
+    out: Map<string, number>
+  ): void {
     for (const unit of structure.units) {
       if (!Unit.isAtomic(unit)) continue;
       try {
@@ -304,10 +336,14 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
 
         OrderedSet.forEach(unit.elements, (atomIdx) => {
-          const label = `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(residueIdx[atomIdx])}`;
+          const label = `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(
+            residueIdx[atomIdx]
+          )}`;
           if (!out.has(label)) out.set(label, atomIdx);
         });
-      } catch { /* skip unit on hierarchy mismatch */ }
+      } catch {
+        /* skip unit on hierarchy mismatch */
+      }
     }
   }
 
@@ -321,8 +357,12 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     if (!this.plugin) return;
     try {
       const regionState = this.plugin.layout.state.regionState;
-      this.plugin.layout.setProps({ regionState: { ...regionState, top: "full" } });
-    } catch { /* non-critical */ }
+      this.plugin.layout.setProps({
+        regionState: { ...regionState, top: "full" },
+      });
+    } catch {
+      /* non-critical */
+    }
   }
 
   /**
@@ -331,15 +371,19 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   private async applyBallAndStick(): Promise<void> {
     if (!this.plugin) return;
     try {
-      const { hierarchy, component: componentMgr } = this.plugin.managers.structure;
+      const { hierarchy, component: componentMgr } =
+        this.plugin.managers.structure;
       const reprBuilder = this.plugin.builders.structure.representation;
       const structures = hierarchy.current?.structures ?? [];
 
       for (const s of structures) {
         await componentMgr.removeRepresentations(s.components);
-        const polymer = await this.plugin.builders.structure.tryCreateComponentStatic(
-          s.cell, "polymer", { label: "Polymer" }
-        );
+        const polymer =
+          await this.plugin.builders.structure.tryCreateComponentStatic(
+            s.cell,
+            "polymer",
+            { label: "Polymer" }
+          );
         if (!polymer) continue;
         await reprBuilder.addRepresentation(polymer, { type: "cartoon" });
         await reprBuilder.addRepresentation(polymer, {
@@ -347,14 +391,17 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           typeParams: { sizeFactor: 0.18, sizeAspectRatio: 0.7 },
         });
       }
-    } catch { /* non-critical — default visual still shows */ }
+    } catch {
+      /* non-critical — default visual still shows */
+    }
   }
 
   /** Walk the loaded structure once, then emit the chain→residue map and total
    *  residue count.  Replaces separate emitSequenceLength + parsePdbResidues. */
   private emitStructureInfo(): void {
     try {
-      const structures = this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
+      const structures =
+        this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
       const residueMap = new Map<string, Set<number>>();
 
       for (const s of structures) {
@@ -374,7 +421,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
               if (!residueMap.has(chain)) residueMap.set(chain, new Set());
               residueMap.get(chain)!.add(resNum);
             });
-          } catch { /* skip unit */ }
+          } catch {
+            /* skip unit */
+          }
         }
       }
 
@@ -385,7 +434,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           this.sequenceLengthDetected.emit(total);
         });
       }
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
   }
 
   /**
@@ -405,18 +456,26 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     let i = 0;
     while (i < parsed.length) {
       const cur = parsed[i];
-      if (!cur) { result.push(residues[i++]); continue; }
+      if (!cur) {
+        result.push(residues[i++]);
+        continue;
+      }
 
       let j = i + 1;
       while (j < parsed.length) {
         const prev = parsed[j - 1] as Parsed;
         const next = parsed[j];
-        if (!next || next.chain !== cur.chain || next.seq !== prev.seq + 1) break;
+        if (!next || next.chain !== cur.chain || next.seq !== prev.seq + 1)
+          break;
         j++;
       }
 
       const last = parsed[j - 1] as Parsed;
-      result.push(j - i === 1 ? cur.label : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`);
+      result.push(
+        j - i === 1
+          ? cur.label
+          : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`
+      );
       i = j;
     }
     return result;
@@ -430,16 +489,20 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     const container = document.getElementById(this.containerId);
     if (!container) return;
     this.formSubmitAbortCtrl = new AbortController();
-    container.addEventListener("click", (event) => {
-      const btn = (event.target as Element | null)?.closest?.("button");
-      if (btn && container.contains(btn)) {
-        const t = (btn.getAttribute("type") ?? "").toLowerCase();
-        if (!t || t === "submit") {
-          btn.setAttribute("type", "button");
-          event.preventDefault();
+    container.addEventListener(
+      "click",
+      (event) => {
+        const btn = (event.target as Element | null)?.closest?.("button");
+        if (btn && container.contains(btn)) {
+          const t = (btn.getAttribute("type") ?? "").toLowerCase();
+          if (!t || t === "submit") {
+            btn.setAttribute("type", "button");
+            event.preventDefault();
+          }
         }
-      }
-    }, { capture: true, signal: this.formSubmitAbortCtrl.signal });
+      },
+      { capture: true, signal: this.formSubmitAbortCtrl.signal }
+    );
   }
 
   private cleanupSubscription(): void {
@@ -449,11 +512,17 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
   /** Parse a residue token ("A56" or same-chain range "A12-A14") into
    *  { chain, resStart, resEnd }, or null for an unrecognised format. */
-  static parseResidueToken(token: string): { chain: string; resStart: number; resEnd: number } | null {
+  static parseResidueToken(
+    token: string
+  ): { chain: string; resStart: number; resEnd: number } | null {
     const range = token.match(/^([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)$/);
     if (range) {
       if (range[1] !== range[3]) return null;
-      return { chain: range[1], resStart: parseInt(range[2], 10), resEnd: parseInt(range[4], 10) };
+      return {
+        chain: range[1],
+        resStart: parseInt(range[2], 10),
+        resEnd: parseInt(range[4], 10),
+      };
     }
     const single = token.match(/^([A-Za-z]+)(-?\d+)$/);
     if (single) {
@@ -463,7 +532,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     return null;
   }
 
-  private parseResidueLabel(label: string): { chain: string; seq: number } | null {
+  private parseResidueLabel(
+    label: string
+  ): { chain: string; seq: number } | null {
     const m = label.match(/^([A-Za-z]+)(-?\d+)$/);
     return m ? { chain: m[1], seq: parseInt(m[2], 10) } : null;
   }

@@ -41,7 +41,8 @@ if (typeof window !== "undefined") {
     return null;
   }) as typeof window.open;
 
-  const locationAny = window.location as Location & Record<string, (...args: unknown[]) => unknown>;
+  const locationAny = window.location as Location &
+    Record<string, (...args: unknown[]) => unknown>;
   (["assign", "replace", "reload"] as const).forEach((methodName) => {
     locationAny[methodName] = (...args: unknown[]) => {
       warnNavigation(`window.location.${methodName}`, args);

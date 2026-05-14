@@ -285,7 +285,10 @@ export class AuthService {
     }
     const base = environment.apiBaseUrl || window.location.origin;
     this.http
-      .post<{ message: string; userId: string }>(`${base}/api/workflows/me/sync`, {})
+      .post<{ message: string; userId: string }>(
+        `${base}/api/workflows/me/sync`,
+        {}
+      )
       .pipe(take(1))
       .subscribe({
         next: () => {

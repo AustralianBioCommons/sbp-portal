@@ -141,10 +141,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
   );
   selectedToolData: Signal<ToolChip | undefined> = computed(() =>
-    this.tools.find((t) => t.id === this.selectedTool()),
+    this.tools.find((t) => t.id === this.selectedTool())
   );
 
   // Tool-specific parameter definitions (no params for any tool yet)
@@ -228,7 +228,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         residues
           .split(",")
           .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
-          .filter(Boolean),
+          .filter(Boolean)
       ),
     ]
       .sort()
@@ -243,7 +243,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   private validateChains(rowId: string, value: string): string | null {
     if (!value?.trim()) return null;
-    const tokens = value.split(",").map((t) => t.trim()).filter(Boolean);
+    const tokens = value
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     for (const token of tokens) {
       if (!/^[A-Za-z]+$/.test(token)) {
@@ -255,15 +258,22 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (residueMap) {
       for (const token of tokens) {
         if (!residueMap.has(token)) {
-          return `Chain "${token}" not found in PDB. Available: ${[...residueMap.keys()].sort().join(", ")}.`;
+          return `Chain "${token}" not found in PDB. Available: ${[
+            ...residueMap.keys(),
+          ]
+            .sort()
+            .join(", ")}.`;
         }
       }
     }
 
-    const hotspot = (this.getRowValue(rowId, "target_hotspot_residues") as string) ?? "";
+    const hotspot =
+      (this.getRowValue(rowId, "target_hotspot_residues") as string) ?? "";
     if (hotspot.trim()) {
       const chainsSet = new Set(tokens);
-      for (const hChain of this.chainsFromResidues(hotspot).split(",").filter(Boolean)) {
+      for (const hChain of this.chainsFromResidues(hotspot)
+        .split(",")
+        .filter(Boolean)) {
         if (!chainsSet.has(hChain)) {
           return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains.`;
         }
@@ -276,7 +286,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (!value?.trim()) return null;
     const residueMap = this.pdbResidueMap();
 
-    for (const token of value.split(",").map((t) => t.trim()).filter(Boolean)) {
+    for (const token of value
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)) {
       const parsed = MolstarViewerComponent.parseResidueToken(token);
       if (!parsed) {
         return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14".`;
@@ -285,12 +298,19 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
       const chainResidues = residueMap.get(parsed.chain);
       if (!chainResidues) {
-        return `Chain "${parsed.chain}" not found in PDB. Available: ${[...residueMap.keys()].sort().join(", ")}.`;
+        return `Chain "${parsed.chain}" not found in PDB. Available: ${[
+          ...residueMap.keys(),
+        ]
+          .sort()
+          .join(", ")}.`;
       }
       if (!chainResidues.has(parsed.resStart)) {
         return `Residue ${parsed.resStart} not found in chain "${parsed.chain}".`;
       }
-      if (parsed.resStart !== parsed.resEnd && !chainResidues.has(parsed.resEnd)) {
+      if (
+        parsed.resStart !== parsed.resEnd &&
+        !chainResidues.has(parsed.resEnd)
+      ) {
         return `End residue ${parsed.resEnd} not found in chain "${parsed.chain}".`;
       }
     }
@@ -307,7 +327,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  pushes the new selection string to the Mol* viewer. */
   onHotspotResiduesManualChange(rowId: string, value: unknown): void {
     const residues = (value as string) ?? "";
-    this.updateRowValueWithValidation(rowId, "target_hotspot_residues", residues);
+    this.updateRowValueWithValidation(
+      rowId,
+      "target_hotspot_residues",
+      residues
+    );
     const chains = this.chainsFromResidues(residues);
     if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
     this.programmaticViewerSelection.set(residues);
@@ -323,9 +347,15 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     const errorKey = `${rowId}_starting_pdb`;
     const currentErrors = this.formErrors();
     if (count < 50) {
-      this.formErrors.set({ ...currentErrors, [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required.` });
+      this.formErrors.set({
+        ...currentErrors,
+        [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required.`,
+      });
     } else if (count > 300) {
-      this.formErrors.set({ ...currentErrors, [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed.` });
+      this.formErrors.set({
+        ...currentErrors,
+        [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed.`,
+      });
     } else {
       const updated = { ...currentErrors };
       delete updated[errorKey];
@@ -336,7 +366,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   onLengthRangeChange(
     rowId: string,
-    range: { min: number; max: number },
+    range: { min: number; max: number }
   ): void {
     this.updateRowValueWithValidation(rowId, "min_length", range.min);
     this.updateRowValueWithValidation(rowId, "max_length", range.max);
@@ -347,7 +377,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  and auto-fills the chains field. e.g. "A56,B12" → chains = "A,B".
    */
   onResiduesSelected(rowId: string, residues: string): void {
-    this.updateRowValueWithValidation(rowId, "target_hotspot_residues", residues);
+    this.updateRowValueWithValidation(
+      rowId,
+      "target_hotspot_residues",
+      residues
+    );
     const chains = this.chainsFromResidues(residues);
     this.updateRowValueWithValidation(rowId, "chains", chains);
   }
@@ -443,7 +477,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   private advanceStep(current: number): void {
     this.completedSteps.update((arr) =>
-      arr.includes(current) ? arr : [...arr, current],
+      arr.includes(current) ? arr : [...arr, current]
     );
     this.currentStep.update((v) => v + 1);
     this.visitedSteps.update((arr) => {
@@ -455,7 +489,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
       this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step],
+        arr.includes(step) ? arr : [...arr, step]
       );
     }
   }
@@ -478,11 +512,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.auth.isLoading$
         .pipe(
           filter((isLoading) => !isLoading),
-          take(1),
+          take(1)
         )
         .subscribe(() => {
           this.loadInputSchema();
-        }),
+        })
     );
 
     // Fallback: If auth doesn't initialize within 5 seconds, load anyway
@@ -530,12 +564,12 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_filters",
-              defaultValues.settings_filters,
+              defaultValues.settings_filters
             );
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_advanced",
-              defaultValues.settings_advanced,
+              defaultValues.settings_advanced
             );
           }
 
@@ -546,7 +580,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       },
       (error) => {
         console.error("Failed to load schema:", error);
-      },
+      }
     );
   }
 
@@ -590,10 +624,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
               const msg =
                 error?.error?.message ?? error?.message ?? "Unknown error";
               this.showError(
-                `Failed to upload PDB file: ${msg}. Please try again.`,
+                `Failed to upload PDB file: ${msg}. Please try again.`
               );
             },
-          }),
+          })
       );
       return;
     }
@@ -625,7 +659,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             console.error("Dataset upload succeeded but no datasetId returned");
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned.",
+              "Dataset upload succeeded but no dataset ID was returned."
             );
             return;
           }
@@ -642,22 +676,22 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             (error) => {
               console.error(
                 "Workflow launch failed after dataset upload",
-                error,
+                error
               );
               this.workflowSubmission.isSubmitting.set(false);
               this.showError(
                 `Workflow launch failed after dataset upload: ${
                   error.message || "Unknown error"
-                }`,
+                }`
               );
-            },
+            }
           );
         },
         error: (error) => {
           console.error("Dataset upload failed", error);
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            `Failed to upload dataset: ${error.message || "Unknown error"}`,
+            `Failed to upload dataset: ${error.message || "Unknown error"}`
           );
         },
       });
@@ -966,7 +1000,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   getRowNumberValue(
     rowId: string,
     fieldName: string,
-    defaultVal: number,
+    defaultVal: number
   ): number {
     const val = this.getRowValue(rowId, fieldName);
     if (typeof val === "number" && Number.isFinite(val)) return val;
@@ -1063,7 +1097,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   updateRowValueWithValidation(
     rowId: string,
     fieldName: string,
-    value: unknown,
+    value: unknown
   ): void {
     this.updateRowValue(rowId, fieldName, value);
     this.validateRowField(rowId, fieldName);
