@@ -9,7 +9,10 @@
       <nav class="flex items-center gap-2 py-2.5 text-sm" aria-label="Breadcrumb">
         <span
           class="text-blue-900 font-medium cursor-pointer hover:text-blue-700 transition-colors"
+          tabindex="0"
+          role="button"
           (click)="navigateToTheme(crumb.themeTab)"
+          (keyup.enter)="navigateToTheme(crumb.themeTab)"
         >{{ crumb.themeLabel }}</span>
         <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>

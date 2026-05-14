@@ -28,12 +28,12 @@ describe("BinderDesignComponent", () => {
 
   describe("workflows", () => {
     it("should have correct workflow structure", () => {
-      expect(component.workflows).toBeDefined();
-      expect(component.workflows.length).toBe(3);
+      expect(component.workflows()).toBeDefined();
+      expect(component.workflows().length).toBe(3);
     });
 
     it("workflows should contain de novo design workflow", () => {
-      const deNovoWorkflow = component.workflows.find(
+      const deNovoWorkflow = component.workflows().find(
         (w) => w.id === "de-novo-design"
       );
       expect(deNovoWorkflow).toBeDefined();
@@ -42,7 +42,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("workflows should contain motif scaffolding workflow", () => {
-      const motifWorkflow = component.workflows.find(
+      const motifWorkflow = component.workflows().find(
         (w) => w.id === "motif-scaffolding"
       );
       expect(motifWorkflow).toBeDefined();
@@ -52,7 +52,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("workflows should contain partial diffusion workflow", () => {
-      const partialWorkflow = component.workflows.find(
+      const partialWorkflow = component.workflows().find(
         (w) => w.id === "partial-diffusion"
       );
       expect(partialWorkflow).toBeDefined();
@@ -62,7 +62,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should have all workflows with required properties", () => {
-      component.workflows.forEach((workflow) => {
+      component.workflows().forEach((workflow) => {
         expect(workflow.id).toBeDefined();
         expect(workflow.id).not.toBe("");
         expect(workflow.label).toBeDefined();
@@ -75,12 +75,12 @@ describe("BinderDesignComponent", () => {
 
   describe("tools", () => {
     it("tools should have correct tools structure", () => {
-      expect(component.tools).toBeDefined();
-      expect(component.tools.length).toBe(3);
+      expect(component.tools()).toBeDefined();
+      expect(component.tools().length).toBe(3);
     });
 
     it("tools should contain BindCraft tool", () => {
-      const bindCraftTool = component.tools.find(
+      const bindCraftTool = component.tools().find(
         (t) => t.label === "BindCraft"
       );
       expect(bindCraftTool).toBeDefined();
@@ -89,7 +89,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("tools should contain RFdiffusion tool", () => {
-      const rfdiffusionTool = component.tools.find(
+      const rfdiffusionTool = component.tools().find(
         (t) => t.label === "RFdiffusion"
       );
       expect(rfdiffusionTool).toBeDefined();
@@ -99,14 +99,15 @@ describe("BinderDesignComponent", () => {
     });
 
     it("tools should contain BoltzGen tool", () => {
-      const boltzGenTool = component.tools.find((t) => t.label === "BoltzGen");
+      const boltzGenTool = component.tools().find((t) => t.label === "BoltzGen");
       expect(boltzGenTool).toBeDefined();
       expect(boltzGenTool?.id).toBe("boltzgen");
       expect(boltzGenTool?.href).toBe("/tools/boltzgen");
       expect(boltzGenTool?.disabled).toBeTrue();
     });
+
     it("should have all tools with required properties", () => {
-      component.tools.forEach((tool) => {
+      component.tools().forEach((tool) => {
         expect(tool.id).toBeDefined();
         expect(tool.id).not.toBe("");
         expect(tool.label).toBeDefined();
@@ -115,7 +116,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should have unique tool IDs", () => {
-      const ids = component.tools.map((tool) => tool.id);
+      const ids = component.tools().map((tool) => tool.id);
       const uniqueIds = [...new Set(ids)];
       expect(ids.length).toBe(uniqueIds.length);
     });
@@ -123,12 +124,12 @@ describe("BinderDesignComponent", () => {
 
   describe("community resources", () => {
     it("should have correct community resources structure", () => {
-      expect(component.communityResources).toBeDefined();
-      expect(component.communityResources.length).toBe(4);
+      expect(component.communityResources()).toBeDefined();
+      expect(component.communityResources().length).toBe(4);
     });
 
     it("should contain documentation resource", () => {
-      const docs = component.communityResources.find(
+      const docs = component.communityResources().find(
         (r) => r.title === "Documentation"
       );
       expect(docs).toBeDefined();
@@ -136,7 +137,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should contain community forum resource", () => {
-      const forum = component.communityResources.find(
+      const forum = component.communityResources().find(
         (r) => r.title === "Community Forum"
       );
       expect(forum).toBeDefined();
@@ -144,7 +145,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should contain best practices resource", () => {
-      const practices = component.communityResources.find(
+      const practices = component.communityResources().find(
         (r) => r.title === "Best Practices"
       );
       expect(practices).toBeDefined();
@@ -152,7 +153,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should contain publication repository resource", () => {
-      const publications = component.communityResources.find(
+      const publications = component.communityResources().find(
         (r) => r.title === "Publication Repository"
       );
       expect(publications).toBeDefined();
@@ -160,7 +161,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should have all resources with required properties", () => {
-      component.communityResources.forEach((resource) => {
+      component.communityResources().forEach((resource) => {
         expect(resource.title).toBeDefined();
         expect(resource.title).not.toBe("");
         expect(resource.description).toBeDefined();
@@ -169,7 +170,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should have unique resource titles", () => {
-      const titles = component.communityResources.map(
+      const titles = component.communityResources().map(
         (resource) => resource.title
       );
       const uniqueTitles = [...new Set(titles)];
@@ -179,29 +180,26 @@ describe("BinderDesignComponent", () => {
 
   describe("data validation", () => {
     it("should have consistent data structures", () => {
-      // Ensure all workflows have the same structure
-      component.workflows.forEach((workflow) => {
+      component.workflows().forEach((workflow) => {
         expect(typeof workflow.id).toBe("string");
         expect(typeof workflow.label).toBe("string");
       });
 
-      // Ensure all tools have the same structure
-      component.tools.forEach((tool) => {
+      component.tools().forEach((tool) => {
         expect(typeof tool.id).toBe("string");
         expect(typeof tool.label).toBe("string");
       });
 
-      // Ensure all community resources have the same structure
-      component.communityResources.forEach((resource) => {
+      component.communityResources().forEach((resource) => {
         expect(typeof resource.title).toBe("string");
         expect(typeof resource.description).toBe("string");
       });
     });
 
     it("should have proper data types", () => {
-      expect(Array.isArray(component.workflows)).toBe(true);
-      expect(Array.isArray(component.tools)).toBe(true);
-      expect(Array.isArray(component.communityResources)).toBe(true);
+      expect(Array.isArray(component.workflows())).toBe(true);
+      expect(Array.isArray(component.tools())).toBe(true);
+      expect(Array.isArray(component.communityResources())).toBe(true);
     });
   });
 
@@ -216,10 +214,7 @@ describe("BinderDesignComponent", () => {
 
         component.navigateToWorkflow(workflowId);
 
-        // Check router navigation was called
         expect(mockRouter.navigate).toHaveBeenCalledWith([`/${workflowId}`]);
-
-        // Check console log
         expect(console.log).toHaveBeenCalledWith(
           `Navigating to workflow: ${workflowId}`
         );
@@ -230,7 +225,6 @@ describe("BinderDesignComponent", () => {
 
         workflowIds.forEach((workflowId) => {
           component.navigateToWorkflow(workflowId);
-
           expect(mockRouter.navigate).toHaveBeenCalledWith([`/${workflowId}`]);
         });
 
@@ -251,10 +245,7 @@ describe("BinderDesignComponent", () => {
 
         component.navigateToTool(toolId);
 
-        // Check router navigation was called
         expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
-
-        // Check console log
         expect(console.log).toHaveBeenCalledWith(
           `Navigating to tool: ${toolId}`
         );
@@ -265,7 +256,6 @@ describe("BinderDesignComponent", () => {
 
         toolIds.forEach((toolId) => {
           component.navigateToTool(toolId);
-
           expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
         });
 
@@ -277,6 +267,19 @@ describe("BinderDesignComponent", () => {
         component.navigateToTool("boltzgen");
 
         expect(mockRouter.navigate).not.toHaveBeenCalled();
+      });
+
+      it("should navigate to generic tools route for non-bindcraft enabled tools", () => {
+        component.tools.set([
+          { id: "rfdiffusion", label: "RFdiffusion", href: "/tools/rfdiffusion" },
+        ]);
+
+        component.navigateToTool("rfdiffusion");
+
+        expect(mockRouter.navigate).toHaveBeenCalledWith([
+          "/tools",
+          "rfdiffusion",
+        ]);
       });
     });
 

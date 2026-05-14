@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject } from "@angular/core";
+import { Component, inject, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { ButtonComponent } from "../../components/button/button.component";
 import { THEMES } from "../../cores/config/themes.config";
@@ -15,7 +15,7 @@ export class BinderDesignComponent {
 
   // Navigation methods
   navigateToWorkflow(workflowId: string) {
-    const workflow = this.workflows.find((item) => item.id === workflowId);
+    const workflow = this.workflows().find((item) => item.id === workflowId);
     if (!workflow || workflow.disabled) {
       return;
     }
@@ -25,7 +25,7 @@ export class BinderDesignComponent {
   }
 
   navigateToTool(toolId: string) {
-    const tool = this.tools.find((item) => item.id === toolId);
+    const tool = this.tools().find((item) => item.id === toolId);
     if (!tool || tool.disabled) {
       return;
     }
@@ -45,11 +45,11 @@ export class BinderDesignComponent {
   }
 
   private readonly theme = THEMES.find((t) => t.id === "binder-design")!;
-  workflows = this.theme.workflows;
-  tools = this.theme.tools;
+  workflows = signal(this.theme.workflows);
+  tools = signal(this.theme.tools);
 
   // Community resources
-  communityResources = [
+  communityResources = signal([
     {
       title: "Documentation",
       description:
@@ -71,5 +71,5 @@ export class BinderDesignComponent {
       description: "Access relevant research papers and publications",
       href: "/publications",
     },
-  ];
+  ]);
 }

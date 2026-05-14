@@ -8,7 +8,9 @@ describe("StructurePredictionComponent", () => {
   let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    mockRouter = jasmine.createSpyObj("Router", ["navigate"]);
+    mockRouter = jasmine.createSpyObj("Router", ["navigate", "navigateByUrl"]);
+    mockRouter.navigate.and.returnValue(Promise.resolve(true));
+    mockRouter.navigateByUrl.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
       imports: [StructurePredictionComponent],
@@ -30,13 +32,11 @@ describe("StructurePredictionComponent", () => {
       id: "single-structure-prediction",
       label: "Single Prediction",
       href: "/single-structure-prediction",
-      disabled: false,
     });
     expect(component.workflows[1]).toEqual({
       id: "interaction-screening",
       label: "Interaction Screening",
       href: "/interaction-screening",
-      disabled: false
     });
   });
 
@@ -45,20 +45,17 @@ describe("StructurePredictionComponent", () => {
     expect(component.tools[0]).toEqual({
       id: "boltz",
       label: "Boltz",
-      href: "/tools/boltz",
-      disabled: true,
+      href: "/single-structure-prediction",
     });
     expect(component.tools[1]).toEqual({
       id: "colabfold",
       label: "ColabFold",
-      href: "/tools/colabfold",
-      disabled: true,
+      href: "/single-structure-prediction",
     });
     expect(component.tools[2]).toEqual({
       id: "alphafold2",
       label: "AlphaFold2",
-      href: "/tools/alphafold2",
-      disabled: true,
+      href: "/single-structure-prediction",
     });
   });
 
@@ -70,7 +67,14 @@ describe("StructurePredictionComponent", () => {
   });
 
   it("should not navigate to workflow when disabled", () => {
-    component.workflows[0].disabled = true;
+    component.workflows = [
+      {
+        id: "single-structure-prediction",
+        label: "Single Prediction",
+        href: "/single-structure-prediction",
+        disabled: true,
+      },
+    ];
     component.navigateToWorkflow("single-structure-prediction");
     expect(mockRouter.navigate).not.toHaveBeenCalled();
   });
@@ -80,19 +84,28 @@ describe("StructurePredictionComponent", () => {
     expect(mockRouter.navigate).not.toHaveBeenCalled();
   });
 
-  it("should not navigate to tool when disabled", () => {
+  it("should navigate to tool when enabled", () => {
     component.navigateToTool("boltz");
-    expect(mockRouter.navigate).not.toHaveBeenCalled();
+    expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(
+      "/single-structure-prediction",
+    );
   });
 
-  it("should navigate to tool when enabled", () => {
-    component.tools[0].disabled = false;
+  it("should not navigate to tool when disabled", () => {
+    component.tools = [
+      {
+        id: "boltz",
+        label: "Boltz",
+        href: "/single-structure-prediction",
+        disabled: true,
+      },
+    ];
     component.navigateToTool("boltz");
-    expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools", "boltz"]);
+    expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
   });
 
   it("should not navigate to tool when id is unknown", () => {
     component.navigateToTool("unknown-tool");
-    expect(mockRouter.navigate).not.toHaveBeenCalled();
+    expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
   });
 });

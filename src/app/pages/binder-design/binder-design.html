@@ -23,7 +23,7 @@
   <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Workflows</h2>
     <div class="flex flex-wrap gap-4">
-      @for (workflow of workflows; track workflow.id) {
+      @for (workflow of workflows(); track workflow.id) {
       <app-button
         variant="secondary"
         widthClass="w-auto"
@@ -42,7 +42,7 @@
   <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Tools</h2>
     <div class="flex flex-wrap gap-4">
-      @for (tool of tools; track tool.id) {
+      @for (tool of tools(); track tool.id) {
       <app-button
         variant="secondary"
         widthClass="w-auto"
@@ -61,7 +61,7 @@
   <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Community Resources</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      @for (resource of communityResources; track resource.href) {
+      @for (resource of communityResources(); track resource.href) {
       <a
         [href]="resource.href"
         class="bg-white no-underline rounded-lg border space-y-4 p-6 shadow hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer block"

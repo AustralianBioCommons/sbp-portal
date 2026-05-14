@@ -265,6 +265,83 @@ describe("Header", () => {
     });
   });
 
+  describe("navigateToTheme", () => {
+    it("should navigate to themes with the given tab query param", () => {
+      component.navigateToTheme("binder-design");
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
+        queryParams: { tab: "binder-design" },
+      });
+    });
+
+    it("should navigate to themes with structure-prediction tab", () => {
+      component.navigateToTheme("structure-prediction");
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
+        queryParams: { tab: "structure-prediction" },
+      });
+    });
+  });
+
+  describe("breadcrumb behaviour", () => {
+    it("should show breadcrumb for a known workflow route", () => {
+      component["checkRoute"]("/de-novo-design");
+
+      expect(component.showBreadcrumb()).toBe(true);
+      expect(component.breadcrumb()).toEqual({
+        themeLabel: "Binder Design",
+        themeTab: "binder-design",
+        workflowLabel: "De Novo Design",
+      });
+    });
+
+    it("should show correct breadcrumb for single-structure-prediction route", () => {
+      component["checkRoute"]("/single-structure-prediction");
+
+      expect(component.showBreadcrumb()).toBe(true);
+      expect(component.breadcrumb()).toEqual({
+        themeLabel: "Structure Prediction",
+        themeTab: "structure-prediction",
+        workflowLabel: "Single Prediction",
+      });
+    });
+
+    it("should not show breadcrumb for /themes route", () => {
+      component["checkRoute"]("/themes");
+
+      expect(component.showBreadcrumb()).toBe(false);
+      expect(component.breadcrumb()).toBeNull();
+    });
+
+    it("should not show breadcrumb for unknown routes", () => {
+      component["checkRoute"]("/unknown-path");
+
+      expect(component.showBreadcrumb()).toBe(false);
+      expect(component.breadcrumb()).toBeNull();
+    });
+
+    it("should clear breadcrumb when navigating back to /themes", () => {
+      component["checkRoute"]("/de-novo-design");
+      expect(component.showBreadcrumb()).toBe(true);
+
+      component["checkRoute"]("/themes");
+      expect(component.showBreadcrumb()).toBe(false);
+      expect(component.breadcrumb()).toBeNull();
+    });
+
+    it("should not show tabs on workflow routes", () => {
+      component["checkRoute"]("/de-novo-design");
+
+      expect(component.showTabs()).toBe(false);
+    });
+
+    it("should strip query params when matching workflow routes", () => {
+      component["checkRoute"]("/de-novo-design?foo=bar");
+
+      expect(component.showBreadcrumb()).toBe(true);
+    });
+  });
+
   describe("selectTab edge cases", () => {
     it("should handle navigation failures gracefully", async () => {
       mockRouter.navigate.and.returnValue(Promise.resolve(false));
