@@ -42,5 +42,5 @@ Notes:
 To run and fix lint locally:
 
 ```bash
-npx prettier --write <directory-path-to-fix-linting>
+npm run format
 ```
