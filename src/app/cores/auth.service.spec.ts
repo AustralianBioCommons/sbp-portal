@@ -24,6 +24,8 @@ describe("AuthService", () => {
   let isAuthenticatedSubject: BehaviorSubject<boolean>;
   let isLoadingSubject: BehaviorSubject<boolean>;
   let appStateSubject: BehaviorSubject<{ target?: string } | null>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let idTokenClaimsSubject: BehaviorSubject<any>;
   let mockRouter: jasmine.SpyObj<Router>;
   let httpTestingController: HttpTestingController;
 
@@ -33,6 +35,7 @@ describe("AuthService", () => {
     isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     isLoadingSubject = new BehaviorSubject<boolean>(true);
     appStateSubject = new BehaviorSubject<{ target?: string } | null>(null);
+    idTokenClaimsSubject = new BehaviorSubject<unknown>(null);
     mockRouter = jasmine.createSpyObj("Router", ["navigateByUrl"]);
 
     mockAuth0Service = jasmine.createSpyObj(
@@ -44,6 +47,7 @@ describe("AuthService", () => {
         error$: errorSubject.asObservable(),
         isLoading$: isLoadingSubject.asObservable(),
         appState$: appStateSubject.asObservable(),
+        idTokenClaims$: idTokenClaimsSubject.asObservable(),
       }
     );
 
@@ -501,6 +505,76 @@ describe("AuthService", () => {
       tick(500);
       expect(service.isLoading).toBeFalse();
     }));
+  });
+
+  describe("canExecuteWorkflows$", () => {
+    const ROLES_CLAIM = "https://biocommons.org.au/roles";
+    const WORKFLOW_ROLE = "biocommons/group/sbp_workflow_execution";
+
+    it("should emit false when idTokenClaims$ emits null", (done) => {
+      idTokenClaimsSubject.next(null);
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit false when claims have no roles claim", (done) => {
+      idTokenClaimsSubject.next({ sub: "user|123" });
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit false when roles claim is not an array", (done) => {
+      idTokenClaimsSubject.next({ [ROLES_CLAIM]: "not-an-array" });
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit false when roles array does not include the workflow execution role", (done) => {
+      idTokenClaimsSubject.next({ [ROLES_CLAIM]: ["biocommons/group/other"] });
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit true when roles array includes the workflow execution role", (done) => {
+      idTokenClaimsSubject.next({ [ROLES_CLAIM]: [WORKFLOW_ROLE] });
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeTrue();
+        done();
+      });
+    });
+
+    it("should emit true when roles array includes the workflow role alongside others", (done) => {
+      idTokenClaimsSubject.next({
+        [ROLES_CLAIM]: ["biocommons/group/other", WORKFLOW_ROLE],
+      });
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeTrue();
+        done();
+      });
+    });
+
+    it("should react to role changes over time", (done) => {
+      const results: boolean[] = [];
+      const sub = service.canExecuteWorkflows$.subscribe((can) => {
+        results.push(can);
+        if (results.length === 3) {
+          expect(results).toEqual([false, true, false]);
+          sub.unsubscribe();
+          done();
+        }
+      });
+      idTokenClaimsSubject.next(null);
+      idTokenClaimsSubject.next({ [ROLES_CLAIM]: [WORKFLOW_ROLE] });
+      idTokenClaimsSubject.next({ [ROLES_CLAIM]: ["biocommons/group/other"] });
+    });
   });
 
   describe("Current user sync", () => {

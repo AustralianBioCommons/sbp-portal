@@ -8,6 +8,7 @@ import { AppComponent } from "./app/app.component";
 import { authGuard } from "./app/cores/auth.guard";
 import { Home } from "./app/pages/home/home";
 import { JobsComponent } from "./app/pages/jobs/jobs";
+import { AccessPreviewComponent } from "./app/pages/dev/access-preview";
 import { NotFoundComponent } from "./app/pages/not-found/not-found";
 import { DeNovoDesignComponent } from "./app/pages/workflow/de-novo-design/de-novo-design";
 import { InteractionScreeningComponent } from "./app/pages/workflow/interaction-screening/interaction-screening";
@@ -37,6 +38,7 @@ bootstrapApplication(AppComponent, {
         component: JobsComponent,
       },
       { path: "protected", component: AppComponent, canActivate: [authGuard] },
+      { path: "dev/access-preview", component: AccessPreviewComponent },
       // 404 catch-all route - MUST be last
       { path: "**", component: NotFoundComponent },
     ]),

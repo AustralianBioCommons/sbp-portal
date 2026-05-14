@@ -2,8 +2,11 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { BehaviorSubject, Observable, map, take } from "rxjs";
+import { BehaviorSubject, Observable, map, of, take } from "rxjs";
 import { environment } from "../../environments/environment";
+
+const DEV_PREVIEW = !environment.production &&
+  localStorage.getItem("sbp.devPreview") === "no-role";
 
 interface AuthError {
   error?: string;
@@ -39,7 +42,9 @@ export class AuthService {
   public showBanner$ = this.showBannerSubject.asObservable();
 
   // Loading observables
-  public isLoading$ = this.loadingSubject.asObservable();
+  public isLoading$: Observable<boolean> = DEV_PREVIEW
+    ? of(false)
+    : this.loadingSubject.asObservable();
   public loadingMessage$ = this.loadingMessageSubject.asObservable();
 
   // Keep legacy observables for backward compatibility
@@ -47,7 +52,9 @@ export class AuthService {
   public showErrorBanner$ = this.showBannerSubject.asObservable();
 
   // Expose Auth0 observables
-  public isAuthenticated$ = this.auth0.isAuthenticated$;
+  public isAuthenticated$: Observable<boolean> = DEV_PREVIEW
+    ? of(true)
+    : this.auth0.isAuthenticated$;
   public user$ = this.auth0.user$;
   public error$ = this.auth0.error$;
 
@@ -55,14 +62,16 @@ export class AuthService {
   private static readonly WORKFLOW_EXECUTION_ROLE =
     "biocommons/group/sbp_workflow_execution";
 
-  public canExecuteWorkflows$ = this.auth0.idTokenClaims$.pipe(
-    map((claims) => {
-      if (!claims) return false;
-      const roles = claims[AuthService.ROLES_CLAIM];
-      return Array.isArray(roles) &&
-        roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE);
-    })
-  );
+  public canExecuteWorkflows$: Observable<boolean> = DEV_PREVIEW
+    ? of(false)
+    : this.auth0.idTokenClaims$.pipe(
+        map((claims) => {
+          if (!claims) return false;
+          const roles = claims[AuthService.ROLES_CLAIM];
+          return Array.isArray(roles) &&
+            roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE);
+        })
+      );
 
   constructor() {
     // Initialize loading and banner handling
@@ -72,6 +81,10 @@ export class AuthService {
   }
 
   private initializeLoadingStates(): void {
+    if (DEV_PREVIEW) {
+      this.setLoading(false);
+      return;
+    }
     // Monitor Auth0 loading state
     this.auth0.isLoading$.subscribe((isLoading) => {
       if (isLoading) {

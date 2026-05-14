@@ -7,6 +7,8 @@ export interface Environment {
   };
   apiBaseUrl?: string;
   profileUrl: string;
+  /** Dev-only: simulates a logged-in user who lacks the workflow execution role. Remove before shipping. */
+  devPreviewAuthenticatedNoRole?: boolean;
 }
 
 export const environment: Environment = {

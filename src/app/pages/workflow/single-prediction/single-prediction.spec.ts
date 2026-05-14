@@ -65,6 +65,8 @@ describe("SinglePredictionComponent", () => {
   };
   let authService: {
     isAuthenticated$: Observable<boolean>;
+    canExecuteWorkflows$: Observable<boolean>;
+    profileUrl: string;
     login: jasmine.Spy;
   };
 
@@ -93,6 +95,8 @@ describe("SinglePredictionComponent", () => {
 
     authService = {
       isAuthenticated$: of(true),
+      canExecuteWorkflows$: of(true),
+      profileUrl: "https://test.profile.example.com/profile",
       login: jasmine.createSpy("login"),
     };
 
