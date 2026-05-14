@@ -76,10 +76,14 @@
           class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center"
         >
           <div class="text-center p-4">
-            <p class="text-base font-semibold text-gray-900 mb-2">Access Restricted</p>
+            <p class="text-base font-semibold text-gray-900 mb-2">
+              Access Restricted
+            </p>
             @if ((auth.isAuthenticated$ | async) === false) {
             <p class="text-sm text-gray-600">
-              To use this tool, please log in or register for a BioCommons Access account and add the <strong>SBP Workflow Execution bundle</strong> to your profile.
+              To use this tool, please log in or register for a BioCommons
+              Access account and add the
+              <strong>SBP Workflow Execution bundle</strong> to your profile.
             </p>
             <div class="mt-3 flex justify-center">
               <app-button
@@ -88,25 +92,24 @@
                 widthClass="w-[218px]"
                 colorClasses="h-[47px] text-white bg-[#205A86] hover:bg-[#1a4a6e] justify-center"
                 borderRadius="rounded-[10px]"
-                (click)="loginWithReturnUrl()">
+                (click)="loginWithReturnUrl()"
+              >
                 Log in or Register
               </app-button>
             </div>
             } @else {
             <p class="text-sm text-gray-600">
-              You currently do not have access to this tool; please go to your profile
-              page to add the <strong>SBP Workflow Execution</strong> bundle.
+              You currently do not have access to this tool; please go to your
+              profile page to add the
+              <strong>SBP Workflow Execution</strong> bundle.
             </p>
             <div class="mt-3 flex justify-center">
-<<<<<<< HEAD
-              <a [href]="profileUrl" target="_blank" rel="noopener noreferrer"
-=======
               <a
                 [href]="profileUrl"
                 target="_blank"
                 rel="noopener noreferrer"
->>>>>>> 958c9c1 (feat: add workflow execution role guard)
-                class="inline-flex items-center justify-center w-[218px] h-[47px] text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors">
+                class="inline-flex items-center justify-center w-[218px] h-[47px] text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors"
+              >
                 Add bundle
               </a>
             </div>

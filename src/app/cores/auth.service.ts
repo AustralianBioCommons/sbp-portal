@@ -5,7 +5,8 @@ import { AuthService as Auth0Service } from "@auth0/auth0-angular";
 import { BehaviorSubject, Observable, map, of, take } from "rxjs";
 import { environment } from "../../environments/environment";
 
-const DEV_PREVIEW = !environment.production &&
+const DEV_PREVIEW =
+  !environment.production &&
   localStorage.getItem("sbp.devPreview") === "no-role";
 
 interface AuthError {
@@ -68,8 +69,10 @@ export class AuthService {
         map((claims) => {
           if (!claims) return false;
           const roles = claims[AuthService.ROLES_CLAIM];
-          return Array.isArray(roles) &&
-            roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE);
+          return (
+            Array.isArray(roles) &&
+            roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE)
+          );
         })
       );
 

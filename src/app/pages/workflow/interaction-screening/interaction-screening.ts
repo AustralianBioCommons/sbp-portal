@@ -90,12 +90,12 @@ export class InteractionScreeningComponent {
     targetFasta: ["", fastaValidator(validateProteinSequence)],
   });
   private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status)),
+    this.form.statusChanges.pipe(startWith(this.form.status))
   );
-  private formValue: Signal<{ queryFasta: string; targetFasta: string }> = toSignal(
-    this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
-    { initialValue: this.form.getRawValue() },
-  );
+  private formValue: Signal<{ queryFasta: string; targetFasta: string }> =
+    toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())), {
+      initialValue: this.form.getRawValue(),
+    });
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
