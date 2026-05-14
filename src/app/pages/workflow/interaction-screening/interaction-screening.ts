@@ -28,6 +28,7 @@ import {
   SequenceValidationResult,
   validateProteinSequence,
 } from "../../../cores/utils/fasta.utils";
+import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -77,6 +78,7 @@ type StepItem = Step;
 export class InteractionScreeningComponent {
   // Auth
   public auth = inject(AuthService);
+  readonly profileUrl = environment.profileUrl;
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
   // Dataset upload service
@@ -88,11 +90,12 @@ export class InteractionScreeningComponent {
     targetFasta: ["", fastaValidator(validateProteinSequence)],
   });
   private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status))
+    this.form.statusChanges.pipe(startWith(this.form.status)),
   );
-  private formValue: Signal<
-    { queryFasta?: string; targetFasta?: string } | undefined
-  > = toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())));
+  private formValue: Signal<{ queryFasta: string; targetFasta: string }> = toSignal(
+    this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
+    { initialValue: this.form.getRawValue() },
+  );
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");

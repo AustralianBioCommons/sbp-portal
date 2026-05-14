@@ -25,6 +25,7 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
+import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
@@ -99,6 +100,7 @@ interface ToolSettingErrors {
 })
 export class SinglePredictionComponent {
   public auth = inject(AuthService);
+  readonly profileUrl = environment.profileUrl;
   public workflowSubmission = inject(WorkflowSubmissionService);
   private datasetUploadService = inject(DatasetUploadService);
   private fastaUploadService = inject(FastaUploadService);

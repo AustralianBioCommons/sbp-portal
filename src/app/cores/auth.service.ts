@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { BehaviorSubject, Observable, take } from "rxjs";
+import { BehaviorSubject, Observable, map, take } from "rxjs";
 import { environment } from "../../environments/environment";
 
 interface AuthError {
@@ -50,6 +50,19 @@ export class AuthService {
   public isAuthenticated$ = this.auth0.isAuthenticated$;
   public user$ = this.auth0.user$;
   public error$ = this.auth0.error$;
+
+  private static readonly ROLES_CLAIM = "https://biocommons.org.au/roles";
+  private static readonly WORKFLOW_EXECUTION_ROLE =
+    "biocommons/group/sbp_workflow_execution";
+
+  public canExecuteWorkflows$ = this.auth0.idTokenClaims$.pipe(
+    map((claims) => {
+      if (!claims) return false;
+      const roles = claims[AuthService.ROLES_CLAIM];
+      return Array.isArray(roles) &&
+        roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE);
+    })
+  );
 
   constructor() {
     // Initialize loading and banner handling
