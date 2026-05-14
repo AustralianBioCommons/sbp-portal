@@ -6,7 +6,7 @@ import {
 } from "@angular/common/http/testing";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { BehaviorSubject, of } from "rxjs";
+import { BehaviorSubject, of, throwError } from "rxjs";
 import { AuthService } from "./auth.service";
 import { environment } from "../../environments/environment";
 
@@ -24,8 +24,6 @@ describe("AuthService", () => {
   let isAuthenticatedSubject: BehaviorSubject<boolean>;
   let isLoadingSubject: BehaviorSubject<boolean>;
   let appStateSubject: BehaviorSubject<{ target?: string } | null>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let idTokenClaimsSubject: BehaviorSubject<any>;
   let mockRouter: jasmine.SpyObj<Router>;
   let httpTestingController: HttpTestingController;
 
@@ -35,7 +33,6 @@ describe("AuthService", () => {
     isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
     isLoadingSubject = new BehaviorSubject<boolean>(true);
     appStateSubject = new BehaviorSubject<{ target?: string } | null>(null);
-    idTokenClaimsSubject = new BehaviorSubject<unknown>(null);
     mockRouter = jasmine.createSpyObj("Router", ["navigateByUrl"]);
 
     mockAuth0Service = jasmine.createSpyObj(
@@ -47,7 +44,6 @@ describe("AuthService", () => {
         error$: errorSubject.asObservable(),
         isLoading$: isLoadingSubject.asObservable(),
         appState$: appStateSubject.asObservable(),
-        idTokenClaims$: idTokenClaimsSubject.asObservable(),
       }
     );
 
@@ -510,17 +506,36 @@ describe("AuthService", () => {
   describe("canExecuteWorkflows$", () => {
     const ROLES_CLAIM = "https://biocommons.org.au/roles";
     const WORKFLOW_ROLE = "biocommons/group/sbp_workflow_execution";
+    const syncUrl = `${environment.apiBaseUrl}/api/workflows/me/sync`;
 
-    it("should emit false when idTokenClaims$ emits null", (done) => {
-      idTokenClaimsSubject.next(null);
+    function mockAccessToken(payload: Record<string, unknown>): string {
+      const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+      const body = btoa(JSON.stringify(payload));
+      return `${header}.${body}.mock-sig`;
+    }
+
+    // Setting isAuthenticated → true also fires syncCurrentUserToBackend().
+    // Flush that request so afterEach's verify() doesn't fail.
+    function flushSync() {
+      httpTestingController
+        .expectOne(syncUrl)
+        .flush({ message: "synced", userId: "user-1" });
+    }
+
+    it("should emit false when not authenticated", (done) => {
+      // isAuthenticatedSubject starts false — no sync request
       service.canExecuteWorkflows$.subscribe((can) => {
         expect(can).toBeFalse();
         done();
       });
     });
 
-    it("should emit false when claims have no roles claim", (done) => {
-      idTokenClaimsSubject.next({ sub: "user|123" });
+    it("should emit false when access token has no roles claim", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ sub: "user|123" }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
       service.canExecuteWorkflows$.subscribe((can) => {
         expect(can).toBeFalse();
         done();
@@ -528,7 +543,11 @@ describe("AuthService", () => {
     });
 
     it("should emit false when roles claim is not an array", (done) => {
-      idTokenClaimsSubject.next({ [ROLES_CLAIM]: "not-an-array" });
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: "not-an-array" }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
       service.canExecuteWorkflows$.subscribe((can) => {
         expect(can).toBeFalse();
         done();
@@ -536,15 +555,23 @@ describe("AuthService", () => {
     });
 
     it("should emit false when roles array does not include the workflow execution role", (done) => {
-      idTokenClaimsSubject.next({ [ROLES_CLAIM]: ["biocommons/group/other"] });
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: ["biocommons/group/other"] }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
       service.canExecuteWorkflows$.subscribe((can) => {
         expect(can).toBeFalse();
         done();
       });
     });
 
-    it("should emit true when roles array includes the workflow execution role", (done) => {
-      idTokenClaimsSubject.next({ [ROLES_CLAIM]: [WORKFLOW_ROLE] });
+    it("should emit true when access token includes the workflow execution role", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: [WORKFLOW_ROLE] }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
       service.canExecuteWorkflows$.subscribe((can) => {
         expect(can).toBeTrue();
         done();
@@ -552,16 +579,33 @@ describe("AuthService", () => {
     });
 
     it("should emit true when roles array includes the workflow role alongside others", (done) => {
-      idTokenClaimsSubject.next({
-        [ROLES_CLAIM]: ["biocommons/group/other", WORKFLOW_ROLE],
-      });
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: ["biocommons/group/other", WORKFLOW_ROLE] }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
       service.canExecuteWorkflows$.subscribe((can) => {
         expect(can).toBeTrue();
         done();
       });
     });
 
-    it("should react to role changes over time", (done) => {
+    it("should emit false when getAccessTokenSilently throws", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        throwError(() => new Error("token fetch failed"))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should react to authentication state changes", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: [WORKFLOW_ROLE] }))
+      );
       const results: boolean[] = [];
       const sub = service.canExecuteWorkflows$.subscribe((can) => {
         results.push(can);
@@ -571,10 +615,10 @@ describe("AuthService", () => {
           done();
         }
       });
-      // BehaviorSubject already emits the initial null → false on subscribe (results[0]).
-      // Only push the two value changes that complete the sequence.
-      idTokenClaimsSubject.next({ [ROLES_CLAIM]: [WORKFLOW_ROLE] });
-      idTokenClaimsSubject.next({ [ROLES_CLAIM]: ["biocommons/group/other"] });
+      // isAuthenticatedSubject starts false → results[0] = false on subscribe
+      isAuthenticatedSubject.next(true);  // fetches token with role → results[1] = true
+      flushSync();                        // clear the sync HTTP request
+      isAuthenticatedSubject.next(false); // unauthenticated → results[2] = false
     });
   });
 

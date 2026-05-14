@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { BehaviorSubject, Observable, map, of, take } from "rxjs";
+import { BehaviorSubject, Observable, catchError, map, of, switchMap, take } from "rxjs";
 import { environment } from "../../environments/environment";
 
 const DEV_PREVIEW =
@@ -65,15 +65,30 @@ export class AuthService {
 
   public canExecuteWorkflows$: Observable<boolean> = DEV_PREVIEW
     ? of(false)
-    : this.auth0.idTokenClaims$.pipe(
-        map((claims) => {
-          if (!claims) return false;
-          const roles = claims[AuthService.ROLES_CLAIM];
-          return (
-            Array.isArray(roles) &&
-            roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE)
+    : this.auth0.isAuthenticated$.pipe(
+        switchMap((isAuthenticated) => {
+          if (!isAuthenticated) return of(false);
+          return this.auth0.getAccessTokenSilently().pipe(
+            map((token) => {
+              try {
+                // JWT uses base64url — convert to standard base64 before decoding
+                const base64 = token
+                  .split(".")[1]
+                  .replace(/-/g, "+")
+                  .replace(/_/g, "/");
+                const payload = JSON.parse(atob(base64));
+                const roles = payload[AuthService.ROLES_CLAIM];
+                return (
+                  Array.isArray(roles) &&
+                  roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE)
+                );
+              } catch {
+                return false;
+              }
+            }),
+            catchError(() => of(false)),
           );
-        })
+        }),
       );
 
   constructor() {
