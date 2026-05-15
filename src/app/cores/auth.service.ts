@@ -13,17 +13,6 @@ import {
 } from "rxjs";
 import { environment } from "../../environments/environment";
 
-const DEV_PREVIEW =
-  !environment.production &&
-  localStorage.getItem("sbp.devPreview") === "no-role";
-
-if (DEV_PREVIEW) {
-  console.warn(
-    "[DEV ONLY] sbp.devPreview=no-role is active — authentication checks are bypassed. " +
-      "Remove this localStorage flag and the DEV_PREVIEW code before shipping."
-  );
-}
-
 interface AuthError {
   error?: string;
   message?: string;
@@ -58,9 +47,7 @@ export class AuthService {
   public showBanner$ = this.showBannerSubject.asObservable();
 
   // Loading observables
-  public isLoading$: Observable<boolean> = DEV_PREVIEW
-    ? of(false)
-    : this.loadingSubject.asObservable();
+  public isLoading$: Observable<boolean> = this.loadingSubject.asObservable();
   public loadingMessage$ = this.loadingMessageSubject.asObservable();
 
   // Keep legacy observables for backward compatibility
@@ -68,9 +55,7 @@ export class AuthService {
   public showErrorBanner$ = this.showBannerSubject.asObservable();
 
   // Expose Auth0 observables
-  public isAuthenticated$: Observable<boolean> = DEV_PREVIEW
-    ? of(true)
-    : this.auth0.isAuthenticated$;
+  public isAuthenticated$: Observable<boolean> = this.auth0.isAuthenticated$;
   public user$ = this.auth0.user$;
   public error$ = this.auth0.error$;
 
@@ -78,33 +63,32 @@ export class AuthService {
   private static readonly WORKFLOW_EXECUTION_ROLE =
     "biocommons/group/sbp_workflow_execution";
 
-  public canExecuteWorkflows$: Observable<boolean> = DEV_PREVIEW
-    ? of(false)
-    : this.auth0.isAuthenticated$.pipe(
-        switchMap((isAuthenticated) => {
-          if (!isAuthenticated) return of(false);
-          return this.auth0.getAccessTokenSilently().pipe(
-            map((token) => {
-              try {
-                // JWT uses base64url — convert to standard base64 before decoding
-                const base64 = token
-                  .split(".")[1]
-                  .replace(/-/g, "+")
-                  .replace(/_/g, "/");
-                const payload = JSON.parse(atob(base64));
-                const roles = payload[AuthService.ROLES_CLAIM];
-                return (
-                  Array.isArray(roles) &&
-                  roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE)
-                );
-              } catch {
-                return false;
-              }
-            }),
-            catchError(() => of(false))
-          );
-        })
-      );
+  public canExecuteWorkflows$: Observable<boolean> =
+    this.auth0.isAuthenticated$.pipe(
+      switchMap((isAuthenticated) => {
+        if (!isAuthenticated) return of(false);
+        return this.auth0.getAccessTokenSilently().pipe(
+          map((token) => {
+            try {
+              // JWT uses base64url — convert to standard base64 before decoding
+              const base64 = token
+                .split(".")[1]
+                .replace(/-/g, "+")
+                .replace(/_/g, "/");
+              const payload = JSON.parse(atob(base64));
+              const roles = payload[AuthService.ROLES_CLAIM];
+              return (
+                Array.isArray(roles) &&
+                roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE)
+              );
+            } catch {
+              return false;
+            }
+          }),
+          catchError(() => of(false))
+        );
+      })
+    );
 
   constructor() {
     // Initialize loading and banner handling
@@ -114,10 +98,6 @@ export class AuthService {
   }
 
   private initializeLoadingStates(): void {
-    if (DEV_PREVIEW) {
-      this.setLoading(false);
-      return;
-    }
     // Monitor Auth0 loading state
     this.auth0.isLoading$.subscribe((isLoading) => {
       if (isLoading) {
