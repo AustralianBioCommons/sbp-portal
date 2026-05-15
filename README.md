@@ -20,22 +20,13 @@ To run it locally:
 npm install
 ```
 
-3. Create your local environment file:
-
-```bash
-cp .env.example .env
-# Fill in AUTH_CLIENT_ID and any values that differ from the dev defaults.
-```
-
-4. Start the dev server:
+3. Start the dev server:
 
 ```bash
 npm start
-# This auto-runs `npm run env:generate` before `ng serve`, so src/environments/environment.ts
-# is regenerated from your .env on every start.
 ```
 
-5. To run tests
+4. To run tests:
 
 ```bash
 npm test
@@ -43,8 +34,7 @@ npm test
 
 Notes:
 
-- `.env` is gitignored. Never commit it.
-- To regenerate `src/environments/environment.ts` without starting the server: `npm run env:generate`.
+- Environment variables are hardcoded in `src/environments/environment.ts` for local development. Update that file if you need to point to a different backend.
 - Tailwind and PostCSS are configured via `tailwind.config.cjs` and `postcss.config.cjs`.
 - If you scaffolded with a different version of Angular CLI locally, some generated files may differ; these files are a minimal starting point created without running the Angular CLI in this environment.
 
