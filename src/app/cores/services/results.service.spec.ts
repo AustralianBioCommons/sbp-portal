@@ -14,16 +14,9 @@ describe("ResultsService", () => {
   let httpMock: HttpTestingController;
   let sanitizer: DomSanitizer;
   let apiBase: string;
-  let savedApiBaseUrl: string | undefined;
 
   beforeEach(() => {
-    // Ensure apiBaseUrl is an absolute URL so new URL(path, apiBase) doesn't throw
-    // when environment.ts was generated without a .env file (empty string fallback).
-    savedApiBaseUrl = environment.apiBaseUrl;
-    if (!environment.apiBaseUrl) {
-      environment.apiBaseUrl = "https://api.dev.sbp.test.biocommons.org.au";
-    }
-    apiBase = environment.apiBaseUrl.replace(/\/?$/, "/");
+    apiBase = environment.apiBaseUrl!.replace(/\/?$/, "/");
 
     TestBed.configureTestingModule({
       providers: [
@@ -40,7 +33,6 @@ describe("ResultsService", () => {
 
   afterEach(() => {
     httpMock.verify();
-    environment.apiBaseUrl = savedApiBaseUrl;
   });
 
   it("should be created", () => {
