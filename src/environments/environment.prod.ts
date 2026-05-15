@@ -7,6 +7,6 @@ export const environment: Environment = {
     clientId: "VgTSGK8Ph92r8mVhmVvQDrxGzbWX0vCm",
     audience: "https://dev.api.aai.test.biocommons.org.au",
   },
-  apiBaseUrl: "https://dev.sbp.test.biocommons.org.au/api",
+  apiBaseUrl: "https://api.dev.sbp.test.biocommons.org.au",
   profileUrl: "https://dev.portal.aai.test.biocommons.org.au/profile",
 };

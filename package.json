@@ -4,9 +4,7 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "env:generate": "node scripts/generate-env.js",
-    "env:generate:prod": "node scripts/generate-env.js --prod",
-    "start": "npm run env:generate && ng serve --open",
+    "start": "ng serve --open",
     "build": "ng build",
     "test": "ng test",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless --code-coverage",
