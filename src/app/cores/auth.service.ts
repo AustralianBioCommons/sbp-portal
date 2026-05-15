@@ -59,10 +59,6 @@ export class AuthService {
   public user$ = this.auth0.user$;
   public error$ = this.auth0.error$;
 
-  private static readonly ROLES_CLAIM = "https://biocommons.org.au/roles";
-  private static readonly WORKFLOW_EXECUTION_ROLE =
-    "biocommons/group/sbp_workflow_execution";
-
   public canExecuteWorkflows$: Observable<boolean> =
     this.auth0.isAuthenticated$.pipe(
       switchMap((isAuthenticated) => {
@@ -71,10 +67,10 @@ export class AuthService {
           map((token) => {
             const payload = AuthService.decodeAccessToken(token);
             if (!payload) return false;
-            const roles = payload[AuthService.ROLES_CLAIM];
+            const roles = payload[environment.rolesClaim];
             return (
               Array.isArray(roles) &&
-              roles.includes(AuthService.WORKFLOW_EXECUTION_ROLE)
+              roles.includes(environment.workflowRole)
             );
           }),
           catchError(() => of(false))

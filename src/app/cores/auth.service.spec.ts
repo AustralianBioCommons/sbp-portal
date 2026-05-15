@@ -506,8 +506,8 @@ describe("AuthService", () => {
   });
 
   describe("canExecuteWorkflows$", () => {
-    const ROLES_CLAIM = "https://biocommons.org.au/roles";
-    const WORKFLOW_ROLE = "biocommons/group/sbp_workflow_execution";
+    const ROLES_CLAIM = environment.rolesClaim;
+    const WORKFLOW_ROLE = environment.workflowRole;
     const syncUrl = `${
       environment.apiBaseUrl || window.location.origin
     }/api/workflows/me/sync`;

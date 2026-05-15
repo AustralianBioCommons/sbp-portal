@@ -7,4 +7,6 @@ export interface Environment {
   };
   apiBaseUrl?: string;
   profileUrl: string;
+  rolesClaim: string;
+  workflowRole: string;
 }

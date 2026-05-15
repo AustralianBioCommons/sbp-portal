@@ -9,4 +9,6 @@ export const environment: Environment = {
   },
   apiBaseUrl: "https://api.dev.sbp.test.biocommons.org.au",
   profileUrl: "https://dev.portal.aai.test.biocommons.org.au/profile",
+  rolesClaim: "https://biocommons.org.au/roles",
+  workflowRole: "biocommons/group/sbp_workflow_execution",
 };
