@@ -1,3 +1,6 @@
+// Dev fallback values — override by running `npm run env:generate` with a .env file.
+// In CI, run `npm run env:generate` (or `env:generate:prod`) after fetching the
+// Secrets Manager secret before invoking `ng build`.
 export interface Environment {
   production: boolean;
   auth: {

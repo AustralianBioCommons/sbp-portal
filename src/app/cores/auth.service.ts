@@ -17,6 +17,13 @@ const DEV_PREVIEW =
   !environment.production &&
   localStorage.getItem("sbp.devPreview") === "no-role";
 
+if (DEV_PREVIEW) {
+  console.warn(
+    "[DEV ONLY] sbp.devPreview=no-role is active — authentication checks are bypassed. " +
+      "Remove this localStorage flag and the DEV_PREVIEW code before shipping."
+  );
+}
+
 interface AuthError {
   error?: string;
   message?: string;
