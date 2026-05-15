@@ -69,8 +69,7 @@ export class AuthService {
             if (!payload) return false;
             const roles = payload[environment.rolesClaim];
             return (
-              Array.isArray(roles) &&
-              roles.includes(environment.workflowRole)
+              Array.isArray(roles) && roles.includes(environment.workflowRole)
             );
           }),
           catchError(() => of(false))
