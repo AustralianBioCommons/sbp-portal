@@ -386,7 +386,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const syncRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       syncRequest.flush({ message: "synced", userId: "user-1" });
 
@@ -506,7 +508,9 @@ describe("AuthService", () => {
   describe("canExecuteWorkflows$", () => {
     const ROLES_CLAIM = "https://biocommons.org.au/roles";
     const WORKFLOW_ROLE = "biocommons/group/sbp_workflow_execution";
-    const syncUrl = `${environment.apiBaseUrl}/api/workflows/me/sync`;
+    const syncUrl = `${
+      environment.apiBaseUrl || window.location.origin
+    }/api/workflows/me/sync`;
 
     function mockAccessToken(payload: Record<string, unknown>): string {
       const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
@@ -631,13 +635,17 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const firstRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       firstRequest.flush({ message: "synced", userId: "user-1" });
 
       isAuthenticatedSubject.next(true);
       httpTestingController.expectNone(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       expect(service.currentBannerMessage).toBe("Login successful!");
     });
@@ -646,7 +654,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const firstRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       firstRequest.flush({ message: "synced", userId: "user-1" });
 
@@ -654,7 +664,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const secondRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       secondRequest.flush({ message: "synced-again", userId: "user-1" });
       expect(service.currentBannerMessage).toBe("Login successful!");
@@ -666,7 +678,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const failedRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       failedRequest.flush(
         { message: "failed" },
@@ -678,7 +692,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const retryRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       retryRequest.flush({ message: "synced", userId: "user-1" });
       expect(warnSpy).toHaveBeenCalled();
