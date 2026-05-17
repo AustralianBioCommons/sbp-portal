@@ -193,7 +193,7 @@ describe("Header", () => {
       const navigationEnd = new NavigationEnd(
         1,
         "/themes?tab=structure-search",
-        "/themes?tab=structure-search",
+        "/themes?tab=structure-search"
       );
 
       mockRouter.parseUrl.and.returnValue({
@@ -374,7 +374,7 @@ describe("Header", () => {
       } as unknown as UrlTree);
 
       component["checkRoute"](
-        "/themes?tab=structure-prediction&filter=active&page=2",
+        "/themes?tab=structure-prediction&filter=active&page=2"
       );
 
       expect(component.activeTab()).toBe("structure-prediction");

@@ -1,12 +1,14 @@
 <section
-  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-size-[100%_auto] bg-top bg-fixed">
+  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-size-[100%_auto] bg-top bg-fixed"
+>
   <!-- Error Alert -->
   @if (showAlert()) {
   <app-alert
     [type]="'error'"
     [message]="alertMessage()"
     [dismissible]="true"
-    (dismissed)="closeAlert()"></app-alert>
+    (dismissed)="closeAlert()"
+  ></app-alert>
   }
 
   <div class="max-w-7xl px-6 mx-auto py-12">
@@ -23,13 +25,15 @@
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
             class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
-            type="button">
+            type="button"
+          >
             {{ tab.label }}
           </button>
         </li>
         } @empty {
         <li
-          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg">
+          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg"
+        >
           No tabs available
         </li>
         }
@@ -37,7 +41,8 @@
     </nav>
 
     <div
-      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12">
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
+    >
       <div>
         <h1 class="text-3xl font-semibold text-gray-900">De Novo Design</h1>
         <p class="mt-2 text-sm text-gray-600">
@@ -66,9 +71,11 @@
         <app-tool-selection
           [tools]="tools"
           [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"></app-tool-selection>
+          (toolSelect)="selectTool($event)"
+        ></app-tool-selection>
         <div
-          class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+          class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+        >
           <p class="text-sm text-amber-800">
             Only <strong>BindCraft</strong> is available right now. {{
             unavailableToolLabels.join(" and ") }} are temporarily unavailable.
@@ -81,7 +88,8 @@
         <!-- Lock overlay if not authenticated -->
         @if ((auth.isAuthenticated$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] rounded-[10px] border flex items-center justify-center">
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] rounded-[10px] border flex items-center justify-center"
+        >
           <div class="text-center p-4">
             <p class="text-sm text-gray-600">
               You must be logged in to configure options and run the workflow.
@@ -92,7 +100,8 @@
                 variant="primary"
                 colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-900"
                 borderRadius="rounded-[10px]"
-                (click)="loginWithReturnUrl()">
+                (click)="loginWithReturnUrl()"
+              >
                 Log in
               </app-button>
             </div>
@@ -108,13 +117,15 @@
           [isStepInvalid]="isStepInvalid"
           [isStepCompleted]="isStepCompleted"
           [isStepVisited]="isStepVisited"
-          (stepClick)="goToStep($event)"></app-step-navigation>
+          (stepClick)="goToStep($event)"
+        ></app-step-navigation>
 
         <!-- Step 1: Input Configuration -->
         @if (currentStep() === 1) {
         <app-step-content
           title="Input Configuration"
-          description="Configure input parameters based on the workflow schema.">
+          description="Configure input parameters based on the workflow schema."
+        >
           @if (schemaLoader.inputSchemaData() &&
           schemaLoader.inputSchemaFields().length > 0) {
           <div class="mt-4">
@@ -132,10 +143,12 @@
                 <div class="flex flex-col lg:flex-row gap-4 items-start">
                   <!-- Left half: PDB viewer -->
                   <div
-                    class="w-full lg:w-1/2 overflow-hidden rounded-lg border border-gray-200">
+                    class="w-full lg:w-1/2 overflow-hidden rounded-lg border border-gray-200"
+                  >
                     <!-- Header row -->
                     <div
-                      class="flex items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3">
+                      class="flex items-center justify-between gap-4 border-b border-gray-200 bg-gray-50 px-4 py-3"
+                    >
                       <div>
                         <p class="block text-sm font-medium text-gray-700">
                           Target PDB file
@@ -155,7 +168,8 @@
                         <button
                           type="button"
                           class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600"
-                          (click)="clearLocalPdb(row.id)">
+                          (click)="clearLocalPdb(row.id)"
+                        >
                           Clear
                         </button>
                       </div>
@@ -163,11 +177,23 @@
                     </div>
 
                     @if (hasRowFieldError(row.id, 'starting_pdb')) {
-                    <div class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
-                      <svg class="mt-0.5 h-4 w-4 shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    <div
+                      class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+                    >
+                      <svg
+                        class="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                          clip-rule="evenodd"
+                        />
                       </svg>
-                      <p class="text-sm text-red-600">{{ getRowFieldError(row.id, 'starting_pdb') }}</p>
+                      <p class="text-sm text-red-600">
+                        {{ getRowFieldError(row.id, 'starting_pdb') }}
+                      </p>
                     </div>
                     }
 
@@ -175,9 +201,12 @@
                       <app-molstar-viewer
                         [pdbFile]="localPdbFile()"
                         [disabled]="isPdbUploading()"
+                        [externalSelection]="programmaticViewerSelection()"
                         (filePicked)="onPdbFilePicked($event, row.id)"
                         (residuesSelected)="onResiduesSelected(row.id, $event)"
-                        (sequenceLengthDetected)="onSequenceLengthDetected($event)"></app-molstar-viewer>
+                        (structureResiduesDetected)="onStructureResiduesDetected($event)"
+                        (sequenceLengthDetected)="onSequenceLengthDetected($event)"
+                      ></app-molstar-viewer>
                     </div>
                   </div>
 
@@ -199,8 +228,18 @@
                         [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
                         [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
                         [disabled]="isPdbUploading()"
-                        (rangeChange)="onLengthRangeChange(row.id, $event)"></app-length-range-slider>
+                        (rangeChange)="onLengthRangeChange(row.id, $event)"
+                      ></app-length-range-slider>
                     </div>
+                    } @else if (field.name === 'target_hotspot_residues') {
+                    <app-form-field
+                      [field]="field"
+                      [value]="getRowValue(row.id, field.name)"
+                      [hasError]="hasRowFieldError(row.id, field.name)"
+                      [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                      (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
+                      (fieldBlur)="validateRowField(row.id, field.name)"
+                    ></app-form-field>
                     } @else {
                     <app-form-field
                       [field]="field"
@@ -208,7 +247,8 @@
                       [hasError]="hasRowFieldError(row.id, field.name)"
                       [errorMessage]="getRowFieldError(row.id, field.name) || ''"
                       (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                      (fieldBlur)="validateRowField(row.id, field.name)"></app-form-field>
+                      (fieldBlur)="validateRowField(row.id, field.name)"
+                    ></app-form-field>
                     } }
                   </div>
                 </div>
@@ -224,7 +264,8 @@
         @if (currentStep() === 2) {
         <app-step-content
           title="Tool Settings — {{ selectedToolLabel() }}"
-          description="Configure parameters specific to {{ selectedToolLabel() }}.">
+          description="Configure parameters specific to {{ selectedToolLabel() }}."
+        >
           @if (!selectedToolHasParams()) {
           <div class="mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
             <div class="flex items-start">
@@ -232,11 +273,13 @@
                 <svg
                   class="h-5 w-5 text-blue-400"
                   viewBox="0 0 20 20"
-                  fill="currentColor">
+                  fill="currentColor"
+                >
                   <path
                     fill-rule="evenodd"
                     d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clip-rule="evenodd" />
+                    clip-rule="evenodd"
+                  />
                 </svg>
               </div>
               <div class="ml-3">
@@ -258,7 +301,8 @@
           <div
             class="mt-3 grid gap-3 sm:grid-cols-3"
             role="region"
-            aria-label="Tool specific parameters">
+            aria-label="Tool specific parameters"
+          >
             @for (p of toolParams[selectedTool()] || []; track p.name) {
             <div class="bg-white border border-gray-200 rounded-md p-3">
               <label
@@ -270,7 +314,8 @@
               <input
                 [id]="'param-' + p.name"
                 type="text"
-                class="mt-2 w-full px-3 py-2 border rounded text-sm" />
+                class="mt-2 w-full px-3 py-2 border rounded text-sm"
+              />
             </div>
             }
           </div>
@@ -282,13 +327,15 @@
         @if (currentStep() === 3) {
         <app-step-content
           title="Review & Submit"
-          description="Confirm your selections before starting the job.">
+          description="Confirm your selections before starting the job."
+        >
           <app-configuration-summary
             [selectedTool]="selectedToolLabel()"
             [hasParameters]="selectedToolHasParams()"
             [summaryItems]="formSummary()"
             [requiredFieldCount]="schemaLoader.requiredInputFields().length"
-            [isValid]="isFormValid()"></app-configuration-summary>
+            [isValid]="isFormValid()"
+          ></app-configuration-summary>
         </app-step-content>
         }
 
@@ -300,7 +347,8 @@
             (click)="previousStep()"
             [disabled]="!canGoPrev() || (auth.isAuthenticated$ | async) === false"
             borderRadius="rounded-[10px]"
-            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Previous
           </app-button>
           <div class="flex items-center gap-2">
@@ -311,7 +359,8 @@
               (click)="nextStep()"
               [disabled]="!canGoNext() || isPdbUploading() || (auth.isAuthenticated$ | async) === false"
               borderRadius="rounded-[10px]"
-              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed">
+              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
               @if (isPdbUploading()) { Uploading… } @else { Next }
             </app-button>
             } @if (currentStep() === steps.length) {
@@ -321,7 +370,8 @@
               (click)="submitWorkflow()"
               [disabled]="!isFormValid() || (auth.isAuthenticated$ | async) === false"
               borderRadius="rounded-[10px]"
-              colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed">
+              colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed"
+            >
               Submit
             </app-button>
             }
@@ -372,4 +422,5 @@
   [confirmText]="'View Jobs'"
   [cancelText]="'New Job'"
   (confirmed)="goToJobs()"
-  (cancelled)="submitNewJob()"></app-dialog>
+  (cancelled)="submitNewJob()"
+></app-dialog>

@@ -22,7 +22,9 @@ describe("JobsActionMenuComponent", () => {
   });
 
   it("should apply the provided overlay style", () => {
-    const menuElement = fixture.nativeElement.querySelector("div.fixed") as HTMLDivElement;
+    const menuElement = fixture.nativeElement.querySelector(
+      "div.fixed"
+    ) as HTMLDivElement;
 
     expect(menuElement.style.left).toBe("12px");
     expect(menuElement.style.top).toBe("24px");

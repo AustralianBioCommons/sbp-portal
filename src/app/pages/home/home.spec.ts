@@ -162,7 +162,7 @@ describe("Home", () => {
 
       const container = fixture.nativeElement.querySelector(".min-h-screen");
       expect(container?.classList.contains("structure-prediction-bg")).toBe(
-        true,
+        true
       );
       expect(container?.classList.contains("bg-gray-50")).toBe(false);
     });

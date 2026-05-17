@@ -92,7 +92,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
-    "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/schema_input.json";
+    "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/schema_input.json";
 
   // Form data and validation
   formData = signal<Record<string, unknown>>({});
@@ -141,10 +141,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
   );
   selectedToolData: Signal<ToolChip | undefined> = computed(() =>
-    this.tools.find((t) => t.id === this.selectedTool()),
+    this.tools.find((t) => t.id === this.selectedTool())
   );
 
   // Tool-specific parameter definitions (no params for any tool yet)
@@ -172,6 +172,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  Actual upload to S3 is deferred until the user clicks Next. */
   localPdbFile = signal<File | null>(null);
 
+  /** Parsed chain → residue-number set from the loaded PDB.  Populated
+   *  asynchronously after the user picks a file; null until then. */
+  pdbResidueMap = signal<Map<string, Set<number>> | null>(null);
+
   /** Reference to the File object that was last successfully uploaded.
    *  Used to skip re-upload when the user navigates Back then Next again. */
   private uploadedPdbFile = signal<File | null>(null);
@@ -198,6 +202,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (this.localPdbFile()) {
       this.updateRowValue(rowId, "chains", "");
       this.updateRowValue(rowId, "target_hotspot_residues", "");
+      this.programmaticViewerSelection.set("");
     }
     this.localPdbFile.set(file);
     // New file picked — reset upload tracking so Next will upload this file.
@@ -209,9 +214,127 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   clearLocalPdb(rowId: string): void {
     this.localPdbFile.set(null);
     this.uploadedPdbFile.set(null);
+    this.pdbResidueMap.set(null);
+    this.programmaticViewerSelection.set("");
     this.updateRowValueWithValidation(rowId, "starting_pdb", "");
     this.updateRowValueWithValidation(rowId, "chains", "");
     this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
+  }
+
+  /** Return sorted, deduplicated chain letters from a residue string like "A56,B12-B20". */
+  private chainsFromResidues(residues: string): string {
+    return [
+      ...new Set(
+        residues
+          .split(",")
+          .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
+          .filter(Boolean)
+      ),
+    ]
+      .sort()
+      .join(",");
+  }
+
+  /** Receives the chain→residue map emitted by the Mol* viewer after it
+   *  parses the PDB structure — no need to re-parse the file ourselves. */
+  onStructureResiduesDetected(residues: Map<string, Set<number>>): void {
+    this.pdbResidueMap.set(residues.size > 0 ? residues : null);
+  }
+
+  private validateChains(rowId: string, value: string): string | null {
+    if (!value?.trim()) return null;
+    const tokens = value
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    for (const token of tokens) {
+      if (!/^[A-Za-z]+$/.test(token)) {
+        return `Invalid chain "${token}". Use letter identifiers only, e.g. "A" or "A,B".`;
+      }
+    }
+
+    const residueMap = this.pdbResidueMap();
+    if (residueMap) {
+      for (const token of tokens) {
+        if (!residueMap.has(token)) {
+          return `Chain "${token}" not found in PDB. Available: ${[
+            ...residueMap.keys(),
+          ]
+            .sort()
+            .join(", ")}.`;
+        }
+      }
+    }
+
+    const hotspot =
+      (this.getRowValue(rowId, "target_hotspot_residues") as string) ?? "";
+    if (hotspot.trim()) {
+      const chainsSet = new Set(tokens);
+      for (const hChain of this.chainsFromResidues(hotspot)
+        .split(",")
+        .filter(Boolean)) {
+        if (!chainsSet.has(hChain)) {
+          return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains.`;
+        }
+      }
+    }
+    return null;
+  }
+
+  private validateHotspotResidues(value: string): string | null {
+    if (!value?.trim()) return null;
+    const residueMap = this.pdbResidueMap();
+
+    for (const token of value
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)) {
+      const parsed = MolstarViewerComponent.parseResidueToken(token);
+      if (!parsed) {
+        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14".`;
+      }
+      if (!residueMap) continue;
+
+      const chainResidues = residueMap.get(parsed.chain);
+      if (!chainResidues) {
+        return `Chain "${parsed.chain}" not found in PDB. Available: ${[
+          ...residueMap.keys(),
+        ]
+          .sort()
+          .join(", ")}.`;
+      }
+      if (!chainResidues.has(parsed.resStart)) {
+        return `Residue ${parsed.resStart} not found in chain "${parsed.chain}".`;
+      }
+      if (
+        parsed.resStart !== parsed.resEnd &&
+        !chainResidues.has(parsed.resEnd)
+      ) {
+        return `End residue ${parsed.resEnd} not found in chain "${parsed.chain}".`;
+      }
+    }
+    return null;
+  }
+
+  /** Drives the [externalSelection] input on the Mol* viewer.  Only updated
+   *  by manual form input — never by viewer-originated selection — so there
+   *  is no circular feedback loop. */
+  programmaticViewerSelection = signal<string>("");
+
+  /** Called when the user manually edits the target_hotspot_residues field.
+   *  Updates the value, auto-derives chains, validates against the PDB, and
+   *  pushes the new selection string to the Mol* viewer. */
+  onHotspotResiduesManualChange(rowId: string, value: unknown): void {
+    const residues = (value as string) ?? "";
+    this.updateRowValueWithValidation(
+      rowId,
+      "target_hotspot_residues",
+      residues
+    );
+    const chains = this.chainsFromResidues(residues);
+    if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
+    this.programmaticViewerSelection.set(residues);
   }
 
   onChainsDetected(rowId: string, chains: string): void {
@@ -224,9 +347,15 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     const errorKey = `${rowId}_starting_pdb`;
     const currentErrors = this.formErrors();
     if (count < 50) {
-      this.formErrors.set({ ...currentErrors, [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required.` });
+      this.formErrors.set({
+        ...currentErrors,
+        [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required.`,
+      });
     } else if (count > 300) {
-      this.formErrors.set({ ...currentErrors, [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed.` });
+      this.formErrors.set({
+        ...currentErrors,
+        [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed.`,
+      });
     } else {
       const updated = { ...currentErrors };
       delete updated[errorKey];
@@ -237,7 +366,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   onLengthRangeChange(
     rowId: string,
-    range: { min: number; max: number },
+    range: { min: number; max: number }
   ): void {
     this.updateRowValueWithValidation(rowId, "min_length", range.min);
     this.updateRowValueWithValidation(rowId, "max_length", range.max);
@@ -248,28 +377,13 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  and auto-fills the chains field. e.g. "A56,B12" → chains = "A,B".
    */
   onResiduesSelected(rowId: string, residues: string): void {
-    if (residues) {
-      this.updateRowValueWithValidation(
-        rowId,
-        "target_hotspot_residues",
-        residues,
-      );
-      // Derive chains from the leading letter(s) of each residue token
-      const chains = [
-        ...new Set(
-          residues
-            .split(",")
-            .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
-            .filter(Boolean),
-        ),
-      ]
-        .sort()
-        .join(",");
-      if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
-    } else {
-      this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
-      this.updateRowValueWithValidation(rowId, "chains", "");
-    }
+    this.updateRowValueWithValidation(
+      rowId,
+      "target_hotspot_residues",
+      residues
+    );
+    const chains = this.chainsFromResidues(residues);
+    this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
   // Steps marked complete only when user presses Next on that step
@@ -345,51 +459,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (current === 1) {
       this.attemptedStep1.set(true);
       this.validateAllRequiredFields();
+      // Ensure row-level validation (including PDB-based hotspot checks) runs.
+      for (const row of this.schemaLoader.inputRows()) {
+        this.validateRowField(row.id, "target_hotspot_residues");
+        this.validateRowField(row.id, "chains");
+      }
       this.validateForm();
 
       if (!this.isFormValid()) {
-        return;
-      }
-
-      // Upload the PDB file to S3 before moving on, if one is pending.
-      const file = this.localPdbFile();
-      const rowId = this.schemaLoader.inputRows()[0]?.id;
-      if (file && rowId && file !== this.uploadedPdbFile()) {
-        this.isPdbUploading.set(true);
-        this.subscription.add(
-          this.pdbUploadService
-            .uploadPdbFile({
-              file,
-              metadata: {
-                fieldName: "starting_pdb",
-                uploadedAt: new Date().toISOString(),
-              },
-            })
-            .subscribe({
-              next: (response) => {
-                const s3Uri =
-                  response.s3Uri ??
-                  response.fileUrl ??
-                  response.fileId ??
-                  response.fileName ??
-                  file.name;
-                // Replace placeholder filename with the real S3 path.
-                this.updateRowValueWithValidation(rowId, "starting_pdb", s3Uri);
-                // Record the uploaded file so Back+Next doesn't re-upload it.
-                this.uploadedPdbFile.set(file);
-                this.isPdbUploading.set(false);
-                this.advanceStep(current);
-              },
-              error: (error) => {
-                this.isPdbUploading.set(false);
-                const msg =
-                  error?.error?.message ?? error?.message ?? "Unknown error";
-                this.showError(
-                  `Failed to upload PDB file: ${msg}. Please try again.`,
-                );
-              },
-            }),
-        );
         return;
       }
     }
@@ -399,7 +476,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   private advanceStep(current: number): void {
     this.completedSteps.update((arr) =>
-      arr.includes(current) ? arr : [...arr, current],
+      arr.includes(current) ? arr : [...arr, current]
     );
     this.currentStep.update((v) => v + 1);
     this.visitedSteps.update((arr) => {
@@ -411,7 +488,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
       this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step],
+        arr.includes(step) ? arr : [...arr, step]
       );
     }
   }
@@ -434,11 +511,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.auth.isLoading$
         .pipe(
           filter((isLoading) => !isLoading),
-          take(1),
+          take(1)
         )
         .subscribe(() => {
           this.loadInputSchema();
-        }),
+        })
     );
 
     // Fallback: If auth doesn't initialize within 5 seconds, load anyway
@@ -463,9 +540,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
         // Add default URLs for settings fields
         defaultValues.settings_filters =
-          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_filters.json";
+          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_filters.json";
         defaultValues.settings_advanced =
-          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/main/assets/bindcraft/default_4stage_multimer.json";
+          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_4stage_multimer.json";
 
         this.initializeFormData(defaultValues);
 
@@ -486,12 +563,12 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_filters",
-              defaultValues.settings_filters,
+              defaultValues.settings_filters
             );
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_advanced",
-              defaultValues.settings_advanced,
+              defaultValues.settings_advanced
             );
           }
 
@@ -502,7 +579,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       },
       (error) => {
         console.error("Failed to load schema:", error);
-      },
+      }
     );
   }
 
@@ -512,6 +589,52 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const file = this.localPdbFile();
+    const rowId = this.schemaLoader.inputRows()[0]?.id;
+
+    if (file && rowId && file !== this.uploadedPdbFile()) {
+      this.isPdbUploading.set(true);
+      this.workflowSubmission.isSubmitting.set(true);
+      this.subscription.add(
+        this.pdbUploadService
+          .uploadPdbFile({
+            file,
+            metadata: {
+              fieldName: "starting_pdb",
+              uploadedAt: new Date().toISOString(),
+            },
+          })
+          .subscribe({
+            next: (response) => {
+              const s3Uri =
+                response.s3Uri ??
+                response.fileUrl ??
+                response.fileId ??
+                response.fileName ??
+                file.name;
+              this.updateRowValueWithValidation(rowId, "starting_pdb", s3Uri);
+              this.uploadedPdbFile.set(file);
+              this.isPdbUploading.set(false);
+              this.doSubmitWorkflow();
+            },
+            error: (error) => {
+              this.isPdbUploading.set(false);
+              this.workflowSubmission.isSubmitting.set(false);
+              const msg =
+                error?.error?.message ?? error?.message ?? "Unknown error";
+              this.showError(
+                `Failed to upload PDB file: ${msg}. Please try again.`
+              );
+            },
+          })
+      );
+      return;
+    }
+
+    this.doSubmitWorkflow();
+  }
+
+  private doSubmitWorkflow(): void {
     const rawFormData = this.getFormData();
     const formData = {
       ...rawFormData,
@@ -532,7 +655,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             console.error("Dataset upload succeeded but no datasetId returned");
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned.",
+              "Dataset upload succeeded but no dataset ID was returned."
             );
             return;
           }
@@ -549,22 +672,22 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             (error) => {
               console.error(
                 "Workflow launch failed after dataset upload",
-                error,
+                error
               );
               this.workflowSubmission.isSubmitting.set(false);
               this.showError(
                 `Workflow launch failed after dataset upload: ${
                   error.message || "Unknown error"
-                }`,
+                }`
               );
-            },
+            }
           );
         },
         error: (error) => {
           console.error("Dataset upload failed", error);
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            `Failed to upload dataset: ${error.message || "Unknown error"}`,
+            `Failed to upload dataset: ${error.message || "Unknown error"}`
           );
         },
       });
@@ -873,7 +996,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   getRowNumberValue(
     rowId: string,
     fieldName: string,
-    defaultVal: number,
+    defaultVal: number
   ): number {
     const val = this.getRowValue(rowId, fieldName);
     if (typeof val === "number" && Number.isFinite(val)) return val;
@@ -900,6 +1023,18 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     const currentErrors = this.formErrors();
 
     if (validationResult.valid) {
+      // Custom field-level validators (PDB-aware).
+      let customError: string | null = null;
+      if (fieldName === "target_hotspot_residues") {
+        customError = this.validateHotspotResidues(value as string);
+      } else if (fieldName === "chains") {
+        customError = this.validateChains(rowId, value as string);
+      }
+      if (customError) {
+        this.formErrors.set({ ...currentErrors, [errorKey]: customError });
+        this.validateAllRows();
+        return;
+      }
       // Remove error for this specific cell
       const updatedErrors = { ...currentErrors };
       delete updatedErrors[errorKey];
@@ -958,7 +1093,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   updateRowValueWithValidation(
     rowId: string,
     fieldName: string,
-    value: unknown,
+    value: unknown
   ): void {
     this.updateRowValue(rowId, fieldName, value);
     this.validateRowField(rowId, fieldName);
