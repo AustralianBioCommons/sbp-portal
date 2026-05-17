@@ -24,27 +24,67 @@ export const THEMES: ThemeConfig[] = [
     id: "binder-design",
     label: "Binder Design",
     workflows: [
-      { id: "de-novo-design", label: "De Novo Design", href: "/de-novo-design" },
-      { id: "motif-scaffolding", label: "Motif Scaffolding", href: "/motif-scaffolding", disabled: true },
-      { id: "partial-diffusion", label: "Partial Diffusion", href: "/partial-diffusion", disabled: true },
+      {
+        id: "de-novo-design",
+        label: "De Novo Design",
+        href: "/de-novo-design",
+      },
+      {
+        id: "motif-scaffolding",
+        label: "Motif Scaffolding",
+        href: "/motif-scaffolding",
+        disabled: true,
+      },
+      {
+        id: "partial-diffusion",
+        label: "Partial Diffusion",
+        href: "/partial-diffusion",
+        disabled: true,
+      },
     ],
     tools: [
       { id: "bindcraft", label: "BindCraft", href: "/de-novo-design" },
-      { id: "rfdiffusion", label: "RFdiffusion", href: "/tools/rfdiffusion", disabled: true },
-      { id: "boltzgen", label: "BoltzGen", href: "/tools/boltzgen", disabled: true },
+      {
+        id: "rfdiffusion",
+        label: "RFdiffusion",
+        href: "/tools/rfdiffusion",
+        disabled: true,
+      },
+      {
+        id: "boltzgen",
+        label: "BoltzGen",
+        href: "/tools/boltzgen",
+        disabled: true,
+      },
     ],
   },
   {
     id: "structure-prediction",
     label: "Structure Prediction",
     workflows: [
-      { id: "single-structure-prediction", label: "Single Prediction", href: "/single-structure-prediction" },
-      { id: "interaction-screening", label: "Interaction Screening", href: "/interaction-screening" },
+      {
+        id: "single-structure-prediction",
+        label: "Single Prediction",
+        href: "/single-structure-prediction",
+      },
+      {
+        id: "interaction-screening",
+        label: "Interaction Screening",
+        href: "/interaction-screening",
+      },
     ],
     tools: [
       { id: "boltz", label: "Boltz", href: "/single-structure-prediction" },
-      { id: "colabfold", label: "ColabFold", href: "/single-structure-prediction" },
-      { id: "alphafold2", label: "AlphaFold2", href: "/single-structure-prediction" },
+      {
+        id: "colabfold",
+        label: "ColabFold",
+        href: "/single-structure-prediction",
+      },
+      {
+        id: "alphafold2",
+        label: "AlphaFold2",
+        href: "/single-structure-prediction",
+      },
     ],
   },
 ];

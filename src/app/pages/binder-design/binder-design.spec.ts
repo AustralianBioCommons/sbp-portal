@@ -33,18 +33,18 @@ describe("BinderDesignComponent", () => {
     });
 
     it("workflows should contain de novo design workflow", () => {
-      const deNovoWorkflow = component.workflows().find(
-        (w) => w.id === "de-novo-design"
-      );
+      const deNovoWorkflow = component
+        .workflows()
+        .find((w) => w.id === "de-novo-design");
       expect(deNovoWorkflow).toBeDefined();
       expect(deNovoWorkflow?.label).toBe("De Novo Design");
       expect(deNovoWorkflow?.href).toBe("/de-novo-design");
     });
 
     it("workflows should contain motif scaffolding workflow", () => {
-      const motifWorkflow = component.workflows().find(
-        (w) => w.id === "motif-scaffolding"
-      );
+      const motifWorkflow = component
+        .workflows()
+        .find((w) => w.id === "motif-scaffolding");
       expect(motifWorkflow).toBeDefined();
       expect(motifWorkflow?.label).toBe("Motif Scaffolding");
       expect(motifWorkflow?.href).toBe("/motif-scaffolding");
@@ -52,9 +52,9 @@ describe("BinderDesignComponent", () => {
     });
 
     it("workflows should contain partial diffusion workflow", () => {
-      const partialWorkflow = component.workflows().find(
-        (w) => w.id === "partial-diffusion"
-      );
+      const partialWorkflow = component
+        .workflows()
+        .find((w) => w.id === "partial-diffusion");
       expect(partialWorkflow).toBeDefined();
       expect(partialWorkflow?.label).toBe("Partial Diffusion");
       expect(partialWorkflow?.href).toBe("/partial-diffusion");
@@ -80,18 +80,18 @@ describe("BinderDesignComponent", () => {
     });
 
     it("tools should contain BindCraft tool", () => {
-      const bindCraftTool = component.tools().find(
-        (t) => t.label === "BindCraft"
-      );
+      const bindCraftTool = component
+        .tools()
+        .find((t) => t.label === "BindCraft");
       expect(bindCraftTool).toBeDefined();
       expect(bindCraftTool?.id).toBe("bindcraft");
       expect(bindCraftTool?.href).toBe("/de-novo-design");
     });
 
     it("tools should contain RFdiffusion tool", () => {
-      const rfdiffusionTool = component.tools().find(
-        (t) => t.label === "RFdiffusion"
-      );
+      const rfdiffusionTool = component
+        .tools()
+        .find((t) => t.label === "RFdiffusion");
       expect(rfdiffusionTool).toBeDefined();
       expect(rfdiffusionTool?.id).toBe("rfdiffusion");
       expect(rfdiffusionTool?.href).toBe("/tools/rfdiffusion");
@@ -99,7 +99,9 @@ describe("BinderDesignComponent", () => {
     });
 
     it("tools should contain BoltzGen tool", () => {
-      const boltzGenTool = component.tools().find((t) => t.label === "BoltzGen");
+      const boltzGenTool = component
+        .tools()
+        .find((t) => t.label === "BoltzGen");
       expect(boltzGenTool).toBeDefined();
       expect(boltzGenTool?.id).toBe("boltzgen");
       expect(boltzGenTool?.href).toBe("/tools/boltzgen");
@@ -129,33 +131,33 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should contain documentation resource", () => {
-      const docs = component.communityResources().find(
-        (r) => r.title === "Documentation"
-      );
+      const docs = component
+        .communityResources()
+        .find((r) => r.title === "Documentation");
       expect(docs).toBeDefined();
       expect(docs?.description).toContain("guides and tutorials");
     });
 
     it("should contain community forum resource", () => {
-      const forum = component.communityResources().find(
-        (r) => r.title === "Community Forum"
-      );
+      const forum = component
+        .communityResources()
+        .find((r) => r.title === "Community Forum");
       expect(forum).toBeDefined();
       expect(forum?.description).toContain("Connect with other researchers");
     });
 
     it("should contain best practices resource", () => {
-      const practices = component.communityResources().find(
-        (r) => r.title === "Best Practices"
-      );
+      const practices = component
+        .communityResources()
+        .find((r) => r.title === "Best Practices");
       expect(practices).toBeDefined();
       expect(practices?.description).toContain("protocols and methodologies");
     });
 
     it("should contain publication repository resource", () => {
-      const publications = component.communityResources().find(
-        (r) => r.title === "Publication Repository"
-      );
+      const publications = component
+        .communityResources()
+        .find((r) => r.title === "Publication Repository");
       expect(publications).toBeDefined();
       expect(publications?.description).toContain("research papers");
     });
@@ -170,9 +172,9 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should have unique resource titles", () => {
-      const titles = component.communityResources().map(
-        (resource) => resource.title
-      );
+      const titles = component
+        .communityResources()
+        .map((resource) => resource.title);
       const uniqueTitles = [...new Set(titles)];
       expect(titles.length).toBe(uniqueTitles.length);
     });
@@ -257,7 +259,11 @@ describe("BinderDesignComponent", () => {
 
       it("should navigate to generic tools route for non-bindcraft enabled tools", () => {
         component.tools.set([
-          { id: "rfdiffusion", label: "RFdiffusion", href: "/tools/rfdiffusion" },
+          {
+            id: "rfdiffusion",
+            label: "RFdiffusion",
+            href: "/tools/rfdiffusion",
+          },
         ]);
 
         component.navigateToTool("rfdiffusion");

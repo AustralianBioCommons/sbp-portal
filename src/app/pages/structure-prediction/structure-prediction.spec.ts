@@ -87,7 +87,7 @@ describe("StructurePredictionComponent", () => {
   it("should navigate to tool when enabled", () => {
     component.navigateToTool("boltz");
     expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(
-      "/single-structure-prediction",
+      "/single-structure-prediction"
     );
   });
 
