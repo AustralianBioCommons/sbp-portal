@@ -26,7 +26,7 @@ npm install
 npm start
 ```
 
-4. To run tests
+4. To run tests:
 
 ```bash
 npm test
@@ -34,6 +34,7 @@ npm test
 
 Notes:
 
+- Environment variables are hardcoded in `src/environments/environment.ts` for local development. Update that file if you need to point to a different backend.
 - Tailwind and PostCSS are configured via `tailwind.config.cjs` and `postcss.config.cjs`.
 - If you scaffolded with a different version of Angular CLI locally, some generated files may differ; these files are a minimal starting point created without running the Angular CLI in this environment.
 
@@ -42,5 +43,5 @@ Notes:
 To run and fix lint locally:
 
 ```bash
-npx prettier --write <directory-path-to-fix-linting>
+npm run format
 ```

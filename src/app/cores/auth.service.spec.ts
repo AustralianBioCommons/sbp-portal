@@ -6,7 +6,7 @@ import {
 } from "@angular/common/http/testing";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { BehaviorSubject, of } from "rxjs";
+import { BehaviorSubject, of, throwError } from "rxjs";
 import { AuthService } from "./auth.service";
 import { environment } from "../../environments/environment";
 
@@ -386,7 +386,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const syncRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       syncRequest.flush({ message: "synced", userId: "user-1" });
 
@@ -503,18 +505,147 @@ describe("AuthService", () => {
     }));
   });
 
+  describe("canExecuteWorkflows$", () => {
+    const ROLES_CLAIM = environment.rolesClaim;
+    const WORKFLOW_ROLE = environment.workflowRole;
+    const syncUrl = `${
+      environment.apiBaseUrl || window.location.origin
+    }/api/workflows/me/sync`;
+
+    function mockAccessToken(payload: Record<string, unknown>): string {
+      const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+      const body = btoa(JSON.stringify(payload));
+      return `${header}.${body}.mock-sig`;
+    }
+
+    // Setting isAuthenticated → true also fires syncCurrentUserToBackend().
+    // Flush that request so afterEach's verify() doesn't fail.
+    function flushSync() {
+      httpTestingController
+        .expectOne(syncUrl)
+        .flush({ message: "synced", userId: "user-1" });
+    }
+
+    it("should emit false when not authenticated", (done) => {
+      // isAuthenticatedSubject starts false — no sync request
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit false when access token has no roles claim", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ sub: "user|123" }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit false when roles claim is not an array", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: "not-an-array" }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit false when roles array does not include the workflow execution role", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: ["biocommons/group/other"] }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should emit true when access token includes the workflow execution role", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: [WORKFLOW_ROLE] }))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeTrue();
+        done();
+      });
+    });
+
+    it("should emit true when roles array includes the workflow role alongside others", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(
+          mockAccessToken({
+            [ROLES_CLAIM]: ["biocommons/group/other", WORKFLOW_ROLE],
+          })
+        )
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeTrue();
+        done();
+      });
+    });
+
+    it("should emit false when getAccessTokenSilently throws", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        throwError(() => new Error("token fetch failed"))
+      );
+      isAuthenticatedSubject.next(true);
+      flushSync();
+      service.canExecuteWorkflows$.subscribe((can) => {
+        expect(can).toBeFalse();
+        done();
+      });
+    });
+
+    it("should react to authentication state changes", (done) => {
+      mockAuth0Service.getAccessTokenSilently.and.returnValue(
+        of(mockAccessToken({ [ROLES_CLAIM]: [WORKFLOW_ROLE] }))
+      );
+      const results: boolean[] = [];
+      const sub = service.canExecuteWorkflows$.subscribe((can) => {
+        results.push(can);
+        if (results.length === 3) {
+          expect(results).toEqual([false, true, false]);
+          sub.unsubscribe();
+          done();
+        }
+      });
+      // isAuthenticatedSubject starts false → results[0] = false on subscribe
+      isAuthenticatedSubject.next(true); // fetches token with role → results[1] = true
+      flushSync(); // clear the sync HTTP request
+      isAuthenticatedSubject.next(false); // unauthenticated → results[2] = false
+    });
+  });
+
   describe("Current user sync", () => {
     it("should sync the current user only once per authenticated session", () => {
       isAuthenticatedSubject.next(true);
 
       const firstRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       firstRequest.flush({ message: "synced", userId: "user-1" });
 
       isAuthenticatedSubject.next(true);
       httpTestingController.expectNone(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       expect(service.currentBannerMessage).toBe("Login successful!");
     });
@@ -523,7 +654,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const firstRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       firstRequest.flush({ message: "synced", userId: "user-1" });
 
@@ -531,7 +664,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const secondRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       secondRequest.flush({ message: "synced-again", userId: "user-1" });
       expect(service.currentBannerMessage).toBe("Login successful!");
@@ -543,7 +678,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const failedRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       failedRequest.flush(
         { message: "failed" },
@@ -555,7 +692,9 @@ describe("AuthService", () => {
       isAuthenticatedSubject.next(true);
 
       const retryRequest = httpTestingController.expectOne(
-        `${environment.apiBaseUrl}/api/workflows/me/sync`
+        `${
+          environment.apiBaseUrl || window.location.origin
+        }/api/workflows/me/sync`
       );
       retryRequest.flush({ message: "synced", userId: "user-1" });
       expect(warnSpy).toHaveBeenCalled();

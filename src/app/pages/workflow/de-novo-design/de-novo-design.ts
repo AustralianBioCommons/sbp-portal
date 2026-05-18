@@ -29,6 +29,7 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
+import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
@@ -75,6 +76,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   // Auth
   public auth = inject(AuthService);
+  readonly profileUrl = environment.profileUrl;
   // Router for navigation
   private router = inject(Router);
   // Schema loader service

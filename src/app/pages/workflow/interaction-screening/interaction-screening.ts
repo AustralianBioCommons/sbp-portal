@@ -8,7 +8,7 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from "@angular/forms";
-import { startWith } from "rxjs/operators";
+import { map, startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -28,6 +28,7 @@ import {
   SequenceValidationResult,
   validateProteinSequence,
 } from "../../../cores/utils/fasta.utils";
+import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -77,6 +78,7 @@ type StepItem = Step;
 export class InteractionScreeningComponent {
   // Auth
   public auth = inject(AuthService);
+  readonly profileUrl = environment.profileUrl;
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
   // Dataset upload service
@@ -90,9 +92,14 @@ export class InteractionScreeningComponent {
   private formStatus = toSignal(
     this.form.statusChanges.pipe(startWith(this.form.status))
   );
-  private formValue: Signal<
-    { queryFasta?: string; targetFasta?: string } | undefined
-  > = toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())));
+  private formValue: Signal<{ queryFasta: string; targetFasta: string }> =
+    toSignal(
+      this.form.valueChanges.pipe(
+        startWith(null),
+        map(() => this.form.getRawValue())
+      ),
+      { initialValue: this.form.getRawValue() }
+    );
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");

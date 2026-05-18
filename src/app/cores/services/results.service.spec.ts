@@ -13,9 +13,11 @@ describe("ResultsService", () => {
   let service: ResultsService;
   let httpMock: HttpTestingController;
   let sanitizer: DomSanitizer;
-  const apiBase = environment.apiBaseUrl!.replace(/\/?$/, "/");
+  let apiBase: string;
 
   beforeEach(() => {
+    apiBase = environment.apiBaseUrl!.replace(/\/?$/, "/");
+
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),

@@ -1,4 +1,4 @@
-import { Environment } from "./environment";
+import { Environment } from "./environment.interface";
 
 export const environment: Environment = {
   production: true,
@@ -7,6 +7,8 @@ export const environment: Environment = {
     clientId: "VgTSGK8Ph92r8mVhmVvQDrxGzbWX0vCm",
     audience: "https://dev.api.aai.test.biocommons.org.au",
   },
-  apiBaseUrl: "https://dev.sbp.test.biocommons.org.au/api",
+  apiBaseUrl: "https://api.dev.sbp.test.biocommons.org.au",
   profileUrl: "https://dev.portal.aai.test.biocommons.org.au/profile",
+  rolesClaim: "https://biocommons.org.au/roles",
+  workflowRole: "biocommons/group/sbp_workflow_execution",
 };

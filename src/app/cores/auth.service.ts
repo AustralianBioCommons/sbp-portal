@@ -2,7 +2,15 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { AuthService as Auth0Service } from "@auth0/auth0-angular";
-import { BehaviorSubject, Observable, take } from "rxjs";
+import {
+  BehaviorSubject,
+  Observable,
+  catchError,
+  map,
+  of,
+  switchMap,
+  take,
+} from "rxjs";
 import { environment } from "../../environments/environment";
 
 interface AuthError {
@@ -39,7 +47,7 @@ export class AuthService {
   public showBanner$ = this.showBannerSubject.asObservable();
 
   // Loading observables
-  public isLoading$ = this.loadingSubject.asObservable();
+  public isLoading$: Observable<boolean> = this.loadingSubject.asObservable();
   public loadingMessage$ = this.loadingMessageSubject.asObservable();
 
   // Keep legacy observables for backward compatibility
@@ -47,9 +55,39 @@ export class AuthService {
   public showErrorBanner$ = this.showBannerSubject.asObservable();
 
   // Expose Auth0 observables
-  public isAuthenticated$ = this.auth0.isAuthenticated$;
+  public isAuthenticated$: Observable<boolean> = this.auth0.isAuthenticated$;
   public user$ = this.auth0.user$;
   public error$ = this.auth0.error$;
+
+  public canExecuteWorkflows$: Observable<boolean> =
+    this.auth0.isAuthenticated$.pipe(
+      switchMap((isAuthenticated) => {
+        if (!isAuthenticated) return of(false);
+        return this.auth0.getAccessTokenSilently().pipe(
+          map((token) => {
+            const payload = AuthService.decodeAccessToken(token);
+            if (!payload) return false;
+            const roles = payload[environment.rolesClaim];
+            return (
+              Array.isArray(roles) && roles.includes(environment.workflowRole)
+            );
+          }),
+          catchError(() => of(false))
+        );
+      })
+    );
+
+  // JWT uses base64url — convert to standard base64 before decoding.
+  private static decodeAccessToken(
+    token: string
+  ): Record<string, unknown> | null {
+    try {
+      const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      return JSON.parse(atob(base64));
+    } catch {
+      return null;
+    }
+  }
 
   constructor() {
     // Initialize loading and banner handling

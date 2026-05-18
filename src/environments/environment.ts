@@ -1,13 +1,4 @@
-export interface Environment {
-  production: boolean;
-  auth: {
-    domain: string;
-    clientId: string;
-    audience?: string;
-  };
-  apiBaseUrl?: string;
-  profileUrl: string;
-}
+import { Environment } from "./environment.interface";
 
 export const environment: Environment = {
   production: false,
@@ -17,6 +8,7 @@ export const environment: Environment = {
     audience: "https://dev.api.aai.test.biocommons.org.au",
   },
   apiBaseUrl: "https://api.dev.sbp.test.biocommons.org.au",
-  // For local-only testing, prefer an Angular dev-server proxy or a gitignored environment.local.ts
   profileUrl: "https://dev.portal.aai.test.biocommons.org.au/profile",
+  rolesClaim: "https://biocommons.org.au/roles",
+  workflowRole: "biocommons/group/sbp_workflow_execution",
 };
