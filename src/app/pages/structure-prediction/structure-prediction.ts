@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { ButtonComponent } from "../../components/button/button.component";
+import { THEMES } from "../../cores/config/themes.config";
 
 @Component({
   selector: "app-structure-prediction",
@@ -18,7 +19,6 @@ export class StructurePredictionComponent {
       return;
     }
 
-    console.log(`Navigating to workflow: ${workflowId}`);
     this.router.navigate([`/${workflowId}`]);
   }
 
@@ -28,43 +28,10 @@ export class StructurePredictionComponent {
       return;
     }
 
-    console.log(`Navigating to tool: ${toolId}`);
-    this.router.navigate(["/tools", toolId]);
+    this.router.navigateByUrl(tool.href);
   }
 
-  workflows = [
-    {
-      id: "single-structure-prediction",
-      label: "Single Prediction",
-      href: "/single-structure-prediction",
-      disabled: false,
-    },
-    {
-      id: "interaction-screening",
-      label: "Interaction Screening",
-      href: "/interaction-screening",
-      disabled: false,
-    },
-  ];
-
-  tools = [
-    {
-      id: "boltz",
-      label: "Boltz",
-      href: "/tools/boltz",
-      disabled: true,
-    },
-    {
-      id: "colabfold",
-      label: "ColabFold",
-      href: "/tools/colabfold",
-      disabled: true,
-    },
-    {
-      id: "alphafold2",
-      label: "AlphaFold2",
-      href: "/tools/alphafold2",
-      disabled: true,
-    },
-  ];
+  private readonly theme = THEMES.find((t) => t.id === "structure-prediction")!;
+  workflows = this.theme.workflows;
+  tools = this.theme.tools;
 }

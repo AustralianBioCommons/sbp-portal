@@ -9,6 +9,7 @@ import {
 } from "@angular/core";
 import { NavigationEnd, Router, RouterModule } from "@angular/router";
 import { filter } from "rxjs/operators";
+import { THEMES } from "../../cores/config/themes.config";
 import { Login } from "../login/login.component";
 import { Navbar } from "../navbar/navbar.component";
 
@@ -16,6 +17,12 @@ export interface TabItem {
   id: string;
   label: string;
   description: string;
+}
+
+export interface BreadcrumbInfo {
+  themeLabel: string;
+  themeTab: string;
+  workflowLabel: string;
 }
 
 @Component({
@@ -29,6 +36,20 @@ export class Header implements AfterViewInit {
 
   activeTab = signal("binder-design");
   showTabs = signal(false);
+  showBreadcrumb = signal(false);
+  breadcrumb = signal<BreadcrumbInfo | null>(null);
+
+  private readonly workflowBreadcrumbs: Record<string, BreadcrumbInfo> =
+    THEMES.reduce((acc, theme) => {
+      for (const wf of theme.workflows) {
+        acc[wf.href] = {
+          themeLabel: theme.label,
+          themeTab: theme.id,
+          workflowLabel: wf.label,
+        };
+      }
+      return acc;
+    }, {} as Record<string, BreadcrumbInfo>);
 
   // Scroll state
   canScrollLeft = signal(false);
@@ -68,20 +89,20 @@ export class Header implements AfterViewInit {
   }
 
   private checkRoute(url: string) {
-    this.showTabs.set(url.startsWith("/themes"));
+    const basePath = url.split("?")[0];
 
-    // Extract tab from query parameters when on themes route
-    if (url.startsWith("/themes")) {
+    this.showTabs.set(basePath === "/themes");
+
+    if (basePath === "/themes") {
       const urlTree = this.router.parseUrl(url);
       const tab = urlTree.queryParams["tab"];
-      if (tab) {
-        this.activeTab.set(tab);
-        console.log("Header: Updated active tab to:", tab);
-      } else {
-        // Default to binder-design if no tab specified
-        this.activeTab.set("binder-design");
-        console.log("Header: No tab specified, defaulting to binder-design");
-      }
+      this.activeTab.set(tab ?? "binder-design");
+      this.showBreadcrumb.set(false);
+      this.breadcrumb.set(null);
+    } else {
+      const crumb = this.workflowBreadcrumbs[basePath] ?? null;
+      this.showBreadcrumb.set(crumb !== null);
+      this.breadcrumb.set(crumb);
     }
   }
 
@@ -105,6 +126,10 @@ export class Header implements AfterViewInit {
 
   isActiveTab(tabId: string): boolean {
     return this.activeTab() === tabId;
+  }
+
+  navigateToTheme(themeTab: string): void {
+    this.router.navigate(["/themes"], { queryParams: { tab: themeTab } });
   }
 
   scrollLeft(): void {

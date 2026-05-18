@@ -467,7 +467,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.validateForm();
 
       if (!this.isFormValid()) {
-        console.log("Cannot proceed: Input configuration validation failed");
         return;
       }
     }
@@ -642,8 +641,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       binder_name: (rawFormData["id"] as string) || "",
     };
 
-    console.log("Starting workflow submission with dataset upload...");
-
     this.workflowSubmission.isSubmitting.set(true);
 
     this.datasetUploadService
@@ -653,7 +650,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           const datasetId = response.datasetId;
-          console.log("Dataset upload response:", response);
 
           if (!datasetId) {
             console.error("Dataset upload succeeded but no datasetId returned");
