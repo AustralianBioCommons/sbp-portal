@@ -9,7 +9,7 @@ This repository contains the code for the Structural Biology Platform (SBP) web 
 
 ## Development
 
-This repository now contains a minimal Angular (Angular 20 + Tailwind) application scaffold at the repository root.
+This repository now contains a minimal Angular (Angular 21 + Tailwind) application scaffold at the repository root.
 
 To run it locally:
 
