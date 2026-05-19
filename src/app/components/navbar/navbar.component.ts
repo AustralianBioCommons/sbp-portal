@@ -114,11 +114,6 @@ export class Navbar {
       ],
     },
     {
-      label: "Tools",
-      path: "/tools",
-      icon: "heroWrenchScrewdriver",
-    },
-    {
       label: "Jobs",
       path: "/jobs",
       image: "/assets/job-run.png",

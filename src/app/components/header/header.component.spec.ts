@@ -71,28 +71,21 @@ describe("Header", () => {
     });
 
     it("should have correct tabs configuration", () => {
-      expect(component.tabs.length).toBe(3);
+      expect(component.tabs.length).toBe(2);
       expect(component.tabs[0]).toEqual({
         id: "binder-design",
         label: "Binder Design",
         description: "Design and optimize protein binders for specific targets",
       });
-      expect(component.tabs[2]).toEqual({
-        id: "tools",
-        label: "Tools",
-        description: "Access various computational biology tools and utilities",
+      expect(component.tabs[1]).toEqual({
+        id: "structure-prediction",
+        label: "Structure Prediction",
+        description: "Predict protein structures using advanced algorithms",
       });
     });
   });
 
   describe("selectTab", () => {
-    it("should navigate to tools route when tools tab is selected", () => {
-      component.selectTab("tools");
-
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools"]);
-      expect(component.activeTab()).toBe("tools");
-    });
-
     it("should navigate to themes with query param for non-tools tabs", () => {
       component.selectTab("structure-prediction");
 
@@ -346,10 +339,12 @@ describe("Header", () => {
     it("should handle navigation failures gracefully", async () => {
       mockRouter.navigate.and.returnValue(Promise.resolve(false));
 
-      component.selectTab("tools");
+      component.selectTab("structure-prediction");
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/tools"]);
-      expect(component.activeTab()).toBe("tools");
+      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
+        queryParams: { tab: "structure-prediction" },
+      });
+      expect(component.activeTab()).toBe("structure-prediction");
     });
 
     it("should handle other tab navigation with query params", () => {
