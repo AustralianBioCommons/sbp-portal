@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component, Input } from "@angular/core";
 
 export interface FormValidationSummary {
@@ -10,7 +9,7 @@ export interface FormValidationSummary {
 @Component({
   selector: "app-form-status",
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="mt-4 p-3 bg-gray-50 rounded-[10px]">
       <div class="flex items-center justify-between">

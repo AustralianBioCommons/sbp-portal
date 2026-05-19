@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
 export interface ToolOption {
@@ -10,7 +9,7 @@ export interface ToolOption {
 @Component({
   selector: "app-tool-selection",
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: "./tool-selection.component.html",
 })
 export class ToolSelectionComponent {

@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import {
   AfterViewInit,
   Component,
@@ -28,7 +27,7 @@ export interface BreadcrumbInfo {
 @Component({
   selector: "app-header",
   standalone: true,
-  imports: [CommonModule, RouterModule, Navbar, Login],
+  imports: [RouterModule, Navbar, Login],
   templateUrl: "./header.component.html",
 })
 export class Header implements AfterViewInit {

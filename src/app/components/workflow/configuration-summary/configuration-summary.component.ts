@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component, Input } from "@angular/core";
 
 export interface SummaryItem {
@@ -12,7 +11,7 @@ export interface SummaryItem {
 @Component({
   selector: "app-configuration-summary",
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="mt-4 space-y-4">
       <!-- Selected Tool -->

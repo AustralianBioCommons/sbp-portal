@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
-import { CommonModule } from "@angular/common";
+
 import { ButtonComponent } from "../button/button.component";
 
 @Component({
   selector: "app-dialog",
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [ButtonComponent],
   templateUrl: "./dialog.component.html",
   styleUrls: ["./dialog.component.scss"],
 })

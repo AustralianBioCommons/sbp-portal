@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
 export interface ListboxSelectOption {
@@ -9,7 +8,7 @@ export interface ListboxSelectOption {
 @Component({
   selector: "app-listbox-select",
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="relative" (focusout)="handleFocusOut($event)">
       <button

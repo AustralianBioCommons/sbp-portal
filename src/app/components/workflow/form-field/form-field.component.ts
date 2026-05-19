@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import {
   Component,
   EventEmitter,
@@ -14,7 +13,7 @@ import { AlertComponent } from "../../alert/alert.component";
 @Component({
   selector: "app-form-field",
   standalone: true,
-  imports: [CommonModule, AlertComponent],
+  imports: [AlertComponent],
   templateUrl: "./form-field.component.html",
 })
 export class FormFieldComponent {
