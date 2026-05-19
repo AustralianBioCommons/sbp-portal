@@ -68,11 +68,6 @@ export class Header implements AfterViewInit {
       label: "Structure Prediction",
       description: "Predict protein structures using advanced algorithms",
     },
-    {
-      id: "tools",
-      label: "Tools",
-      description: "Access various computational biology tools and utilities",
-    },
   ];
 
   constructor() {
@@ -115,12 +110,6 @@ export class Header implements AfterViewInit {
 
   selectTab(tabId: string) {
     this.activeTab.set(tabId);
-    // Navigate to themes route with query param or use a service to communicate with home component
-    // if the tab is tools, navigate to /tools directly
-    if (tabId === "tools") {
-      this.router.navigate(["/tools"]);
-      return;
-    }
     this.router.navigate(["/themes"], { queryParams: { tab: tabId } });
   }
 
