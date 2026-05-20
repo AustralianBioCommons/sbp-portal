@@ -1,6 +1,10 @@
 import { Environment } from "./environment.interface";
+import {
+  RuntimeEnvironmentConfig,
+  mergeEnvironmentConfig,
+} from "./runtime-config";
 
-export const environment: Environment = {
+const defaults: Environment = {
   production: true,
   auth: {
     domain: "dev.login.aai.test.biocommons.org.au",
@@ -12,3 +16,17 @@ export const environment: Environment = {
   rolesClaim: "https://biocommons.org.au/roles",
   workflowRole: "biocommons/group/sbp_workflow_execution",
 };
+
+export const environment: Environment = mergeEnvironmentConfig(defaults);
+
+export function updateEnvironment(runtime?: RuntimeEnvironmentConfig): void {
+  const merged = mergeEnvironmentConfig(defaults, runtime);
+  environment.production = merged.production;
+  environment.auth = merged.auth;
+  environment.apiBaseUrl = merged.apiBaseUrl;
+  environment.profileUrl = merged.profileUrl;
+  environment.rolesClaim = merged.rolesClaim;
+  environment.workflowRole = merged.workflowRole;
+}
+
+export const environmentDefaults = defaults;
