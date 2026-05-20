@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component, inject, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { ButtonComponent } from "../../components/button/button.component";
@@ -7,7 +6,7 @@ import { THEMES } from "../../cores/config/themes.config";
 @Component({
   selector: "app-binder-design",
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [ButtonComponent],
   templateUrl: "./binder-design.html",
 })
 export class BinderDesignComponent {

@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
@@ -36,7 +35,7 @@ type SocialLink = {
 @Component({
   selector: "app-footer",
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIconComponent],
+  imports: [FormsModule, NgIconComponent],
   providers: [
     provideIcons({
       heroMagnifyingGlass,

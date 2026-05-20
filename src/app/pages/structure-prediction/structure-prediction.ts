@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { ButtonComponent } from "../../components/button/button.component";
@@ -7,7 +6,7 @@ import { THEMES } from "../../cores/config/themes.config";
 @Component({
   selector: "app-structure-prediction",
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [ButtonComponent],
   templateUrl: "./structure-prediction.html",
 })
 export class StructurePredictionComponent {

@@ -867,7 +867,6 @@ describe("InputSchemaService", () => {
       spyOn(console, "error");
 
       service.parseInputSchema(invalidSchema).subscribe({
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         next: (_result) => {
           // Should not reach here with this malformed schema
           done.fail("Should have thrown an error");

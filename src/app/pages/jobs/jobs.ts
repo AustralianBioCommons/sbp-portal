@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import {
   Component,
   inject,
@@ -25,7 +24,6 @@ import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
   selector: "app-jobs",
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     JobsActionMenuComponent,
     JobResultsComponent,

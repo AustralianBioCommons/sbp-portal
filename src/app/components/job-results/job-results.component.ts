@@ -1,4 +1,3 @@
-import { CommonModule } from "@angular/common";
 import {
   Component,
   EventEmitter,
@@ -34,7 +33,7 @@ type JobSettingItem = {
 @Component({
   selector: "app-job-results",
   standalone: true,
-  imports: [CommonModule, NgIconComponent, LoadingComponent],
+  imports: [NgIconComponent, LoadingComponent],
   templateUrl: "./job-results.component.html",
   providers: [provideIcons({ heroArrowDownTray })],
 })

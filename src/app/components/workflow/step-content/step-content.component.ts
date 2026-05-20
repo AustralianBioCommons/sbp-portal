@@ -1,10 +1,9 @@
-import { CommonModule } from "@angular/common";
 import { Component, Input } from "@angular/core";
 
 @Component({
   selector: "app-step-content",
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="mt-4 border border-gray-200 rounded-[10px] p-4 bg-white">
       @if (title) {

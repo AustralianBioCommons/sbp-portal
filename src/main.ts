@@ -1,3 +1,4 @@
+import { provideZoneChangeDetection } from "@angular/core";
 // src/main.ts
 import { provideHttpClient, withInterceptors } from "@angular/common/http";
 import { bootstrapApplication } from "@angular/platform-browser";
@@ -17,6 +18,7 @@ import { environment } from "./environments/environment";
 
 bootstrapApplication(AppComponent, {
   providers: [
+    provideZoneChangeDetection(),
     provideAnimations(),
     provideRouter([
       { path: "", redirectTo: "/themes", pathMatch: "full" },

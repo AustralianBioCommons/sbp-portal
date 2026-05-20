@@ -29,7 +29,6 @@ context.keys().forEach(context);
 // Prevent full page reloads during unit tests by stubbing navigation helpers.
 if (typeof window !== "undefined") {
   const warnNavigation = (target: string, args: unknown[]) => {
-    // eslint-disable-next-line no-console
     console.warn(
       `[test-nav] Blocked ${target} during unit tests`,
       ...(args.length ? args : [])
