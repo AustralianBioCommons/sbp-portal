@@ -68,6 +68,12 @@ export const THEMES: ThemeConfig[] = [
         href: "/single-structure-prediction",
       },
       {
+        id: "bulk-prediction",
+        label: "Bulk Prediction",
+        href: "/bulk-prediction",
+        disabled: true,
+      },
+      {
         id: "interaction-screening",
         label: "Interaction Screening",
         href: "/interaction-screening",

@@ -27,13 +27,19 @@ describe("StructurePredictionComponent", () => {
   });
 
   it("should define workflows", () => {
-    expect(component.workflows.length).toBe(2);
+    expect(component.workflows.length).toBe(3);
     expect(component.workflows[0]).toEqual({
       id: "single-structure-prediction",
       label: "Single Prediction",
       href: "/single-structure-prediction",
     });
     expect(component.workflows[1]).toEqual({
+      id: "bulk-prediction",
+      label: "Bulk Prediction",
+      href: "/bulk-prediction",
+      disabled: true,
+    });
+    expect(component.workflows[2]).toEqual({
       id: "interaction-screening",
       label: "Interaction Screening",
       href: "/interaction-screening",
@@ -87,7 +93,7 @@ describe("StructurePredictionComponent", () => {
   it("should navigate to tool when enabled", () => {
     component.navigateToTool("boltz");
     expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(
-      "/single-structure-prediction"
+      "/single-structure-prediction",
     );
   });
 

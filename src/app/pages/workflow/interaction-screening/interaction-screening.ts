@@ -7,6 +7,7 @@ import {
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
+  Validators,
 } from "@angular/forms";
 import { map, startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
@@ -25,20 +26,32 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import {
-  SequenceValidationResult,
-  validateProteinSequence,
+  parseMultiFasta,
+  validateMultiFastaProtein,
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
-function fastaValidator(
-  validate: (seq: string) => SequenceValidationResult
-): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const result = validate(control.value ?? "");
-    return result.valid ? null : { fasta: result.errorMessage };
+function multiFastaValidator(
+  control: AbstractControl,
+): ValidationErrors | null {
+  const result = validateMultiFastaProtein(control.value ?? "");
+  return result.valid ? null : { fasta: result.errorMessage };
+}
+
+const MAX_SEQUENCE_PRODUCT = 1000;
+
+function maxProductValidator(max: number): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const queryVal = group.get("queryFasta")?.value ?? "";
+    const targetVal = group.get("targetFasta")?.value ?? "";
+    const queryResult = validateMultiFastaProtein(queryVal);
+    const targetResult = validateMultiFastaProtein(targetVal);
+    if (!queryResult.valid || !targetResult.valid) return null;
+    const product = queryResult.sequenceCount * targetResult.sequenceCount;
+    return product >= max ? { maxProduct: { actual: product, max } } : null;
   };
 }
 
@@ -85,21 +98,31 @@ export class InteractionScreeningComponent {
   private datasetUploadService = inject(DatasetUploadService);
   // Form
   private fb = inject(NonNullableFormBuilder);
-  readonly form = this.fb.group({
-    queryFasta: ["", fastaValidator(validateProteinSequence)],
-    targetFasta: ["", fastaValidator(validateProteinSequence)],
-  });
-  private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status))
+  readonly form = this.fb.group(
+    {
+      jobId: [
+        "",
+        [Validators.maxLength(100), Validators.pattern(/^[\w\-\s]*$/)],
+      ],
+      queryFasta: ["", multiFastaValidator],
+      targetFasta: ["", multiFastaValidator],
+    },
+    { validators: maxProductValidator(MAX_SEQUENCE_PRODUCT) },
   );
-  private formValue: Signal<{ queryFasta: string; targetFasta: string }> =
-    toSignal(
-      this.form.valueChanges.pipe(
-        startWith(null),
-        map(() => this.form.getRawValue())
-      ),
-      { initialValue: this.form.getRawValue() }
-    );
+  private formStatus = toSignal(
+    this.form.statusChanges.pipe(startWith(this.form.status)),
+  );
+  private formValue: Signal<{
+    jobId: string;
+    queryFasta: string;
+    targetFasta: string;
+  }> = toSignal(
+    this.form.valueChanges.pipe(
+      startWith(null),
+      map(() => this.form.getRawValue()),
+    ),
+    { initialValue: this.form.getRawValue() },
+  );
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
@@ -133,7 +156,7 @@ export class InteractionScreeningComponent {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
   );
 
   // ─── Steps ───────────────────────────────────────────────────────────────
@@ -141,7 +164,7 @@ export class InteractionScreeningComponent {
     {
       id: 1,
       title: "Input Configuration",
-      description: "Add query and target protein sequences",
+      description: "Add query and target protein sequences in FASTA format",
     },
     {
       id: 2,
@@ -182,25 +205,29 @@ export class InteractionScreeningComponent {
 
   // Review step summary
   formSummary = computed(() => {
-    const queryFasta = this.formValue()?.queryFasta ?? "";
-    const targetFasta = this.formValue()?.targetFasta ?? "";
+    const val = this.formValue();
+    const queryResult = validateMultiFastaProtein(val?.queryFasta ?? "");
+    const targetResult = validateMultiFastaProtein(val?.targetFasta ?? "");
     const items: { label: string; value: string; fieldName: string }[] = [];
-    if (validateProteinSequence(queryFasta).valid) {
+    if (val?.jobId) {
+      items.push({ label: "Job ID", value: val.jobId, fieldName: "job_id" });
+    }
+    if (queryResult.valid) {
       items.push({
-        label: "Query Sequence",
-        value:
-          queryFasta.trim().slice(0, 40) +
-          (queryFasta.trim().length > 40 ? "…" : ""),
-        fieldName: "query_sequence",
+        label: "Query Sequences",
+        value: `${queryResult.sequenceCount} sequence${
+          queryResult.sequenceCount !== 1 ? "s" : ""
+        }`,
+        fieldName: "query_sequences",
       });
     }
-    if (validateProteinSequence(targetFasta).valid) {
+    if (targetResult.valid) {
       items.push({
-        label: "Target Sequence",
-        value:
-          targetFasta.trim().slice(0, 40) +
-          (targetFasta.trim().length > 40 ? "…" : ""),
-        fieldName: "target_sequence",
+        label: "Target Sequences",
+        value: `${targetResult.sequenceCount} sequence${
+          targetResult.sequenceCount !== 1 ? "s" : ""
+        }`,
+        fieldName: "target_sequences",
       });
     }
     return items;
@@ -212,10 +239,13 @@ export class InteractionScreeningComponent {
     errorCount: number;
     rowCount: number;
   } {
+    const productError = !!this.form.errors?.["maxProduct"];
     const errorCount =
+      (this.form.controls.jobId.valid ? 0 : 1) +
       (this.form.controls.queryFasta.valid ? 0 : 1) +
-      (this.form.controls.targetFasta.valid ? 0 : 1);
-    return { valid: this.isFormValid(), errorCount, rowCount: 2 };
+      (this.form.controls.targetFasta.valid ? 0 : 1) +
+      (productError ? 1 : 0);
+    return { valid: this.isFormValid(), errorCount, rowCount: 3 };
   }
 
   previousStep() {
@@ -230,7 +260,7 @@ export class InteractionScreeningComponent {
         if (!this.isFormValid()) return;
       }
       this.completedSteps.update((arr) =>
-        arr.includes(current) ? arr : [...arr, current]
+        arr.includes(current) ? arr : [...arr, current],
       );
       this.currentStep.update((v) => v + 1);
       this.visitedSteps.update((arr) => {
@@ -244,12 +274,25 @@ export class InteractionScreeningComponent {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
       this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
+        arr.includes(step) ? arr : [...arr, step],
       );
     }
   }
 
-  // ─── Query / Target FASTA error helpers ──────────────────────────────────
+  // ─── Field error helpers ──────────────────────────────────────────────────
+
+  hasJobIdError(): boolean {
+    const ctrl = this.form.controls.jobId;
+    return ctrl.touched && ctrl.invalid;
+  }
+
+  getJobIdError(): string {
+    const errors = this.form.controls.jobId.errors;
+    if (errors?.["maxlength"]) return "Job ID must be 100 characters or fewer.";
+    if (errors?.["pattern"])
+      return "Job ID may only contain letters, numbers, spaces, hyphens, and underscores.";
+    return "";
+  }
 
   hasQueryError(): boolean {
     const ctrl = this.form.controls.queryFasta;
@@ -269,6 +312,18 @@ export class InteractionScreeningComponent {
     return this.form.controls.targetFasta.errors?.["fasta"] ?? "";
   }
 
+  hasProductError(): boolean {
+    return !!this.form.errors?.["maxProduct"];
+  }
+
+  getProductError(): string {
+    const err = this.form.errors?.["maxProduct"];
+    if (!err) return "";
+    return `Too many sequence combinations: ${
+      err.actual
+    } pairs (query × target). The maximum is ${err.max - 1}.`;
+  }
+
   private touchAll(): void {
     this.form.markAllAsTouched();
   }
@@ -281,17 +336,19 @@ export class InteractionScreeningComponent {
    * Whitespace normalisation matches the validator (replace(/\s+/g, "")).
    */
   private buildWispsPayload(): Record<string, unknown>[] {
+    const queryEntries = parseMultiFasta(this.form.value.queryFasta ?? "");
+    const targetEntries = parseMultiFasta(this.form.value.targetFasta ?? "");
     return [
-      {
-        id: "query",
-        sequence: (this.form.value.queryFasta ?? "").replace(/\s+/g, ""),
+      ...queryEntries.map((e) => ({
+        id: e.header,
+        sequence: e.sequence,
         group: "query",
-      },
-      {
-        id: "target",
-        sequence: (this.form.value.targetFasta ?? "").replace(/\s+/g, ""),
+      })),
+      ...targetEntries.map((e) => ({
+        id: e.header,
+        sequence: e.sequence,
         group: "target",
-      },
+      })),
     ];
   }
 
@@ -302,9 +359,11 @@ export class InteractionScreeningComponent {
     }
 
     const sequences = this.buildWispsPayload();
+    const jobId = this.form.value.jobId;
     const payload: Record<string, unknown> = {
       sequences,
       tool: this.selectedToolLabel(),
+      ...(jobId ? { job_id: jobId } : {}),
     };
 
     this.workflowSubmission.isSubmitting.set(true);
@@ -315,7 +374,7 @@ export class InteractionScreeningComponent {
         if (!datasetId) {
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            "Dataset upload succeeded but no dataset ID was returned."
+            "Dataset upload succeeded but no dataset ID was returned.",
           );
           return;
         }
@@ -326,15 +385,15 @@ export class InteractionScreeningComponent {
           (error) => {
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              `Workflow launch failed: ${error.message || "Unknown error"}`
+              `Workflow launch failed: ${error.message || "Unknown error"}`,
             );
-          }
+          },
         );
       },
       error: (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(
-          `Failed to upload dataset: ${error.message || "Unknown error"}`
+          `Failed to upload dataset: ${error.message || "Unknown error"}`,
         );
       },
     });
