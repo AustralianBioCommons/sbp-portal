@@ -263,8 +263,16 @@ describe("fasta.utils", () => {
       });
     });
 
-    it("strips spaces within sequence content before validation", () => {
+    it("rejects spaces within sequence content", () => {
       expect(validateMultiFastaProtein(">seq1\nACD EFG HIK LMN")).toEqual({
+        valid: false,
+        errorMessage: 'Sequence for "seq1" must not contain spaces.',
+        sequenceCount: 0,
+      });
+    });
+
+    it("accepts entry where only leading/trailing spaces surround the header and sequence lines", () => {
+      expect(validateMultiFastaProtein("    >seq1\n    ACDEFGHIKLMN")).toEqual({
         valid: true,
         sequenceCount: 1,
       });

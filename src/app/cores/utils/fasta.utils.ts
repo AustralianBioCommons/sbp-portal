@@ -143,12 +143,24 @@ export function validateMultiFastaProtein(
 
     headers.add(header);
 
-    const sequence = lines.slice(1).join("").replace(/\s+/g, "").toUpperCase();
+    const sequenceLines = lines.slice(1).map((l) => l.trim());
+    const sequence = sequenceLines
+      .filter((l) => l.length > 0)
+      .join("")
+      .toUpperCase();
 
     if (!sequence) {
       return {
         valid: false,
         errorMessage: `No sequence found for header "${header}".`,
+        sequenceCount: 0,
+      };
+    }
+
+    if (sequenceLines.some((l) => /\s/.test(l))) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for "${header}" must not contain spaces.`,
         sequenceCount: 0,
       };
     }
