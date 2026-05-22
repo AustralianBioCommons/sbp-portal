@@ -230,7 +230,7 @@ describe("fasta.utils", () => {
 
     it("rejects duplicate headers within the same input", () => {
       const result = validateMultiFastaProtein(
-        ">seq1\nMKTAYIAK\n>seq1\nACDEFGHIK",
+        ">seq1\nMKTAYIAK\n>seq1\nACDEFGHIK"
       );
       expect(result.valid).toBe(false);
       expect(result.errorMessage).toContain('Duplicate FASTA header: "seq1"');
@@ -245,7 +245,7 @@ describe("fasta.utils", () => {
 
     it("accepts multiple valid entries and counts them correctly", () => {
       expect(
-        validateMultiFastaProtein(">seq1\nMKTAYIAK\n>seq2\nACDEFGHIK"),
+        validateMultiFastaProtein(">seq1\nMKTAYIAK\n>seq2\nACDEFGHIK")
       ).toEqual({ valid: true, sequenceCount: 2 });
     });
 

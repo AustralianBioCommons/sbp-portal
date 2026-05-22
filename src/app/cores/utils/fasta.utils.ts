@@ -50,7 +50,7 @@ export const CCD_COMPOUNDS: Record<string, string> = {
 function createSequenceValidator(
   pattern: RegExp,
   emptyMessage: string,
-  invalidMessage: string,
+  invalidMessage: string
 ): (sequence: string) => SequenceValidationResult {
   return (sequence: string): SequenceValidationResult => {
     const normalized = sequence.replace(/\s+/g, "").toUpperCase();
@@ -75,7 +75,7 @@ const CANONICAL_AA_REGEX = /^[ARNDCQEGHILKMFPSTWYV]+$/;
 export const validateProteinSequence = createSequenceValidator(
   CANONICAL_AA_REGEX,
   "Protein sequence is required.",
-  "Protein sequence must contain only the 20 canonical amino acid letters.",
+  "Protein sequence must contain only the 20 canonical amino acid letters."
 );
 
 /**
@@ -86,7 +86,7 @@ export const validateProteinSequence = createSequenceValidator(
  * - Sequences must contain only canonical amino acids (ARNDCQEGHILKMFPSTWYV).
  */
 export function validateMultiFastaProtein(
-  input: string,
+  input: string
 ): MultiFastaValidationResult {
   const trimmed = input.trim();
 
@@ -182,7 +182,7 @@ export function validateMultiFastaProtein(
  * Assumes the input has already passed `validateMultiFastaProtein`.
  */
 export function parseMultiFasta(
-  input: string,
+  input: string
 ): Array<{ header: string; sequence: string }> {
   return input
     .trim()
@@ -199,13 +199,13 @@ export function parseMultiFasta(
 export const validateDnaSequence = createSequenceValidator(
   /^[ATGC]+$/,
   "DNA sequence is required.",
-  "DNA sequence must use valid DNA characters only (A, T, G, C).",
+  "DNA sequence must use valid DNA characters only (A, T, G, C)."
 );
 
 export const validateRnaSequence = createSequenceValidator(
   /^[AUGC]+$/,
   "RNA sequence is required.",
-  "RNA sequence must use valid RNA characters only (A, U, G, C).",
+  "RNA sequence must use valid RNA characters only (A, U, G, C)."
 );
 
 export function lookupCcdCompound(code: string): CcdLookupResult {
