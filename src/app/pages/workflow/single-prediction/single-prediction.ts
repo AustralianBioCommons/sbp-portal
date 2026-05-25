@@ -613,16 +613,17 @@ export class SinglePredictionComponent {
       [id]: result.valid ? "valid" : "invalid",
     }));
     if (result.valid && result.name) {
-      this.ccdLookupNames.update((s) => ({ ...s, [id]: result.name }));
+      this.ccdLookupNames.update((s) => ({ ...s, [id]: result.name! }));
       this.ccdLookupErrors.update((s) => {
         const next = { ...s };
         delete next[id];
         return next;
       });
     } else if (!result.valid && result.errorMessage) {
+      const errorMessage = result.errorMessage;
       this.ccdLookupErrors.update((s) => ({
         ...s,
-        [id]: result.errorMessage,
+        [id]: errorMessage,
       }));
       this.ccdLookupNames.update((s) => {
         const next = { ...s };
