@@ -1,12 +1,14 @@
 <section
-  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-size-[100%_auto] bg-top bg-fixed">
+  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-size-[100%_auto] bg-top bg-fixed"
+>
   <!-- Error Alert -->
   @if (showAlert()) {
   <app-alert
     [type]="'error'"
     [message]="alertMessage()"
     [dismissible]="true"
-    (dismissed)="closeAlert()"></app-alert>
+    (dismissed)="closeAlert()"
+  ></app-alert>
   }
 
   <div class="max-w-7xl px-6 mx-auto py-12">
@@ -23,13 +25,15 @@
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
             class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
-            type="button">
+            type="button"
+          >
             {{ tab.label }}
           </button>
         </li>
         } @empty {
         <li
-          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg">
+          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg"
+        >
           No tabs available
         </li>
         }
@@ -37,7 +41,8 @@
     </nav>
 
     <div
-      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12">
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
+    >
       <div>
         <h1 class="text-3xl font-semibold text-gray-900">
           Interaction Screening
@@ -66,10 +71,12 @@
         <app-tool-selection
           [tools]="tools"
           [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"></app-tool-selection>
+          (toolSelect)="selectTool($event)"
+        ></app-tool-selection>
 
         <div
-          class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+          class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+        >
           <p class="text-sm text-amber-800">
             {{ unavailableToolLabels.join(" and ") }} are temporarily
             unavailable.
@@ -82,7 +89,8 @@
         <!-- Lock overlay if user cannot execute workflows -->
         @if ((auth.canExecuteWorkflows$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center">
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center"
+        >
           <div class="text-center p-4">
             <p class="text-base font-semibold text-gray-900 mb-2">
               Access Restricted
@@ -100,7 +108,8 @@
                 widthClass="w-[218px]"
                 colorClasses="h-[47px] text-white bg-[#205A86] hover:bg-[#1a4a6e] justify-center"
                 borderRadius="rounded-[10px]"
-                (click)="loginWithReturnUrl()">
+                (click)="loginWithReturnUrl()"
+              >
                 Log in or Register
               </app-button>
             </div>
@@ -115,7 +124,8 @@
                 [href]="profileUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center justify-center w-56 h-12 text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors">
+                class="inline-flex items-center justify-center w-56 h-12 text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors"
+              >
                 Add bundle
               </a>
             </div>
@@ -132,19 +142,22 @@
           [isStepInvalid]="isStepInvalid"
           [isStepCompleted]="isStepCompleted"
           [isStepVisited]="isStepVisited"
-          (stepClick)="goToStep($event)"></app-step-navigation>
+          (stepClick)="goToStep($event)"
+        ></app-step-navigation>
 
         <!-- Step 1: Input Configuration -->
         @if (currentStep() === 1) {
         <app-step-content
           title="Input Configuration"
-          description="Provide query and target protein sequences in multi-FASTA format.">
+          description="Provide query and target protein sequences in multi-FASTA format."
+        >
           <div class="mt-6 space-y-6">
             <!-- Job Name -->
             <div>
               <label
                 for="job-id"
-                class="block text-sm font-medium text-gray-700">
+                class="block text-sm font-medium text-gray-700"
+              >
                 Job Name
               </label>
               <p class="mt-1 text-xs text-gray-500">
@@ -163,7 +176,8 @@
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
                 placeholder="e.g. my-screening-job"
-                maxlength="100" />
+                maxlength="100"
+              />
               @if (hasJobNameError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ getJobNameError() }}
@@ -175,7 +189,8 @@
             <div>
               <label
                 for="query-fasta"
-                class="block text-sm font-medium text-gray-700">
+                class="block text-sm font-medium text-gray-700"
+              >
                 Query Sequences
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
@@ -200,7 +215,8 @@
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
-                placeholder=">seq1&#10;MKTAYIAKQRQISFVK&#10;>seq2&#10;ACDEFGHIKLMNPQRSTVWY"></textarea>
+                placeholder=">seq1&#10;MKTAYIAKQRQISFVK&#10;>seq2&#10;ACDEFGHIKLMNPQRSTVWY"
+              ></textarea>
               @if (hasQueryError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ getQueryError() }}
@@ -212,7 +228,8 @@
             <div>
               <label
                 for="target-fasta"
-                class="block text-sm font-medium text-gray-700">
+                class="block text-sm font-medium text-gray-700"
+              >
                 Target Sequences
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
@@ -237,7 +254,8 @@
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
-                placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY&#10;>target2&#10;MKTAYIAKQRQISFVK"></textarea>
+                placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY&#10;>target2&#10;MKTAYIAKQRQISFVK"
+              ></textarea>
               @if (hasTargetError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ getTargetError() }}
@@ -256,18 +274,21 @@
         @if (currentStep() === 2) {
         <app-step-content
           title="Tool Settings — {{ selectedToolLabel() }}"
-          description="Configure parameters specific to {{ selectedToolLabel() }}.">
+          description="Configure parameters specific to {{ selectedToolLabel() }}."
+        >
           <div class="mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
             <div class="flex items-start">
               <div class="shrink-0">
                 <svg
                   class="h-5 w-5 text-blue-400"
                   viewBox="0 0 20 20"
-                  fill="currentColor">
+                  fill="currentColor"
+                >
                   <path
                     fill-rule="evenodd"
                     d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clip-rule="evenodd" />
+                    clip-rule="evenodd"
+                  />
                 </svg>
               </div>
               <div class="ml-3">
@@ -292,13 +313,15 @@
         @if (currentStep() === 3) {
         <app-step-content
           title="Review & Submit"
-          description="Confirm your selections before starting the job.">
+          description="Confirm your selections before starting the job."
+        >
           <app-configuration-summary
             [selectedTool]="selectedToolLabel()"
             [hasParameters]="false"
             [summaryItems]="formSummary()"
             [requiredFieldCount]="2"
-            [isValid]="isFormValid()"></app-configuration-summary>
+            [isValid]="isFormValid()"
+          ></app-configuration-summary>
         </app-step-content>
         }
 
@@ -310,7 +333,8 @@
             (click)="previousStep()"
             [disabled]="!canGoPrev() || (auth.canExecuteWorkflows$ | async) === false"
             borderRadius="rounded-[10px]"
-            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Previous
           </app-button>
           <div class="flex items-center gap-2">
@@ -321,7 +345,8 @@
               (click)="nextStep()"
               [disabled]="!canGoNext() || (auth.canExecuteWorkflows$ | async) === false"
               borderRadius="rounded-[10px]"
-              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed">
+              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
               Next
             </app-button>
             } @if (currentStep() === steps.length) {
@@ -332,7 +357,8 @@
               [disabled]="true"
               borderRadius="rounded-[10px]"
               colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 opacity-50 cursor-not-allowed"
-              title="Submission is temporarily unavailable">
+              title="Submission is temporarily unavailable"
+            >
               Submit
             </app-button>
             }
@@ -379,4 +405,5 @@
   [confirmText]="'View Jobs'"
   [cancelText]="'New Job'"
   (confirmed)="goToJobs()"
-  (cancelled)="submitNewJob()"></app-dialog>
+  (cancelled)="submitNewJob()"
+></app-dialog>
