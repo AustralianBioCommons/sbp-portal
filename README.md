@@ -34,7 +34,7 @@ npm test
 
 Notes:
 
-- Environment variables are hardcoded in `src/environments/environment.ts` for local development. Update that file if you need to point to a different backend.
+- Runtime config is loaded from `src/assets/config/app-config.json` and merged with defaults from `src/environments/environment.ts`, matching the AAI portal pattern. Update `app-config.json` for local runtime config changes.
 - Tailwind and PostCSS are configured via `tailwind.config.cjs` and `postcss.config.cjs`.
 - If you scaffolded with a different version of Angular CLI locally, some generated files may differ; these files are a minimal starting point created without running the Angular CLI in this environment.
 

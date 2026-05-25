@@ -1,11 +1,13 @@
 import { provideZoneChangeDetection } from "@angular/core";
 // src/main.ts
+import { inject, provideAppInitializer } from "@angular/core";
 import { provideHttpClient, withInterceptors } from "@angular/common/http";
 import { bootstrapApplication } from "@angular/platform-browser";
 import { provideAnimations } from "@angular/platform-browser/animations";
 import { provideRouter } from "@angular/router";
 import { authHttpInterceptorFn, provideAuth0 } from "@auth0/auth0-angular";
 import { AppComponent } from "./app/app.component";
+import { RuntimeConfigLoaderService } from "./app/cores/config/runtime-config-loader.service";
 import { authGuard } from "./app/cores/auth.guard";
 import { Home } from "./app/pages/home/home";
 import { JobsComponent } from "./app/pages/jobs/jobs";
@@ -44,6 +46,7 @@ bootstrapApplication(AppComponent, {
       // 404 catch-all route - MUST be last
       { path: "**", component: NotFoundComponent },
     ]),
+    provideAppInitializer(() => inject(RuntimeConfigLoaderService).load()),
     provideAuth0({
       domain: environment.auth.domain,
       clientId: environment.auth.clientId,
