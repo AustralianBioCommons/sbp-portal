@@ -15,7 +15,6 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
-import { FormStatusComponent } from "../../../components/workflow/form-status/form-status.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
   Step,
@@ -35,7 +34,7 @@ import { DatasetUploadService } from "../../../cores/services/dataset-upload.ser
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
 function multiFastaValidator(
-  control: AbstractControl
+  control: AbstractControl,
 ): ValidationErrors | null {
   const result = validateMultiFastaProtein(control.value ?? "");
   return result.valid ? null : { fasta: result.errorMessage };
@@ -80,7 +79,6 @@ type StepItem = Step;
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
-    FormStatusComponent,
   ],
   host: {
     class: "block w-full interaction-screening-bg",
@@ -100,28 +98,28 @@ export class InteractionScreeningComponent {
   private fb = inject(NonNullableFormBuilder);
   readonly form = this.fb.group(
     {
-      jobId: [
+      jobName: [
         "",
-        [Validators.maxLength(100), Validators.pattern(/^[\w\-\s]*$/)],
+        [Validators.maxLength(100), Validators.pattern(/^(?!\d)[\w\-\s]*$/)],
       ],
       queryFasta: ["", multiFastaValidator],
       targetFasta: ["", multiFastaValidator],
     },
-    { validators: maxProductValidator(MAX_SEQUENCE_PRODUCT) }
+    { validators: maxProductValidator(MAX_SEQUENCE_PRODUCT) },
   );
   private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status))
+    this.form.statusChanges.pipe(startWith(this.form.status)),
   );
   private formValue: Signal<{
-    jobId: string;
+    jobName: string;
     queryFasta: string;
     targetFasta: string;
   }> = toSignal(
     this.form.valueChanges.pipe(
       startWith(null),
-      map(() => this.form.getRawValue())
+      map(() => this.form.getRawValue()),
     ),
-    { initialValue: this.form.getRawValue() }
+    { initialValue: this.form.getRawValue() },
   );
   // Alert state
   showAlert = signal(false);
@@ -156,7 +154,7 @@ export class InteractionScreeningComponent {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
   );
 
   // ─── Steps ───────────────────────────────────────────────────────────────
@@ -209,8 +207,12 @@ export class InteractionScreeningComponent {
     const queryResult = validateMultiFastaProtein(val?.queryFasta ?? "");
     const targetResult = validateMultiFastaProtein(val?.targetFasta ?? "");
     const items: { label: string; value: string; fieldName: string }[] = [];
-    if (val?.jobId) {
-      items.push({ label: "Job ID", value: val.jobId, fieldName: "job_id" });
+    if (val?.jobName) {
+      items.push({
+        label: "Job Name",
+        value: val.jobName,
+        fieldName: "job_id",
+      });
     }
     if (queryResult.valid) {
       items.push({
@@ -241,7 +243,7 @@ export class InteractionScreeningComponent {
   } {
     const productError = !!this.form.errors?.["maxProduct"];
     const errorCount =
-      (this.form.controls.jobId.valid ? 0 : 1) +
+      (this.form.controls.jobName.valid ? 0 : 1) +
       (this.form.controls.queryFasta.valid ? 0 : 1) +
       (this.form.controls.targetFasta.valid ? 0 : 1) +
       (productError ? 1 : 0);
@@ -260,7 +262,7 @@ export class InteractionScreeningComponent {
         if (!this.isFormValid()) return;
       }
       this.completedSteps.update((arr) =>
-        arr.includes(current) ? arr : [...arr, current]
+        arr.includes(current) ? arr : [...arr, current],
       );
       this.currentStep.update((v) => v + 1);
       this.visitedSteps.update((arr) => {
@@ -274,23 +276,24 @@ export class InteractionScreeningComponent {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
       this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
+        arr.includes(step) ? arr : [...arr, step],
       );
     }
   }
 
   // ─── Field error helpers ──────────────────────────────────────────────────
 
-  hasJobIdError(): boolean {
-    const ctrl = this.form.controls.jobId;
+  hasJobNameError(): boolean {
+    const ctrl = this.form.controls.jobName;
     return ctrl.touched && ctrl.invalid;
   }
 
-  getJobIdError(): string {
-    const errors = this.form.controls.jobId.errors;
-    if (errors?.["maxlength"]) return "Job ID must be 100 characters or fewer.";
+  getJobNameError(): string {
+    const errors = this.form.controls.jobName.errors;
+    if (errors?.["maxlength"])
+      return "Job Name must be 100 characters or fewer.";
     if (errors?.["pattern"])
-      return "Job ID may only contain letters, numbers, spaces, hyphens, and underscores.";
+      return "Job Name may only contain letters, numbers, spaces, hyphens, and underscores, and must not start with a number.";
     return "";
   }
 
@@ -359,11 +362,11 @@ export class InteractionScreeningComponent {
     }
 
     const sequences = this.buildWispsPayload();
-    const jobId = this.form.value.jobId;
+    const jobName = this.form.value.jobName;
     const payload: Record<string, unknown> = {
       sequences,
       tool: this.selectedToolLabel(),
-      ...(jobId ? { job_id: jobId } : {}),
+      ...(jobName ? { job_id: jobName } : {}),
     };
 
     this.workflowSubmission.isSubmitting.set(true);
@@ -374,7 +377,7 @@ export class InteractionScreeningComponent {
         if (!datasetId) {
           this.workflowSubmission.isSubmitting.set(false);
           this.showError(
-            "Dataset upload succeeded but no dataset ID was returned."
+            "Dataset upload succeeded but no dataset ID was returned.",
           );
           return;
         }
@@ -385,15 +388,15 @@ export class InteractionScreeningComponent {
           (error) => {
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              `Workflow launch failed: ${error.message || "Unknown error"}`
+              `Workflow launch failed: ${error.message || "Unknown error"}`,
             );
-          }
+          },
         );
       },
       error: (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(
-          `Failed to upload dataset: ${error.message || "Unknown error"}`
+          `Failed to upload dataset: ${error.message || "Unknown error"}`,
         );
       },
     });
