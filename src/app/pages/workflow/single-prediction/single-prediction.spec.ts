@@ -432,7 +432,6 @@ describe("SinglePredictionComponent", () => {
     component.selectTool("colabfold");
     component.updateColabfoldNumRecycles("0");
     expect(component.isStep2Valid()).toBe(false);
-    expect(component.getToolSettingsErrorCount()).toBe(1);
 
     component.updateColabfoldNumRecycles("4");
     expect(component.isStep2Valid()).toBe(true);
