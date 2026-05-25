@@ -3,6 +3,12 @@ export interface SequenceValidationResult {
   errorMessage?: string;
 }
 
+export interface MultiFastaValidationResult {
+  valid: boolean;
+  errorMessage?: string;
+  sequenceCount: number;
+}
+
 export interface CcdLookupResult {
   valid: boolean;
   name?: string;
@@ -58,6 +64,8 @@ function createSequenceValidator(
   };
 }
 
+const CANONICAL_AA_REGEX = /^[ARNDCQEGHILKMFPSTWYV]+$/;
+
 /**
  * Validates a protein sequence against the 20 canonical amino acids
  * (ARNDCQEGHILKMFPSTWYV). This is consistent with the standard AlphaFold
@@ -65,10 +73,128 @@ function createSequenceValidator(
  * Whitespace is stripped before validation.
  */
 export const validateProteinSequence = createSequenceValidator(
-  /^[ARNDCQEGHILKMFPSTWYV]+$/,
+  CANONICAL_AA_REGEX,
   "Protein sequence is required.",
   "Protein sequence must contain only the 20 canonical amino acid letters."
 );
+
+/**
+ * Validates a multi-FASTA protein input.
+ * - Input must not be empty.
+ * - Each entry must have a FASTA header line starting with ">".
+ * - Headers must be unique within the input.
+ * - Sequences must contain only canonical amino acids (ARNDCQEGHILKMFPSTWYV).
+ */
+export function validateMultiFastaProtein(
+  input: string
+): MultiFastaValidationResult {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    return {
+      valid: false,
+      errorMessage: "At least one FASTA sequence is required.",
+      sequenceCount: 0,
+    };
+  }
+
+  if (!trimmed.startsWith(">")) {
+    return {
+      valid: false,
+      errorMessage:
+        'Input must be in FASTA format: each entry needs a header line starting with ">".',
+      sequenceCount: 0,
+    };
+  }
+
+  const blocks = trimmed.split(/\n(?=>)/);
+  const headers = new Set<string>();
+
+  for (const block of blocks) {
+    const lines = block.split("\n");
+    const headerLine = lines[0];
+
+    if (!headerLine.startsWith(">")) {
+      return {
+        valid: false,
+        errorMessage: 'Each FASTA entry must begin with a ">" header line.',
+        sequenceCount: 0,
+      };
+    }
+
+    const header = headerLine.slice(1).trim();
+
+    if (!header) {
+      return {
+        valid: false,
+        errorMessage:
+          'FASTA header cannot be empty (the ">" line must contain text after it).',
+        sequenceCount: 0,
+      };
+    }
+
+    if (headers.has(header)) {
+      return {
+        valid: false,
+        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique.`,
+        sequenceCount: 0,
+      };
+    }
+
+    headers.add(header);
+
+    const sequenceLines = lines.slice(1).map((l) => l.trim());
+    const sequence = sequenceLines
+      .filter((l) => l.length > 0)
+      .join("")
+      .toUpperCase();
+
+    if (!sequence) {
+      return {
+        valid: false,
+        errorMessage: `No sequence found for header "${header}".`,
+        sequenceCount: 0,
+      };
+    }
+
+    if (sequenceLines.some((l) => /\s/.test(l))) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for "${header}" must not contain spaces.`,
+        sequenceCount: 0,
+      };
+    }
+
+    if (!CANONICAL_AA_REGEX.test(sequence)) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for "${header}" contains invalid characters. Only canonical amino acids (ARNDCQEGHILKMFPSTWYV) are allowed.`,
+        sequenceCount: 0,
+      };
+    }
+  }
+
+  return { valid: true, sequenceCount: headers.size };
+}
+
+/**
+ * Parses a validated multi-FASTA string into an array of header/sequence pairs.
+ * Assumes the input has already passed `validateMultiFastaProtein`.
+ */
+export function parseMultiFasta(
+  input: string
+): Array<{ header: string; sequence: string }> {
+  return input
+    .trim()
+    .split(/\n(?=>)/)
+    .map((block) => {
+      const lines = block.split("\n");
+      return {
+        header: lines[0].slice(1).trim(),
+        sequence: lines.slice(1).join("").replace(/\s+/g, "").toUpperCase(),
+      };
+    });
+}
 
 export const validateDnaSequence = createSequenceValidator(
   /^[ATGC]+$/,

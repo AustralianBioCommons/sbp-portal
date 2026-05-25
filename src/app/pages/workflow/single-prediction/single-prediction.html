@@ -108,7 +108,7 @@
                 [href]="profileUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center justify-center w-[218px] h-[47px] text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors"
+                class="inline-flex items-center justify-center w-56 h-12 text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors"
               >
                 Add bundle
               </a>
@@ -135,29 +135,36 @@
         >
           <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
             <label
-              for="run-name"
+              for="job-name"
               class="block text-sm font-medium text-gray-700"
             >
-              Run name
+              Job Name
               <span class="ml-1 text-red-500">*</span>
             </label>
+            <p class="mt-1 text-xs text-gray-500">
+              Required identifier for this job. Allowed characters: letters,
+              numbers, spaces, hyphens, and underscores. Must not start with a
+              number.
+            </p>
             <input
-              id="run-name"
+              id="job-name"
               type="text"
-              [value]="runName()"
-              (input)="runName.set($any($event.target).value)"
-              (blur)="runNameTouched.set(true)"
+              autocomplete="off"
+              [value]="jobName()"
+              (input)="jobName.set($any($event.target).value)"
+              (blur)="jobNameTouched.set(true)"
               placeholder="e.g. my-prediction"
               [class]="
-                runNameTouched() && !runName().trim()
+                jobNameTouched() && jobNameError()
                   ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                   : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
               "
-              class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 transition-colors"
+              class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
+              maxlength="60"
             />
-            @if (runNameTouched() && !runName().trim()) {
+            @if (jobNameTouched() && jobNameError()) {
             <p class="mt-1 text-xs text-red-600" role="alert">
-              Run name is required.
+              {{ jobNameError() }}
             </p>
             }
           </div>
@@ -344,11 +351,6 @@
                 Add Entity
               </app-button>
             </div>
-
-            <app-form-status
-              [isValid]="isStep1Valid()"
-              [validationSummary]="getFormValidationSummary()"
-            ></app-form-status>
           </div>
         </app-step-content>
         } @if (currentStep() === 2) {
@@ -440,11 +442,6 @@
               </label>
             </div>
             }
-
-            <app-form-status
-              [isValid]="isStep2Valid()"
-              [validationSummary]="{ valid: isStep2Valid(), errorCount: getToolSettingsErrorCount(), rowCount: 1 }"
-            ></app-form-status>
           </div>
         </app-step-content>
         } @if (currentStep() === 3) {

@@ -7,6 +7,7 @@ import {
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
+  Validators,
 } from "@angular/forms";
 import { map, startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
@@ -14,7 +15,6 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
-import { FormStatusComponent } from "../../../components/workflow/form-status/form-status.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
   Step,
@@ -25,20 +25,32 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import {
-  SequenceValidationResult,
-  validateProteinSequence,
+  parseMultiFasta,
+  validateMultiFastaProtein,
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 
-function fastaValidator(
-  validate: (seq: string) => SequenceValidationResult
-): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const result = validate(control.value ?? "");
-    return result.valid ? null : { fasta: result.errorMessage };
+function multiFastaValidator(
+  control: AbstractControl
+): ValidationErrors | null {
+  const result = validateMultiFastaProtein(control.value ?? "");
+  return result.valid ? null : { fasta: result.errorMessage };
+}
+
+const MAX_SEQUENCE_PRODUCT = 1000;
+
+function maxProductValidator(max: number): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const queryVal = group.get("queryFasta")?.value ?? "";
+    const targetVal = group.get("targetFasta")?.value ?? "";
+    const queryResult = validateMultiFastaProtein(queryVal);
+    const targetResult = validateMultiFastaProtein(targetVal);
+    if (!queryResult.valid || !targetResult.valid) return null;
+    const product = queryResult.sequenceCount * targetResult.sequenceCount;
+    return product >= max ? { maxProduct: { actual: product, max } } : null;
   };
 }
 
@@ -67,7 +79,6 @@ type StepItem = Step;
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
-    FormStatusComponent,
   ],
   host: {
     class: "block w-full interaction-screening-bg",
@@ -85,21 +96,35 @@ export class InteractionScreeningComponent {
   private datasetUploadService = inject(DatasetUploadService);
   // Form
   private fb = inject(NonNullableFormBuilder);
-  readonly form = this.fb.group({
-    queryFasta: ["", fastaValidator(validateProteinSequence)],
-    targetFasta: ["", fastaValidator(validateProteinSequence)],
-  });
+  readonly form = this.fb.group(
+    {
+      jobName: [
+        "",
+        [
+          Validators.required,
+          Validators.maxLength(60),
+          Validators.pattern(/^(?!\d)[\w\-\s]*$/),
+        ],
+      ],
+      queryFasta: ["", multiFastaValidator],
+      targetFasta: ["", multiFastaValidator],
+    },
+    { validators: maxProductValidator(MAX_SEQUENCE_PRODUCT) }
+  );
   private formStatus = toSignal(
     this.form.statusChanges.pipe(startWith(this.form.status))
   );
-  private formValue: Signal<{ queryFasta: string; targetFasta: string }> =
-    toSignal(
-      this.form.valueChanges.pipe(
-        startWith(null),
-        map(() => this.form.getRawValue())
-      ),
-      { initialValue: this.form.getRawValue() }
-    );
+  private formValue: Signal<{
+    jobName: string;
+    queryFasta: string;
+    targetFasta: string;
+  }> = toSignal(
+    this.form.valueChanges.pipe(
+      startWith(null),
+      map(() => this.form.getRawValue())
+    ),
+    { initialValue: this.form.getRawValue() }
+  );
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
@@ -141,7 +166,7 @@ export class InteractionScreeningComponent {
     {
       id: 1,
       title: "Input Configuration",
-      description: "Add query and target protein sequences",
+      description: "Add query and target protein sequences in FASTA format",
     },
     {
       id: 2,
@@ -182,25 +207,33 @@ export class InteractionScreeningComponent {
 
   // Review step summary
   formSummary = computed(() => {
-    const queryFasta = this.formValue()?.queryFasta ?? "";
-    const targetFasta = this.formValue()?.targetFasta ?? "";
+    const val = this.formValue();
+    const queryResult = validateMultiFastaProtein(val?.queryFasta ?? "");
+    const targetResult = validateMultiFastaProtein(val?.targetFasta ?? "");
     const items: { label: string; value: string; fieldName: string }[] = [];
-    if (validateProteinSequence(queryFasta).valid) {
+    if (val?.jobName) {
       items.push({
-        label: "Query Sequence",
-        value:
-          queryFasta.trim().slice(0, 40) +
-          (queryFasta.trim().length > 40 ? "…" : ""),
-        fieldName: "query_sequence",
+        label: "Job Name",
+        value: val.jobName,
+        fieldName: "job_id",
       });
     }
-    if (validateProteinSequence(targetFasta).valid) {
+    if (queryResult.valid) {
       items.push({
-        label: "Target Sequence",
-        value:
-          targetFasta.trim().slice(0, 40) +
-          (targetFasta.trim().length > 40 ? "…" : ""),
-        fieldName: "target_sequence",
+        label: "Query Sequences",
+        value: `${queryResult.sequenceCount} sequence${
+          queryResult.sequenceCount !== 1 ? "s" : ""
+        }`,
+        fieldName: "query_sequences",
+      });
+    }
+    if (targetResult.valid) {
+      items.push({
+        label: "Target Sequences",
+        value: `${targetResult.sequenceCount} sequence${
+          targetResult.sequenceCount !== 1 ? "s" : ""
+        }`,
+        fieldName: "target_sequences",
       });
     }
     return items;
@@ -212,10 +245,13 @@ export class InteractionScreeningComponent {
     errorCount: number;
     rowCount: number;
   } {
+    const productError = !!this.form.errors?.["maxProduct"];
     const errorCount =
+      (this.form.controls.jobName.valid ? 0 : 1) +
       (this.form.controls.queryFasta.valid ? 0 : 1) +
-      (this.form.controls.targetFasta.valid ? 0 : 1);
-    return { valid: this.isFormValid(), errorCount, rowCount: 2 };
+      (this.form.controls.targetFasta.valid ? 0 : 1) +
+      (productError ? 1 : 0);
+    return { valid: this.isFormValid(), errorCount, rowCount: 3 };
   }
 
   previousStep() {
@@ -249,7 +285,22 @@ export class InteractionScreeningComponent {
     }
   }
 
-  // ─── Query / Target FASTA error helpers ──────────────────────────────────
+  // ─── Field error helpers ──────────────────────────────────────────────────
+
+  hasJobNameError(): boolean {
+    const ctrl = this.form.controls.jobName;
+    return ctrl.touched && ctrl.invalid;
+  }
+
+  getJobNameError(): string {
+    const errors = this.form.controls.jobName.errors;
+    if (errors?.["required"]) return "Job Name is required.";
+    if (errors?.["maxlength"])
+      return "Job Name must be 60 characters or fewer.";
+    if (errors?.["pattern"])
+      return "Job Name may only contain letters, numbers, spaces, hyphens, and underscores, and must not start with a number.";
+    return "";
+  }
 
   hasQueryError(): boolean {
     const ctrl = this.form.controls.queryFasta;
@@ -269,6 +320,18 @@ export class InteractionScreeningComponent {
     return this.form.controls.targetFasta.errors?.["fasta"] ?? "";
   }
 
+  hasProductError(): boolean {
+    return !!this.form.errors?.["maxProduct"];
+  }
+
+  getProductError(): string {
+    const err = this.form.errors?.["maxProduct"];
+    if (!err) return "";
+    return `Too many sequence combinations: ${
+      err.actual
+    } pairs (query × target). The maximum is ${err.max - 1}.`;
+  }
+
   private touchAll(): void {
     this.form.markAllAsTouched();
   }
@@ -281,17 +344,19 @@ export class InteractionScreeningComponent {
    * Whitespace normalisation matches the validator (replace(/\s+/g, "")).
    */
   private buildWispsPayload(): Record<string, unknown>[] {
+    const queryEntries = parseMultiFasta(this.form.value.queryFasta ?? "");
+    const targetEntries = parseMultiFasta(this.form.value.targetFasta ?? "");
     return [
-      {
-        id: "query",
-        sequence: (this.form.value.queryFasta ?? "").replace(/\s+/g, ""),
+      ...queryEntries.map((e) => ({
+        id: e.header,
+        sequence: e.sequence,
         group: "query",
-      },
-      {
-        id: "target",
-        sequence: (this.form.value.targetFasta ?? "").replace(/\s+/g, ""),
+      })),
+      ...targetEntries.map((e) => ({
+        id: e.header,
+        sequence: e.sequence,
         group: "target",
-      },
+      })),
     ];
   }
 
@@ -302,9 +367,11 @@ export class InteractionScreeningComponent {
     }
 
     const sequences = this.buildWispsPayload();
+    const jobName = this.form.value.jobName;
     const payload: Record<string, unknown> = {
       sequences,
       tool: this.selectedToolLabel(),
+      job_id: jobName,
     };
 
     this.workflowSubmission.isSubmitting.set(true);

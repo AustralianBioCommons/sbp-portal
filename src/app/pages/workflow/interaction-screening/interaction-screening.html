@@ -124,7 +124,7 @@
                 [href]="profileUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center justify-center w-[218px] h-[47px] text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors"
+                class="inline-flex items-center justify-center w-56 h-12 text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors"
               >
                 Add bundle
               </a>
@@ -149,25 +149,63 @@
         @if (currentStep() === 1) {
         <app-step-content
           title="Input Configuration"
-          description="Provide one query protein sequence and one target protein sequence."
+          description="Provide query and target protein sequences in multi-FASTA format."
         >
           <div class="mt-6 space-y-6">
+            <!-- Job Name -->
+            <div>
+              <label
+                for="job-id"
+                class="block text-sm font-medium text-gray-700"
+              >
+                Job Name
+                <span class="ml-1 text-red-500" aria-hidden="true">*</span>
+              </label>
+              <p class="mt-1 text-xs text-gray-500">
+                Required identifier for this job. Allowed characters: letters,
+                numbers, spaces, hyphens, and underscores. Must not start with a
+                number.
+              </p>
+              <input
+                id="job-id"
+                type="text"
+                autocomplete="off"
+                [formControl]="form.controls.jobName"
+                [class]="
+                  hasJobNameError()
+                    ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
+                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                "
+                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
+                placeholder="e.g. my-screening-job"
+                maxlength="60"
+              />
+              @if (hasJobNameError()) {
+              <p class="mt-1 text-xs text-red-600" role="alert">
+                {{ getJobNameError() }}
+              </p>
+              }
+            </div>
+
             <!-- Query Sequence -->
             <div>
               <label
                 for="query-fasta"
                 class="block text-sm font-medium text-gray-700"
               >
-                Query Sequence
+                Query Sequences
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
               <p class="mt-1 text-xs text-gray-500">
-                Enter the query protein sequence using single-letter amino acid
-                codes (e.g. MKTAYIAKQR…).
+                Enter one or more query protein sequences in FASTA format. Each
+                entry must have a unique header line starting with
+                <code class="font-mono">&#62;</code>, followed by the sequence
+                on the next line(s). Only canonical amino acids
+                (ARNDCQEGHILKMFPSTWYV) are accepted.
               </p>
               <textarea
                 id="query-fasta"
-                rows="7"
+                rows="8"
                 spellcheck="false"
                 autocomplete="off"
                 autocorrect="off"
@@ -179,7 +217,7 @@
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
-                placeholder="MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAP"
+                placeholder=">seq1&#10;MKTAYIAKQRQISFVK&#10;>seq2&#10;ACDEFGHIKLMNPQRSTVWY"
               ></textarea>
               @if (hasQueryError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
@@ -194,17 +232,19 @@
                 for="target-fasta"
                 class="block text-sm font-medium text-gray-700"
               >
-                Target Sequence
+                Target Sequences
                 <span class="text-red-500 ml-1" aria-hidden="true">*</span>
               </label>
               <p class="mt-1 text-xs text-gray-500">
-                Enter the target protein sequence using single-letter amino acid
-                codes. The pipeline will evaluate its interaction with the query
-                sequence above.
+                Enter one or more target protein sequences in FASTA format. The
+                pipeline will evaluate all pairwise interactions between these
+                and the query sequences above. Each entry needs a unique header
+                line starting with <code class="font-mono">&#62;</code>. Only
+                canonical amino acids (ARNDCQEGHILKMFPSTWYV) are accepted.
               </p>
               <textarea
                 id="target-fasta"
-                rows="7"
+                rows="8"
                 spellcheck="false"
                 autocomplete="off"
                 autocorrect="off"
@@ -216,20 +256,18 @@
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
-                placeholder="ACDEFGHIKLMNPQRSTVWY"
+                placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY&#10;>target2&#10;MKTAYIAKQRQISFVK"
               ></textarea>
               @if (hasTargetError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
                 {{ getTargetError() }}
               </p>
+              } @if (hasProductError()) {
+              <p class="mt-2 text-xs text-red-600" role="alert">
+                {{ getProductError() }}
+              </p>
               }
             </div>
-
-            <!-- Form Status -->
-            <app-form-status
-              [isValid]="isFormValid()"
-              [validationSummary]="getFormValidationSummary()"
-            ></app-form-status>
           </div>
         </app-step-content>
         }
@@ -283,7 +321,7 @@
             [selectedTool]="selectedToolLabel()"
             [hasParameters]="false"
             [summaryItems]="formSummary()"
-            [requiredFieldCount]="2"
+            [requiredFieldCount]="3"
             [isValid]="isFormValid()"
           ></app-configuration-summary>
         </app-step-content>
