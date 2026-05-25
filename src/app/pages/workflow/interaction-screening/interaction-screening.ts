@@ -100,7 +100,11 @@ export class InteractionScreeningComponent {
     {
       jobName: [
         "",
-        [Validators.maxLength(100), Validators.pattern(/^(?!\d)[\w\-\s]*$/)],
+        [
+          Validators.required,
+          Validators.maxLength(60),
+          Validators.pattern(/^(?!\d)[\w\-\s]*$/),
+        ],
       ],
       queryFasta: ["", multiFastaValidator],
       targetFasta: ["", multiFastaValidator],
@@ -290,8 +294,9 @@ export class InteractionScreeningComponent {
 
   getJobNameError(): string {
     const errors = this.form.controls.jobName.errors;
+    if (errors?.["required"]) return "Job Name is required.";
     if (errors?.["maxlength"])
-      return "Job Name must be 100 characters or fewer.";
+      return "Job Name must be 60 characters or fewer.";
     if (errors?.["pattern"])
       return "Job Name may only contain letters, numbers, spaces, hyphens, and underscores, and must not start with a number.";
     return "";
@@ -366,7 +371,7 @@ export class InteractionScreeningComponent {
     const payload: Record<string, unknown> = {
       sequences,
       tool: this.selectedToolLabel(),
-      ...(jobName ? { job_id: jobName } : {}),
+      job_id: jobName,
     };
 
     this.workflowSubmission.isSubmitting.set(true);

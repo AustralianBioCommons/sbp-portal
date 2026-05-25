@@ -159,10 +159,12 @@
                 class="block text-sm font-medium text-gray-700"
               >
                 Job Name
+                <span class="ml-1 text-red-500" aria-hidden="true">*</span>
               </label>
               <p class="mt-1 text-xs text-gray-500">
-                Optional identifier for this job. Allowed characters: letters,
-                numbers, spaces, hyphens, and underscores.
+                Required identifier for this job. Allowed characters: letters,
+                numbers, spaces, hyphens, and underscores. Must not start with a
+                number.
               </p>
               <input
                 id="job-id"
@@ -176,7 +178,7 @@
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
                 placeholder="e.g. my-screening-job"
-                maxlength="100"
+                maxlength="60"
               />
               @if (hasJobNameError()) {
               <p class="mt-1 text-xs text-red-600" role="alert">
@@ -319,7 +321,7 @@
             [selectedTool]="selectedToolLabel()"
             [hasParameters]="false"
             [summaryItems]="formSummary()"
-            [requiredFieldCount]="2"
+            [requiredFieldCount]="3"
             [isValid]="isFormValid()"
           ></app-configuration-summary>
         </app-step-content>

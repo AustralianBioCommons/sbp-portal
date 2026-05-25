@@ -123,7 +123,7 @@ describe("SinglePredictionComponent", () => {
     copyNumber = "1"
   ): number {
     const rowId = component.entityRows()[0].id;
-    component.runName.set("test-run");
+    component.jobName.set("test-run");
     component.updateRowSequence(rowId, sequence);
     component.updateRowCopyNumber(rowId, copyNumber);
     component.updateRowMoleculeType(rowId, "protein");
@@ -225,7 +225,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should validate DNA, RNA, and ligand formats", () => {
     const rowId = component.entityRows()[0].id;
-    component.runName.set("test-run");
+    component.jobName.set("test-run");
     component.selectTool("boltz");
 
     component.updateRowSequence(rowId, "ACGT");
@@ -256,7 +256,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
-    component.runName.set("test-run");
+    component.jobName.set("test-run");
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
@@ -367,7 +367,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should allow Boltz with non-protein molecules and generate FASTA-like content", () => {
     const rowId = component.entityRows()[0].id;
-    component.runName.set("test-run");
+    component.jobName.set("test-run");
 
     component.selectTool("boltz");
     component.updateRowSequence(rowId, "ACGT");
@@ -664,48 +664,75 @@ describe("SinglePredictionComponent", () => {
     expect(errors["copyNumber"]).toContain("greater than or equal to 1");
   });
 
-  it("should require runName in step 1 validation", () => {
+  it("should require jobName in step 1 validation", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
-    component.runName.set("");
+    component.jobName.set("");
     expect(component.isStep1Valid()).toBe(false);
 
-    component.runName.set("my-run");
+    component.jobName.set("my-job");
     expect(component.isStep1Valid()).toBe(true);
   });
 
-  it("should show run name required error after touching", () => {
-    component.runNameTouched.set(true);
-    component.runName.set("");
-    expect(component.runNameTouched()).toBe(true);
-
-    component.nextStep();
-    expect(component.runNameTouched()).toBe(true);
-  });
-
-  it("should not advance to step 2 until runName is filled", () => {
+  it("should reject jobName that starts with a number", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
-    component.runName.set("");
+
+    component.jobName.set("1invalid");
+    expect(component.isStep1Valid()).toBe(false);
+    expect(component.jobNameError()).toContain("must not start with a number");
+  });
+
+  it("should reject jobName with invalid characters", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+
+    component.jobName.set("job@name!");
+    expect(component.isStep1Valid()).toBe(false);
+    expect(component.jobNameError()).toContain("must not start with a number");
+  });
+
+  it("should reject jobName longer than 60 characters", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+
+    component.jobName.set("a".repeat(61));
+    expect(component.isStep1Valid()).toBe(false);
+    expect(component.jobNameError()).toContain("60 characters or fewer");
+  });
+
+  it("should show job name required error after touching", () => {
+    component.jobNameTouched.set(true);
+    component.jobName.set("");
+    expect(component.jobNameTouched()).toBe(true);
+
+    component.nextStep();
+    expect(component.jobNameTouched()).toBe(true);
+  });
+
+  it("should not advance to step 2 until jobName is filled", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+    component.jobName.set("");
 
     component.nextStep();
     expect(component.currentStep()).toBe(1);
 
-    component.runName.set("valid-run");
+    component.jobName.set("valid-run");
     component.nextStep();
     expect(component.currentStep()).toBe(2);
   });
 
   it("should generate seqeraRunName with timestamp and random suffix", () => {
-    component.runName.set("My Prediction");
-    const unique = component["buildUniqueRunName"]();
+    component.jobName.set("My Prediction");
+    const unique = component["buildUniqueJobName"]();
     expect(unique).toMatch(/^My-Prediction-\d{8}-\d{6}-[a-z0-9]{4}$/);
   });
 
-  it("should use 'run' slug when runName is empty in buildUniqueRunName", () => {
-    component.runName.set("");
-    const unique = component["buildUniqueRunName"]();
+  it("should use 'run' slug when jobName is empty in buildUniqueJobName", () => {
+    component.jobName.set("");
+    const unique = component["buildUniqueJobName"]();
     expect(unique).toMatch(/^run-\d{8}-\d{6}-[a-z0-9]{4}$/);
   });
 

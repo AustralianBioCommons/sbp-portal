@@ -154,8 +154,16 @@ export class SinglePredictionComponent {
   stepOneTouched = signal(false);
   stepTwoTouched = signal(false);
 
-  runName = signal("");
-  runNameTouched = signal(false);
+  jobName = signal("");
+  jobNameTouched = signal(false);
+  readonly jobNameError = computed<string>(() => {
+    const val = this.jobName();
+    if (!val.trim()) return "Job Name is required.";
+    if (val.length > 60) return "Job Name must be 60 characters or fewer.";
+    if (!/^(?!\d)[\w\-\s]*$/.test(val))
+      return "Job Name may only contain letters, numbers, spaces, hyphens, and underscores, and must not start with a number.";
+    return "";
+  });
 
   alphafold2RandomSeed = signal("42");
   alphafold2FullDbs = signal(false);
@@ -195,7 +203,7 @@ export class SinglePredictionComponent {
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
   readonly isStep1Valid = computed(
     () =>
-      this.runName().trim().length > 0 &&
+      !this.jobNameError() &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
         (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
@@ -635,7 +643,7 @@ export class SinglePredictionComponent {
 
   private touchAllEntityRows(): void {
     this.stepOneTouched.set(true);
-    this.runNameTouched.set(true);
+    this.jobNameTouched.set(true);
     this.entityRows.update((rows) =>
       rows.map((row) => ({
         ...row,
@@ -855,8 +863,8 @@ export class SinglePredictionComponent {
     );
   }
 
-  private buildUniqueRunName(): string {
-    const base = this.runName().trim();
+  private buildUniqueJobName(): string {
+    const base = this.jobName().trim();
     const slug =
       base
         .replace(/[^a-zA-Z0-9\-_]/g, "-")
@@ -876,8 +884,8 @@ export class SinglePredictionComponent {
   private buildWorkflowPayload(): Record<string, unknown> {
     return {
       tool: "Proteinfold",
-      runName: this.runName().trim(),
-      seqeraRunName: this.buildUniqueRunName(),
+      runName: this.jobName().trim(),
+      seqeraRunName: this.buildUniqueJobName(),
       mode: this.selectedTool(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,
