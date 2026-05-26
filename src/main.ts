@@ -1,5 +1,6 @@
 // src/main.ts
 import { provideZoneChangeDetection } from "@angular/core";
+import packageJson from "../package.json";
 import { provideHttpClient, withInterceptors } from "@angular/common/http";
 import { bootstrapApplication } from "@angular/platform-browser";
 import { provideAnimations } from "@angular/platform-browser/animations";
@@ -22,6 +23,8 @@ import {
   RuntimeEnvironmentConfig,
   mergeEnvironmentConfig,
 } from "./environments/runtime-config";
+
+console.info("Structural Biology Portal build version:", packageJson.version);
 
 async function bootstrap(): Promise<void> {
   let runtimeConfig: RuntimeEnvironmentConfig = {};
