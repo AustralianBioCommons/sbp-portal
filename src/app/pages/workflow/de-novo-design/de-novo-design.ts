@@ -8,7 +8,11 @@ import {
   Signal,
   signal,
 } from "@angular/core";
-import { FormsModule } from "@angular/forms";
+import { FormControl, FormsModule } from "@angular/forms";
+import {
+  JOB_NAME_VALIDATORS,
+  jobNameErrorMessage,
+} from "../../../cores/validators/job-name.validators";
 import { Router } from "@angular/router";
 import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
@@ -100,14 +104,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   // Job Name (custom signal-based field, replaces schema 'id' field in UI)
   jobName = signal("");
   jobNameTouched = signal(false);
-  readonly jobNameError = computed<string>(() => {
-    const val = this.jobName();
-    if (!val.trim()) return "Job Name is required.";
-    if (val.length > 60) return "Job Name must be 60 characters or fewer.";
-    if (!/^(?!\d)[\w-]*$/.test(val))
-      return "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number.";
-    return "";
-  });
+  readonly jobNameError = computed<string>(() =>
+    jobNameErrorMessage(
+      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
+    )
+  );
 
   // Form data and validation
   formData = signal<Record<string, unknown>>({});

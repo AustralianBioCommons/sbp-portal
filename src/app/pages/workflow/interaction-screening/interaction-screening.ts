@@ -7,8 +7,11 @@ import {
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
-  Validators,
 } from "@angular/forms";
+import {
+  JOB_NAME_VALIDATORS,
+  jobNameErrorMessage,
+} from "../../../cores/validators/job-name.validators";
 import { forkJoin, of } from "rxjs";
 import { map, startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
@@ -103,14 +106,7 @@ export class InteractionScreeningComponent {
   private fb = inject(NonNullableFormBuilder);
   readonly form = this.fb.group(
     {
-      jobName: [
-        "",
-        [
-          Validators.required,
-          Validators.maxLength(60),
-          Validators.pattern(/^(?!\d)[\w-]*$/),
-        ],
-      ],
+      jobName: ["", JOB_NAME_VALIDATORS],
       queryFasta: ["", multiFastaValidator],
       targetFasta: ["", multiFastaValidator],
     },
@@ -298,13 +294,7 @@ export class InteractionScreeningComponent {
   }
 
   getJobNameError(): string {
-    const errors = this.form.controls.jobName.errors;
-    if (errors?.["required"]) return "Job Name is required.";
-    if (errors?.["maxlength"])
-      return "Job Name must be 60 characters or fewer.";
-    if (errors?.["pattern"])
-      return "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number.";
-    return "";
+    return jobNameErrorMessage(this.form.controls.jobName.errors);
   }
 
   hasQueryError(): boolean {

@@ -254,7 +254,7 @@
                         (input)="onJobNameChange($any($event.target).value)"
                         (blur)="jobNameTouched.set(true)"
                         placeholder="e.g. my-binder-job"
-                        maxlength="61"
+                        maxlength="60"
                       />
                       @if (jobNameTouched() && jobNameError()) {
                       <p class="mt-1 text-sm text-red-600">

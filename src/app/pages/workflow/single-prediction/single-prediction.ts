@@ -6,6 +6,11 @@ import {
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
 import { Component, computed, inject, Signal, signal } from "@angular/core";
+import { FormControl } from "@angular/forms";
+import {
+  JOB_NAME_VALIDATORS,
+  jobNameErrorMessage,
+} from "../../../cores/validators/job-name.validators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -157,14 +162,11 @@ export class SinglePredictionComponent {
 
   jobName = signal("");
   jobNameTouched = signal(false);
-  readonly jobNameError = computed<string>(() => {
-    const val = this.jobName();
-    if (!val.trim()) return "Job Name is required.";
-    if (val.length > 60) return "Job Name must be 60 characters or fewer.";
-    if (!/^(?!\d)[\w-]*$/.test(val))
-      return "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number.";
-    return "";
-  });
+  readonly jobNameError = computed<string>(() =>
+    jobNameErrorMessage(
+      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
+    )
+  );
 
   alphafold2RandomSeed = signal("42");
   alphafold2FullDbs = signal(false);
