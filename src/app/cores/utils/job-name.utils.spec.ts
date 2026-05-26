@@ -1,8 +1,5 @@
 import { FormControl } from "@angular/forms";
-import {
-  JOB_NAME_VALIDATORS,
-  jobNameErrorMessage,
-} from "./job-name.utils";
+import { JOB_NAME_VALIDATORS, jobNameErrorMessage } from "./job-name.utils";
 
 function validate(value: string) {
   return new FormControl(value, JOB_NAME_VALIDATORS).errors;
