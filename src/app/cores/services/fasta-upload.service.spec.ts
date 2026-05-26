@@ -53,6 +53,37 @@ describe("FastaUploadService", () => {
     req.flush(mockResponse);
   });
 
+  it("should append folder to FormData when folder is provided", () => {
+    const mockFile = new File(["content"], "querySeq1.fasta", {
+      type: "text/plain",
+    });
+    const mockResponse = {
+      message: "FASTA file uploaded successfully",
+      success: true,
+      fileId: "input/interaction-screening/querySeq1.fasta",
+      fileName: "querySeq1.fasta",
+      s3Uri: "s3://bucket/input/interaction-screening/querySeq1.fasta",
+      presignedUrl:
+        "https://signed.example/input/interaction-screening/querySeq1.fasta",
+    };
+
+    let emittedSuccess = false;
+
+    service
+      .uploadFastaFile({ file: mockFile, folder: "input/interaction-screening" })
+      .subscribe((res) => {
+        emittedSuccess = res.success;
+      });
+
+    const req = httpController.expectOne((r) =>
+      r.url.includes("/fasta/upload")
+    );
+    expect(req.request.method).toBe("POST");
+    expect(req.request.body instanceof FormData).toBe(true);
+    req.flush(mockResponse);
+    expect(emittedSuccess).toBe(true);
+  });
+
   it("should propagate HTTP errors to the caller", () => {
     const mockFile = new File(["content"], "test.fasta", {
       type: "text/plain",
