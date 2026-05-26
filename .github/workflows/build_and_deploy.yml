@@ -81,6 +81,10 @@ jobs:
         env:
           DEV_SUFFIX: ${{ steps.dev_version.outputs.suffix }}
 
+      - name: Write build version
+        run: |
+          echo "export const buildVersion = '${{ steps.dev_version.outputs.full_version }}';" > src/environments/build-version.ts
+
       - name: Build production bundle
         run: npx ng build --configuration production --output-path dist/sbp-portal-prod
 

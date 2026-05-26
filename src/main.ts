@@ -22,6 +22,9 @@ import {
   RuntimeEnvironmentConfig,
   mergeEnvironmentConfig,
 } from "./environments/runtime-config";
+import { buildVersion } from "./environments/build-version";
+
+console.info("Structural Biology Portal build version:", buildVersion);
 
 async function bootstrap(): Promise<void> {
   let runtimeConfig: RuntimeEnvironmentConfig = {};
