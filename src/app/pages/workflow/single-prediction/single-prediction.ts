@@ -29,6 +29,7 @@ import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import {
   CCD_COMPOUNDS,
   isValidSmiles,
@@ -802,7 +803,7 @@ export class SinglePredictionComponent {
     });
 
     this.fastaUploadService
-      .uploadFastaFile({ file: fastaFile })
+      .uploadFastaFile({ file: fastaFile, folder: WORKFLOW_INPUT_DIRS.SINGLE_PREDICTION })
       .pipe(
         switchMap((response) => {
           if (!response.s3Uri) {

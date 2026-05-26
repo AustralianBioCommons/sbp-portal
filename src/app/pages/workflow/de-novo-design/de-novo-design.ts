@@ -35,6 +35,7 @@ import { DatasetUploadService } from "../../../cores/services/dataset-upload.ser
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 
 interface TabItem {
   id: "overview" | "output" | "papers";
@@ -601,6 +602,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         this.pdbUploadService
           .uploadPdbFile({
             file,
+            folder: WORKFLOW_INPUT_DIRS.DE_NOVO_DESIGN,
             metadata: {
               fieldName: "starting_pdb",
               uploadedAt: new Date().toISOString(),
