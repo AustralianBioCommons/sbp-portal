@@ -9,6 +9,7 @@ import {
   ValidatorFn,
   Validators,
 } from "@angular/forms";
+import { forkJoin, of } from "rxjs";
 import { map, startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
@@ -30,8 +31,12 @@ import {
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
-import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
+import {
+  FastaUploadResponse,
+  FastaUploadService,
+} from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 
 function multiFastaValidator(
   control: AbstractControl
@@ -92,8 +97,8 @@ export class InteractionScreeningComponent {
   readonly profileUrl = environment.profileUrl;
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
-  // Dataset upload service
-  private datasetUploadService = inject(DatasetUploadService);
+  // FASTA upload service
+  private fastaUploadService = inject(FastaUploadService);
   // Form
   private fb = inject(NonNullableFormBuilder);
   readonly form = this.fb.group(
@@ -367,41 +372,37 @@ export class InteractionScreeningComponent {
     }
 
     const sequences = this.buildWispsPayload();
-    const jobName = this.form.value.jobName;
-    const payload: Record<string, unknown> = {
-      sequences,
-      tool: this.selectedToolLabel(),
-      job_id: jobName,
-    };
 
     this.workflowSubmission.isSubmitting.set(true);
 
-    this.datasetUploadService.uploadDataset({ formData: payload }).subscribe({
-      next: (response) => {
-        const datasetId = response.datasetId;
-        if (!datasetId) {
-          this.workflowSubmission.isSubmitting.set(false);
-          this.showError(
-            "Dataset upload succeeded but no dataset ID was returned."
-          );
-          return;
-        }
-        const workflowFormData = { ...payload, tool: this.selectedToolLabel() };
-        this.workflowSubmission.submitWorkflowWithDataset(
-          workflowFormData,
-          datasetId,
-          (error) => {
-            this.workflowSubmission.isSubmitting.set(false);
-            this.showError(
-              `Workflow launch failed: ${error.message || "Unknown error"}`
-            );
-          }
-        );
+    const uploadObservables = sequences.map((seq) => {
+      const id = seq["id"] as string;
+      const sequence = seq["sequence"] as string;
+      const fastaContent = `>${id}\n${sequence}`;
+      const blob = new Blob([fastaContent], { type: "text/plain" });
+      const file = new File([blob], `${id}.fasta`, { type: "text/plain" });
+      return this.fastaUploadService.uploadFastaFile({
+        file,
+        folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
+      });
+    });
+
+    const uploads$ =
+      uploadObservables.length > 0
+        ? forkJoin(uploadObservables)
+        : of([] as FastaUploadResponse[]);
+
+    uploads$.subscribe({
+      next: (uploadResponses) => {
+        const fastaS3Uris = uploadResponses.map((r) => r.s3Uri);
+        console.log("FASTA uploads complete:", fastaS3Uris);
+        this.workflowSubmission.isSubmitting.set(false);
+        
       },
       error: (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(
-          `Failed to upload dataset: ${error.message || "Unknown error"}`
+          `Failed to upload FASTA files: ${error.message || "Unknown error"}`
         );
       },
     });
