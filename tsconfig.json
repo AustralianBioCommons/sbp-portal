@@ -13,7 +13,6 @@
     "target": "es2022",
     "types": ["jasmine", "node"],
     "typeRoots": ["node_modules/@types"],
-    "resolveJsonModule": true,
     "skipLibCheck": true,
     "paths": {
       "@auth0/auth0-angular/public-api": [
