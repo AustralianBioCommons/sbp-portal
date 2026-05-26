@@ -11,7 +11,7 @@ import {
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
-} from "../../../cores/validators/job-name.validators";
+} from "../../../cores/utils/job-name.utils";
 import { forkJoin, of } from "rxjs";
 import { map, startWith } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";

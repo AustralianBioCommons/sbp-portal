@@ -12,7 +12,7 @@ import { FormControl, FormsModule } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
-} from "../../../cores/validators/job-name.validators";
+} from "../../../cores/utils/job-name.utils";
 import { Router } from "@angular/router";
 import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";

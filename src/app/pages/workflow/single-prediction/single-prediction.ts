@@ -10,7 +10,7 @@ import { FormControl } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
-} from "../../../cores/validators/job-name.validators";
+} from "../../../cores/utils/job-name.utils";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
