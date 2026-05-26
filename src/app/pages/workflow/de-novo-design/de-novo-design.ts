@@ -650,24 +650,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.doSubmitWorkflow();
   }
 
-  private buildUniqueJobName(): string {
-    const base = this.jobName().trim();
-    const slug =
-      base
-        .replace(/[^a-zA-Z0-9\-_]/g, "-")
-        .replace(/-{2,}/g, "-")
-        .replace(/^-|-$/g, "") || "run";
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const ts = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(
-      now.getUTCDate()
-    )}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(
-      now.getUTCSeconds()
-    )}`;
-    const rand = Math.random().toString(36).slice(2, 6);
-    return `${slug}-${ts}-${rand}`;
-  }
-
   private doSubmitWorkflow(): void {
     const rawFormData = this.getFormData();
     const formData = {
@@ -676,7 +658,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       sample_id: this.jobName(),
       binder_name: this.jobName(),
       runName: this.jobName(),
-      seqeraRunName: this.buildUniqueJobName(),
     };
 
     this.workflowSubmission.isSubmitting.set(true);

@@ -867,29 +867,10 @@ export class SinglePredictionComponent {
     );
   }
 
-  private buildUniqueJobName(): string {
-    const base = this.jobName().trim();
-    const slug =
-      base
-        .replace(/[^a-zA-Z0-9\-_]/g, "-")
-        .replace(/-{2,}/g, "-")
-        .replace(/^-|-$/g, "") || "run";
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const ts = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(
-      now.getUTCDate()
-    )}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(
-      now.getUTCSeconds()
-    )}`;
-    const rand = Math.random().toString(36).slice(2, 6);
-    return `${slug}-${ts}-${rand}`;
-  }
-
   private buildWorkflowPayload(): Record<string, unknown> {
     return {
       tool: "Proteinfold",
       runName: this.jobName().trim(),
-      seqeraRunName: this.buildUniqueJobName(),
       mode: this.selectedTool(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,

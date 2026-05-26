@@ -533,9 +533,6 @@ describe("SinglePredictionComponent", () => {
       workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
         .args[0];
     expect(payload["runName"]).toBe("test-run");
-    expect(payload["seqeraRunName"]).toMatch(
-      /^test-run-\d{8}-\d{6}-[a-z0-9]{4}$/
-    );
     expect(payload["mode"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
@@ -722,18 +719,6 @@ describe("SinglePredictionComponent", () => {
     component.jobName.set("valid-run");
     component.nextStep();
     expect(component.currentStep()).toBe(2);
-  });
-
-  it("should generate seqeraRunName with timestamp and random suffix", () => {
-    component.jobName.set("My Prediction");
-    const unique = component["buildUniqueJobName"]();
-    expect(unique).toMatch(/^My-Prediction-\d{8}-\d{6}-[a-z0-9]{4}$/);
-  });
-
-  it("should use 'run' slug when jobName is empty in buildUniqueJobName", () => {
-    component.jobName.set("");
-    const unique = component["buildUniqueJobName"]();
-    expect(unique).toMatch(/^run-\d{8}-\d{6}-[a-z0-9]{4}$/);
   });
 
   it("should use the cached FASTA/dataset on second submit without re-uploading", () => {
