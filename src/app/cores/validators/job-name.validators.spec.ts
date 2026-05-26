@@ -65,7 +65,9 @@ describe("jobNameErrorMessage", () => {
 
   it("returns maxlength message", () => {
     expect(
-      jobNameErrorMessage({ maxlength: { requiredLength: 60, actualLength: 61 } })
+      jobNameErrorMessage({
+        maxlength: { requiredLength: 60, actualLength: 61 },
+      })
     ).toBe("Job Name must be 60 characters or fewer.");
   });
 
