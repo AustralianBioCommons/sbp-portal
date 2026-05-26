@@ -70,7 +70,10 @@ describe("FastaUploadService", () => {
     let emittedSuccess = false;
 
     service
-      .uploadFastaFile({ file: mockFile, folder: "input/interaction-screening" })
+      .uploadFastaFile({
+        file: mockFile,
+        folder: "input/interaction-screening",
+      })
       .subscribe((res) => {
         emittedSuccess = res.success;
       });

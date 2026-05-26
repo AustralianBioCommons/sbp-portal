@@ -397,7 +397,6 @@ export class InteractionScreeningComponent {
         const fastaS3Uris = uploadResponses.map((r) => r.s3Uri);
         console.log("FASTA uploads complete:", fastaS3Uris);
         this.workflowSubmission.isSubmitting.set(false);
-        
       },
       error: (error) => {
         this.workflowSubmission.isSubmitting.set(false);

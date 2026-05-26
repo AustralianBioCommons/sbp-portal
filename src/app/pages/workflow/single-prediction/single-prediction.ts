@@ -803,7 +803,10 @@ export class SinglePredictionComponent {
     });
 
     this.fastaUploadService
-      .uploadFastaFile({ file: fastaFile, folder: WORKFLOW_INPUT_DIRS.SINGLE_PREDICTION })
+      .uploadFastaFile({
+        file: fastaFile,
+        folder: WORKFLOW_INPUT_DIRS.SINGLE_PREDICTION,
+      })
       .pipe(
         switchMap((response) => {
           if (!response.s3Uri) {

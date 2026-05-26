@@ -262,7 +262,9 @@ describe("InteractionScreeningComponent", () => {
     component.form.controls.jobName.setValue("1invalid");
 
     expect(component.hasJobNameError()).toBe(true);
-    expect(component.getJobNameError()).toContain("must not start with a number");
+    expect(component.getJobNameError()).toContain(
+      "must not start with a number"
+    );
   });
 
   it("should return empty string from getJobNameError when no errors", () => {
@@ -372,8 +374,12 @@ describe("InteractionScreeningComponent", () => {
     fixture.detectChanges();
     const summary = component.formSummary();
     expect(summary.find((i) => i.label === "Job Name")?.value).toBe("my-job");
-    expect(summary.find((i) => i.label === "Query Sequences")?.value).toContain("1");
-    expect(summary.find((i) => i.label === "Target Sequences")?.value).toContain("1");
+    expect(summary.find((i) => i.label === "Query Sequences")?.value).toContain(
+      "1"
+    );
+    expect(
+      summary.find((i) => i.label === "Target Sequences")?.value
+    ).toContain("1");
   });
 
   it("should return empty summary when form is empty", () => {
@@ -398,8 +404,14 @@ describe("InteractionScreeningComponent", () => {
   });
 
   it("should count the product error in errorCount", () => {
-    const queryFasta = Array.from({ length: 32 }, (_, i) => `>q${i}\nARNDC`).join("\n");
-    const targetFasta = Array.from({ length: 32 }, (_, i) => `>t${i}\nARNDC`).join("\n");
+    const queryFasta = Array.from(
+      { length: 32 },
+      (_, i) => `>q${i}\nARNDC`
+    ).join("\n");
+    const targetFasta = Array.from(
+      { length: 32 },
+      (_, i) => `>t${i}\nARNDC`
+    ).join("\n");
     component.form.setValue({ jobName: "job", queryFasta, targetFasta });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
