@@ -161,8 +161,8 @@ export class SinglePredictionComponent {
     const val = this.jobName();
     if (!val.trim()) return "Job Name is required.";
     if (val.length > 60) return "Job Name must be 60 characters or fewer.";
-    if (!/^(?!\d)[\w\-\s]*$/.test(val))
-      return "Job Name may only contain letters, numbers, spaces, hyphens, and underscores, and must not start with a number.";
+    if (!/^(?!\d)[\w-]*$/.test(val))
+      return "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number.";
     return "";
   });
 

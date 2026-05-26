@@ -97,6 +97,18 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
   private readonly inputSchemaUrl =
     "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/schema_input.json";
 
+  // Job Name (custom signal-based field, replaces schema 'id' field in UI)
+  jobName = signal("");
+  jobNameTouched = signal(false);
+  readonly jobNameError = computed<string>(() => {
+    const val = this.jobName();
+    if (!val.trim()) return "Job Name is required.";
+    if (val.length > 60) return "Job Name must be 60 characters or fewer.";
+    if (!/^(?!\d)[\w-]*$/.test(val))
+      return "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number.";
+    return "";
+  });
+
   // Form data and validation
   formData = signal<Record<string, unknown>>({});
   formErrors = signal<{ [key: string]: string }>({});
@@ -638,11 +650,33 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.doSubmitWorkflow();
   }
 
+  private buildUniqueJobName(): string {
+    const base = this.jobName().trim();
+    const slug =
+      base
+        .replace(/[^a-zA-Z0-9\-_]/g, "-")
+        .replace(/-{2,}/g, "-")
+        .replace(/^-|-$/g, "") || "run";
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const ts = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(
+      now.getUTCDate()
+    )}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(
+      now.getUTCSeconds()
+    )}`;
+    const rand = Math.random().toString(36).slice(2, 6);
+    return `${slug}-${ts}-${rand}`;
+  }
+
   private doSubmitWorkflow(): void {
     const rawFormData = this.getFormData();
     const formData = {
       ...rawFormData,
-      binder_name: (rawFormData["id"] as string) || "",
+      id: this.jobName(),
+      sample_id: this.jobName(),
+      binder_name: this.jobName(),
+      runName: this.jobName(),
+      seqeraRunName: this.buildUniqueJobName(),
     };
 
     this.workflowSubmission.isSubmitting.set(true);
@@ -667,7 +701,6 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
           const workflowFormData = {
             ...formData,
             tool: this.selectedToolLabel(),
-            binder_name: (formData["id"] as string) || "",
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(
@@ -736,6 +769,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.formData.set(updatedData);
     this.validateField(fieldName, value);
     this.validateForm();
+  }
+
+  onJobNameChange(value: string): void {
+    this.jobName.set(value);
+    this.validateAllRows();
   }
 
   // Handle input events
@@ -813,10 +851,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     // Validate each required field to show specific errors
     for (const field of requiredFields) {
-      if (field.name === "binder_name") continue;
+      if (field.name === "binder_name" || field.name === "id") continue;
       const value = currentData[field.name];
       this.validateField(field.name, value);
     }
+    this.jobNameTouched.set(true);
   }
 
   // Validate the entire form
@@ -828,12 +867,17 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
     // Check if all required fields have values
     for (const field of requiredFields) {
-      if (field.name === "binder_name") continue;
+      if (field.name === "binder_name" || field.name === "id") continue;
       const value = currentData[field.name];
       if (value === undefined || value === null || value === "") {
         isValid = false;
         break;
       }
+    }
+
+    // Check Job Name validity
+    if (this.jobNameError()) {
+      isValid = false;
     }
 
     // Check if there are any validation errors
@@ -908,6 +952,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
       "settings_filters",
       "settings_advanced",
       "binder_name",
+      "id",
     ];
 
     fields.forEach((field) => {
@@ -944,6 +989,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    if (this.jobName()) {
+      summary.unshift({
+        label: "Job Name",
+        value: this.jobName(),
+        fieldName: "id",
+      });
+    }
 
     return summary;
   });
@@ -1063,7 +1116,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
     // Check each row for required field completeness
     for (const row of rows) {
       for (const field of requiredFields) {
-        if (field.name === "binder_name") continue;
+        if (field.name === "binder_name" || field.name === "id") continue;
         const value = row.values[field.name];
         if (value === undefined || value === null || value === "") {
           hasErrors = true;
@@ -1071,6 +1124,11 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         }
       }
       if (hasErrors) break;
+    }
+
+    // Check Job Name validity
+    if (this.jobNameError()) {
+      hasErrors = true;
     }
 
     // Check if there are validation errors

@@ -108,7 +108,7 @@ export class InteractionScreeningComponent {
         [
           Validators.required,
           Validators.maxLength(60),
-          Validators.pattern(/^(?!\d)[\w\-\s]*$/),
+          Validators.pattern(/^(?!\d)[\w-]*$/),
         ],
       ],
       queryFasta: ["", multiFastaValidator],
@@ -303,7 +303,7 @@ export class InteractionScreeningComponent {
     if (errors?.["maxlength"])
       return "Job Name must be 60 characters or fewer.";
     if (errors?.["pattern"])
-      return "Job Name may only contain letters, numbers, spaces, hyphens, and underscores, and must not start with a number.";
+      return "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number.";
     return "";
   }
 
