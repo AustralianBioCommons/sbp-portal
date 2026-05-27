@@ -5,6 +5,7 @@ import { environment } from "../../../environments/environment";
 
 export interface FastaUploadRequest {
   file: File;
+  folder?: string;
 }
 
 export interface FastaUploadResponse {
@@ -29,6 +30,9 @@ export class FastaUploadService {
   ): Observable<FastaUploadResponse> {
     const formData = new FormData();
     formData.append("file", request.file);
+    if (request.folder) {
+      formData.append("folder", request.folder);
+    }
 
     return this.http.post<FastaUploadResponse>(
       `${this.apiUrl}/upload`,

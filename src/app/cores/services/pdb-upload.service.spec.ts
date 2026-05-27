@@ -61,6 +61,35 @@ describe("PdbUploadService", () => {
       req.flush(mockResponse);
     });
 
+    it("should append folder to FormData when folder is provided", () => {
+      const mockFile = new File(["test content"], "target.pdb", {
+        type: "chemical/x-pdb",
+      });
+      const mockResponse = {
+        message: "File uploaded successfully",
+        success: true,
+        fileId: "input/de-novo-design/target.pdb",
+        fileName: "target.pdb",
+        fileUrl: "https://example.com/input/de-novo-design/target.pdb",
+      };
+
+      let emittedSuccess = false;
+
+      service
+        .uploadPdbFile({ file: mockFile, folder: "input/de-novo-design" })
+        .subscribe((response) => {
+          emittedSuccess = response.success;
+        });
+
+      const req = httpMock.expectOne(
+        `${environment.apiBaseUrl}/api/workflows/pdb/upload`
+      );
+      expect(req.request.method).toBe("POST");
+      expect(req.request.body instanceof FormData).toBe(true);
+      req.flush(mockResponse);
+      expect(emittedSuccess).toBe(true);
+    });
+
     it("should upload a PDB file without metadata", () => {
       const mockFile = new File(["test content"], "test.pdb", {
         type: "chemical/x-pdb",

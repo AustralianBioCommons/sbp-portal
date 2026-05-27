@@ -6,6 +6,11 @@ import {
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
 import { Component, computed, inject, Signal, signal } from "@angular/core";
+import { FormControl } from "@angular/forms";
+import {
+  JOB_NAME_VALIDATORS,
+  jobNameErrorMessage,
+} from "../../../cores/utils/job-name.utils";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -29,6 +34,7 @@ import { AuthService } from "../../../cores/auth.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import {
   CCD_COMPOUNDS,
   isValidSmiles,
@@ -156,14 +162,11 @@ export class SinglePredictionComponent {
 
   jobName = signal("");
   jobNameTouched = signal(false);
-  readonly jobNameError = computed<string>(() => {
-    const val = this.jobName();
-    if (!val.trim()) return "Job Name is required.";
-    if (val.length > 60) return "Job Name must be 60 characters or fewer.";
-    if (!/^(?!\d)[\w\-\s]*$/.test(val))
-      return "Job Name may only contain letters, numbers, spaces, hyphens, and underscores, and must not start with a number.";
-    return "";
-  });
+  readonly jobNameError = computed<string>(() =>
+    jobNameErrorMessage(
+      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
+    )
+  );
 
   alphafold2RandomSeed = signal("42");
   alphafold2FullDbs = signal(false);
@@ -802,7 +805,10 @@ export class SinglePredictionComponent {
     });
 
     this.fastaUploadService
-      .uploadFastaFile({ file: fastaFile })
+      .uploadFastaFile({
+        file: fastaFile,
+        folder: WORKFLOW_INPUT_DIRS.SINGLE_PREDICTION,
+      })
       .pipe(
         switchMap((response) => {
           if (!response.s3Uri) {
@@ -863,29 +869,10 @@ export class SinglePredictionComponent {
     );
   }
 
-  private buildUniqueJobName(): string {
-    const base = this.jobName().trim();
-    const slug =
-      base
-        .replace(/[^a-zA-Z0-9\-_]/g, "-")
-        .replace(/-{2,}/g, "-")
-        .replace(/^-|-$/g, "") || "run";
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const ts = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(
-      now.getUTCDate()
-    )}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(
-      now.getUTCSeconds()
-    )}`;
-    const rand = Math.random().toString(36).slice(2, 6);
-    return `${slug}-${ts}-${rand}`;
-  }
-
   private buildWorkflowPayload(): Record<string, unknown> {
     return {
       tool: "Proteinfold",
       runName: this.jobName().trim(),
-      seqeraRunName: this.buildUniqueJobName(),
       mode: this.selectedTool(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,

@@ -163,8 +163,7 @@
               </label>
               <p class="mt-1 text-xs text-gray-500">
                 Required identifier for this job. Allowed characters: letters,
-                numbers, spaces, hyphens, and underscores. Must not start with a
-                number.
+                numbers, hyphens, and underscores. Must not start with a number.
               </p>
               <input
                 id="job-id"
@@ -356,10 +355,9 @@
               type="button"
               variant="primary"
               (click)="submitWorkflow()"
-              [disabled]="true"
+              [disabled]="!isFormValid() || workflowSubmission.isSubmitting() || (auth.canExecuteWorkflows$ | async) === false"
               borderRadius="rounded-[10px]"
-              colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 opacity-50 cursor-not-allowed"
-              title="Submission is temporarily unavailable"
+              colorClasses="px-4 py-2 text-white bg-teal-500 hover:bg-teal-400 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Submit
             </app-button>

@@ -5,6 +5,7 @@ import { environment } from "../../../environments/environment";
 
 export interface PdbUploadRequest {
   file: File;
+  folder?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -31,6 +32,10 @@ export class PdbUploadService {
   uploadPdbFile(request: PdbUploadRequest): Observable<PdbUploadResponse> {
     const formData = new FormData();
     formData.append("file", request.file);
+
+    if (request.folder) {
+      formData.append("folder", request.folder);
+    }
 
     if (request.metadata) {
       formData.append("metadata", JSON.stringify(request.metadata));
