@@ -13,7 +13,7 @@ import {
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
 import { forkJoin, of } from "rxjs";
-import { map, startWith } from "rxjs/operators";
+import { map, startWith, switchMap } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -38,6 +38,7 @@ import {
   FastaUploadResponse,
   FastaUploadService,
 } from "../../../cores/services/fasta-upload.service";
+import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 
@@ -102,6 +103,8 @@ export class InteractionScreeningComponent {
   public workflowSubmission = inject(WorkflowSubmissionService);
   // FASTA upload service
   private fastaUploadService = inject(FastaUploadService);
+  // Dataset upload service
+  private datasetUploadService = inject(DatasetUploadService);
   // Form
   private fb = inject(NonNullableFormBuilder);
   readonly form = this.fb.group(
@@ -333,26 +336,33 @@ export class InteractionScreeningComponent {
 
   // ─── Submission ───────────────────────────────────────────────────────────
 
-  /**
-   * Build the wisps-compatible payload array.
-   * Each element matches the wisps schema_input row: { id, sequence, group }.
-   * Whitespace normalisation matches the validator (replace(/\s+/g, "")).
-   */
-  private buildWispsPayload(): Record<string, unknown>[] {
+  private buildWispsPayload(): { id: string; sequence: string; group: "query" | "target" }[] {
     const queryEntries = parseMultiFasta(this.form.value.queryFasta ?? "");
     const targetEntries = parseMultiFasta(this.form.value.targetFasta ?? "");
     return [
       ...queryEntries.map((e) => ({
         id: e.header,
         sequence: e.sequence,
-        group: "query",
+        group: "query" as const,
       })),
       ...targetEntries.map((e) => ({
         id: e.header,
         sequence: e.sequence,
-        group: "target",
+        group: "target" as const,
       })),
     ];
+  }
+
+  private buildSamplesheetFormData(
+    sequences: { id: string; group: "query" | "target" }[],
+    uploadResponses: FastaUploadResponse[]
+  ): Record<string, unknown> {
+    return {
+      id: sequences.map((s) => s.id),
+      sequence: uploadResponses.map((r) => r.s3Uri),
+      group: sequences.map((s) => (s.group === "target" ? "g1" : "g2")),
+      type: sequences.map(() => "protein"),
+    };
   }
 
   submitWorkflow() {
@@ -361,16 +371,15 @@ export class InteractionScreeningComponent {
       return;
     }
 
+    const jobName = this.form.value.jobName ?? "";
     const sequences = this.buildWispsPayload();
 
     this.workflowSubmission.isSubmitting.set(true);
 
     const uploadObservables = sequences.map((seq) => {
-      const id = seq["id"] as string;
-      const sequence = seq["sequence"] as string;
-      const fastaContent = `>${id}\n${sequence}`;
+      const fastaContent = `>${seq.id}\n${seq.sequence}`;
       const blob = new Blob([fastaContent], { type: "text/plain" });
-      const file = new File([blob], `${id}.fasta`, { type: "text/plain" });
+      const file = new File([blob], `${seq.id}.fasta`, { type: "text/plain" });
       return this.fastaUploadService.uploadFastaFile({
         file,
         folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
@@ -382,19 +391,46 @@ export class InteractionScreeningComponent {
         ? forkJoin(uploadObservables)
         : of([] as FastaUploadResponse[]);
 
-    uploads$.subscribe({
-      next: (uploadResponses) => {
-        const fastaS3Uris = uploadResponses.map((r) => r.s3Uri);
-        console.log("FASTA uploads complete:", fastaS3Uris);
-        this.workflowSubmission.isSubmitting.set(false);
-      },
-      error: (error) => {
-        this.workflowSubmission.isSubmitting.set(false);
-        this.showError(
-          `Failed to upload FASTA files: ${error.message || "Unknown error"}`
-        );
-      },
-    });
+    uploads$
+      .pipe(
+        switchMap((uploadResponses) => {
+          const formData = this.buildSamplesheetFormData(
+            sequences,
+            uploadResponses
+          );
+          return this.datasetUploadService.uploadDataset({
+            formData,
+            datasetName: `${jobName}-samplesheet-${Date.now()}`,
+            datasetDescription: "Interaction screening samplesheet",
+          });
+        })
+      )
+      .subscribe({
+        next: (datasetResponse) => {
+          const datasetId = datasetResponse.datasetId;
+          if (!datasetId) {
+            this.workflowSubmission.isSubmitting.set(false);
+            this.showError(
+              "Dataset upload succeeded but no dataset ID was returned."
+            );
+            return;
+          }
+          this.workflowSubmission.submitWorkflowWithDataset(
+            { tool: this.selectedToolLabel(), runName: jobName },
+            datasetId,
+            (error) => {
+              this.workflowSubmission.isSubmitting.set(false);
+              this.showError(
+                `Workflow launch failed: ${error.message || "Unknown error"}`
+              );
+            }
+          );
+        },
+        error: (error) => {
+          this.workflowSubmission.isSubmitting.set(false);
+          this.showError(error.message || "Unknown error");
+        },
+      });
   }
 
   submitNewJob() {
