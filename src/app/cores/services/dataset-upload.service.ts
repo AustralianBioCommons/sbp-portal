@@ -19,8 +19,6 @@ export interface DatasetUploadResponse {
 export interface InteractionScreeningDatasetUploadRequest {
   sequences: { id: string; group: "query" | "target" }[];
   runId: string;
-  datasetName?: string;
-  datasetDescription?: string;
 }
 
 @Injectable({

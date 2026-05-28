@@ -408,8 +408,6 @@ export class InteractionScreeningComponent {
           this.datasetUploadService.uploadInteractionScreeningDataset({
             sequences: sequences.map((s) => ({ id: s.id, group: s.group })),
             runId: jobName,
-            datasetName: `${jobName}-samplesheet-${Date.now()}`,
-            datasetDescription: "Interaction screening samplesheet",
           })
         )
       )
