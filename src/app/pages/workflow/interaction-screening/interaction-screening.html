@@ -211,7 +211,7 @@
                 autocapitalize="off"
                 [formControl]="form.controls.queryFasta"
                 [class]="
-                  hasQueryError()
+                  hasQueryError() || hasDuplicateSequencesError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
@@ -250,7 +250,7 @@
                 autocapitalize="off"
                 [formControl]="form.controls.targetFasta"
                 [class]="
-                  hasTargetError()
+                  hasTargetError() || hasDuplicateSequencesError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
                     : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                 "
@@ -264,6 +264,10 @@
               } @if (hasProductError()) {
               <p class="mt-2 text-xs text-red-600" role="alert">
                 {{ getProductError() }}
+              </p>
+              } @if (hasDuplicateSequencesError()) {
+              <p class="mt-2 text-xs text-red-600" role="alert">
+                {{ getDuplicateSequencesError() }}
               </p>
               }
             </div>

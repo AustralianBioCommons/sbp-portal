@@ -29,6 +29,7 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import {
+  validateUniqueHeadersAcrossInputs,
   parseMultiFasta,
   validateMultiFastaProtein,
 } from "../../../cores/utils/fasta.utils";
@@ -61,6 +62,21 @@ function maxProductValidator(max: number): ValidatorFn {
     const product = queryResult.sequenceCount * targetResult.sequenceCount;
     return product >= max ? { maxProduct: { actual: product, max } } : null;
   };
+}
+
+function uniqueSequencesValidator(
+  group: AbstractControl
+): ValidationErrors | null {
+  const queryVal = group.get("queryFasta")?.value ?? "";
+  const targetVal = group.get("targetFasta")?.value ?? "";
+  if (
+    !validateMultiFastaProtein(queryVal).valid ||
+    !validateMultiFastaProtein(targetVal).valid
+  ) {
+    return null;
+  }
+  const result = validateUniqueHeadersAcrossInputs(queryVal, targetVal);
+  return result.valid ? null : { duplicateSequences: result.errorMessage };
 }
 
 interface TabItem {
@@ -113,7 +129,12 @@ export class InteractionScreeningComponent {
       queryFasta: ["", multiFastaValidator],
       targetFasta: ["", multiFastaValidator],
     },
-    { validators: maxProductValidator(MAX_SEQUENCE_PRODUCT) }
+    {
+      validators: [
+        maxProductValidator(MAX_SEQUENCE_PRODUCT),
+        uniqueSequencesValidator,
+      ],
+    }
   );
   private formStatus = toSignal(
     this.form.statusChanges.pipe(startWith(this.form.status))
@@ -328,6 +349,14 @@ export class InteractionScreeningComponent {
     return `Too many sequence combinations: ${
       err.actual
     } pairs (query × target). The maximum is ${err.max - 1}.`;
+  }
+
+  hasDuplicateSequencesError(): boolean {
+    return !!this.form.errors?.["duplicateSequences"];
+  }
+
+  getDuplicateSequencesError(): string {
+    return this.form.errors?.["duplicateSequences"] ?? "";
   }
 
   private touchAll(): void {

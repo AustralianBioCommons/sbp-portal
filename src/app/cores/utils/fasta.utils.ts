@@ -196,6 +196,25 @@ export function parseMultiFasta(
     });
 }
 
+/**
+ * Checks that no sequence ID appears in both FASTA inputs.
+ * Assumes both inputs have already passed `validateMultiFastaProtein`.
+ */
+export function validateUniqueHeadersAcrossInputs(
+  input1: string,
+  input2: string
+): SequenceValidationResult {
+  const headers1 = new Set(parseMultiFasta(input1).map((e) => e.header));
+  const duplicates = parseMultiFasta(input2)
+    .map((e) => e.header)
+    .filter((h) => headers1.has(h));
+  if (duplicates.length === 0) return { valid: true };
+  return {
+    valid: false,
+    errorMessage: `Sequence ID${duplicates.length > 1 ? "s" : ""} must be unique across query and target. Duplicate${duplicates.length > 1 ? "s" : ""}: ${duplicates.map((h) => `"${h}"`).join(", ")}.`,
+  };
+}
+
 export const validateDnaSequence = createSequenceValidator(
   /^[ATGC]+$/,
   "DNA sequence is required.",
