@@ -12,7 +12,6 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { forkJoin, of } from "rxjs";
 import { map, startWith, switchMap } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
@@ -51,6 +50,7 @@ function multiFastaValidator(
 }
 
 const MAX_SEQUENCE_PRODUCT = 1000;
+const BASE_PATH = "/g/data/yz52/sbp-service/input/";
 
 function maxProductValidator(max: number): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -384,11 +384,13 @@ export class InteractionScreeningComponent {
 
   private buildSamplesheetFormData(
     sequences: { id: string; group: "query" | "target" }[],
-    uploadResponses: FastaUploadResponse[]
+    runId: string
   ): Record<string, unknown> {
     return {
       id: sequences.map((s) => s.id),
-      sequence: uploadResponses.map((r) => r.s3Uri),
+      sequence: sequences.map(
+        (s) => `${BASE_PATH}/${runId}/${s.id}.fasta`
+      ),
       group: sequences.map((s) => (s.group === "target" ? "g1" : "g2")),
       type: sequences.map(() => "protein"),
     };
@@ -405,27 +407,22 @@ export class InteractionScreeningComponent {
 
     this.workflowSubmission.isSubmitting.set(true);
 
-    const uploadObservables = sequences.map((seq) => {
-      const fastaContent = `>${seq.id}\n${seq.sequence}`;
-      const blob = new Blob([fastaContent], { type: "text/plain" });
-      const file = new File([blob], `${seq.id}.fasta`, { type: "text/plain" });
-      return this.fastaUploadService.uploadFastaFile({
-        file,
-        folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
-      });
+    const combinedFasta = sequences
+      .map((seq) => `>${seq.id}\n${seq.sequence}`)
+      .join("\n");
+    const blob = new Blob([combinedFasta], { type: "text/plain" });
+    const file = new File([blob], `sequences.fasta`, { type: "text/plain" });
+    const upload$ = this.fastaUploadService.uploadFastaFile({
+      file,
+      folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
     });
 
-    const uploads$ =
-      uploadObservables.length > 0
-        ? forkJoin(uploadObservables)
-        : of([] as FastaUploadResponse[]);
-
-    uploads$
+    upload$
       .pipe(
-        switchMap((uploadResponses) => {
+        switchMap(() => {
           const formData = this.buildSamplesheetFormData(
             sequences,
-            uploadResponses
+            jobName
           );
           return this.datasetUploadService.uploadDataset({
             formData,
