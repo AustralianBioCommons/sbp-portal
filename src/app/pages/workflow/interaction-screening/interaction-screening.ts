@@ -50,7 +50,6 @@ function multiFastaValidator(
 }
 
 const MAX_SEQUENCE_PRODUCT = 1000;
-const BASE_PATH = "/g/data/yz52/sbp-service/input/";
 
 function maxProductValidator(max: number): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -382,20 +381,6 @@ export class InteractionScreeningComponent {
     ];
   }
 
-  private buildSamplesheetFormData(
-    sequences: { id: string; group: "query" | "target" }[],
-    runId: string
-  ): Record<string, unknown> {
-    return {
-      id: sequences.map((s) => s.id),
-      sequence: sequences.map(
-        (s) => `${BASE_PATH}/${runId}/${s.id}.fasta`
-      ),
-      group: sequences.map((s) => (s.group === "target" ? "g1" : "g2")),
-      type: sequences.map(() => "protein"),
-    };
-  }
-
   submitWorkflow() {
     if (!this.isFormValid()) {
       console.error("Cannot submit: Form validation failed");
@@ -419,17 +404,14 @@ export class InteractionScreeningComponent {
 
     upload$
       .pipe(
-        switchMap(() => {
-          const formData = this.buildSamplesheetFormData(
-            sequences,
-            jobName
-          );
-          return this.datasetUploadService.uploadDataset({
-            formData,
+        switchMap(() =>
+          this.datasetUploadService.uploadInteractionScreeningDataset({
+            sequences: sequences.map((s) => ({ id: s.id, group: s.group })),
+            runId: jobName,
             datasetName: `${jobName}-samplesheet-${Date.now()}`,
             datasetDescription: "Interaction screening samplesheet",
-          });
-        })
+          })
+        )
       )
       .subscribe({
         next: (datasetResponse) => {

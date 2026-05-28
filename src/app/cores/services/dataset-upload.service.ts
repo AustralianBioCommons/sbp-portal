@@ -16,6 +16,13 @@ export interface DatasetUploadResponse {
   details?: unknown;
 }
 
+export interface InteractionScreeningDatasetUploadRequest {
+  sequences: { id: string; group: "query" | "target" }[];
+  runId: string;
+  datasetName?: string;
+  datasetDescription?: string;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -23,14 +30,20 @@ export class DatasetUploadService {
   private http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiBaseUrl}/api/workflows/datasets`;
 
-  /**
-   * Upload dataset to the Seqera Platform via backend API
-   */
   uploadDataset(
     request: DatasetUploadRequest
   ): Observable<DatasetUploadResponse> {
     return this.http.post<DatasetUploadResponse>(
       `${this.apiUrl}/upload`,
+      request
+    );
+  }
+
+  uploadInteractionScreeningDataset(
+    request: InteractionScreeningDatasetUploadRequest
+  ): Observable<DatasetUploadResponse> {
+    return this.http.post<DatasetUploadResponse>(
+      `${this.apiUrl}/interaction-screening/upload`,
       request
     );
   }
