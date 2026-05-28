@@ -34,10 +34,7 @@ import {
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
-import {
-  FastaUploadResponse,
-  FastaUploadService,
-} from "../../../cores/services/fasta-upload.service";
+import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
@@ -364,7 +361,11 @@ export class InteractionScreeningComponent {
 
   // ─── Submission ───────────────────────────────────────────────────────────
 
-  private buildWispsPayload(): { id: string; sequence: string; group: "query" | "target" }[] {
+  private buildWispsPayload(): {
+    id: string;
+    sequence: string;
+    group: "query" | "target";
+  }[] {
     const queryEntries = parseMultiFasta(this.form.value.queryFasta ?? "");
     const targetEntries = parseMultiFasta(this.form.value.targetFasta ?? "");
     return [

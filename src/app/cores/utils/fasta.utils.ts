@@ -211,7 +211,11 @@ export function validateUniqueHeadersAcrossInputs(
   if (duplicates.length === 0) return { valid: true };
   return {
     valid: false,
-    errorMessage: `Sequence ID${duplicates.length > 1 ? "s" : ""} must be unique across query and target. Duplicate${duplicates.length > 1 ? "s" : ""}: ${duplicates.map((h) => `"${h}"`).join(", ")}.`,
+    errorMessage: `Sequence ID${
+      duplicates.length > 1 ? "s" : ""
+    } must be unique across query and target. Duplicate${
+      duplicates.length > 1 ? "s" : ""
+    }: ${duplicates.map((h) => `"${h}"`).join(", ")}.`,
   };
 }
 
