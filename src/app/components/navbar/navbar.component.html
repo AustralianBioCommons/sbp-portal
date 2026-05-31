@@ -7,7 +7,8 @@
       (click)="navigate('/themes', { tab: 'binder-design' })"
       (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
       (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
-      aria-label="Navigate to home page">
+      aria-label="Navigate to home page"
+    >
       <img class="w-60 h-auto" src="/assets/sbp-logo.png" alt="SBP Portal" />
     </button>
 
@@ -18,12 +19,14 @@
       widthClass="w-auto !p-0 !hover:translate-x-0"
       borderRadius="rounded-lg"
       [active]="isMobileMenuOpen()"
-      (click)="toggleMobileMenu(); $event.stopPropagation()">
+      (click)="toggleMobileMenu(); $event.stopPropagation()"
+    >
       <ng-icon
         [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
         size="24"
         class="transition-all pointer-events-none !hover:translate-x-0"
-        [class.rotate-90]="isMobileMenuOpen()">
+        [class.rotate-90]="isMobileMenuOpen()"
+      >
       </ng-icon>
 
       <!-- Menu Label -->
@@ -37,7 +40,8 @@
   @if (isMobileMenuOpen()) {
   <div
     class="absolute top-0 right-0 w-80 z-50 bg-gray-100 border border-gray-200 shadow-xl rounded-lg"
-    [@slideInOut]>
+    [@slideInOut]
+  >
     <!-- Menu Content -->
     <div class="px-4 py-4">
       <!-- Navigation Items -->
@@ -55,14 +59,16 @@
               item.path
                 ? navigate(item.path, item.queryParams)
                 : executeAction(item.action)
-            ">
+            "
+          >
             @if (item.icon && !item.image) {
             <ng-icon [name]="item.icon" class="text-sm w-4 h-4"></ng-icon>
             } @if (item.image) {
             <img
               [src]="item.image"
               [alt]="item.label + ' icon'"
-              class="w-4 h-4 object-contain grayscale hover:grayscale-0 transition-[filter] duration-200" />
+              class="w-4 h-4 object-contain grayscale hover:grayscale-0 transition-[filter] duration-200"
+            />
             }
             <span>{{ item.label }}</span>
           </app-button>
@@ -78,7 +84,8 @@
               (isParentNavItemActive(item)
                 ? 'text-blue-900 font-bold'
                 : 'text-black')
-            ">
+            "
+          >
             <div class="flex items-center gap-2">
               @if (item.icon && !item.image) {
               <ng-icon
@@ -86,7 +93,8 @@
                 [class]="
                   'w-4 h-4 ' +
                   (isParentNavItemActive(item) ? 'text-teal-500' : '')
-                "></ng-icon>
+                "
+              ></ng-icon>
               } @if (item.image) {
               <img
                 [src]="item.image"
@@ -96,7 +104,8 @@
                   (isParentNavItemActive(item)
                     ? 'filter-[hue-rotate(180deg)_saturate(1.2)]'
                     : '')
-                " />
+                "
+              />
               }
               <span>{{ item.label }}</span>
             </div>
@@ -107,7 +116,8 @@
               widthClass="w-auto"
               colorClasses="p-1"
               (click)="closeMobileMenu()"
-              type="button">
+              type="button"
+            >
               <ng-icon name="heroXMark" class="w-6 h-6"></ng-icon>
               <span class="sr-only">Close menu</span>
             </app-button>
@@ -124,7 +134,8 @@
                 child.path
                   ? navigate(child.path, child.queryParams)
                   : executeAction(child.action)
-              ">
+              "
+            >
               <span>{{ child.label }}</span>
             </app-button>
             } }

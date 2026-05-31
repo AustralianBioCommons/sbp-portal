@@ -73,7 +73,7 @@ export class JobResultsComponent implements OnChanges {
   reportLoading = signal(false);
   reportError = signal<string | null>(null);
   filesItems = signal<Array<{ label: string; url: string; category: string }>>(
-    [],
+    []
   );
   filesLoading = signal(false);
   filesError = signal<string | null>(null);
@@ -218,7 +218,7 @@ export class JobResultsComponent implements OnChanges {
           this.reportUrl.set(null);
           this.reportError.set("Failed to load report.");
           return EMPTY;
-        }),
+        })
       )
       .subscribe((reportResourceUrl) => {
         if (reportResourceUrl) {
@@ -252,7 +252,7 @@ export class JobResultsComponent implements OnChanges {
           this.settingsItems.set([]);
           this.settingsError.set("Failed to load settings.");
           return EMPTY;
-        }),
+        })
       )
       .subscribe((response) => {
         this.settingsItems.set(this.normalizeSettings(response.settingParams));
@@ -279,7 +279,7 @@ export class JobResultsComponent implements OnChanges {
           this.filesItems.set([]);
           this.filesError.set("Failed to load files.");
           return EMPTY;
-        }),
+        })
       )
       .subscribe((response) => {
         this.filesItems.set(
@@ -287,7 +287,7 @@ export class JobResultsComponent implements OnChanges {
             label: download.label,
             url: this.normalizeDownloadUrl(download.url),
             category: download.category,
-          })),
+          }))
         );
         this.filesLoading.set(false);
       });
@@ -310,7 +310,7 @@ export class JobResultsComponent implements OnChanges {
           this.logsItems.set([]);
           this.logsError.set("Failed to load logs.");
           return EMPTY;
-        }),
+        })
       )
       .subscribe((response) => {
         this.logsItems.set(this.normalizeLogsResponse(response));
@@ -361,7 +361,7 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private normalizeSettings(
-    settingParams: Record<string, unknown> | null | undefined,
+    settingParams: Record<string, unknown> | null | undefined
   ): JobSettingItem[] {
     if (!settingParams) {
       return [];
@@ -369,7 +369,7 @@ export class JobResultsComponent implements OnChanges {
 
     return Object.entries(settingParams)
       .filter(
-        ([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key),
+        ([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key)
       )
       .map(([key, value]) => ({
         ...this.normalizeSettingItem(key, value),
@@ -460,7 +460,7 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private formatValidationDetails(
-    validation: Record<string, unknown> | undefined,
+    validation: Record<string, unknown> | undefined
   ): string[] {
     if (!validation) {
       return [];

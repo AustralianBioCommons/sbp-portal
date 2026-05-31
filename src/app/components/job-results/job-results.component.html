@@ -3,7 +3,8 @@
   class="fixed inset-0 z-50 overflow-y-auto"
   aria-labelledby="job-details-title"
   role="dialog"
-  aria-modal="true">
+  aria-modal="true"
+>
   <div class="flex min-h-screen items-center justify-center px-4 py-8">
     <div
       class="fixed inset-0 bg-gray-950/45"
@@ -11,15 +12,18 @@
       tabindex="0"
       (click)="closeRequested.emit()"
       (keydown.enter)="closeRequested.emit()"
-      (keydown.space)="closeRequested.emit()"></div>
+      (keydown.space)="closeRequested.emit()"
+    ></div>
 
     <div
-      class="relative w-full max-w-4xl overflow-hidden rounded-md border bg-white">
+      class="relative w-full max-w-4xl overflow-hidden rounded-md border bg-white"
+    >
       <div class="flex items-start gap-6 bg-gray-50 px-6 py-4 border-b">
         <div class="flex flex-1 flex-wrap justify-between items-center gap-6">
           <h2
             id="job-details-title"
-            class="text-xl font-semibold text-gray-900">
+            class="text-xl font-semibold text-gray-900"
+          >
             {{ selectedJob.jobName }}
           </h2>
 
@@ -27,7 +31,8 @@
             <button
               type="button"
               class="inline-flex items-center gap-2 px-4 py-2 text-sm border border-red-600 font-medium rounded text-red-600 bg-white hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
-              (click)="deleteRequested.emit()">
+              (click)="deleteRequested.emit()"
+            >
               <ng-icon name="heroTrash" size="16"></ng-icon>
               Delete
             </button>
@@ -35,7 +40,8 @@
               type="button"
               title="Download all files (coming soon)"
               class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-blue-700 rounded text-white bg-blue-700 cursor-not-allowed transition-all"
-              disabled>
+              disabled
+            >
               <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
               Download all files
             </button>
@@ -45,7 +51,8 @@
           type="button"
           aria-label="Close job details"
           class="inline-flex h-10 w-10 items-center justify-center rounded text-gray-600 transition-all hover:bg-gray-200"
-          (click)="closeRequested.emit()">
+          (click)="closeRequested.emit()"
+        >
           <ng-icon name="heroXMark" size="20"></ng-icon>
         </button>
       </div>
@@ -66,7 +73,8 @@
 
         <nav
           class="scrollbar-hidden overflow-x-auto border-b flex"
-          aria-label="Job result tabs">
+          aria-label="Job result tabs"
+        >
           @for (tab of tabs; track tab.id) {
           <button
             type="button"
@@ -76,7 +84,8 @@
             [class.text-blue-700]="activeTab() === tab.id"
             [class.border-transparent]="activeTab() !== tab.id"
             [class.text-gray-600]="activeTab() !== tab.id"
-            [class.hover:border-gray-600]="activeTab() !== tab.id">
+            [class.hover:border-gray-600]="activeTab() !== tab.id"
+          >
             <ng-icon [name]="tab.icon" size="16"></ng-icon>
             {{ tab.label }}
           </button>
@@ -88,14 +97,16 @@
           <div class="font-semibold text-gray-900">Design Summary Report</div>
           @if (reportError()) {
           <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+          >
             {{ reportError() }}
           </div>
           } @else if (reportUrl(); as reportDocumentUrl) {
           <div class="relative overflow-hidden rounded border bg-white">
             @if (reportLoading()) {
             <div
-              class="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
+              class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+            >
               <app-loading message="Loading report..." [inline]="true" />
             </div>
             }
@@ -105,7 +116,8 @@
               [src]="reportDocumentUrl"
               [title]="'Job report for ' + selectedJob.jobName"
               (load)="onReportLoad()"
-              (error)="onReportError()">
+              (error)="onReportError()"
+            >
             </iframe>
           </div>
           } @else if (reportLoading()) {
@@ -123,7 +135,8 @@
           </div>
           @if (filesError()) {
           <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+          >
             {{ filesError() }}
           </div>
           } @else if (filesLoading()) {
@@ -146,7 +159,8 @@
                       target="_blank"
                       rel="noopener noreferrer"
                       class="min-w-0 flex-1 truncate text-sm font-medium text-blue-900 hover:text-blue-700"
-                      [title]="'Download ' + file.label">
+                      [title]="'Download ' + file.label"
+                    >
                       {{ file.label }}
                     </a>
 
@@ -156,7 +170,8 @@
                       rel="noopener noreferrer"
                       class="shrink-0 rounded p-2 text-blue-900 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
                       [title]="'Download ' + file.label"
-                      [attr.aria-label]="'Download ' + file.label">
+                      [attr.aria-label]="'Download ' + file.label"
+                    >
                       <ng-icon name="heroArrowDownTray" size="20" />
                     </a>
                   </div>
@@ -174,7 +189,8 @@
           <div class="font-semibold text-gray-900">Run settings</div>
           @if (settingsError()) {
           <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+          >
             {{ settingsError() }}
           </div>
           } @else if (settingsLoading()) {
@@ -192,7 +208,8 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 download
-                class="text-blue-700 hover:underline transition-all hover:text-blue-800 text-xs wrap-break-word font-mono">
+                class="text-blue-700 hover:underline transition-all hover:text-blue-800 text-xs wrap-break-word font-mono"
+              >
                 {{ setting.value }}
               </a>
               } @else {
@@ -219,7 +236,8 @@
           <div class="font-semibold text-gray-900">Logs</div>
           @if (logsError()) {
           <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+          >
             {{ logsError() }}
           </div>
           } @else if (logsLoading()) {
