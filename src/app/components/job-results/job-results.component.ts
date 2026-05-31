@@ -10,16 +10,25 @@ import {
 } from "@angular/core";
 import { SafeResourceUrl } from "@angular/platform-browser";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroArrowDownTray } from "@ng-icons/heroicons/outline";
+import {
+  heroArrowDownTray,
+  heroBookOpen,
+  heroChartBarSquare,
+  heroCommandLine,
+  heroCog8Tooth,
+  heroFolder,
+  heroTrash,
+  heroXMark,
+} from "@ng-icons/heroicons/outline";
 import { LoadingComponent } from "../loading/loading.component";
 import { JobListItem } from "../../cores/services/jobs.service";
 import {
   ResultLogsResponse,
   ResultsService,
 } from "../../cores/services/results.service";
+import { DatePipe } from "@angular/common";
 import { EMPTY } from "rxjs";
 import { catchError } from "rxjs/operators";
-import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 import { environment } from "../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -35,10 +44,23 @@ type JobSettingItem = {
   standalone: true,
   imports: [NgIconComponent, LoadingComponent],
   templateUrl: "./job-results.component.html",
-  providers: [provideIcons({ heroArrowDownTray })],
+  providers: [
+    provideIcons({
+      heroArrowDownTray,
+      heroBookOpen,
+      heroChartBarSquare,
+      heroCommandLine,
+      heroCog8Tooth,
+      heroFolder,
+      heroTrash,
+      heroXMark,
+    }),
+    DatePipe,
+  ],
 })
 export class JobResultsComponent implements OnChanges {
   private resultsService = inject(ResultsService);
+  private datePipe = inject(DatePipe);
 
   @Input() isOpen = false;
   @Input() job: JobListItem | null = null;
@@ -51,7 +73,7 @@ export class JobResultsComponent implements OnChanges {
   reportLoading = signal(false);
   reportError = signal<string | null>(null);
   filesItems = signal<Array<{ label: string; url: string; category: string }>>(
-    []
+    [],
   );
   filesLoading = signal(false);
   filesError = signal<string | null>(null);
@@ -62,12 +84,12 @@ export class JobResultsComponent implements OnChanges {
   logsLoading = signal(false);
   logsError = signal<string | null>(null);
 
-  readonly tabs: Array<{ id: JobResultsTab; label: string }> = [
-    { id: "results", label: "Results" },
-    { id: "files", label: "Files" },
-    { id: "settings", label: "Settings" },
-    { id: "logs", label: "Logs" },
-    { id: "citations", label: "Citations" },
+  readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
+    { id: "results", label: "Results", icon: "heroChartBarSquare" },
+    { id: "files", label: "Files", icon: "heroFolder" },
+    { id: "settings", label: "Settings", icon: "heroCog8Tooth" },
+    { id: "logs", label: "Logs", icon: "heroCommandLine" },
+    { id: "citations", label: "Citations", icon: "heroBookOpen" },
   ];
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -87,13 +109,12 @@ export class JobResultsComponent implements OnChanges {
     }
   }
 
-  formatDate(dateString: string): string {
-    return formatDateTimeForJobs(dateString);
-  }
-
   getSummaryItems(job: JobListItem): Array<{ label: string; value: string }> {
     return [
-      { label: "Submitted", value: this.formatDate(job.submittedAt) },
+      {
+        label: "Submitted date",
+        value: this.datePipe.transform(job.submittedAt, "dd/MM/yyyy") ?? "",
+      },
       { label: "Type", value: job.workflowType || "N/A" },
       { label: "Status", value: job.status },
       {
@@ -197,7 +218,7 @@ export class JobResultsComponent implements OnChanges {
           this.reportUrl.set(null);
           this.reportError.set("Failed to load report.");
           return EMPTY;
-        })
+        }),
       )
       .subscribe((reportResourceUrl) => {
         if (reportResourceUrl) {
@@ -231,7 +252,7 @@ export class JobResultsComponent implements OnChanges {
           this.settingsItems.set([]);
           this.settingsError.set("Failed to load settings.");
           return EMPTY;
-        })
+        }),
       )
       .subscribe((response) => {
         this.settingsItems.set(this.normalizeSettings(response.settingParams));
@@ -258,7 +279,7 @@ export class JobResultsComponent implements OnChanges {
           this.filesItems.set([]);
           this.filesError.set("Failed to load files.");
           return EMPTY;
-        })
+        }),
       )
       .subscribe((response) => {
         this.filesItems.set(
@@ -266,7 +287,7 @@ export class JobResultsComponent implements OnChanges {
             label: download.label,
             url: this.normalizeDownloadUrl(download.url),
             category: download.category,
-          }))
+          })),
         );
         this.filesLoading.set(false);
       });
@@ -289,7 +310,7 @@ export class JobResultsComponent implements OnChanges {
           this.logsItems.set([]);
           this.logsError.set("Failed to load logs.");
           return EMPTY;
-        })
+        }),
       )
       .subscribe((response) => {
         this.logsItems.set(this.normalizeLogsResponse(response));
@@ -340,7 +361,7 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private normalizeSettings(
-    settingParams: Record<string, unknown> | null | undefined
+    settingParams: Record<string, unknown> | null | undefined,
   ): JobSettingItem[] {
     if (!settingParams) {
       return [];
@@ -348,7 +369,7 @@ export class JobResultsComponent implements OnChanges {
 
     return Object.entries(settingParams)
       .filter(
-        ([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key)
+        ([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key),
       )
       .map(([key, value]) => ({
         ...this.normalizeSettingItem(key, value),
@@ -439,7 +460,7 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private formatValidationDetails(
-    validation: Record<string, unknown> | undefined
+    validation: Record<string, unknown> | undefined,
   ): string[] {
     if (!validation) {
       return [];

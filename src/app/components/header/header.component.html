@@ -8,8 +8,7 @@
     <div class="max-w-7xl px-6 mx-auto">
       <nav
         class="flex items-center gap-2 py-2.5 text-sm"
-        aria-label="Breadcrumb"
-      >
+        aria-label="Breadcrumb">
         <span
           class="text-blue-900 font-medium cursor-pointer hover:text-blue-700 transition-colors"
           tabindex="0"
@@ -19,17 +18,15 @@
           >{{ crumb.themeLabel }}</span
         >
         <svg
-          class="w-4 h-4 text-gray-400 flex-shrink-0"
+          class="w-4 h-4 text-gray-400 shrink-0"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+          viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M9 5l7 7-7 7"
-          ></path>
+            d="M9 5l7 7-7 7"></path>
         </svg>
         <span class="text-gray-800 font-semibold">{{
           crumb.workflowLabel
@@ -50,20 +47,17 @@
         [class.pointer-events-none]="!canScrollLeft"
         (click)="scrollLeft()"
         type="button"
-        aria-label="Scroll left"
-      >
+        aria-label="Scroll left">
         <svg
           class="w-4 h-4 text-gray-600"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+          viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          ></path>
+            d="M15 19l-7-7 7-7"></path>
         </svg>
       </button>
 
@@ -74,20 +68,17 @@
         [class.pointer-events-none]="!canScrollRight"
         (click)="scrollRight()"
         type="button"
-        aria-label="Scroll right"
-      >
+        aria-label="Scroll right">
         <svg
           class="w-4 h-4 text-gray-600"
           fill="none"
           stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+          viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M9 5l7 7-7 7"
-          ></path>
+            d="M9 5l7 7-7 7"></path>
         </svg>
       </button>
 
@@ -95,8 +86,7 @@
         #tabsContainer
         class="-mb-px overflow-x-auto scrollbar-hidden scroll-smooth"
         (scroll)="onScroll()"
-        aria-label="Tabs"
-      >
+        aria-label="Tabs">
         <div class="flex justify-center min-w-max px-6 lg:px-0">
           @for (tab of tabs; track tab.id) {
           <button
@@ -107,8 +97,7 @@
               isActiveTab(tab.id)
                 ? 'text-primary border-gray-800'
                 : 'text-blue-900 hover:text-blue-800 hover:border-gray-300 border-transparent'
-            "
-          >
+            ">
             {{ tab.label }}
           </button>
           }

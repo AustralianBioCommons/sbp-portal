@@ -10,6 +10,7 @@ export interface JobListItem {
   id: string;
   jobName: string;
   workflowType: string | null;
+  workflowName?: string | null;
   status: string;
   submittedAt: string;
   score: number | null;
@@ -95,20 +96,20 @@ export class JobsService {
   cancelJob(runId: string): Observable<CancelJobResponse> {
     return this.http.post<CancelJobResponse>(
       `${this.jobsUrl}/${encodeURIComponent(runId)}/cancel`,
-      {}
+      {},
     );
   }
 
   deleteJob(runId: string): Observable<DeleteJobResponse> {
     return this.http.delete<DeleteJobResponse>(
-      `${this.jobsUrl}/${encodeURIComponent(runId)}`
+      `${this.jobsUrl}/${encodeURIComponent(runId)}`,
     );
   }
 
   bulkDeleteJobs(runIds: string[]): Observable<BulkDeleteJobsResponse> {
     return this.http.post<BulkDeleteJobsResponse>(
       `${this.jobsUrl}/bulk-delete`,
-      { runIds }
+      { runIds },
     );
   }
 }

@@ -3,361 +3,253 @@
   class="fixed inset-0 z-50 overflow-y-auto"
   aria-labelledby="job-details-title"
   role="dialog"
-  aria-modal="true"
->
+  aria-modal="true">
   <div class="flex min-h-screen items-center justify-center px-4 py-8">
     <div
-      class="fixed inset-0 bg-slate-950/45"
+      class="fixed inset-0 bg-gray-950/45"
       role="button"
       tabindex="0"
       (click)="closeRequested.emit()"
       (keydown.enter)="closeRequested.emit()"
-      (keydown.space)="closeRequested.emit()"
-    ></div>
+      (keydown.space)="closeRequested.emit()"></div>
 
     <div
-      class="relative w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
-    >
-      <div class="px-6 py-5">
-        <div
-          class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
-        >
-          <div>
-            <p class="text-lg font-semibold text-slate-500">Job name</p>
-            <h2
-              id="job-details-title"
-              class="mt-1 text-4xl font-semibold text-slate-900"
-            >
-              {{ selectedJob.jobName }}
-            </h2>
-          </div>
-          <div
-            class="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-900"
-          >
-            This job
+      class="relative w-full max-w-4xl overflow-hidden rounded-md border bg-white">
+      <div class="flex items-start gap-6 bg-gray-50 px-6 py-4 border-b">
+        <div class="flex flex-1 flex-wrap justify-between items-center gap-6">
+          <h2
+            id="job-details-title"
+            class="text-xl font-semibold text-gray-900">
+            {{ selectedJob.jobName }}
+          </h2>
 
+          <div class="flex gap-6 items-center">
             <button
               type="button"
-              (click)="deleteRequested.emit()"
-              class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
-            >
-              <svg
-                class="h-4 w-4 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm border border-red-600 font-medium rounded text-red-600 bg-white hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
+              (click)="deleteRequested.emit()">
+              <ng-icon name="heroTrash" size="16"></ng-icon>
               Delete
             </button>
             <button
               type="button"
-              disabled
-              class="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed"
               title="Download all files (coming soon)"
-            >
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-blue-700 rounded text-white bg-blue-700 cursor-not-allowed transition-all"
+              disabled>
               <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
               Download all files
             </button>
-            <button
-              type="button"
-              (click)="closeRequested.emit()"
-              class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:bg-slate-100"
-              aria-label="Close job details"
-            >
-              <svg
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.75"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
           </div>
         </div>
+        <button
+          type="button"
+          aria-label="Close job details"
+          class="inline-flex h-10 w-10 items-center justify-center rounded text-gray-600 transition-all hover:bg-gray-200"
+          (click)="closeRequested.emit()">
+          <ng-icon name="heroXMark" size="20"></ng-icon>
+        </button>
+      </div>
 
-        <div class="mt-5 grid gap-4 pb-1 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="p-6 space-y-6">
+        <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
           @for (item of getSummaryItems(selectedJob); track item.label) {
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-slate-500">{{ item.label }}</p>
-            <p
-              class="mt-2 border-b border-slate-300 pb-2 text-sm font-medium text-slate-900"
-            >
+          <div class="rounded border bg-gray-50 p-4">
+            <p class="text-xs font-semibold uppercase text-gray-600">
+              {{ item.label }}
+            </p>
+            <p class="mt-2 text-xs text-gray-900 font-mono">
               {{ item.value }}
             </p>
           </div>
           }
         </div>
-      </div>
 
-      <div class="border-b border-gray-200 bg-white px-6">
         <nav
-          class="-mb-px overflow-x-auto scrollbar-hiddenscroll-smooth py-1"
-          aria-label="Job result tabs"
-        >
-          <div class="flex min-w-max justify-center gap-8">
-            @for (tab of tabs; track tab.id) {
-            <button
-              type="button"
-              (click)="setActiveTab(tab.id)"
-              class="whitespace-nowrap px-1 py-4 text-sm font-medium transition-all duration-200 hover:scale-110"
-              [class.text-primary]="activeTab() === tab.id"
-              [class.border-gray-800]="activeTab() === tab.id"
-              [class.border-b-3]="activeTab() === tab.id"
-              [class.font-semibold]="activeTab() === tab.id"
-              [class.text-blue-900]="activeTab() !== tab.id"
-              [class.hover:text-blue-800]="activeTab() !== tab.id"
-              [class.hover:border-gray-300]="activeTab() !== tab.id"
-              [class.border-b-2]="activeTab() !== tab.id"
-              [class.border-transparent]="activeTab() !== tab.id"
-            >
-              {{ tab.label }}
-            </button>
-            }
-          </div>
+          class="scrollbar-hidden overflow-x-auto border-b flex"
+          aria-label="Job result tabs">
+          @for (tab of tabs; track tab.id) {
+          <button
+            type="button"
+            (click)="setActiveTab(tab.id)"
+            class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-transparent border-b-3 py-3 min-w-24 w-24 text-sm font-semibold transition-all"
+            [class.border-blue-700]="activeTab() === tab.id"
+            [class.text-blue-700]="activeTab() === tab.id"
+            [class.border-transparent]="activeTab() !== tab.id"
+            [class.text-gray-600]="activeTab() !== tab.id"
+            [class.hover:border-gray-600]="activeTab() !== tab.id">
+            <ng-icon [name]="tab.icon" size="16"></ng-icon>
+            {{ tab.label }}
+          </button>
+          }
         </nav>
-      </div>
 
-      <div class="max-h-[60vh] overflow-y-auto px-6 py-6">
-        <div class="mx-auto w-full max-w-4xl">
+        <div class="max-h-[60vh] overflow-y-auto space-y-6">
           @switch (activeTab()) { @case ("results") {
-          <div class="rounded-2xl border border-slate-200 p-5">
-            <h3 class="text-md font-semibold text-slate-900">
-              Design Summary Report
-            </h3>
-            @if (reportError()) {
-            <p
-              class="mt-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-            >
-              {{ reportError() }}
-            </p>
-            } @else if (reportUrl(); as reportDocumentUrl) {
-            <div
-              class="relative mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white"
-            >
-              @if (reportLoading()) {
-              <div
-                class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
-              >
-                <app-loading
-                  message="Loading report..."
-                  [inline]="true"
-                ></app-loading>
-              </div>
-              }
-              <iframe
-                class="w-full bg-white"
-                style="height: 500px; zoom: 0.7"
-                [src]="reportDocumentUrl"
-                [title]="'Job report for ' + selectedJob.jobName"
-                (load)="onReportLoad()"
-                (error)="onReportError()"
-              ></iframe>
-            </div>
-            } @else if (reportLoading()) {
-            <div class="mt-4 px-4 py-6">
-              <app-loading
-                message="Loading report..."
-                [inline]="true"
-              ></app-loading>
-            </div>
-            } @else {
-            <p class="mt-2 text-sm text-slate-600">
-              No report data is available for this run yet.
-            </p>
-            }
+          <div class="font-semibold text-gray-900">Design Summary Report</div>
+          @if (reportError()) {
+          <div
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            {{ reportError() }}
           </div>
-          } @case ("files") {
-          <div class="rounded-2xl border border-slate-200 bg-white">
-            <div class="border-b border-slate-200 px-5 py-4">
-              <h3 class="text-md font-semibold text-slate-900">
-                Available files
-              </h3>
-              <p class="mt-1 text-sm text-slate-500">
-                Download individual result files from this workflow run.
-              </p>
+          } @else if (reportUrl(); as reportDocumentUrl) {
+          <div class="relative overflow-hidden rounded border bg-white">
+            @if (reportLoading()) {
+            <div
+              class="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
+              <app-loading message="Loading report..." [inline]="true" />
             </div>
-            @if (filesError()) {
-            <div class="px-5 py-4">
-              <p
-                class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-              >
-                {{ filesError() }}
-              </p>
-            </div>
-            } @else if (filesLoading()) {
-            <div class="px-5 py-6">
-              <app-loading
-                message="Loading files..."
-                [inline]="true"
-              ></app-loading>
-            </div>
-            } @else if (filesItems().length > 0) {
-            <div class="px-5 py-4">
-              @for (categoryGroup of getFilesByCategory(); track
-              categoryGroup.category) {
-              <div class="mb-6 last:mb-0">
-                <h4 class="text-sm font-semibold mb-3">
-                  {{ categoryGroup.category }}
-                </h4>
-                <div class="space-y-2">
-                  @for (file of categoryGroup.files; track file.url) {
-                  <div
-                    class="flex items-center justify-between py-2 hover:bg-slate-50 px-3 rounded-lg"
-                  >
+            }
+            <iframe
+              class="w-full bg-white"
+              style="height: 500px; zoom: 0.7"
+              [src]="reportDocumentUrl"
+              [title]="'Job report for ' + selectedJob.jobName"
+              (load)="onReportLoad()"
+              (error)="onReportError()">
+            </iframe>
+          </div>
+          } @else if (reportLoading()) {
+          <app-loading message="Loading report..." [inline]="true" />
+          } @else {
+          <p class="text-sm text-gray-600 wrap-break-word">
+            No report data is available for this run.
+          </p>
+          } } @case ("files") {
+          <div class="space-y-2">
+            <div class="font-semibold text-gray-900">Available files</div>
+            <p class="text-sm text-gray-600">
+              Download individual result files from this workflow run.
+            </p>
+          </div>
+          @if (filesError()) {
+          <div
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            {{ filesError() }}
+          </div>
+          } @else if (filesLoading()) {
+          <app-loading message="Loading files..." [inline]="true" />
+          } @else if (filesItems().length > 0) {
+          <div class="space-y-6">
+            @for (categoryGroup of getFilesByCategory(); track
+            categoryGroup.category) {
+            <section class="space-y-3">
+              <h4 class="text-sm font-semibold text-gray-900">
+                {{ categoryGroup.category }}
+              </h4>
+
+              <ul class="space-y-2">
+                @for (file of categoryGroup.files; track file.url) {
+                <li class="rounded px-3 py-2 hover:bg-gray-50">
+                  <div class="flex items-center gap-4">
                     <a
                       [href]="file.url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-sm text-blue-900 hover:text-blue-700 truncate flex-1 min-w-0 mr-4 cursor-pointer"
-                      [title]="'Download ' + file.label"
-                    >
+                      class="min-w-0 flex-1 truncate text-sm font-medium text-blue-900 hover:text-blue-700"
+                      [title]="'Download ' + file.label">
                       {{ file.label }}
                     </a>
+
                     <a
                       [href]="file.url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-blue-900 hover:text-blue-700 p-2"
+                      class="shrink-0 rounded p-2 text-blue-900 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2"
                       [title]="'Download ' + file.label"
-                    >
-                      <ng-icon name="heroArrowDownTray" size="20"></ng-icon>
+                      [attr.aria-label]="'Download ' + file.label">
+                      <ng-icon name="heroArrowDownTray" size="20" />
                     </a>
                   </div>
-                  }
-                </div>
-              </div>
-              }
-            </div>
-            } @else {
-            <div class="px-5 py-4">
-              <p class="text-sm text-slate-600">
-                No files available for this run yet.
-              </p>
-            </div>
+                </li>
+                }
+              </ul>
+            </section>
             }
           </div>
-          } @case ("settings") {
+          } @else {
+          <p class="text-sm text-gray-600 wrap-break-word">
+            No files available for this run.
+          </p>
+          } } @case ("settings") {
+          <div class="font-semibold text-gray-900">Run settings</div>
+          @if (settingsError()) {
           <div
-            class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <h3 class="text-md font-semibold text-slate-900">Run settings</h3>
-            @if (settingsError()) {
-            <p
-              class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-            >
-              {{ settingsError() }}
-            </p>
-            } @else if (settingsLoading()) {
-            <div class="mt-4 py-6">
-              <app-loading
-                message="Loading settings..."
-                [inline]="true"
-              ></app-loading>
-            </div>
-            } @else if (settingsItems().length > 0) {
-            <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-              @for (setting of settingsItems(); track setting.label) {
-              <div
-                class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3"
-              >
-                <dt
-                  class="text-xs font-semibold uppercase tracking-wide text-slate-500"
-                >
-                  {{ setting.label }}
-                </dt>
-                @if (setting.url) {
-                <dd class="mt-1 text-sm">
-                  <a
-                    [href]="setting.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    class="text-blue-700 underline hover:text-blue-900 break-all"
-                    >{{ setting.value }}</a
-                  >
-                </dd>
-                } @else {
-                <dd class="mt-1 wrap-break-word text-sm text-slate-900">
-                  {{ setting.value }}
-                </dd>
-                } @if (setting.details.length > 0) {
-                <div class="mt-2 space-y-1">
-                  @for (detail of setting.details; track detail) {
-                  <p class="text-xs text-slate-500">{{ detail }}</p>
-                  }
-                </div>
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            {{ settingsError() }}
+          </div>
+          } @else if (settingsLoading()) {
+          <app-loading message="Loading settings..." [inline]="true" />
+          } @else if (settingsItems().length > 0) {
+          <div class="grid gap-4 grid-cols-2">
+            @for (setting of settingsItems(); track setting.label) {
+            <div class="rounded border bg-gray-50 p-4 space-y-2">
+              <div class="text-xs font-semibold uppercase text-gray-600">
+                {{ setting.label }}
+              </div>
+              @if (setting.url) {
+              <a
+                [href]="setting.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                class="text-blue-700 hover:underline transition-all hover:text-blue-800 text-xs wrap-break-word font-mono">
+                {{ setting.value }}
+              </a>
+              } @else {
+              <div class="text-xs text-gray-900 wrap-break-word font-mono">
+                {{ setting.value }}
+              </div>
+              } @if (setting.details.length > 0) {
+              <div class="space-y-2">
+                @for (detail of setting.details; track detail) {
+                <p class="text-xs text-gray-900 font-mono wrap-break-word">
+                  {{ detail }}
+                </p>
                 }
               </div>
               }
-            </dl>
-            } @else {
-            <p class="mt-4 text-sm text-slate-600">
-              No settings data is available for this run yet.
-            </p>
+            </div>
             }
           </div>
-          } @case ("logs") {
+          } @else {
+          <p class="text-sm text-gray-600 wrap-break-word">
+            No settings data is available for this run.
+          </p>
+          } } @case ("logs") {
+          <div class="font-semibold text-gray-900">Logs</div>
+          @if (logsError()) {
           <div
-            class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <h3 class="text-md font-semibold text-slate-900">Logs</h3>
-            @if (logsError()) {
-            <p
-              class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-            >
-              {{ logsError() }}
-            </p>
-            } @else if (logsLoading()) {
-            <div class="mt-4 py-6">
-              <app-loading
-                message="Loading logs..."
-                [inline]="true"
-              ></app-loading>
-            </div>
-            } @else if (logsItems().length > 0) {
-            <div class="mt-4 space-y-3 font-mono text-sm">
-              @for (line of logsItems(); track line) {
-              <p class="text-slate-700 whitespace-pre-wrap wrap-break-word">
-                {{ line }}
-              </p>
-              }
-            </div>
-            } @else {
-            <p class="mt-4 text-sm text-slate-600">
-              No logs are available for this run yet.
+            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word">
+            {{ logsError() }}
+          </div>
+          } @else if (logsLoading()) {
+          <app-loading message="Loading logs..." [inline]="true" />
+          } @else if (logsItems().length > 0) {
+          <div class="space-y-2 font-mono text-xs text-gray-900">
+            @for (line of logsItems(); track line) {
+            <p class="whitespace-pre-wrap wrap-break-word">
+              {{ line }}
             </p>
             }
           </div>
-          } @case ("citations") {
-          <div class="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 class="text-lg font-semibold text-slate-900">Citations</h3>
-            <p class="mt-2 text-sm text-slate-500">
+          } @else {
+          <p class="text-sm text-gray-600 wrap-break-word">
+            No logs are available for this run.
+          </p>
+          } } @case ("citations") {
+          <div class="space-y-2">
+            <div class="font-semibold text-gray-900">Citations</div>
+            <p class="text-sm text-gray-600">
               Cite the workflow and platform used to produce the results from
               this run.
             </p>
-            <ul class="mt-4 space-y-3">
-              @for (citation of getCitations(selectedJob); track citation) {
-              <li
-                class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              >
-                {{ citation }}
-              </li>
-              }
-            </ul>
           </div>
+          <ul class="space-y-2 list-disc pl-6 text-sm">
+            @for (citation of getCitations(selectedJob); track citation) {
+            <li>{{ citation }}</li>
+            }
+          </ul>
+
           } }
         </div>
       </div>
