@@ -1,5 +1,6 @@
 import { inject, Injectable, signal } from "@angular/core";
 import { Router } from "@angular/router";
+import { getErrorMessage } from "../utils/error.utils";
 import { WorkflowApiService } from "./workflow-api.service";
 
 @Injectable({
@@ -104,17 +105,14 @@ export class WorkflowSubmissionService {
         },
         error: (error) => {
           console.error("Error launching workflow:", error);
-          // Hide loading state
           this.isSubmitting.set(false);
 
-          // Call custom error handler if provided
+          const message = getErrorMessage(error);
+
           if (onError) {
-            onError(error);
+            onError(new Error(message));
           } else {
-            // Default error handling
-            alert(
-              `Failed to launch workflow: ${error.message || "Unknown error"}`
-            );
+            alert(`Failed to launch workflow: ${message}`);
           }
         },
       });

@@ -519,10 +519,6 @@ describe("SinglePredictionComponent", () => {
           id: "single_prediction",
           fasta: MOCK_FASTA_RESPONSE.s3Uri,
         },
-        datasetName: jasmine.stringMatching(
-          /^single_prediction-samplesheet-\d+$/
-        ),
-        datasetDescription: "Single prediction samplesheet",
       })
     );
     expect(

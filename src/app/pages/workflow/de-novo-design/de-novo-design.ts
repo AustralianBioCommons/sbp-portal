@@ -40,6 +40,7 @@ import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
+import { getErrorMessage } from "../../../cores/utils/error.utils";
 
 interface TabItem {
   id: "overview" | "output" | "papers";
@@ -637,8 +638,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             error: (error) => {
               this.isPdbUploading.set(false);
               this.workflowSubmission.isSubmitting.set(false);
-              const msg =
-                error?.error?.message ?? error?.message ?? "Unknown error";
+              const msg = getErrorMessage(error);
               this.showError(
                 `Failed to upload PDB file: ${msg}. Please try again.`
               );
@@ -708,9 +708,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error("Dataset upload failed", error);
           this.workflowSubmission.isSubmitting.set(false);
-          this.showError(
-            `Failed to upload dataset: ${error.message || "Unknown error"}`
-          );
+          this.showError(`Failed to upload dataset: ${getErrorMessage(error)}`);
         },
       });
   }

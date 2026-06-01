@@ -6,6 +6,7 @@ import {
   FastaUploadResponse,
   FastaUploadService,
 } from "../../../cores/services/fasta-upload.service";
+import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { InteractionScreeningComponent } from "./interaction-screening";
 
@@ -23,12 +24,19 @@ const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
   presignedUrl: "https://signed.example/querySeq1.fasta",
 };
 
+const MOCK_DATASET_RESPONSE = {
+  success: true,
+  message: "ok",
+  datasetId: "dataset-123",
+};
+
 // ──────────────────────────────────────────────────────────────────────────
 
 describe("InteractionScreeningComponent", () => {
   let component: InteractionScreeningComponent;
   let fixture: ComponentFixture<InteractionScreeningComponent>;
   let fastaUploadService: jasmine.SpyObj<FastaUploadService>;
+  let datasetUploadService: jasmine.SpyObj<DatasetUploadService>;
   let workflowSubmissionService: {
     isSubmitting: ReturnType<typeof signal<boolean>>;
     showSuccessDialog: ReturnType<typeof signal<boolean>>;
@@ -52,11 +60,23 @@ describe("InteractionScreeningComponent", () => {
     );
     fastaUploadService.uploadFastaFile.and.returnValue(of(MOCK_FASTA_RESPONSE));
 
+    datasetUploadService = jasmine.createSpyObj<DatasetUploadService>(
+      "DatasetUploadService",
+      ["uploadInteractionScreeningDataset"]
+    );
+    datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
+      of(MOCK_DATASET_RESPONSE)
+    );
+
     workflowSubmissionService = {
       isSubmitting: signal(false),
       showSuccessDialog: signal(false),
       successDialogData: signal(null),
-      submitWorkflowWithDataset: jasmine.createSpy("submitWorkflowWithDataset"),
+      submitWorkflowWithDataset: jasmine
+        .createSpy("submitWorkflowWithDataset")
+        .and.callFake(() => {
+          workflowSubmissionService.isSubmitting.set(false);
+        }),
       goToJobs: jasmine.createSpy("goToJobs"),
     };
 
@@ -72,6 +92,7 @@ describe("InteractionScreeningComponent", () => {
       providers: [
         { provide: AuthService, useValue: authService },
         { provide: FastaUploadService, useValue: fastaUploadService },
+        { provide: DatasetUploadService, useValue: datasetUploadService },
         {
           provide: WorkflowSubmissionService,
           useValue: workflowSubmissionService,
@@ -119,14 +140,14 @@ describe("InteractionScreeningComponent", () => {
     expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
   });
 
-  it("should call uploadFastaFile once per sequence (2 calls for query + target) when form is valid", () => {
+  it("should call uploadFastaFile once with combined sequences when form is valid", () => {
     fillValidForm();
     fixture.detectChanges();
 
     component.submitWorkflow();
 
-    // one query sequence + one target sequence = 2 uploads
-    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(2);
+    // all sequences combined into a single FASTA file upload
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
   });
 
   it("should set isSubmitting to false on successful upload", () => {
@@ -452,6 +473,62 @@ describe("InteractionScreeningComponent", () => {
     fixture.detectChanges();
     fastaUploadService.uploadFastaFile.and.returnValue(throwError(() => ({})));
     component.submitWorkflow();
+    expect(component.alertMessage()).toContain("Unknown error");
+  });
+
+  // ── 23. submitWorkflow — missing datasetId ────────────────────────────────
+
+  it("should show error and set isSubmitting false when dataset upload returns no datasetId", () => {
+    fillValidForm();
+    fixture.detectChanges();
+    datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
+      of({ success: true, message: "ok" })
+    );
+
+    component.submitWorkflow();
+
+    expect(workflowSubmissionService.isSubmitting()).toBe(false);
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("no dataset ID");
+  });
+
+  // ── 24. submitWorkflow — workflow launch error callback ───────────────────
+
+  it("should show error when submitWorkflowWithDataset calls the error callback", () => {
+    fillValidForm();
+    fixture.detectChanges();
+    workflowSubmissionService.submitWorkflowWithDataset.and.callFake(
+      (
+        _options: unknown,
+        _datasetId: string,
+        errorCallback: (err: Error) => void
+      ) => {
+        errorCallback(new Error("launch failed"));
+      }
+    );
+
+    component.submitWorkflow();
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("launch failed");
+    expect(workflowSubmissionService.isSubmitting()).toBe(false);
+  });
+
+  it("should show 'Unknown error' when the workflow launch error has no message", () => {
+    fillValidForm();
+    fixture.detectChanges();
+    workflowSubmissionService.submitWorkflowWithDataset.and.callFake(
+      (
+        _options: unknown,
+        _datasetId: string,
+        errorCallback: (err: Error) => void
+      ) => {
+        errorCallback({} as Error);
+      }
+    );
+
+    component.submitWorkflow();
+
     expect(component.alertMessage()).toContain("Unknown error");
   });
 });
