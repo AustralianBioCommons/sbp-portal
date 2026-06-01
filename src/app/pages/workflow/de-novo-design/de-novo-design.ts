@@ -682,7 +682,9 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
 
           const workflowFormData = {
             ...formData,
-            tool: this.selectedToolLabel(),
+            // tool = the user-selected algorithm (e.g. "bindcraft"); stored in workflow_runs.tool.
+            // The workflow is identified by "de-novo-design" passed as workflowName below.
+            tool: this.selectedTool(),
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(
@@ -699,7 +701,8 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
                   error.message || "Unknown error"
                 }`
               );
-            }
+            },
+            "de-novo-design"
           );
         },
         error: (error) => {
@@ -971,6 +974,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    if (this.selectedToolLabel()) {
+      summary.unshift({
+        label: "Mode",
+        value: this.selectedToolLabel(),
+        fieldName: "tool",
+      });
+    }
 
     if (this.jobName()) {
       summary.unshift({

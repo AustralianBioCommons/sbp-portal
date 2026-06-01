@@ -865,15 +865,17 @@ export class SinglePredictionComponent {
         this.showError(
           `Workflow launch failed: ${error.message || "Unknown error"}`
         );
-      }
+      },
+      "single-prediction"
     );
   }
 
   private buildWorkflowPayload(): Record<string, unknown> {
     return {
-      tool: "Proteinfold",
+      // tool = user-selected algorithm (e.g. "colabfold"); workflow is "single-prediction"
+      // passed via workflowName to submitWorkflowWithDataset above.
+      tool: this.selectedTool(),
       runName: this.jobName().trim(),
-      mode: this.selectedTool(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,
         moleculeType: row.moleculeType,

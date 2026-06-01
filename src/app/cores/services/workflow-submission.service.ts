@@ -36,7 +36,8 @@ export class WorkflowSubmissionService {
   submitWorkflowWithDataset(
     formData: Record<string, unknown>,
     datasetId?: string,
-    onError?: (error: Error) => void
+    onError?: (error: Error) => void,
+    workflowName?: string
   ): void {
     // Generate a random run name with timestamp and random string
     const timestamp = new Date()
@@ -46,9 +47,10 @@ export class WorkflowSubmissionService {
     const randomStr = Math.random().toString(36).substring(2, 8);
     const randomRunName = `run-${timestamp}-${randomStr}`;
 
-    // Construct the launch configuration
+    // workflowName overrides formData.tool when the caller separates workflow identity
+    // from the user-selected tool (e.g. de-novo-design sends tool="bindcraft" in formData
     const launch = {
-      tool: (formData.tool as string) || "BindCraft",
+      tool: workflowName || (formData.tool as string),
       configProfiles: (formData.configProfiles as string[]) || ["singularity"],
       runName: (formData.runName as string) || randomRunName,
       paramsText: null as string | null,
