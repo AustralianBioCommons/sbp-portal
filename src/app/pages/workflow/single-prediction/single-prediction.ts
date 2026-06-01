@@ -875,6 +875,7 @@ export class SinglePredictionComponent {
       // tool = user-selected algorithm (e.g. "colabfold"); workflow is "single-prediction"
       // passed via workflowName to submitWorkflowWithDataset above.
       tool: this.selectedTool(),
+      mode: this.selectedTool(),
       runName: this.jobName().trim(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,

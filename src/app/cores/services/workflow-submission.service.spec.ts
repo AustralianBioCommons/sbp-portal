@@ -92,7 +92,7 @@ describe("WorkflowSubmissionService", () => {
     expect(launch.tool).toBe("AlphaFold2");
     expect(launch.configProfiles).toEqual(["docker"]);
     expect(launch.runName).toContain("run-");
-    expect(launch.paramsText).toBeNull();
+    expect(launch.paramsText).toBeUndefined();
     expect(service.isSubmitting()).toBeFalse();
     expect(service.showSuccessDialog()).toBeTrue();
     expect(service.successDialogData()).toEqual({
@@ -101,7 +101,30 @@ describe("WorkflowSubmissionService", () => {
     });
   });
 
-  it("should use default launch values when optional form data is absent", () => {
+  it("should error when tool is absent", () => {
+    const onError = jasmine.createSpy("onError");
+
+    service.submitWorkflowWithDataset({}, "dataset-456", onError);
+
+    expect(onError).toHaveBeenCalledWith(
+      jasmine.objectContaining({ message: "tool is required to launch workflow." })
+    );
+    expect(workflowApiService.launchWorkflow).not.toHaveBeenCalled();
+    expect(service.isSubmitting()).toBeFalse();
+  });
+
+  it("should fall back to alert when tool is absent and no error handler is provided", () => {
+    const alertSpy = spyOn(window, "alert");
+
+    service.submitWorkflowWithDataset({}, "dataset-456");
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Failed to launch workflow: tool is required to launch workflow."
+    );
+    expect(workflowApiService.launchWorkflow).not.toHaveBeenCalled();
+  });
+
+  it("should use default configProfiles and runName when not provided", () => {
     workflowApiService.launchWorkflow.and.returnValue(
       of({
         message: "submitted",
@@ -111,10 +134,10 @@ describe("WorkflowSubmissionService", () => {
       })
     );
 
-    service.submitWorkflowWithDataset({}, "dataset-456");
+    service.submitWorkflowWithDataset({ tool: "Boltz" }, "dataset-456");
 
     const [launch] = workflowApiService.launchWorkflow.calls.mostRecent().args;
-    expect(launch.tool).toBe("BindCraft");
+    expect(launch.tool).toBe("Boltz");
     expect(launch.configProfiles).toEqual(["singularity"]);
     expect(launch.runName).toContain("run-");
   });
