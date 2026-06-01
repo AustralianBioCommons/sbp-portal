@@ -243,7 +243,9 @@
           } @else if (logsLoading()) {
           <app-loading message="Loading logs..." [inline]="true" />
           } @else if (logsItems().length > 0) {
-          <div class="space-y-2 font-mono text-xs text-gray-900">
+          <div
+            class="rounded p-6 bg-gray-900 space-y-2 font-mono text-xs text-white"
+          >
             @for (line of logsItems(); track line) {
             <p class="whitespace-pre-wrap wrap-break-word">
               {{ line }}
