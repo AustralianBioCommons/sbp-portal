@@ -276,10 +276,10 @@
                 {{ job.jobName }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {{ job.workflowName || "—" }}
+                {{ job.workflow || "—" }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {{ job.workflowType || "—" }}
+                {{ job.tool || "—" }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 @if (isInProgress(job.status)) {

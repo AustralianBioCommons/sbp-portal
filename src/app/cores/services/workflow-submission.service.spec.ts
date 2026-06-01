@@ -107,7 +107,9 @@ describe("WorkflowSubmissionService", () => {
     service.submitWorkflowWithDataset({}, "dataset-456", onError);
 
     expect(onError).toHaveBeenCalledWith(
-      jasmine.objectContaining({ message: "tool is required to launch workflow." })
+      jasmine.objectContaining({
+        message: "Tool is required to launch workflow.",
+      })
     );
     expect(workflowApiService.launchWorkflow).not.toHaveBeenCalled();
     expect(service.isSubmitting()).toBeFalse();
@@ -119,7 +121,7 @@ describe("WorkflowSubmissionService", () => {
     service.submitWorkflowWithDataset({}, "dataset-456");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Failed to launch workflow: tool is required to launch workflow."
+      "Failed to launch workflow: Tool is required to launch workflow."
     );
     expect(workflowApiService.launchWorkflow).not.toHaveBeenCalled();
   });
