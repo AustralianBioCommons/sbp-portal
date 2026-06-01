@@ -35,6 +35,7 @@ import { DatasetUploadService } from "../../../cores/services/dataset-upload.ser
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
+import { getErrorMessage } from "../../../cores/utils/error.utils";
 import {
   CCD_COMPOUNDS,
   isValidSmiles,
@@ -845,9 +846,9 @@ export class SinglePredictionComponent {
           this.preparedSamplesheetDatasetId.set(datasetId);
           onPrepared(fastaUrl, datasetId);
         },
-        error: (error: Error) => {
+        error: (error: unknown) => {
           this.workflowSubmission.isSubmitting.set(false);
-          this.showError(error.message || "Unknown error");
+          this.showError(getErrorMessage(error));
         },
       });
   }

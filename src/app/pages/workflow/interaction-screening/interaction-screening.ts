@@ -38,6 +38,7 @@ import { FastaUploadService } from "../../../cores/services/fasta-upload.service
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
+import { getErrorMessage } from "../../../cores/utils/error.utils";
 
 function multiFastaValidator(
   control: AbstractControl
@@ -435,7 +436,7 @@ export class InteractionScreeningComponent {
         },
         error: (error) => {
           this.workflowSubmission.isSubmitting.set(false);
-          this.showError(error.message || "Unknown error");
+          this.showError(getErrorMessage(error));
         },
       });
   }
