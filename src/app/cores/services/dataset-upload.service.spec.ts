@@ -55,4 +55,32 @@ describe("DatasetUploadService", () => {
       datasetId: "dataset-123",
     });
   });
+
+  it("should upload interaction screening dataset to the correct endpoint", () => {
+    const requestBody = {
+      sequences: [
+        { id: "querySeq1", group: "query" as const },
+        { id: "targetSeq1", group: "target" as const },
+      ],
+      runId: "my-run",
+    };
+
+    service
+      .uploadInteractionScreeningDataset(requestBody)
+      .subscribe((response) => {
+        expect(response.success).toBeTrue();
+        expect(response.datasetId).toBe("dataset-456");
+      });
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/datasets/interaction-screening/upload`
+    );
+    expect(req.request.method).toBe("POST");
+    expect(req.request.body).toEqual(requestBody);
+    req.flush({
+      success: true,
+      message: "uploaded",
+      datasetId: "dataset-456",
+    });
+  });
 });

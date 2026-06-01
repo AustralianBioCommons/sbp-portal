@@ -7,6 +7,7 @@ import {
   validateMultiFastaProtein,
   validateProteinSequence,
   validateRnaSequence,
+  validateUniqueHeadersAcrossInputs,
 } from "./fasta.utils";
 
 describe("fasta.utils", () => {
@@ -283,6 +284,45 @@ describe("fasta.utils", () => {
         valid: true,
         sequenceCount: 1,
       });
+    });
+  });
+
+  describe("validateUniqueHeadersAcrossInputs", () => {
+    it("returns valid when all headers are unique across both inputs", () => {
+      expect(
+        validateUniqueHeadersAcrossInputs(
+          ">query1\nMKTAYIAK",
+          ">target1\nACDEFGHIK"
+        )
+      ).toEqual({ valid: true });
+    });
+
+    it("returns invalid when a header appears in both inputs", () => {
+      const result = validateUniqueHeadersAcrossInputs(
+        ">seq1\nMKTAYIAK",
+        ">seq1\nACDEFGHIK"
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain('"seq1"');
+    });
+
+    it("reports multiple duplicate headers", () => {
+      const result = validateUniqueHeadersAcrossInputs(
+        ">seq1\nMKTAYIAK\n>seq2\nACDEFGHIK",
+        ">seq1\nMKTAYIAK\n>seq2\nACDEFGHIK"
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain('"seq1"');
+      expect(result.errorMessage).toContain('"seq2"');
+    });
+
+    it("returns valid when inputs have no overlapping headers", () => {
+      expect(
+        validateUniqueHeadersAcrossInputs(
+          ">a\nMKT\n>b\nACDE",
+          ">c\nMKT\n>d\nACDE"
+        )
+      ).toEqual({ valid: true });
     });
   });
 
