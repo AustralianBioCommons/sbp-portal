@@ -5,8 +5,6 @@ import { environment } from "../../../environments/environment";
 
 export interface DatasetUploadRequest {
   formData: Record<string, unknown>;
-  datasetName?: string;
-  datasetDescription?: string;
 }
 
 export interface DatasetUploadResponse {
