@@ -12,8 +12,7 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { forkJoin, of } from "rxjs";
-import { map, startWith } from "rxjs/operators";
+import { map, startWith, switchMap } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -29,17 +28,17 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import {
+  validateUniqueHeadersAcrossInputs,
   parseMultiFasta,
   validateMultiFastaProtein,
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
-import {
-  FastaUploadResponse,
-  FastaUploadService,
-} from "../../../cores/services/fasta-upload.service";
+import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
+import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
+import { getErrorMessage } from "../../../cores/utils/error.utils";
 
 function multiFastaValidator(
   control: AbstractControl
@@ -60,6 +59,21 @@ function maxProductValidator(max: number): ValidatorFn {
     const product = queryResult.sequenceCount * targetResult.sequenceCount;
     return product >= max ? { maxProduct: { actual: product, max } } : null;
   };
+}
+
+function uniqueSequencesValidator(
+  group: AbstractControl
+): ValidationErrors | null {
+  const queryVal = group.get("queryFasta")?.value ?? "";
+  const targetVal = group.get("targetFasta")?.value ?? "";
+  if (
+    !validateMultiFastaProtein(queryVal).valid ||
+    !validateMultiFastaProtein(targetVal).valid
+  ) {
+    return null;
+  }
+  const result = validateUniqueHeadersAcrossInputs(queryVal, targetVal);
+  return result.valid ? null : { duplicateSequences: result.errorMessage };
 }
 
 interface TabItem {
@@ -102,6 +116,8 @@ export class InteractionScreeningComponent {
   public workflowSubmission = inject(WorkflowSubmissionService);
   // FASTA upload service
   private fastaUploadService = inject(FastaUploadService);
+  // Dataset upload service
+  private datasetUploadService = inject(DatasetUploadService);
   // Form
   private fb = inject(NonNullableFormBuilder);
   readonly form = this.fb.group(
@@ -110,7 +126,12 @@ export class InteractionScreeningComponent {
       queryFasta: ["", multiFastaValidator],
       targetFasta: ["", multiFastaValidator],
     },
-    { validators: maxProductValidator(MAX_SEQUENCE_PRODUCT) }
+    {
+      validators: [
+        maxProductValidator(MAX_SEQUENCE_PRODUCT),
+        uniqueSequencesValidator,
+      ],
+    }
   );
   private formStatus = toSignal(
     this.form.statusChanges.pipe(startWith(this.form.status))
@@ -327,30 +348,37 @@ export class InteractionScreeningComponent {
     } pairs (query × target). The maximum is ${err.max - 1}.`;
   }
 
+  hasDuplicateSequencesError(): boolean {
+    return !!this.form.errors?.["duplicateSequences"];
+  }
+
+  getDuplicateSequencesError(): string {
+    return this.form.errors?.["duplicateSequences"] ?? "";
+  }
+
   private touchAll(): void {
     this.form.markAllAsTouched();
   }
 
   // ─── Submission ───────────────────────────────────────────────────────────
 
-  /**
-   * Build the wisps-compatible payload array.
-   * Each element matches the wisps schema_input row: { id, sequence, group }.
-   * Whitespace normalisation matches the validator (replace(/\s+/g, "")).
-   */
-  private buildWispsPayload(): Record<string, unknown>[] {
+  private buildWispsPayload(): {
+    id: string;
+    sequence: string;
+    group: "query" | "target";
+  }[] {
     const queryEntries = parseMultiFasta(this.form.value.queryFasta ?? "");
     const targetEntries = parseMultiFasta(this.form.value.targetFasta ?? "");
     return [
       ...queryEntries.map((e) => ({
         id: e.header,
         sequence: e.sequence,
-        group: "query",
+        group: "query" as const,
       })),
       ...targetEntries.map((e) => ({
         id: e.header,
         sequence: e.sequence,
-        group: "target",
+        group: "target" as const,
       })),
     ];
   }
@@ -361,40 +389,56 @@ export class InteractionScreeningComponent {
       return;
     }
 
+    const jobName = this.form.value.jobName ?? "";
     const sequences = this.buildWispsPayload();
 
     this.workflowSubmission.isSubmitting.set(true);
 
-    const uploadObservables = sequences.map((seq) => {
-      const id = seq["id"] as string;
-      const sequence = seq["sequence"] as string;
-      const fastaContent = `>${id}\n${sequence}`;
-      const blob = new Blob([fastaContent], { type: "text/plain" });
-      const file = new File([blob], `${id}.fasta`, { type: "text/plain" });
-      return this.fastaUploadService.uploadFastaFile({
-        file,
-        folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
+    const combinedFasta = sequences
+      .map((seq) => `>${seq.id}\n${seq.sequence}`)
+      .join("\n");
+    const blob = new Blob([combinedFasta], { type: "text/plain" });
+    const file = new File([blob], `sequences.fasta`, { type: "text/plain" });
+    const upload$ = this.fastaUploadService.uploadFastaFile({
+      file,
+      folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
+    });
+
+    upload$
+      .pipe(
+        switchMap(() =>
+          this.datasetUploadService.uploadInteractionScreeningDataset({
+            sequences: sequences.map((s) => ({ id: s.id, group: s.group })),
+            runId: jobName,
+          })
+        )
+      )
+      .subscribe({
+        next: (datasetResponse) => {
+          const datasetId = datasetResponse.datasetId;
+          if (!datasetId) {
+            this.workflowSubmission.isSubmitting.set(false);
+            this.showError(
+              "Dataset upload succeeded but no dataset ID was returned."
+            );
+            return;
+          }
+          this.workflowSubmission.submitWorkflowWithDataset(
+            { tool: this.selectedToolLabel(), runName: jobName },
+            datasetId,
+            (error) => {
+              this.workflowSubmission.isSubmitting.set(false);
+              this.showError(
+                `Workflow launch failed: ${error.message || "Unknown error"}`
+              );
+            }
+          );
+        },
+        error: (error) => {
+          this.workflowSubmission.isSubmitting.set(false);
+          this.showError(getErrorMessage(error));
+        },
       });
-    });
-
-    const uploads$ =
-      uploadObservables.length > 0
-        ? forkJoin(uploadObservables)
-        : of([] as FastaUploadResponse[]);
-
-    uploads$.subscribe({
-      next: (uploadResponses) => {
-        const fastaS3Uris = uploadResponses.map((r) => r.s3Uri);
-        console.log("FASTA uploads complete:", fastaS3Uris);
-        this.workflowSubmission.isSubmitting.set(false);
-      },
-      error: (error) => {
-        this.workflowSubmission.isSubmitting.set(false);
-        this.showError(
-          `Failed to upload FASTA files: ${error.message || "Unknown error"}`
-        );
-      },
-    });
   }
 
   submitNewJob() {
