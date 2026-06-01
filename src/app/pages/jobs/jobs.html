@@ -84,6 +84,8 @@
                 @for (status of statusOptions; track status) {
                 <label
                   (click)="$event.stopPropagation()"
+                  (keydown)="$event.stopPropagation()"
+                  tabindex="0"
                   class="flex cursor-pointer items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <input

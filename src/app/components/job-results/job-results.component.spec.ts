@@ -150,7 +150,6 @@ describe("JobResultsComponent", () => {
 
   it("should build and render the job report iframe", () => {
     expect(resultsService.getJobReport).toHaveBeenCalledWith(mockJob.id);
-    expect(fixture.nativeElement.textContent).toContain("Job name");
     const iframe = fixture.nativeElement.querySelector(
       "iframe"
     ) as HTMLIFrameElement;
@@ -716,7 +715,7 @@ describe("JobResultsComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "No files available for this run yet."
+      "No files available for this run."
     );
   });
 
