@@ -122,7 +122,7 @@ export class JobsComponent implements OnInit {
             ...job,
             finalDesignCount:
               rawJob.finalDesignCount ?? rawJob.final_design_count ?? null,
-            workflowName: rawJob.workflowName ?? rawJob.workflow_name ?? null,
+            workflow: rawJob.workflow ?? rawJob.workflow_name ?? null,
           };
         });
         this.jobs.set(this.sortJobs(normalizedJobs));

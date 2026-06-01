@@ -115,7 +115,7 @@ export class JobResultsComponent implements OnChanges {
         label: "Submitted date",
         value: this.datePipe.transform(job.submittedAt, "dd/MM/yyyy") ?? "",
       },
-      { label: "Type", value: job.workflowType || "N/A" },
+      { label: "Tool", value: job.tool || "N/A" },
       { label: "Status", value: job.status },
       {
         label: "Score",
@@ -134,7 +134,7 @@ export class JobResultsComponent implements OnChanges {
 
   getCitations(job: JobListItem): string[] {
     return [
-      `${job.workflowType || "Workflow"} methods and generated outputs.`,
+      `${job.tool || "Workflow"} methods and generated outputs.`,
       "SBP Portal platform and supporting infrastructure.",
     ];
   }

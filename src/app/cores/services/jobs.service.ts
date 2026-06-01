@@ -9,8 +9,8 @@ import { environment } from "../../../environments/environment";
 export interface JobListItem {
   id: string;
   jobName: string;
-  workflowType: string | null;
-  workflowName?: string | null;
+  workflow?: string | null;
+  tool: string | null;
   status: string;
   submittedAt: string;
   score: number | null;

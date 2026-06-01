@@ -34,7 +34,7 @@ describe("JobResultsComponent", () => {
   const mockJob: JobListItem = {
     id: "job-1",
     jobName: "Example job",
-    workflowType: "Binder design",
+    tool: "Binder design",
     status: "In progress",
     submittedAt: "2026-03-12T10:00:00Z",
     score: 0.95,
@@ -44,7 +44,7 @@ describe("JobResultsComponent", () => {
   const fallbackJob: JobListItem = {
     id: "job-2",
     jobName: "Queued job",
-    workflowType: null,
+    tool: null,
     status: "In queue",
     submittedAt: "2026-03-12T11:00:00Z",
     score: null,
