@@ -15,7 +15,7 @@ import {
   heroBookOpen,
   heroChartBarSquare,
   heroCommandLine,
-  heroCog8Tooth,
+  heroCog6Tooth,
   heroFolder,
   heroTrash,
   heroXMark,
@@ -50,7 +50,7 @@ type JobSettingItem = {
       heroBookOpen,
       heroChartBarSquare,
       heroCommandLine,
-      heroCog8Tooth,
+      heroCog6Tooth,
       heroFolder,
       heroTrash,
       heroXMark,
@@ -87,7 +87,7 @@ export class JobResultsComponent implements OnChanges {
   readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
     { id: "results", label: "Results", icon: "heroChartBarSquare" },
     { id: "files", label: "Files", icon: "heroFolder" },
-    { id: "settings", label: "Settings", icon: "heroCog8Tooth" },
+    { id: "settings", label: "Settings", icon: "heroCog6Tooth" },
     { id: "logs", label: "Logs", icon: "heroCommandLine" },
     { id: "citations", label: "Citations", icon: "heroBookOpen" },
   ];
