@@ -37,7 +37,8 @@ export class WorkflowSubmissionService {
   submitWorkflowWithDataset(
     formData: Record<string, unknown>,
     datasetId?: string,
-    onError?: (error: Error) => void
+    onError?: (error: Error) => void,
+    workflowName?: string
   ): void {
     // Generate a random run name with timestamp and random string
     const timestamp = new Date()
@@ -47,12 +48,24 @@ export class WorkflowSubmissionService {
     const randomStr = Math.random().toString(36).substring(2, 8);
     const randomRunName = `run-${timestamp}-${randomStr}`;
 
-    // Construct the launch configuration
+    // workflowName overrides formData.tool when the caller separates workflow identity
+    // from the user-selected tool (e.g. de-novo-design sends tool="bindcraft" in formData
+    const tool = workflowName || (formData.tool as string | undefined);
+    if (!tool) {
+      const error = new Error("Tool is required to launch workflow.");
+      if (onError) {
+        onError(error);
+      } else {
+        alert(`Failed to launch workflow: ${error.message}`);
+      }
+      return;
+    }
+
     const launch = {
-      tool: (formData.tool as string) || "BindCraft",
+      tool,
       configProfiles: (formData.configProfiles as string[]) || ["singularity"],
       runName: (formData.runName as string) || randomRunName,
-      paramsText: null as string | null,
+      paramsText: undefined as string | undefined,
     };
 
     console.log("Submitting workflow with launch config:", launch);
