@@ -22,7 +22,7 @@ describe("JobsComponent", () => {
     id: "job-1",
     jobName: "Example job",
     tool: "Binder design",
-    workflow: null,
+    workflow: "",
     status: "In progress",
     submittedAt: "2026-03-12T10:00:00Z",
     score: 0.95,
@@ -32,7 +32,8 @@ describe("JobsComponent", () => {
   const secondJob: JobListItem = {
     id: "job-2",
     jobName: "Queued job",
-    tool: null,
+    tool: "",
+    workflow: "",
     status: "In queue",
     submittedAt: "2026-03-12T11:00:00Z",
     score: null,
@@ -66,10 +67,10 @@ describe("JobsComponent", () => {
     ]);
     mockJobsService.listJobs.and.returnValue(of(mockResponse));
     mockJobsService.cancelJob.and.returnValue(
-      of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" })
+      of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" }),
     );
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      of({ deleted: [mockJob.id], failed: {} })
+      of({ deleted: [mockJob.id], failed: {} }),
     );
     await TestBed.configureTestingModule({
       imports: [JobsComponent],
@@ -83,18 +84,18 @@ describe("JobsComponent", () => {
     mockResultsService.getJobReport.and.returnValue(
       of(
         sanitizer.bypassSecurityTrustResourceUrl(
-          "https://example.test/report.html"
-        )
-      )
+          "https://example.test/report.html",
+        ),
+      ),
     );
     mockResultsService.getJobDownloads.and.returnValue(
-      of({ runId: mockJob.id, downloads: [] })
+      of({ runId: mockJob.id, downloads: [] }),
     );
     mockResultsService.getJobSettingParams.and.returnValue(
-      of({ runId: mockJob.id, settingParams: { binder_name: "PDL1" } })
+      of({ runId: mockJob.id, settingParams: { binder_name: "PDL1" } }),
     );
     mockResultsService.getJobLogs.and.returnValue(
-      of({ runId: mockJob.id, logs: [], entries: [], formattedEntries: [] })
+      of({ runId: mockJob.id, logs: [], entries: [], formattedEntries: [] }),
     );
 
     fixture = TestBed.createComponent(JobsComponent);
@@ -121,7 +122,7 @@ describe("JobsComponent", () => {
         total: 2,
         limit: 50,
         offset: 0,
-      })
+      }),
     );
 
     component.loadJobs();
@@ -145,7 +146,7 @@ describe("JobsComponent", () => {
         total: 1,
         limit: 50,
         offset: 0,
-      })
+      }),
     );
 
     component.loadJobs();
@@ -156,7 +157,7 @@ describe("JobsComponent", () => {
 
   it("should set an error when loading jobs fails", () => {
     mockJobsService.listJobs.and.returnValue(
-      throwError(() => new Error("load failed"))
+      throwError(() => new Error("load failed")),
     );
 
     component.loadJobs();
@@ -302,18 +303,18 @@ describe("JobsComponent", () => {
 
   it("should return status classes and helpers", () => {
     expect(component.getStatusClass("Completed")).toBe(
-      "bg-green-100 text-green-800"
+      "bg-green-100 text-green-800",
     );
     expect(component.getStatusClass("In progress")).toBe("text-gray-700");
     expect(component.getStatusClass("In queue")).toBe(
-      "bg-white text-black border border-black"
+      "bg-white text-black border border-black",
     );
     expect(component.getStatusClass("Failed")).toBe("bg-red-600 text-white");
     expect(component.getStatusClass("Stopped")).toBe(
-      "bg-yellow-100 text-red-700"
+      "bg-yellow-100 text-red-700",
     );
     expect(component.getStatusClass("Unknown")).toBe(
-      "bg-gray-100 text-gray-800"
+      "bg-gray-100 text-gray-800",
     );
     expect(component.isInProgress("In progress")).toBeTrue();
   });
@@ -380,7 +381,7 @@ describe("JobsComponent", () => {
     await detectComponentChanges();
 
     expect(
-      fixture.debugElement.query(By.directive(JobResultsComponent))
+      fixture.debugElement.query(By.directive(JobResultsComponent)),
     ).toBeTruthy();
   });
 
@@ -409,7 +410,7 @@ describe("JobsComponent", () => {
   it("should clear selection and close the delete dialog when no jobs are selected", () => {
     const closeDeleteDialogSpy = spyOn(
       component,
-      "closeDeleteDialog"
+      "closeDeleteDialog",
     ).and.callThrough();
 
     component.confirmDelete();
@@ -423,11 +424,11 @@ describe("JobsComponent", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
     const closeDeleteDialogSpy = spyOn(
       component,
-      "closeDeleteDialog"
+      "closeDeleteDialog",
     ).and.callThrough();
     component.selectedJobs.set([mockJob.id, secondJob.id]);
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      of({ deleted: [mockJob.id], failed: {} })
+      of({ deleted: [mockJob.id], failed: {} }),
     );
 
     component.confirmDelete();
@@ -447,7 +448,7 @@ describe("JobsComponent", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
     component.selectedJobs.set([mockJob.id, secondJob.id]);
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      of({ deleted: [mockJob.id], failed: { [secondJob.id]: "failed" } })
+      of({ deleted: [mockJob.id], failed: { [secondJob.id]: "failed" } }),
     );
 
     component.confirmDelete();
@@ -459,7 +460,7 @@ describe("JobsComponent", () => {
 
   it("should handle delete request failures", () => {
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      throwError(() => new Error("delete failed"))
+      throwError(() => new Error("delete failed")),
     );
     component.selectedJobs.set([mockJob.id]);
 
