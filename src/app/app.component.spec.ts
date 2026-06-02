@@ -53,7 +53,7 @@ describe("AppComponent", () => {
 
   it("should render app structure", () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector("app-header")).toBeTruthy();
+    expect(compiled.querySelector("app-navbar")).toBeTruthy();
     expect(compiled.querySelector("main")).toBeTruthy();
     expect(compiled.querySelector("app-footer")).toBeTruthy();
   });

@@ -253,6 +253,141 @@ export function lookupCcdCompound(code: string): CcdLookupResult {
   };
 }
 
+export interface BulkFastaValidationResult {
+  valid: boolean;
+  errorMessage?: string;
+  sequenceCount: number;
+}
+
+const BULK_FASTA_REGEX = /^[ARNDCQEGHILKMFPSTWYV:]+$/;
+const MAX_BULK_ENTRIES = 1000;
+const MAX_AA_LENGTH = 1000;
+
+/**
+ * Validates a multi-FASTA input for bulk protein structure prediction.
+ * - Each entry must have a unique FASTA header.
+ * - Sequences may contain the 20 canonical amino acids and ":" as a multimer chain delimiter.
+ * - At most 1000 FASTA entries are allowed.
+ * - Each entry must not exceed 1000 amino-acid characters (colons excluded from the count).
+ */
+export function validateBulkFastaProtein(
+  input: string
+): BulkFastaValidationResult {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    return {
+      valid: false,
+      errorMessage: "At least one FASTA sequence is required.",
+      sequenceCount: 0,
+    };
+  }
+
+  if (!trimmed.startsWith(">")) {
+    return {
+      valid: false,
+      errorMessage:
+        'Input must be in FASTA format: each entry needs a header line starting with ">".',
+      sequenceCount: 0,
+    };
+  }
+
+  const blocks = trimmed.split(/\n(?=>)/);
+
+  if (blocks.length > MAX_BULK_ENTRIES) {
+    return {
+      valid: false,
+      errorMessage: `Too many FASTA entries: ${blocks.length}. The maximum allowed is ${MAX_BULK_ENTRIES}.`,
+      sequenceCount: blocks.length,
+    };
+  }
+
+  const headers = new Set<string>();
+
+  for (const block of blocks) {
+    const lines = block.split("\n");
+    const headerLine = lines[0];
+
+    if (!headerLine.startsWith(">")) {
+      return {
+        valid: false,
+        errorMessage: 'Each FASTA entry must begin with a ">" header line.',
+        sequenceCount: 0,
+      };
+    }
+
+    const header = headerLine.slice(1).trim();
+
+    if (!header) {
+      return {
+        valid: false,
+        errorMessage:
+          'FASTA header cannot be empty (the ">" line must contain text after it).',
+        sequenceCount: 0,
+      };
+    }
+
+    if (headers.has(header)) {
+      return {
+        valid: false,
+        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique.`,
+        sequenceCount: 0,
+      };
+    }
+
+    headers.add(header);
+
+    const sequenceLines = lines.slice(1).map((l) => l.trim());
+    const rawSequence = sequenceLines
+      .filter((l) => l.length > 0)
+      .join("")
+      .toUpperCase();
+
+    if (!rawSequence) {
+      return {
+        valid: false,
+        errorMessage: `No sequence found for header "${header}".`,
+        sequenceCount: 0,
+      };
+    }
+
+    if (sequenceLines.some((l) => /\s/.test(l))) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for "${header}" must not contain spaces.`,
+        sequenceCount: 0,
+      };
+    }
+
+    if (!BULK_FASTA_REGEX.test(rawSequence)) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for "${header}" contains invalid characters. Only canonical amino acids (ARNDCQEGHILKMFPSTWYV) and the ":" multimer delimiter are allowed.`,
+        sequenceCount: 0,
+      };
+    }
+
+    if (/^:|:$|::/.test(rawSequence)) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for "${header}" has invalid ":" placement. The colon must separate chains and cannot appear at the start, end, or consecutively (e.g. SEQUENCE1:SEQUENCE2).`,
+        sequenceCount: 0,
+      };
+    }
+
+    const aaLength = rawSequence.replace(/:/g, "").length;
+    if (aaLength > MAX_AA_LENGTH) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for "${header}" has ${aaLength} amino-acid characters, exceeding the maximum of ${MAX_AA_LENGTH}.`,
+        sequenceCount: 0,
+      };
+    }
+  }
+
+  return { valid: true, sequenceCount: headers.size };
+}
+
 export function isValidSmiles(value: string): boolean {
   if (!value || /\s/.test(value)) {
     return false;

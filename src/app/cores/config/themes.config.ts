@@ -71,7 +71,6 @@ export const THEMES: ThemeConfig[] = [
         id: "bulk-prediction",
         label: "Bulk Prediction",
         href: "/bulk-prediction",
-        disabled: true,
       },
       {
         id: "interaction-screening",
