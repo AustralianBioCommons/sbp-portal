@@ -110,7 +110,7 @@ export class JobsComponent implements OnInit {
           this.error.set("Failed to load jobs. Please try again.");
           this.loading.set(false);
           return EMPTY;
-        })
+        }),
       )
       .subscribe((response) => {
         const normalizedJobs = response.jobs.map((job) => {
@@ -122,7 +122,7 @@ export class JobsComponent implements OnInit {
             ...job,
             finalDesignCount:
               rawJob.finalDesignCount ?? rawJob.final_design_count ?? null,
-            workflow: rawJob.workflow ?? rawJob.workflow_name ?? null,
+            workflow: rawJob.workflow ?? rawJob.workflow_name ?? "",
           };
         });
         this.jobs.set(this.sortJobs(normalizedJobs));
@@ -216,7 +216,7 @@ export class JobsComponent implements OnInit {
   get totalFinalDesigns(): number {
     return this.jobs().reduce(
       (sum, job) => sum + (job.finalDesignCount ?? 0),
-      0
+      0,
     );
   }
 
@@ -394,7 +394,7 @@ export class JobsComponent implements OnInit {
         if (Object.keys(response.failed || {}).length > 0) {
           const failedCount = Object.keys(response.failed).length;
           this.error.set(
-            `Failed to delete ${failedCount} job${failedCount > 1 ? "s" : ""}.`
+            `Failed to delete ${failedCount} job${failedCount > 1 ? "s" : ""}.`,
           );
         }
         this.selectedJobs.set([]);

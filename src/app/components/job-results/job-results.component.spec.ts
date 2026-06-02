@@ -14,12 +14,12 @@ type JobResultsPrivateApi = {
   normalizeLogsResponse: (response: ResultLogsResponse) => string[];
   normalizeLogs: (logs: string | string[] | null | undefined) => string[];
   normalizeSettings: (
-    settingParams: Record<string, unknown> | null | undefined
+    settingParams: Record<string, unknown> | null | undefined,
   ) => Array<{ label: string; value: string; details: string[]; url?: string }>;
   formatSettingLabel: (key: string) => string;
   formatSettingValue: (value: unknown) => string;
   formatValidationDetails: (
-    validation: Record<string, unknown> | undefined
+    validation: Record<string, unknown> | undefined,
   ) => string[];
   isPdbSettingKey: (key: string) => boolean;
   extractFilename: (path: string) => string;
@@ -35,6 +35,7 @@ describe("JobResultsComponent", () => {
     id: "job-1",
     jobName: "Example job",
     tool: "Binder design",
+    workflow: "",
     status: "In progress",
     submittedAt: "2026-03-12T10:00:00Z",
     score: 0.95,
@@ -44,7 +45,8 @@ describe("JobResultsComponent", () => {
   const fallbackJob: JobListItem = {
     id: "job-2",
     jobName: "Queued job",
-    tool: null,
+    tool: "",
+    workflow: "",
     status: "In queue",
     submittedAt: "2026-03-12T11:00:00Z",
     score: null,
@@ -68,12 +70,12 @@ describe("JobResultsComponent", () => {
     resultsService.getJobReport.and.returnValue(
       of(
         sanitizer.bypassSecurityTrustResourceUrl(
-          "https://example.test/report.html"
-        )
-      )
+          "https://example.test/report.html",
+        ),
+      ),
     );
     resultsService.getJobDownloads.and.returnValue(
-      of({ runId: mockJob.id, downloads: [] })
+      of({ runId: mockJob.id, downloads: [] }),
     );
     resultsService.getJobSettingParams.and.returnValue(
       of({
@@ -99,7 +101,7 @@ describe("JobResultsComponent", () => {
             validation: { max: 500 },
           },
         },
-      })
+      }),
     );
     resultsService.getJobLogs.and.returnValue(
       of({
@@ -120,7 +122,7 @@ describe("JobResultsComponent", () => {
           },
         ],
         logs: "fallback line",
-      })
+      }),
     );
 
     fixture = TestBed.createComponent(JobResultsComponent);
@@ -151,7 +153,7 @@ describe("JobResultsComponent", () => {
   it("should build and render the job report iframe", () => {
     expect(resultsService.getJobReport).toHaveBeenCalledWith(mockJob.id);
     const iframe = fixture.nativeElement.querySelector(
-      "iframe"
+      "iframe",
     ) as HTMLIFrameElement;
     expect(iframe).not.toBeNull();
     expect(iframe.title).toContain(mockJob.jobName);
@@ -226,8 +228,8 @@ describe("JobResultsComponent", () => {
   it("should clear report state when closed", () => {
     component.reportUrl.set(
       sanitizer.bypassSecurityTrustResourceUrl(
-        "https://example.test/ready.html"
-      )
+        "https://example.test/ready.html",
+      ),
     );
     component.reportError.set("error");
 
@@ -257,19 +259,19 @@ describe("JobResultsComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "Loading nextflow/25.10.3"
+      "Loading nextflow/25.10.3",
     );
     expect(fixture.nativeElement.textContent).toContain(
-      "Loading requirement: java/jdk-17.0.2"
+      "Loading requirement: java/jdk-17.0.2",
     );
     expect(fixture.nativeElement.textContent).not.toContain(
-      "raw line that should not render first"
+      "raw line that should not render first",
     );
   });
 
   it("should handle logs fetch errors", () => {
     resultsService.getJobLogs.and.returnValue(
-      throwError(() => new Error("logs failed"))
+      throwError(() => new Error("logs failed")),
     );
 
     fixture = TestBed.createComponent(JobResultsComponent);
@@ -301,7 +303,7 @@ describe("JobResultsComponent", () => {
 
   it("should stop loading when the report iframe loads", () => {
     const iframe = fixture.nativeElement.querySelector(
-      "iframe"
+      "iframe",
     ) as HTMLIFrameElement;
 
     iframe.dispatchEvent(new Event("load"));
@@ -313,7 +315,7 @@ describe("JobResultsComponent", () => {
 
   it("should handle report iframe loading errors", () => {
     const iframe = fixture.nativeElement.querySelector(
-      "iframe"
+      "iframe",
     ) as HTMLIFrameElement;
 
     iframe.dispatchEvent(new Event("error"));
@@ -321,13 +323,13 @@ describe("JobResultsComponent", () => {
 
     expect(component.reportError()).toBe("Failed to load report.");
     expect(fixture.nativeElement.textContent).toContain(
-      "Failed to load report."
+      "Failed to load report.",
     );
   });
 
   it("should handle report fetch errors", () => {
     resultsService.getJobReport.and.returnValue(
-      throwError(() => new Error("report failed"))
+      throwError(() => new Error("report failed")),
     );
 
     fixture = TestBed.createComponent(JobResultsComponent);
@@ -366,13 +368,13 @@ describe("JobResultsComponent", () => {
     expect(fixture.nativeElement.textContent).toContain("Max: 500");
     expect(fixture.nativeElement.textContent).not.toContain("Settings Filters");
     expect(fixture.nativeElement.textContent).not.toContain(
-      "Settings Advanced"
+      "Settings Advanced",
     );
     expect(fixture.nativeElement.textContent).not.toContain(
-      "default_filters.json"
+      "default_filters.json",
     );
     expect(fixture.nativeElement.textContent).not.toContain(
-      "default_advanced.json"
+      "default_advanced.json",
     );
     expect(fixture.nativeElement.textContent).not.toContain("fallback_local");
     expect(fixture.nativeElement.textContent).not.toContain("Source");
@@ -380,7 +382,7 @@ describe("JobResultsComponent", () => {
 
   it("should handle settings fetch errors", () => {
     resultsService.getJobSettingParams.and.returnValue(
-      throwError(() => new Error("settings failed"))
+      throwError(() => new Error("settings failed")),
     );
 
     fixture = TestBed.createComponent(JobResultsComponent);
@@ -504,7 +506,7 @@ describe("JobResultsComponent", () => {
     const privateApi = component as unknown as JobResultsPrivateApi;
     expect(privateApi.formatSettingLabel("___")).toBe("___");
     expect(privateApi.formatSettingLabel("starting-pdb_file")).toBe(
-      "Starting Pdb File"
+      "Starting Pdb File",
     );
   });
 
@@ -586,7 +588,7 @@ describe("JobResultsComponent", () => {
             category: "pdb_files",
           },
         ],
-      })
+      }),
     );
 
     fixture = TestBed.createComponent(JobResultsComponent);
@@ -628,7 +630,7 @@ describe("JobResultsComponent", () => {
             category: "stat_csv",
           },
         ],
-      })
+      }),
     );
 
     fixture = TestBed.createComponent(JobResultsComponent);
@@ -652,13 +654,13 @@ describe("JobResultsComponent", () => {
     fixture.detectChanges();
 
     expect(component.filesItems()[0].url).toBe(
-      `${environment.apiBaseUrl}/api/results/job-1/downloads/results.csv`
+      `${environment.apiBaseUrl}/api/results/job-1/downloads/results.csv`,
     );
   });
 
   it("should handle downloads fetch errors", () => {
     resultsService.getJobDownloads.and.returnValue(
-      throwError(() => new Error("downloads failed"))
+      throwError(() => new Error("downloads failed")),
     );
 
     fixture = TestBed.createComponent(JobResultsComponent);
@@ -715,7 +717,7 @@ describe("JobResultsComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "No files available for this run."
+      "No files available for this run.",
     );
   });
 
@@ -726,7 +728,7 @@ describe("JobResultsComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "Failed to load files."
+      "Failed to load files.",
     );
   });
 
@@ -756,21 +758,21 @@ describe("JobResultsComponent", () => {
     it("should extract filename from an HTTP URL", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       expect(
-        privateApi.extractFilename("https://api.example.com/files/target.pdb")
+        privateApi.extractFilename("https://api.example.com/files/target.pdb"),
       ).toBe("target.pdb");
     });
 
     it("should extract filename from an S3 URI", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       expect(
-        privateApi.extractFilename("s3://my-bucket/uploads/2026/target.pdb")
+        privateApi.extractFilename("s3://my-bucket/uploads/2026/target.pdb"),
       ).toBe("target.pdb");
     });
 
     it("should extract filename from a plain file path", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       expect(privateApi.extractFilename("/data/inputs/target.pdb")).toBe(
-        "target.pdb"
+        "target.pdb",
       );
     });
 
@@ -783,8 +785,8 @@ describe("JobResultsComponent", () => {
       const privateApi = component as unknown as JobResultsPrivateApi;
       expect(
         privateApi.extractFilename(
-          "https://my-bucket.s3.amazonaws.com/uploads/target.pdb?X-Amz-Signature=abc123&X-Amz-Expires=3600"
-        )
+          "https://my-bucket.s3.amazonaws.com/uploads/target.pdb?X-Amz-Signature=abc123&X-Amz-Expires=3600",
+        ),
       ).toBe("target.pdb");
     });
   });
@@ -858,7 +860,7 @@ describe("JobResultsComponent", () => {
           settingParams: {
             starting_pdb: "https://api.example.com/uploads/target.pdb",
           },
-        })
+        }),
       );
 
       fixture = TestBed.createComponent(JobResultsComponent);
@@ -883,7 +885,7 @@ describe("JobResultsComponent", () => {
       fixture.detectChanges();
 
       const anchor = fixture.nativeElement.querySelector(
-        "a[download]"
+        "a[download]",
       ) as HTMLAnchorElement;
       expect(anchor).not.toBeNull();
       expect(anchor.textContent?.trim()).toBe("target.pdb");
