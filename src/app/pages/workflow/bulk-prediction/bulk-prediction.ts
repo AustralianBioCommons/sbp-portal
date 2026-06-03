@@ -45,9 +45,7 @@ import { WorkflowSubmissionService } from "../../../cores/services/workflow-subm
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
 
-function bulkFastaValidator(
-  control: AbstractControl
-): ValidationErrors | null {
+function bulkFastaValidator(control: AbstractControl): ValidationErrors | null {
   const result = validateBulkFastaProtein(control.value ?? "");
   return result.valid ? null : { fasta: result.errorMessage };
 }
@@ -208,7 +206,9 @@ export class BulkPredictionComponent {
     if (fastaResult.valid) {
       items.push({
         label: "FASTA Entries",
-        value: `${fastaResult.sequenceCount} sequence${fastaResult.sequenceCount !== 1 ? "s" : ""}`,
+        value: `${fastaResult.sequenceCount} sequence${
+          fastaResult.sequenceCount !== 1 ? "s" : ""
+        }`,
         fieldName: "fasta_entries",
       });
     }

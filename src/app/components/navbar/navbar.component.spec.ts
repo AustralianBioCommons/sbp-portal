@@ -1,10 +1,6 @@
 import { ElementRef } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import {
-  NavigationEnd,
-  Router,
-  UrlTree,
-} from "@angular/router";
+import { NavigationEnd, Router, UrlTree } from "@angular/router";
 import { of, Subject } from "rxjs";
 import { AuthService } from "../../cores/auth.service";
 
