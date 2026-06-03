@@ -61,8 +61,10 @@ describe("AppComponent", () => {
   it("shows login button when logged out and triggers login", () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector("button");
-    expect(button?.textContent?.toLowerCase()).toContain("log in");
+    const button = compiled.querySelector(
+      "[data-testid='login-button']"
+    ) as HTMLButtonElement;
+    expect(button?.textContent?.toLowerCase()).toContain("login");
     button?.click();
     expect(mockAuthService.login).toHaveBeenCalled();
   });
@@ -123,8 +125,8 @@ describe("AppComponent", () => {
     const fixture2 = TestBed.createComponent(AppComponent);
     fixture2.detectChanges();
     const compiled = fixture2.nativeElement as HTMLElement;
-    const button = compiled.querySelector("button");
-    expect(button?.textContent).toContain("Profile");
+    const button = compiled.querySelector("[aria-label='Open profile']");
+    expect(button).toBeTruthy();
   });
 
   it("displays error alert with exact error message until user logs in", async () => {
