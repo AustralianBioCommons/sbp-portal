@@ -1,6 +1,7 @@
 import { TestBed } from "@angular/core/testing";
 import { Router } from "@angular/router";
 import { of, throwError } from "rxjs";
+import { WorkflowFormData } from "../interfaces/workflow.interfaces";
 import { WorkflowApiService } from "./workflow-api.service";
 import { WorkflowSubmissionService } from "./workflow-submission.service";
 
@@ -8,6 +9,11 @@ describe("WorkflowSubmissionService", () => {
   let service: WorkflowSubmissionService;
   let workflowApiService: jasmine.SpyObj<WorkflowApiService>;
   let router: jasmine.SpyObj<Router>;
+  const minimalPayload: WorkflowFormData = {
+    workflow: "interaction-screening",
+    tool: "boltz",
+    runName: "test-run",
+  };
 
   beforeEach(() => {
     workflowApiService = jasmine.createSpyObj("WorkflowApiService", [
@@ -37,7 +43,7 @@ describe("WorkflowSubmissionService", () => {
   it("should require dataset id when submitting", () => {
     const onError = jasmine.createSpy("onError");
 
-    service.submitWorkflowWithDataset({ tool: "Boltz" }, undefined, onError);
+    service.submitWorkflowWithDataset(minimalPayload, undefined, onError);
 
     expect(onError).toHaveBeenCalled();
     expect(workflowApiService.launchWorkflow).not.toHaveBeenCalled();
@@ -47,7 +53,7 @@ describe("WorkflowSubmissionService", () => {
   it("should fall back to alert when dataset id is missing and no error handler is provided", () => {
     const alertSpy = spyOn(window, "alert");
 
-    service.submitWorkflowWithDataset({ tool: "Boltz" });
+    service.submitWorkflowWithDataset(minimalPayload);
 
     expect(alertSpy).toHaveBeenCalledWith(
       "Failed to launch workflow: datasetId is required to launch workflow."
@@ -65,7 +71,7 @@ describe("WorkflowSubmissionService", () => {
     );
 
     service.submitWorkflowWithDataset(
-      { tool: "AlphaFold2", configProfiles: ["docker"] },
+      { ...minimalPayload, configProfiles: ["docker"] },
       " dataset-123 "
     );
 
@@ -74,12 +80,13 @@ describe("WorkflowSubmissionService", () => {
       workflowApiService.launchWorkflow.calls.mostRecent().args;
     expect(datasetId).toBe("dataset-123");
     expect(formData).toEqual({
-      tool: "AlphaFold2",
+      ...minimalPayload,
       configProfiles: ["docker"],
     });
-    expect(launch.tool).toBe("AlphaFold2");
+    expect(launch.workflow).toBe("interaction-screening");
+    expect(launch.tool).toBe("boltz");
     expect(launch.configProfiles).toEqual(["docker"]);
-    expect(launch.runName).toContain("run-");
+    expect(launch.runName).toBe("test-run");
     expect(launch.paramsText).toBeNull();
     expect(service.isSubmitting()).toBeFalse();
     expect(service.showSuccessDialog()).toBeTrue();
@@ -99,10 +106,14 @@ describe("WorkflowSubmissionService", () => {
       })
     );
 
-    service.submitWorkflowWithDataset({}, "dataset-456");
+    service.submitWorkflowWithDataset(
+      { ...minimalPayload, runName: "" },
+      "dataset-456"
+    );
 
     const [launch] = workflowApiService.launchWorkflow.calls.mostRecent().args;
-    expect(launch.tool).toBe("BindCraft");
+    expect(launch.workflow).toBe("interaction-screening");
+    expect(launch.tool).toBe("boltz");
     expect(launch.configProfiles).toEqual(["singularity"]);
     expect(launch.runName).toContain("run-");
   });
@@ -114,7 +125,7 @@ describe("WorkflowSubmissionService", () => {
     );
 
     service.submitWorkflowWithDataset(
-      { tool: "Boltz" },
+      minimalPayload,
       "dataset-789",
       onError
     );
@@ -130,7 +141,7 @@ describe("WorkflowSubmissionService", () => {
       throwError(() => new Error("launch failed"))
     );
 
-    service.submitWorkflowWithDataset({ tool: "Boltz" }, "dataset-789");
+    service.submitWorkflowWithDataset(minimalPayload, "dataset-789");
 
     expect(alertSpy).toHaveBeenCalledWith(
       "Failed to launch workflow: launch failed"
@@ -143,7 +154,7 @@ describe("WorkflowSubmissionService", () => {
       throwError(() => ({ message: "" }))
     );
 
-    service.submitWorkflowWithDataset({ tool: "Boltz" }, "dataset-789");
+    service.submitWorkflowWithDataset(minimalPayload, "dataset-789");
 
     expect(alertSpy).toHaveBeenCalledWith(
       "Failed to launch workflow: Unknown error"
