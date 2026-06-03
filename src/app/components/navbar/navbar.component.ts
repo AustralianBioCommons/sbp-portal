@@ -14,13 +14,16 @@ import {
   heroArrowRightStartOnRectangle,
   heroArrowTopRightOnSquare,
   heroBars3,
+  heroCalendarDays,
+  heroChevronRight,
+  heroClipboardDocumentList,
   heroHome,
   heroInformationCircle,
+  heroQuestionMarkCircle,
+  heroRectangleGroup,
   heroUserCircle,
   heroXMark,
-  heroChevronRight,
 } from "@ng-icons/heroicons/outline";
-import { tablerCalendarStar } from "@ng-icons/tabler-icons";
 import { filter } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../cores/auth.service";
@@ -55,16 +58,19 @@ export interface BreadcrumbInfo {
   imports: [CommonModule, NgIconComponent, ButtonComponent],
   providers: [
     provideIcons({
-      heroUserCircle,
       heroArrowRightEndOnRectangle,
       heroArrowRightStartOnRectangle,
       heroArrowTopRightOnSquare,
-      heroHome,
       heroBars3,
-      heroXMark,
-      heroInformationCircle,
-      tablerCalendarStar,
+      heroCalendarDays,
       heroChevronRight,
+      heroClipboardDocumentList,
+      heroHome,
+      heroInformationCircle,
+      heroQuestionMarkCircle,
+      heroRectangleGroup,
+      heroUserCircle,
+      heroXMark,
     }),
   ],
   templateUrl: "./navbar.component.html",
@@ -141,7 +147,7 @@ export class Navbar implements AfterViewInit {
     },
     {
       label: "Workflows",
-      image: "/assets/workflow-square-01.png",
+      icon: "heroRectangleGroup",
       children: [
         {
           label: "De Novo Design",
@@ -164,7 +170,7 @@ export class Navbar implements AfterViewInit {
     {
       label: "Jobs",
       path: "/jobs",
-      image: "/assets/job-run.png",
+      icon: "heroClipboardDocumentList",
     },
     {
       label: "About",
@@ -174,12 +180,12 @@ export class Navbar implements AfterViewInit {
     {
       label: "Workshops & Events",
       path: "/events",
-      icon: "tablerCalendarStar",
+      icon: "heroCalendarDays",
     },
     {
       label: "Support/FAQ",
       path: "/support",
-      image: "/assets/contact-support-outline-rounded.png",
+      icon: "heroQuestionMarkCircle",
     },
   ];
 

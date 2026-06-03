@@ -1,29 +1,18 @@
-<nav class="block sticky top-0 z-50 bg-white shadow">
+<nav class="block sticky top-0 z-50 bg-white shadow shrink-0">
   <div class="border-b">
     <div
-      class="max-w-7xl px-6 mx-auto relative flex items-center justify-between h-20 gap-4"
+      class="max-w-7xl px-6 mx-auto relative flex items-center justify-between min-h-20 gap-4"
     >
       <!-- Left: Burger Menu + Logo -->
       <div class="flex items-center gap-4 shrink-0">
-        <app-button
+        <button
           type="button"
-          variant="secondary"
-          widthClass="w-auto !p-0 !hover:translate-x-0"
-          borderRadius="rounded-lg"
-          [active]="isMobileMenuOpen()"
+          class="compact-menu-button text-sky-900 hover:text-sky-700 transition-all"
           (click)="toggleMobileMenu(); $event.stopPropagation()"
-          class="compact-menu-button"
+          aria-label="Open menu"
         >
-          <ng-icon
-            [name]="isMobileMenuOpen() ? 'heroXMark' : 'heroBars3'"
-            size="24"
-            class="transition-all pointer-events-none hover:translate-x-0!"
-            [class.rotate-90]="isMobileMenuOpen()"
-          ></ng-icon>
-          <span class="sr-only">
-            {{ isMobileMenuOpen() ? "Close menu" : "Open menu" }}
-          </span>
-        </app-button>
+          <ng-icon name="heroBars3" size="24"></ng-icon>
+        </button>
         <button
           (click)="navigate('/themes', { tab: 'binder-design' })"
           (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
@@ -133,108 +122,112 @@
         }
       </div>
     </div>
+  </div>
 
-    <!-- Compact Navigation Menu Dropdown -->
-    @if (isMobileMenuOpen()) {
+  <!-- Mobile Menu Backdrop -->
+  <div
+    class="fixed inset-0 z-40 bg-black/50 transition-opacity"
+    [class.opacity-0]="!isMobileMenuOpen()"
+    [class.pointer-events-none]="!isMobileMenuOpen()"
+    (click)="closeMobileMenu()"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Slide-out Navigation Panel -->
+  <div
+    class="compact-menu fixed top-0 left-0 h-full w-80 z-50 bg-white shadow-2xl transition-transform ease-in-out overflow-y-auto flex flex-col"
+    [style.transform]="
+      isMobileMenuOpen() ? 'translateX(0)' : 'translateX(-100%)'
+    "
+    role="dialog"
+    [attr.aria-modal]="isMobileMenuOpen() ? 'true' : null"
+    [attr.aria-hidden]="!isMobileMenuOpen() ? 'true' : null"
+    aria-label="Navigation menu"
+  >
+    <!-- Panel Header -->
     <div
-      class="compact-menu absolute top-full left-0 w-80 z-50 bg-gray-100 border border-gray-200 shadow-xl rounded-lg mt-1"
+      class="flex items-center justify-between px-4 border-b sticky top-0 bg-white z-10 h-20"
     >
-      <div class="px-4 py-4">
-        <div class="space-y-0.5">
-          @for (item of navItems; track item.label) { @if (!item.children &&
-          shouldShowNavItem(item, (isAuthenticated$ | async) || false)) {
-          <div>
-            <app-button
-              variant="secondary"
-              widthClass="w-full"
-              [active]="isNavItemActive(item)"
-              (click)="
-                item.path
-                  ? navigate(item.path, item.queryParams)
-                  : executeAction(item.action)
-              "
-            >
-              @if (item.icon && !item.image) {
-              <ng-icon [name]="item.icon" class="text-sm w-4 h-4"></ng-icon>
-              } @if (item.image) {
-              <img
-                [src]="item.image"
-                [alt]="item.label + ' icon'"
-                class="w-4 h-4 object-contain grayscale hover:grayscale-0 transition-[filter] duration-200"
-              />
-              }
-              <span>{{ item.label }}</span>
-            </app-button>
-          </div>
-          } @if (item.children) {
-          <div class="mb-2">
-            <div
-              [class]="
-                'flex items-center justify-between px-3 py-1.5 font-semibold ' +
-                (isParentNavItemActive(item)
-                  ? 'text-blue-900 font-bold'
-                  : 'text-black')
-              "
-            >
-              <div class="flex items-center gap-2">
-                @if (item.icon && !item.image) {
-                <ng-icon
-                  [name]="item.icon"
-                  [class]="
-                    'w-4 h-4 ' +
-                    (isParentNavItemActive(item) ? 'text-teal-500' : '')
-                  "
-                ></ng-icon>
-                } @if (item.image) {
-                <img
-                  [src]="item.image"
-                  [alt]="item.label + ' icon'"
-                  [class]="
-                    'w-4 h-4 object-contain ' +
-                    (isParentNavItemActive(item)
-                      ? 'filter-[hue-rotate(180deg)_saturate(1.2)]'
-                      : '')
-                  "
-                />
-                }
-                <span>{{ item.label }}</span>
-              </div>
-              @if (item.label === 'Home') {
-              <app-button
-                variant="secondary"
-                widthClass="w-auto"
-                colorClasses="p-1"
-                (click)="closeMobileMenu()"
-                type="button"
-              >
-                <ng-icon name="heroXMark" class="w-6 h-6"></ng-icon>
-                <span class="sr-only">Close menu</span>
-              </app-button>
-              }
-            </div>
-            <div class="ml-3 mt-1 space-y-0.5">
-              @for (child of item.children; track child.label) { @if
-              (shouldShowNavItem(child, (isAuthenticated$ | async) || false)) {
-              <app-button
-                variant="secondary"
-                widthClass="w-full"
-                [active]="isNavItemActive(child)"
-                (click)="
-                  child.path
-                    ? navigate(child.path, child.queryParams)
-                    : executeAction(child.action)
-                "
-              >
-                <span>{{ child.label }}</span>
-              </app-button>
-              } }
-            </div>
-          </div>
-          } }
-        </div>
-      </div>
+      <button
+        (click)="navigate('/themes', { tab: 'binder-design' })"
+        (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
+        aria-label="Navigate to home page"
+      >
+        <img
+          class="w-36 min-w-36 h-auto"
+          src="/assets/sbp-logo.png"
+          alt="SBP Portal"
+        />
+      </button>
+      <button
+        type="button"
+        (click)="closeMobileMenu()"
+        class="rounded-lg h-8 w-8 flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-all"
+        aria-label="Close menu"
+      >
+        <ng-icon name="heroXMark" size="24"></ng-icon>
+      </button>
     </div>
-    }
+
+    <!-- Panel Content -->
+    <nav class="px-4 py-4 flex-1" aria-label="Mobile navigation">
+      <div class="space-y-0.5">
+        @for (item of navItems; track item.label) { @if (!item.children &&
+        shouldShowNavItem(item, (isAuthenticated$ | async) || false)) {
+        <button
+          type="button"
+          class="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
+          [class]="
+            isNavItemActive(item)
+              ? 'bg-sky-50 text-sky-900 font-semibold'
+              : 'text-sky-900 hover:bg-sky-50'
+          "
+          (click)="
+            item.path
+              ? navigate(item.path, item.queryParams)
+              : executeAction(item.action)
+          "
+        >
+          @if (item.icon) {
+          <ng-icon [name]="item.icon" size="18" class="shrink-0"></ng-icon>
+          }
+          <span>{{ item.label }}</span>
+        </button>
+        } @if (item.children) {
+        <div class="mb-1">
+          <div
+            class="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-sky-900"
+          >
+            @if (item.icon) {
+            <ng-icon [name]="item.icon" size="18" class="shrink-0"></ng-icon>
+            }
+            <span>{{ item.label }}</span>
+          </div>
+          <div class="ml-6 space-y-0.5">
+            @for (child of item.children; track child.label) { @if
+            (shouldShowNavItem(child, (isAuthenticated$ | async) || false)) {
+            <button
+              type="button"
+              class="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
+              [class]="
+                isNavItemActive(child)
+                  ? 'bg-sky-50 text-sky-900 font-semibold'
+                  : 'text-sky-800 hover:bg-sky-50'
+              "
+              (click)="
+                child.path
+                  ? navigate(child.path, child.queryParams)
+                  : executeAction(child.action)
+              "
+            >
+              <span>{{ child.label }}</span>
+            </button>
+            } }
+          </div>
+        </div>
+        } }
+      </div>
+    </nav>
   </div>
 
   <!-- Breadcrumb (only show on workflow pages) -->
