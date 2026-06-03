@@ -86,11 +86,11 @@
         @if (isAuthenticated$ | async) {
         <button
           (click)="openProfile()"
-          class="rounded-full border border-gray-300 h-10 pl-2 pr-2 lg:pr-4 flex items-center gap-2 text-sky-900 hover:bg-gray-100 transition-all"
+          class="rounded-full border border-gray-300 h-10 pl-2 pr-2 lg:pr-4 flex items-center gap-1 text-sky-900 hover:bg-gray-100 transition-all"
           type="button"
           aria-label="Open profile"
         >
-          <ng-icon name="heroUserCircle" size="24"></ng-icon>
+          <ng-icon name="heroUserCircle" size="30" strokeWidth="1"></ng-icon>
           <div class="flex flex-col">
             <span
               class="hidden lg:inline-flex items-center gap-1 text-sm font-mono text-gray-900 truncate"
