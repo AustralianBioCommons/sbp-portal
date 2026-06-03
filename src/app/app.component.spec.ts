@@ -61,10 +61,11 @@ describe("AppComponent", () => {
   it("shows login button when logged out and triggers login", () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector(
-      "[data-testid='login-button']"
-    ) as HTMLButtonElement;
-    expect(button?.textContent?.toLowerCase()).toContain("login");
+    const buttons = Array.from(compiled.querySelectorAll("button"));
+    const button = buttons.find((b) =>
+      b.textContent?.toLowerCase().includes("login"),
+    ) as HTMLButtonElement | undefined;
+    expect(button).toBeTruthy();
     button?.click();
     expect(mockAuthService.login).toHaveBeenCalled();
   });

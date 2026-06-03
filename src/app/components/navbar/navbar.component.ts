@@ -28,7 +28,6 @@ import { filter } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../cores/auth.service";
 import { THEMES } from "../../cores/config/themes.config";
-import { ButtonComponent } from "../button/button.component";
 
 export interface NavItem {
   label: string;
@@ -55,7 +54,7 @@ export interface BreadcrumbInfo {
 
 @Component({
   selector: "app-navbar",
-  imports: [CommonModule, NgIconComponent, ButtonComponent],
+  imports: [CommonModule, NgIconComponent],
   providers: [
     provideIcons({
       heroArrowRightEndOnRectangle,
