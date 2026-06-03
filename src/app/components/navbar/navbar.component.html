@@ -82,7 +82,7 @@
           <ng-icon name="heroUserCircle" size="30" strokeWidth="1"></ng-icon>
           <div class="flex flex-col">
             <span
-              class="hidden lg:inline-flex items-center gap-1 text-sm font-mono text-gray-900 truncate"
+              class="hidden lg:inline-flex items-center gap-1 text-xs font-mono text-gray-900 truncate"
             >
               {{ (user$ | async)?.email || "" }}
               <ng-icon name="heroArrowTopRightOnSquare" size="12"></ng-icon>
@@ -135,7 +135,7 @@
 
   <!-- Slide-out Navigation Panel -->
   <div
-    class="compact-menu fixed top-0 left-0 h-full w-80 z-50 bg-white shadow-2xl transition-transform ease-in-out overflow-y-auto flex flex-col"
+    class="compact-menu fixed top-0 left-0 h-full w-84 z-50 bg-white shadow-2xl transition-transform ease-in-out overflow-y-auto flex flex-col"
     [style.transform]="
       isMobileMenuOpen() ? 'translateX(0)' : 'translateX(-100%)'
     "
@@ -146,7 +146,7 @@
   >
     <!-- Panel Header -->
     <div
-      class="flex items-center justify-between px-4 border-b sticky top-0 bg-white z-10 h-20"
+      class="flex items-center justify-between px-4 border-b sticky top-0 shrink-0 bg-white z-10 h-20"
     >
       <button
         (click)="navigate('/themes', { tab: 'binder-design' })"
@@ -170,71 +170,69 @@
     </div>
 
     <!-- Panel Content -->
-    <nav class="px-4 py-4 flex-1" aria-label="Mobile navigation">
-      <div class="space-y-0.5">
-        @for (item of navItems; track item.label) { @if (!item.children &&
-        shouldShowNavItem(item, (isAuthenticated$ | async) || false)) {
-        <button
-          type="button"
-          class="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
-          [class]="
-            isNavItemActive(item)
-              ? 'bg-sky-50 text-sky-900 font-semibold'
-              : 'text-sky-900 hover:bg-sky-50'
-          "
-          (click)="
-            item.path
-              ? navigate(item.path, item.queryParams)
-              : executeAction(item.action)
-          "
+    <div class="p-4 flex-1 space-y-2" aria-label="Mobile navigation">
+      @let isAuth = (isAuthenticated$ | async) || false; @for (item of navItems;
+      track item.label) { @if (item.children) {
+      <div>
+        <div
+          class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-sky-900"
         >
           @if (item.icon) {
-          <ng-icon [name]="item.icon" size="18" class="shrink-0"></ng-icon>
+          <ng-icon [name]="item.icon" size="18" class="shrink-0" />
           }
           <span>{{ item.label }}</span>
-        </button>
-        } @if (item.children) {
-        <div class="mb-1">
-          <div
-            class="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-sky-900"
-          >
-            @if (item.icon) {
-            <ng-icon [name]="item.icon" size="18" class="shrink-0"></ng-icon>
-            }
-            <span>{{ item.label }}</span>
-          </div>
-          <div class="ml-6 space-y-0.5">
-            @for (child of item.children; track child.label) { @if
-            (shouldShowNavItem(child, (isAuthenticated$ | async) || false)) {
-            <button
-              type="button"
-              class="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
-              [class]="
-                isNavItemActive(child)
-                  ? 'bg-sky-50 text-sky-900 font-semibold'
-                  : 'text-sky-800 hover:bg-sky-50'
-              "
-              (click)="
-                child.path
-                  ? navigate(child.path, child.queryParams)
-                  : executeAction(child.action)
-              "
-            >
-              <span>{{ child.label }}</span>
-            </button>
-            } }
-          </div>
         </div>
-        } }
+        <div class="ml-8 space-y-2">
+          @for (child of item.children; track child.label) { @if
+          (shouldShowNavItem(child, isAuth)) {
+          <button
+            type="button"
+            class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
+            [class]="
+              isNavItemActive(child)
+                ? 'bg-sky-50 text-sky-900 font-semibold'
+                : 'text-sky-800 hover:bg-sky-50'
+            "
+            (click)="
+              child.path
+                ? navigate(child.path, child.queryParams)
+                : executeAction(child.action)
+            "
+          >
+            <span>{{ child.label }}</span>
+          </button>
+          } }
+        </div>
       </div>
-    </nav>
+      } @else if (shouldShowNavItem(item, isAuth)) {
+      <button
+        type="button"
+        class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
+        [class]="
+          isNavItemActive(item)
+            ? 'bg-sky-50 text-sky-900 font-semibold'
+            : 'text-sky-900 hover:bg-sky-50'
+        "
+        (click)="
+          item.path
+            ? navigate(item.path, item.queryParams)
+            : executeAction(item.action)
+        "
+      >
+        @if (item.icon) {
+        <ng-icon [name]="item.icon" size="18" class="shrink-0" />
+        }
+        <span>{{ item.label }}</span>
+      </button>
+      } }
+    </div>
   </div>
 
   <!-- Breadcrumb (only show on workflow pages) -->
   @if (showBreadcrumb() && breadcrumb(); as crumb) {
   <div class="w-full bg-gray-50">
     <div
-      class="max-w-7xl px-6 mx-auto flex items-center gap-2 py-2.5 text-sm font-medium"
+      class="max-w-7xl px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
       aria-label="Breadcrumb"
     >
       <span
