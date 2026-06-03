@@ -183,7 +183,7 @@ export class Navbar implements AfterViewInit {
       icon: "heroCalendarDays",
     },
     {
-      label: "Support/FAQ",
+      label: "Support / FAQ",
       path: "/support",
       icon: "heroQuestionMarkCircle",
     },
