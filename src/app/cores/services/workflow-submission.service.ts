@@ -22,18 +22,6 @@ export class WorkflowSubmissionService {
   isSubmitting = signal<boolean>(false);
 
   /**
-   * Submit workflow with form data
-   * @param formData - The form data to submit
-   * @param onError - Optional error handler
-   */
-  submitWorkflow(
-    formData: WorkflowLaunchPayload["formData"],
-    onError?: (error: Error) => void
-  ): void {
-    this.submitWorkflowWithDataset(formData, undefined, onError);
-  }
-
-  /**
    * Submit workflow with form data and optional dataset ID
    * @param formData - The form data to submit
    * @param datasetId - Optional dataset ID to attach to the workflow

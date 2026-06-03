@@ -54,18 +54,6 @@ describe("WorkflowSubmissionService", () => {
     );
   });
 
-  it("should delegate submitWorkflow to submitWorkflowWithDataset", () => {
-    const submitSpy = spyOn(service, "submitWorkflowWithDataset");
-
-    service.submitWorkflow({ tool: "ColabFold" });
-
-    expect(submitSpy).toHaveBeenCalledWith(
-      { tool: "ColabFold" },
-      undefined,
-      undefined
-    );
-  });
-
   it("should submit workflow with normalized dataset id and show success dialog", () => {
     workflowApiService.launchWorkflow.and.returnValue(
       of({
