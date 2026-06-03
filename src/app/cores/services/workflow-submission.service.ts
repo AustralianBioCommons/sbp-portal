@@ -5,7 +5,6 @@ import { WorkflowApiService } from "./workflow-api.service";
 import {
   WorkflowFormData,
   WorkflowLaunchForm,
-  WorkflowLaunchPayload
 } from "../interfaces/workflow.interfaces";
 
 @Injectable({
