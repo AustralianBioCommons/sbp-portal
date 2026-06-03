@@ -63,7 +63,7 @@ describe("AppComponent", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const buttons = Array.from(compiled.querySelectorAll("button"));
     const button = buttons.find((b) =>
-      b.textContent?.toLowerCase().includes("login"),
+      b.textContent?.toLowerCase().includes("login")
     ) as HTMLButtonElement | undefined;
     expect(button).toBeTruthy();
     button?.click();
