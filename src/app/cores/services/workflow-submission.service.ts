@@ -2,6 +2,11 @@ import { inject, Injectable, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { getErrorMessage } from "../utils/error.utils";
 import { WorkflowApiService } from "./workflow-api.service";
+import {
+  WorkflowFormData,
+  WorkflowLaunchForm,
+  WorkflowLaunchPayload
+} from "../interfaces/workflow.interfaces";
 
 @Injectable({
   providedIn: "root",
@@ -22,7 +27,7 @@ export class WorkflowSubmissionService {
    * @param onError - Optional error handler
    */
   submitWorkflow(
-    formData: Record<string, unknown>,
+    formData: WorkflowLaunchPayload["formData"],
     onError?: (error: Error) => void
   ): void {
     this.submitWorkflowWithDataset(formData, undefined, onError);
@@ -35,7 +40,7 @@ export class WorkflowSubmissionService {
    * @param onError - Optional error handler
    */
   submitWorkflowWithDataset(
-    formData: Record<string, unknown>,
+    formData: WorkflowFormData,
     datasetId?: string,
     onError?: (error: Error) => void
   ): void {
@@ -48,11 +53,12 @@ export class WorkflowSubmissionService {
     const randomRunName = `run-${timestamp}-${randomStr}`;
 
     // Construct the launch configuration
-    const launch = {
-      tool: (formData.tool as string) || "BindCraft",
-      configProfiles: (formData.configProfiles as string[]) || ["singularity"],
-      runName: (formData.runName as string) || randomRunName,
-      paramsText: null as string | null,
+    const launch: WorkflowLaunchForm = {
+      workflow: formData.workflow,
+      tool: formData.tool,
+      configProfiles: formData.configProfiles ?? ["singularity"],
+      runName: formData.runName || randomRunName,
+      paramsText: null,
     };
 
     console.log("Submitting workflow with launch config:", launch);
