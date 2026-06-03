@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import {
+  WorkflowLaunchForm,
   WorkflowLaunchPayload,
   WorkflowLaunchResponse,
 } from "../interfaces/workflow.interfaces";
@@ -24,14 +25,9 @@ export class WorkflowApiService {
    * @param datasetId - Optional dataset ID to attach to the workflow
    */
   launchWorkflow(
-    launch: {
-      tool: string;
-      configProfiles?: string[];
-      runName?: string;
-      paramsText?: string | null;
-    },
-    formData: Record<string, unknown>,
-    datasetId: string
+      launch: WorkflowLaunchForm,
+      formData: WorkflowLaunchPayload["formData"],
+      datasetId: string
   ): Observable<WorkflowLaunchResponse> {
     const payload: WorkflowLaunchPayload = {
       launch,
@@ -39,8 +35,8 @@ export class WorkflowApiService {
       formData,
     };
     return this.http.post<WorkflowLaunchResponse>(
-      `${this.apiUrl}/launch`,
-      payload
+        `${this.apiUrl}/launch`,
+        payload
     );
   }
 }
