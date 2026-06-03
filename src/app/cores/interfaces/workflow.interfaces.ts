@@ -1,5 +1,14 @@
-export type WorkflowName = "single-prediction" | "de-novo-design" | "interaction-screening";
-export type WorkflowTool = "alphafold2" | "bindcraft" | "boltz" | "boltzgen" | "colabfold" | "rfdiffusion";
+export type WorkflowName =
+  | "single-prediction"
+  | "de-novo-design"
+  | "interaction-screening";
+export type WorkflowTool =
+  | "alphafold2"
+  | "bindcraft"
+  | "boltz"
+  | "boltzgen"
+  | "colabfold"
+  | "rfdiffusion";
 
 /**
  * Workflow form data
@@ -86,7 +95,9 @@ export type SinglePredictionToolSettingsPayload = Partial<
 
 // de novo design payload includes fields that are loaded from the schema dynamically,
 // can't be specified fully
-export interface DeNovoDesignPayload extends DefaultWorkflowPayload, Record<string, unknown> {
+export interface DeNovoDesignPayload
+  extends DefaultWorkflowPayload,
+    Record<string, unknown> {
   id: string;
   sample_id: string;
   binder_name: string;
@@ -96,7 +107,6 @@ export type WorkflowFormData =
   | SinglePredictionPayload
   | DeNovoDesignPayload
   | InteractionScreeningPayload;
-
 
 /**
  * List runs response

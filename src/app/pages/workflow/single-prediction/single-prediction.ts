@@ -56,7 +56,10 @@ interface TabItem {
 }
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
-type SinglePredictionTool = Extract<WorkflowTool, "colabfold" | "alphafold2" | "boltz">;
+type SinglePredictionTool = Extract<
+  WorkflowTool,
+  "colabfold" | "alphafold2" | "boltz"
+>;
 type StepItem = Step;
 
 interface ToolChip extends ToolOption {
@@ -869,11 +872,14 @@ export class SinglePredictionComponent {
         this.showError(
           `Workflow launch failed: ${error.message || "Unknown error"}`
         );
-      },
+      }
     );
   }
 
-  private buildWorkflowPayload(): Omit<SinglePredictionPayload, "fastaFileUrl" | "samplesheetId"> {
+  private buildWorkflowPayload(): Omit<
+    SinglePredictionPayload,
+    "fastaFileUrl" | "samplesheetId"
+  > {
     return {
       workflow: "single-prediction",
       tool: this.selectedTool(),
