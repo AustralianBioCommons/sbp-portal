@@ -1,7 +1,8 @@
 export type WorkflowName =
   | "single-prediction"
   | "de-novo-design"
-  | "interaction-screening";
+  | "interaction-screening"
+  | "bulk-prediction";
 export type WorkflowTool =
   | "alphafold2"
   | "bindcraft"
