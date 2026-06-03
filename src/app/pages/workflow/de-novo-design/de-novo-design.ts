@@ -701,7 +701,7 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
                   error.message || "Unknown error"
                 }`
               );
-            }
+            },
           );
         },
         error: (error) => {
@@ -971,6 +971,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    if (this.selectedToolLabel()) {
+      summary.unshift({
+        label: "Mode",
+        value: this.selectedToolLabel(),
+        fieldName: "tool",
+      });
+    }
 
     if (this.jobName()) {
       summary.unshift({

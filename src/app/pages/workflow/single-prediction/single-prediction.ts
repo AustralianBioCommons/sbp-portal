@@ -869,7 +869,7 @@ export class SinglePredictionComponent {
         this.showError(
           `Workflow launch failed: ${error.message || "Unknown error"}`
         );
-      }
+      },
     );
   }
 

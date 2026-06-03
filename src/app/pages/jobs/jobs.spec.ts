@@ -1,14 +1,8 @@
-import {
-  ComponentFixture,
-  fakeAsync,
-  TestBed,
-  tick,
-} from "@angular/core/testing";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { DomSanitizer } from "@angular/platform-browser";
 import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
 import { JobResultsComponent } from "../../components/job-results/job-results.component";
-import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import { ResultsService } from "../../cores/services/results.service";
 import { JobsComponent } from "./jobs";
 import {
@@ -27,7 +21,8 @@ describe("JobsComponent", () => {
   const mockJob: JobListItem = {
     id: "job-1",
     jobName: "Example job",
-    workflowType: "Binder design",
+    tool: "Binder design",
+    workflow: "",
     status: "In progress",
     submittedAt: "2026-03-12T10:00:00Z",
     score: 0.95,
@@ -37,7 +32,8 @@ describe("JobsComponent", () => {
   const secondJob: JobListItem = {
     id: "job-2",
     jobName: "Queued job",
-    workflowType: null,
+    tool: "",
+    workflow: "",
     status: "In queue",
     submittedAt: "2026-03-12T11:00:00Z",
     score: null,
@@ -321,9 +317,6 @@ describe("JobsComponent", () => {
       "bg-gray-100 text-gray-800"
     );
     expect(component.isInProgress("In progress")).toBeTrue();
-    expect(component.isCancelable("In progress")).toBeTrue();
-    expect(component.isCancelable("In queue")).toBeTrue();
-    expect(component.isCancelable("Completed")).toBeFalse();
   });
 
   it("should toggle individual and all job selections", () => {
@@ -371,17 +364,6 @@ describe("JobsComponent", () => {
     expect(component.selectedJobDetails()).toBeNull();
   });
 
-  it("should clean up viewport listeners on destroy", () => {
-    const cleanupSpy = jasmine.createSpy("cleanup");
-    (
-      component as unknown as { viewportListeners: Array<() => void> }
-    ).viewportListeners = [cleanupSpy];
-
-    component.ngOnDestroy();
-
-    expect(cleanupSpy).toHaveBeenCalled();
-  });
-
   it("should toggle and close the status dropdown", () => {
     component.toggleStatusDropdown();
     expect(component.showStatusDropdown()).toBeTrue();
@@ -394,135 +376,6 @@ describe("JobsComponent", () => {
     expect(component.showStatusDropdown()).toBeFalse();
   });
 
-  it("should open the action menu with viewport-aware style", fakeAsync(() => {
-    const trigger = {
-      getBoundingClientRect: () => ({
-        right: 300,
-        bottom: 200,
-        top: 160,
-      }),
-    } as HTMLElement;
-
-    component.toggleActionMenu(mockJob.id, trigger);
-    fixture.detectChanges();
-
-    const menuComponent = fixture.debugElement.query(
-      By.directive(JobsActionMenuComponent)
-    ).componentInstance as JobsActionMenuComponent;
-    spyOn(
-      menuComponent.menuContainer.nativeElement,
-      "getBoundingClientRect"
-    ).and.returnValue({
-      width: 208,
-      height: 140,
-      top: 0,
-      left: 0,
-      right: 208,
-      bottom: 140,
-    } as DOMRect);
-
-    tick(0);
-
-    expect(component.isActionMenuOpen(mockJob.id)).toBeTrue();
-    expect(component.actionMenuStyle()).toEqual({
-      left: "92px",
-      top: "208px",
-    });
-  }));
-
-  it("should position the action menu upwards when there is not enough space below", fakeAsync(() => {
-    spyOnProperty(window, "innerHeight", "get").and.returnValue(240);
-    const trigger = {
-      getBoundingClientRect: () => ({
-        right: 280,
-        bottom: 220,
-        top: 200,
-      }),
-    } as HTMLElement;
-
-    component.toggleActionMenu(mockJob.id, trigger);
-    fixture.detectChanges();
-
-    const menuComponent = fixture.debugElement.query(
-      By.directive(JobsActionMenuComponent)
-    ).componentInstance as JobsActionMenuComponent;
-    spyOn(
-      menuComponent.menuContainer.nativeElement,
-      "getBoundingClientRect"
-    ).and.returnValue({
-      width: 208,
-      height: 140,
-      top: 0,
-      left: 0,
-      right: 208,
-      bottom: 140,
-    } as DOMRect);
-
-    tick(0);
-
-    expect(component.actionMenuStyle()).toEqual({
-      left: "72px",
-      top: "52px",
-    });
-  }));
-
-  it("should clamp the action menu horizontally within the viewport", fakeAsync(() => {
-    spyOnProperty(window, "innerWidth", "get").and.returnValue(220);
-    const trigger = {
-      getBoundingClientRect: () => ({
-        right: 500,
-        bottom: 150,
-        top: 120,
-      }),
-    } as HTMLElement;
-
-    component.toggleActionMenu(mockJob.id, trigger);
-    fixture.detectChanges();
-
-    const menuComponent = fixture.debugElement.query(
-      By.directive(JobsActionMenuComponent)
-    ).componentInstance as JobsActionMenuComponent;
-    spyOn(
-      menuComponent.menuContainer.nativeElement,
-      "getBoundingClientRect"
-    ).and.returnValue({
-      width: 208,
-      height: 140,
-      top: 0,
-      left: 0,
-      right: 208,
-      bottom: 140,
-    } as DOMRect);
-
-    tick(0);
-
-    expect(component.actionMenuStyle().left).toBe("8px");
-  }));
-
-  it("should close the action menu when toggling the same job again", () => {
-    component.openActionMenuId.set(mockJob.id);
-    component.actionMenuStyle.set({ left: "10px", top: "20px" });
-
-    component.toggleActionMenu(mockJob.id);
-
-    expect(component.openActionMenuId()).toBeNull();
-    expect(component.actionMenuStyle()).toEqual({});
-  });
-
-  it("should render the action menu component when a row menu is opened", async () => {
-    const triggerButton = fixture.debugElement.query(
-      By.css('button[aria-label="Job actions"]')
-    ).nativeElement as HTMLButtonElement;
-
-    triggerButton.click();
-    await detectComponentChanges();
-
-    expect(component.isActionMenuOpen(mockJob.id)).toBeTrue();
-    expect(
-      fixture.debugElement.query(By.css("app-jobs-action-menu"))
-    ).toBeTruthy();
-  });
-
   it("should render the job details dialog when viewing job details", async () => {
     component.viewJobDetails(mockJob);
     await detectComponentChanges();
@@ -530,52 +383,6 @@ describe("JobsComponent", () => {
     expect(
       fixture.debugElement.query(By.directive(JobResultsComponent))
     ).toBeTruthy();
-  });
-
-  it("should close the menu when the viewport changes", () => {
-    component.openActionMenuId.set(mockJob.id);
-    component.actionMenuStyle.set({ left: "10px", top: "20px" });
-
-    component.onViewportChange();
-
-    expect(component.openActionMenuId()).toBeNull();
-    expect(component.actionMenuStyle()).toEqual({});
-  });
-
-  it("should close the action menu when no action menu component is mounted", fakeAsync(() => {
-    const trigger = {
-      getBoundingClientRect: () => ({ right: 300, bottom: 200, top: 160 }),
-    } as HTMLElement;
-
-    // Ensure actionMenu ViewChild is undefined so the menuEl branch is null
-    component["actionMenu"] = undefined;
-
-    component.toggleActionMenu(mockJob.id, trigger);
-    tick(0);
-
-    expect(component.openActionMenuId()).toBeNull();
-  }));
-
-  it("should close the action menu when no action menu component is mounted", fakeAsync(() => {
-    const trigger = {
-      getBoundingClientRect: () => ({ right: 300, bottom: 200, top: 160 }),
-    } as HTMLElement;
-
-    // Ensure actionMenu ViewChild is undefined so the menuEl branch is null
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (component as any)["actionMenu"] = undefined;
-
-    component.toggleActionMenu(mockJob.id, trigger);
-    tick(0);
-
-    expect(component.openActionMenuId()).toBeNull();
-  }));
-
-  it("should do nothing on viewport changes when no action menu is open", () => {
-    component.onViewportChange();
-
-    expect(component.openActionMenuId()).toBeNull();
-    expect(component.actionMenuStyle()).toEqual({});
   });
 
   it("should open delete confirmation from the job details dialog", () => {
@@ -662,43 +469,5 @@ describe("JobsComponent", () => {
     expect(component.error()).toBe("Failed to delete jobs. Please try again.");
     expect(component.bulkDeleting()).toBeFalse();
     expect(component.showDeleteDialog()).toBeFalse();
-  });
-
-  it("should cancel a cancellable job and reload jobs", () => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-
-    component.cancelJob(mockJob);
-
-    expect(mockJobsService.cancelJob).toHaveBeenCalledWith(mockJob.id);
-    expect(component.isActionLoading(mockJob.id)).toBeFalse();
-    expect(loadJobsSpy).toHaveBeenCalled();
-  });
-
-  it("should not cancel a non-cancellable job", () => {
-    component.cancelJob({ ...mockJob, status: "Completed" });
-
-    expect(mockJobsService.cancelJob).not.toHaveBeenCalled();
-    expect(component.isActionLoading(mockJob.id)).toBeFalse();
-  });
-
-  it("should handle cancel failures", () => {
-    mockJobsService.cancelJob.and.returnValue(
-      throwError(() => new Error("cancel failed"))
-    );
-
-    component.cancelJob(mockJob);
-
-    expect(component.error()).toBe("Failed to cancel job. Please try again.");
-    expect(component.isActionLoading(mockJob.id)).toBeFalse();
-  });
-
-  it("should close the action menu and set a placeholder error when viewing details", () => {
-    component.openActionMenuId.set(mockJob.id);
-
-    component.viewJobDetails(mockJob);
-
-    expect(component.openActionMenuId()).toBeNull();
-    expect(component.showJobDetailsDialog()).toBeTrue();
-    expect(component.selectedJobDetails()).toEqual(mockJob);
   });
 });

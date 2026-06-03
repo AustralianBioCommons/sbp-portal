@@ -96,7 +96,7 @@ describe("WorkflowSubmissionService", () => {
     });
   });
 
-  it("should use default launch values when optional form data is absent", () => {
+  it("should use default configProfiles and runName when not provided", () => {
     workflowApiService.launchWorkflow.and.returnValue(
       of({
         message: "submitted",

@@ -3,8 +3,9 @@ import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
-  heroArrowRightOnRectangle,
-  heroUser,
+  heroArrowRightStartOnRectangle,
+  heroUserCircle,
+  heroArrowRightEndOnRectangle,
 } from "@ng-icons/heroicons/outline";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../cores/auth.service";
@@ -14,8 +15,9 @@ import { AuthService } from "../../cores/auth.service";
   imports: [CommonModule, NgIconComponent],
   providers: [
     provideIcons({
-      heroUser,
-      heroArrowRightOnRectangle,
+      heroUserCircle,
+      heroArrowRightEndOnRectangle,
+      heroArrowRightStartOnRectangle,
     }),
   ],
   templateUrl: "./login.html",
@@ -39,6 +41,6 @@ export class Login {
   }
 
   openProfile() {
-    window.open(this.profileUrl, "_self");
+    window.open(this.profileUrl, "_blank", "noopener,noreferrer");
   }
 }

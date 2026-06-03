@@ -1,43 +1,55 @@
-import {
-  Component,
-  inject,
-  NgZone,
-  OnDestroy,
-  OnInit,
-  signal,
-  ViewChild,
-} from "@angular/core";
+import { Component, inject, OnInit, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { JobResultsComponent } from "../../components/job-results/job-results.component";
-import { JobsActionMenuComponent } from "../../components/jobs-action-menu/jobs-action-menu.component";
 import { LoadingComponent } from "../../components/loading/loading.component";
 import {
   JobListItem,
   JobListQueryParams,
   JobsService,
 } from "../../cores/services/jobs.service";
+import { DatePipe } from "@angular/common";
 import { EMPTY } from "rxjs";
 import { catchError } from "rxjs/operators";
-import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import {
+  heroTrash,
+  heroMagnifyingGlass,
+  heroChevronDown,
+  heroClock,
+  heroChevronLeft,
+  heroChevronRight,
+  heroExclamationTriangle,
+  heroArrowUp,
+  heroArrowDown,
+} from "@ng-icons/heroicons/outline";
 
 @Component({
   selector: "app-jobs",
   standalone: true,
   imports: [
+    DatePipe,
     FormsModule,
-    JobsActionMenuComponent,
     JobResultsComponent,
     LoadingComponent,
+    NgIconComponent,
+  ],
+  providers: [
+    provideIcons({
+      heroTrash,
+      heroMagnifyingGlass,
+      heroChevronDown,
+      heroClock,
+      heroChevronLeft,
+      heroChevronRight,
+      heroExclamationTriangle,
+      heroArrowUp,
+      heroArrowDown,
+    }),
   ],
   templateUrl: "./jobs.html",
 })
-export class JobsComponent implements OnInit, OnDestroy {
+export class JobsComponent implements OnInit {
   private jobsService = inject(JobsService);
-  private ngZone = inject(NgZone);
-  private viewportListeners: (() => void)[] = [];
-
-  @ViewChild(JobsActionMenuComponent)
-  private actionMenu?: JobsActionMenuComponent;
 
   // Expose Math to template
   Math = Math;
@@ -51,10 +63,7 @@ export class JobsComponent implements OnInit, OnDestroy {
   showDeleteDialog = signal(false);
   showJobDetailsDialog = signal(false);
   showStatusDropdown = signal(false);
-  actionLoading = signal<Record<string, boolean>>({});
   bulkDeleting = signal(false);
-  openActionMenuId = signal<string | null>(null);
-  actionMenuStyle = signal<Record<string, string>>({});
   selectedJobDetails = signal<JobListItem | null>(null);
 
   // Filter and pagination state
@@ -70,10 +79,6 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadJobs();
-  }
-
-  ngOnDestroy(): void {
-    this.unregisterViewportListeners();
   }
 
   /**
@@ -111,11 +116,13 @@ export class JobsComponent implements OnInit, OnDestroy {
         const normalizedJobs = response.jobs.map((job) => {
           const rawJob = job as JobListItem & {
             final_design_count?: number | null;
+            workflow_name?: string | null;
           };
           return {
             ...job,
             finalDesignCount:
               rawJob.finalDesignCount ?? rawJob.final_design_count ?? null,
+            workflow: rawJob.workflow ?? rawJob.workflow_name ?? "",
           };
         });
         this.jobs.set(this.sortJobs(normalizedJobs));
@@ -213,13 +220,6 @@ export class JobsComponent implements OnInit, OnDestroy {
     );
   }
 
-  /**
-   * Format date for display
-   */
-  formatDate(dateString: string): string {
-    return formatDateTimeForJobs(dateString);
-  }
-
   toggleScoreSort(): void {
     const current = this.scoreSortDirection();
     const next =
@@ -293,21 +293,6 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   isInProgress(status: string): boolean {
     return status === "In progress";
-  }
-
-  isCancelable(status: string): boolean {
-    return status === "In progress" || status === "In queue";
-  }
-
-  isActionLoading(jobId: string): boolean {
-    return Boolean(this.actionLoading()[jobId]);
-  }
-
-  private setActionLoading(jobId: string, loading: boolean): void {
-    this.actionLoading.update((current) => ({
-      ...current,
-      [jobId]: loading,
-    }));
   }
 
   /**
@@ -393,85 +378,6 @@ export class JobsComponent implements OnInit, OnDestroy {
     this.showStatusDropdown.set(false);
   }
 
-  toggleActionMenu(jobId: string, trigger?: HTMLElement | null): void {
-    if (this.openActionMenuId() === jobId) {
-      this.closeActionMenu();
-      return;
-    }
-
-    // Render the menu hidden with safe initial positioning so its real dimensions can be measured
-    this.actionMenuStyle.set({ visibility: "hidden", left: "0px", top: "0px" });
-    this.openActionMenuId.set(jobId);
-
-    if (trigger) {
-      const capturedTrigger = trigger;
-      setTimeout(() => {
-        const menuEl = this.actionMenu?.menuContainer?.nativeElement;
-        if (menuEl) {
-          this.actionMenuStyle.set(
-            this.getActionMenuStyle(capturedTrigger, menuEl)
-          );
-        } else {
-          this.closeActionMenu();
-        }
-      }, 0);
-    }
-  }
-
-  closeActionMenu(): void {
-    this.openActionMenuId.set(null);
-    this.actionMenuStyle.set({});
-    this.unregisterViewportListeners();
-  }
-
-  isActionMenuOpen(jobId: string): boolean {
-    return this.openActionMenuId() === jobId;
-  }
-
-  onViewportChange(): void {
-    if (this.openActionMenuId()) {
-      this.ngZone.run(() => {
-        this.closeActionMenu();
-      });
-    }
-  }
-
-  private unregisterViewportListeners(): void {
-    this.viewportListeners.forEach((removeListener) => removeListener());
-    this.viewportListeners = [];
-  }
-
-  private getActionMenuStyle(
-    trigger: HTMLElement,
-    menuEl: HTMLElement
-  ): Record<string, string> {
-    const rect = trigger.getBoundingClientRect();
-    const menuRect = menuEl.getBoundingClientRect();
-    const menuWidth = menuRect.width;
-    const menuHeight = menuRect.height;
-    const viewportPadding = 8;
-
-    const left = Math.max(
-      viewportPadding,
-      Math.min(
-        rect.right - menuWidth,
-        window.innerWidth - menuWidth - viewportPadding
-      )
-    );
-
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUpwards =
-      spaceBelow < menuHeight + viewportPadding && rect.top > menuHeight;
-    const top = openUpwards
-      ? rect.top - menuHeight - viewportPadding
-      : rect.bottom + viewportPadding;
-
-    return {
-      left: `${left}px`,
-      top: `${Math.max(viewportPadding, top)}px`,
-    };
-  }
-
   /**
    * Confirm and delete selected jobs
    */
@@ -505,25 +411,7 @@ export class JobsComponent implements OnInit, OnDestroy {
     });
   }
 
-  cancelJob(job: JobListItem): void {
-    if (!this.isCancelable(job.status)) return;
-
-    this.setActionLoading(job.id, true);
-    this.jobsService.cancelJob(job.id).subscribe({
-      next: () => {
-        this.setActionLoading(job.id, false);
-        this.loadJobs();
-      },
-      error: (err) => {
-        console.error("Error cancelling job:", err);
-        this.error.set("Failed to cancel job. Please try again.");
-        this.setActionLoading(job.id, false);
-      },
-    });
-  }
-
   viewJobDetails(job: JobListItem): void {
-    this.closeActionMenu();
     this.selectedJobDetails.set(job);
     this.showJobDetailsDialog.set(true);
   }
