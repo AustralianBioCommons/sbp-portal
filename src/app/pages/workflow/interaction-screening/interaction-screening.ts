@@ -404,14 +404,17 @@ export class InteractionScreeningComponent {
       folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
     });
 
+    let fastaS3Uri = "";
+
     upload$
       .pipe(
-        switchMap(() =>
-          this.datasetUploadService.uploadInteractionScreeningDataset({
+        switchMap((uploadResp) => {
+          fastaS3Uri = uploadResp.s3Uri;
+          return this.datasetUploadService.uploadInteractionScreeningDataset({
             sequences: sequences.map((s) => ({ id: s.id, group: s.group })),
             runId: jobName,
-          })
-        )
+          });
+        })
       )
       .subscribe({
         next: (datasetResponse) => {
@@ -423,8 +426,15 @@ export class InteractionScreeningComponent {
             );
             return;
           }
+          const splitOutputDir = datasetResponse.splitOutputDir ?? "";
           this.workflowSubmission.submitWorkflowWithDataset(
-            { tool: this.selectedToolLabel(), runName: jobName },
+            {
+              tool: "interaction-screening",
+              mode: this.selectedTool(),
+              runName: jobName,
+              fastaS3Uri,
+              splitOutputDir,
+            },
             datasetId,
             (error) => {
               this.workflowSubmission.isSubmitting.set(false);
