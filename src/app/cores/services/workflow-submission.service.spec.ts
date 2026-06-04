@@ -1,7 +1,10 @@
 import { TestBed } from "@angular/core/testing";
 import { Router } from "@angular/router";
-import { of, throwError } from "rxjs";
-import { WorkflowFormData } from "../interfaces/workflow.interfaces";
+import { of, Subject, throwError } from "rxjs";
+import {
+  WorkflowFormData,
+  WorkflowLaunchResponse,
+} from "../interfaces/workflow.interfaces";
 import { WorkflowApiService } from "./workflow-api.service";
 import { WorkflowSubmissionService } from "./workflow-submission.service";
 
@@ -14,7 +17,8 @@ describe("WorkflowSubmissionService", () => {
     tool: "boltz",
     runName: "test-run",
     fastaS3Uri: "s3://bucket/test.fasta",
-    splitOutputDir: "/g/data/yz52/sbp-service/input/interaction_screening/test-run",
+    splitOutputDir:
+      "/g/data/yz52/sbp-service/input/interaction_screening/test-run",
   };
 
   beforeEach(() => {
@@ -170,6 +174,53 @@ describe("WorkflowSubmissionService", () => {
     service.goToJobs();
     expect(service.showSuccessDialog()).toBeFalse();
     expect(router.navigate).toHaveBeenCalledWith(["/jobs"]);
+  });
+
+  it("should set isSubmitting to true while the API call is in flight", () => {
+    const subject = new Subject<WorkflowLaunchResponse>();
+    workflowApiService.launchWorkflow.and.returnValue(subject.asObservable());
+
+    service.submitWorkflowWithDataset(minimalPayload, "dataset-123");
+
+    expect(service.isSubmitting()).toBeTrue();
+
+    subject.next({
+      message: "submitted",
+      runId: "run-1",
+      status: "SUBMITTED",
+      submitTime: "2026-03-26T10:00:00Z",
+    });
+    subject.complete();
+
+    expect(service.isSubmitting()).toBeFalse();
+  });
+
+  it("should reject whitespace-only dataset id", () => {
+    const onError = jasmine.createSpy("onError");
+
+    service.submitWorkflowWithDataset(minimalPayload, "   ", onError);
+
+    expect(onError).toHaveBeenCalled();
+    expect(workflowApiService.launchWorkflow).not.toHaveBeenCalled();
+  });
+
+  it("should pass empty configProfiles array through without defaulting to singularity", () => {
+    workflowApiService.launchWorkflow.and.returnValue(
+      of({
+        message: "submitted",
+        runId: "run-789",
+        status: "SUBMITTED",
+        submitTime: "2026-03-26T10:00:00Z",
+      })
+    );
+
+    service.submitWorkflowWithDataset(
+      { ...minimalPayload, configProfiles: [] },
+      "dataset-789"
+    );
+
+    const [launch] = workflowApiService.launchWorkflow.calls.mostRecent().args;
+    expect(launch.configProfiles).toEqual([]);
   });
 
   it("should close and reset submission state", () => {
