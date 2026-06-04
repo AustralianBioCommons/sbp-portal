@@ -429,9 +429,9 @@ export class InteractionScreeningComponent {
           const splitOutputDir = datasetResponse.splitOutputDir ?? "";
           this.workflowSubmission.submitWorkflowWithDataset(
             {
-              tool: "interaction-screening",
-              mode: this.selectedTool(),
+              tool: this.selectedTool(),
               runName: jobName,
+              workflow: "interaction-screening",
               fastaS3Uri,
               splitOutputDir,
             },

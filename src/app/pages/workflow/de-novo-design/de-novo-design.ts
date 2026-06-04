@@ -41,6 +41,10 @@ import { SchemaLoaderService } from "../../../cores/services/schema-loader.servi
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
+import {
+  DeNovoDesignPayload,
+  WorkflowTool,
+} from "../../../cores/interfaces/workflow.interfaces";
 
 interface TabItem {
   id: "overview" | "output" | "papers";
@@ -48,7 +52,7 @@ interface TabItem {
 }
 
 interface ToolChip extends ToolOption {
-  id: "bindcraft" | "boltzgen" | "rfdiffusion";
+  id: Extract<WorkflowTool, "bindcraft" | "boltzgen" | "rfdiffusion">;
 }
 
 type StepItem = Step;
@@ -680,9 +684,10 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
             return;
           }
 
-          const workflowFormData = {
+          const workflowFormData: DeNovoDesignPayload = {
             ...formData,
-            tool: this.selectedToolLabel(),
+            workflow: "de-novo-design",
+            tool: this.selectedTool(),
           };
 
           this.workflowSubmission.submitWorkflowWithDataset(
@@ -969,6 +974,14 @@ export class DeNovoDesignComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    if (this.selectedToolLabel()) {
+      summary.unshift({
+        label: "Mode",
+        value: this.selectedToolLabel(),
+        fieldName: "tool",
+      });
+    }
 
     if (this.jobName()) {
       summary.unshift({

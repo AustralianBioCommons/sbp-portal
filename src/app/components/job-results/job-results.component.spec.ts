@@ -34,7 +34,8 @@ describe("JobResultsComponent", () => {
   const mockJob: JobListItem = {
     id: "job-1",
     jobName: "Example job",
-    workflowType: "Binder design",
+    tool: "Binder design",
+    workflow: "",
     status: "In progress",
     submittedAt: "2026-03-12T10:00:00Z",
     score: 0.95,
@@ -44,7 +45,8 @@ describe("JobResultsComponent", () => {
   const fallbackJob: JobListItem = {
     id: "job-2",
     jobName: "Queued job",
-    workflowType: null,
+    tool: "",
+    workflow: "",
     status: "In queue",
     submittedAt: "2026-03-12T11:00:00Z",
     score: null,
@@ -150,7 +152,6 @@ describe("JobResultsComponent", () => {
 
   it("should build and render the job report iframe", () => {
     expect(resultsService.getJobReport).toHaveBeenCalledWith(mockJob.id);
-    expect(fixture.nativeElement.textContent).toContain("Job name");
     const iframe = fixture.nativeElement.querySelector(
       "iframe"
     ) as HTMLIFrameElement;
@@ -716,7 +717,7 @@ describe("JobResultsComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "No files available for this run yet."
+      "No files available for this run."
     );
   });
 

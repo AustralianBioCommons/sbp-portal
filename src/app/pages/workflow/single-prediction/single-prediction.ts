@@ -44,6 +44,11 @@ import {
   validateProteinSequence,
   validateRnaSequence,
 } from "../../../cores/utils/fasta.utils";
+import {
+  SinglePredictionPayload,
+  SinglePredictionToolSettingsPayload,
+  WorkflowTool,
+} from "../../../cores/interfaces/workflow.interfaces";
 
 interface TabItem {
   id: "overview" | "output" | "papers";
@@ -51,11 +56,14 @@ interface TabItem {
 }
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
-type ToolId = "colabfold" | "alphafold2" | "boltz";
+type SinglePredictionTool = Extract<
+  WorkflowTool,
+  "colabfold" | "alphafold2" | "boltz"
+>;
 type StepItem = Step;
 
 interface ToolChip extends ToolOption {
-  id: ToolId;
+  id: SinglePredictionTool;
 }
 
 interface EntityRow {
@@ -114,7 +122,7 @@ export class SinglePredictionComponent {
     CCD_COMPOUNDS
   ).map(([code, name]) => ({ value: code, label: `${code} - ${name}` }));
 
-  private readonly samplesheetId = "single_prediction";
+  private readonly samplesheetId = "single-prediction";
   private nextRowId = 1;
   ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
   ccdLookupNames = signal<Record<number, string>>({}); // compound name resolved from the local CCD dictionary via lookupCcdCompound()
@@ -140,7 +148,7 @@ export class SinglePredictionComponent {
     { id: "boltz", label: "Boltz" },
   ];
   isToolAvailable = signal(true);
-  selectedTool = signal<ToolId>("colabfold");
+  selectedTool = signal<SinglePredictionTool>("colabfold");
   selectedToolLabel: Signal<string> = computed(
     () =>
       this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? ""
@@ -281,7 +289,7 @@ export class SinglePredictionComponent {
     this.activeTab.set(id);
   }
 
-  selectTool(id: ToolId) {
+  selectTool(id: SinglePredictionTool) {
     this.selectedTool.set(id);
   }
 
@@ -729,7 +737,7 @@ export class SinglePredictionComponent {
     return {};
   }
 
-  private buildToolSettingsPayload(): Record<string, unknown> {
+  private buildToolSettingsPayload(): SinglePredictionToolSettingsPayload {
     switch (this.selectedTool()) {
       case "alphafold2":
         return {
@@ -868,11 +876,14 @@ export class SinglePredictionComponent {
     );
   }
 
-  private buildWorkflowPayload(): Record<string, unknown> {
+  private buildWorkflowPayload(): Omit<
+    SinglePredictionPayload,
+    "fastaFileUrl" | "samplesheetId"
+  > {
     return {
-      tool: "Proteinfold",
+      workflow: "single-prediction",
+      tool: this.selectedTool(),
       runName: this.jobName().trim(),
-      mode: this.selectedTool(),
       entities: this.entityRows().map((row, index) => ({
         id: `entity_${index + 1}`,
         moleculeType: row.moleculeType,

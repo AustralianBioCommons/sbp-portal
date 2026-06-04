@@ -91,7 +91,7 @@ describe("Login", () => {
 
     const nativeElement = fixture.nativeElement as HTMLElement;
     const emailDisplay = nativeElement.querySelector(
-      ".text-sm.font-bold"
+      ".text-sm.font-semibold"
     ) as HTMLElement | null;
     const profileButton = Array.from(
       nativeElement.querySelectorAll("button")
@@ -115,7 +115,7 @@ describe("Login", () => {
 
     const nativeElement = fixture.nativeElement as HTMLElement;
     const emailDisplay = nativeElement.querySelector(
-      ".text-sm.font-bold"
+      ".text-sm.font-semibold"
     ) as HTMLElement | null;
 
     expect(emailDisplay?.textContent).toContain("user@example.com");
@@ -124,6 +124,10 @@ describe("Login", () => {
   it("should open the external profile page when Profile is selected", () => {
     component.openProfile();
 
-    expect(windowOpenSpy).toHaveBeenCalledWith(environment.profileUrl, "_self");
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      environment.profileUrl,
+      "_blank",
+      "noopener,noreferrer"
+    );
   });
 });

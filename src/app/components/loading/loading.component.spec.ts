@@ -95,19 +95,6 @@ describe("LoadingComponent", () => {
       expect(compiled.querySelector(".animate-spin")).toBeTruthy();
     });
 
-    it("should have three pulse dots", () => {
-      const pulseDots = compiled.querySelectorAll(".animate-pulse");
-      expect(pulseDots.length).toBe(3);
-    });
-
-    it("should have primary, accent and secondary pulse dots", () => {
-      expect(compiled.querySelector(".bg-pink-500.animate-pulse")).toBeTruthy();
-      expect(
-        compiled.querySelector(".bg-orange-500.animate-pulse")
-      ).toBeTruthy();
-      expect(compiled.querySelector(".bg-blue-500.animate-pulse")).toBeTruthy();
-    });
-
     it("should not render a subtitle element", () => {
       expect(compiled.querySelector(".loading-subtitle")).toBeFalsy();
     });

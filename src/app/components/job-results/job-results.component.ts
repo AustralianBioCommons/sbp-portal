@@ -10,16 +10,25 @@ import {
 } from "@angular/core";
 import { SafeResourceUrl } from "@angular/platform-browser";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroArrowDownTray } from "@ng-icons/heroicons/outline";
+import {
+  heroArrowDownTray,
+  heroBookOpen,
+  heroChartBarSquare,
+  heroCommandLine,
+  heroCog6Tooth,
+  heroFolder,
+  heroTrash,
+  heroXMark,
+} from "@ng-icons/heroicons/outline";
 import { LoadingComponent } from "../loading/loading.component";
 import { JobListItem } from "../../cores/services/jobs.service";
 import {
   ResultLogsResponse,
   ResultsService,
 } from "../../cores/services/results.service";
+import { DatePipe } from "@angular/common";
 import { EMPTY } from "rxjs";
 import { catchError } from "rxjs/operators";
-import { formatDateTimeForJobs } from "../../cores/utils/date.utils";
 import { environment } from "../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -35,10 +44,23 @@ type JobSettingItem = {
   standalone: true,
   imports: [NgIconComponent, LoadingComponent],
   templateUrl: "./job-results.component.html",
-  providers: [provideIcons({ heroArrowDownTray })],
+  providers: [
+    provideIcons({
+      heroArrowDownTray,
+      heroBookOpen,
+      heroChartBarSquare,
+      heroCommandLine,
+      heroCog6Tooth,
+      heroFolder,
+      heroTrash,
+      heroXMark,
+    }),
+    DatePipe,
+  ],
 })
 export class JobResultsComponent implements OnChanges {
   private resultsService = inject(ResultsService);
+  private datePipe = inject(DatePipe);
 
   @Input() isOpen = false;
   @Input() job: JobListItem | null = null;
@@ -62,12 +84,12 @@ export class JobResultsComponent implements OnChanges {
   logsLoading = signal(false);
   logsError = signal<string | null>(null);
 
-  readonly tabs: Array<{ id: JobResultsTab; label: string }> = [
-    { id: "results", label: "Results" },
-    { id: "files", label: "Files" },
-    { id: "settings", label: "Settings" },
-    { id: "logs", label: "Logs" },
-    { id: "citations", label: "Citations" },
+  readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
+    { id: "results", label: "Results", icon: "heroChartBarSquare" },
+    { id: "files", label: "Files", icon: "heroFolder" },
+    { id: "settings", label: "Settings", icon: "heroCog6Tooth" },
+    { id: "logs", label: "Logs", icon: "heroCommandLine" },
+    { id: "citations", label: "Citations", icon: "heroBookOpen" },
   ];
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -87,14 +109,13 @@ export class JobResultsComponent implements OnChanges {
     }
   }
 
-  formatDate(dateString: string): string {
-    return formatDateTimeForJobs(dateString);
-  }
-
   getSummaryItems(job: JobListItem): Array<{ label: string; value: string }> {
     return [
-      { label: "Submitted", value: this.formatDate(job.submittedAt) },
-      { label: "Type", value: job.workflowType || "N/A" },
+      {
+        label: "Submitted date",
+        value: this.datePipe.transform(job.submittedAt, "dd/MM/yyyy") ?? "",
+      },
+      { label: "Tool", value: job.tool || "N/A" },
       { label: "Status", value: job.status },
       {
         label: "Score",
@@ -113,7 +134,7 @@ export class JobResultsComponent implements OnChanges {
 
   getCitations(job: JobListItem): string[] {
     return [
-      `${job.workflowType || "Workflow"} methods and generated outputs.`,
+      `${job.tool || "Workflow"} methods and generated outputs.`,
       "SBP Portal platform and supporting infrastructure.",
     ];
   }
