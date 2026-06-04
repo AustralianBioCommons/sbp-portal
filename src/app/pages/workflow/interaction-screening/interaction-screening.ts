@@ -39,6 +39,7 @@ import { DatasetUploadService } from "../../../cores/services/dataset-upload.ser
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
+import { InteractionScreeningPayload } from "../../../cores/interfaces/workflow.interfaces";
 
 function multiFastaValidator(
   control: AbstractControl
@@ -418,15 +419,23 @@ export class InteractionScreeningComponent {
             );
             return;
           }
-          const splitOutputDir = datasetResponse.splitOutputDir ?? "";
-          this.workflowSubmission.submitWorkflowWithDataset(
-            {
+          const splitOutputDir = datasetResponse.splitOutputDir;
+          if (!splitOutputDir) {
+            this.workflowSubmission.isSubmitting.set(false);
+            this.showError(
+              "Dataset upload did not return a split output directory."
+            );
+            return;
+          }
+          const payload: InteractionScreeningPayload = {
               tool: this.selectedTool(),
               runName: jobName,
               workflow: "interaction-screening",
               fastaS3Uri,
               splitOutputDir,
-            },
+            };
+          this.workflowSubmission.submitWorkflowWithDataset(
+            payload,
             datasetId,
             (error) => {
               this.workflowSubmission.isSubmitting.set(false);

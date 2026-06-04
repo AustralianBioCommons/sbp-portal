@@ -68,8 +68,10 @@ export interface DefaultWorkflowPayload {
   configProfiles?: string[];
 }
 
-// No extra fields currently required for interaction screening
-export type InteractionScreeningPayload = DefaultWorkflowPayload;
+export interface InteractionScreeningPayload extends DefaultWorkflowPayload {
+  fastaS3Uri: string;
+  splitOutputDir: string;
+}
 
 export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   entities: EntityRow[];
