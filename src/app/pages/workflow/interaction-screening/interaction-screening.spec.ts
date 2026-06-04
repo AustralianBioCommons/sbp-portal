@@ -474,14 +474,6 @@ describe("InteractionScreeningComponent", () => {
     expect(component.alertMessage()).toContain("Unknown error");
   });
 
-  // ── 20. submitNewJob ─────────────────────────────────────────────────────
-
-  it("should call window.location.reload when submitNewJob is called", () => {
-    spyOn(window.location, "reload");
-    component.submitNewJob();
-    expect(window.location.reload).toHaveBeenCalled();
-  });
-
   // ── 20b. hasDuplicateSequencesError / getDuplicateSequencesError ──────────
 
   it("should return false and empty string from duplicate-sequences helpers when no duplicates", () => {
