@@ -163,20 +163,12 @@ export class InteractionScreeningComponent {
     this.activeTab.set(id);
   }
 
-  // No tools are currently available
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
     { id: "colabfold", label: "ColabFold" },
   ];
-  readonly unavailableToolLabels: string[] = this.tools.map((t) => t.label);
-  isToolAvailable = () => false;
   selectedTool = signal<ToolChip["id"]>("boltz");
   selectTool(id: ToolChip["id"]) {
-    if (!this.isToolAvailable()) {
-      const label = this.tools.find((t) => t.id === id)?.label ?? id;
-      this.showError(`${label} is not available yet.`);
-      return;
-    }
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(

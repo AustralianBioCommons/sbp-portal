@@ -233,15 +233,12 @@ describe("InteractionScreeningComponent", () => {
 
   // ── 8. selectTool ──────────────────────────────────────────────────────
 
-  it("should show an error and not change selectedTool when tool is unavailable", () => {
-    const originalTool = component.selectedTool();
-
+  it("should update selectedTool when selectTool is called", () => {
     component.selectTool("colabfold");
+    expect(component.selectedTool()).toBe("colabfold");
 
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("not available yet");
-    // tool is unchanged because all tools are unavailable
-    expect(component.selectedTool()).toBe(originalTool);
+    component.selectTool("boltz");
+    expect(component.selectedTool()).toBe("boltz");
   });
 
   // ── 9. closeAlert ──────────────────────────────────────────────────────
