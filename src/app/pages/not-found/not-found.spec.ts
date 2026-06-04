@@ -176,6 +176,16 @@ describe("NotFoundComponent", () => {
     });
   });
 
+  it("should navigate to structure search when navigateToStructureSearch is called", () => {
+    mockRouter.navigate.and.returnValue(Promise.resolve(true));
+
+    component.navigateToStructureSearch();
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
+      queryParams: { tab: "structure-search" },
+    });
+  });
+
   it("should navigate to single structure prediction when navigateToSingleStructurePrediction is called", () => {
     mockRouter.navigate.and.returnValue(Promise.resolve(true));
 

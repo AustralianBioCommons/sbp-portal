@@ -428,12 +428,12 @@ export class InteractionScreeningComponent {
             return;
           }
           const payload: InteractionScreeningPayload = {
-              tool: this.selectedTool(),
-              runName: jobName,
-              workflow: "interaction-screening",
-              fastaS3Uri,
-              splitOutputDir,
-            };
+            tool: this.selectedTool(),
+            runName: jobName,
+            workflow: "interaction-screening",
+            fastaS3Uri,
+            splitOutputDir,
+          };
           this.workflowSubmission.submitWorkflowWithDataset(
             payload,
             datasetId,
