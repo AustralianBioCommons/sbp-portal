@@ -66,6 +66,7 @@ export interface DefaultWorkflowPayload {
   tool: WorkflowTool;
   runName: string;
   configProfiles?: string[];
+  sample_id: string;
 }
 
 // No extra fields currently required for interaction screening
@@ -100,7 +101,6 @@ export interface DeNovoDesignPayload
   extends DefaultWorkflowPayload,
     Record<string, unknown> {
   id: string;
-  sample_id: string;
   binder_name: string;
 }
 
