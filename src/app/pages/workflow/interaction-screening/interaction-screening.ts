@@ -428,6 +428,7 @@ export class InteractionScreeningComponent {
               tool: this.selectedTool(),
               runName: jobName,
               workflow: "interaction-screening",
+              sample_id: jobName,
             },
             datasetId,
             (error) => {

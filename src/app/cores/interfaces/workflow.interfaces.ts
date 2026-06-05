@@ -76,7 +76,6 @@ export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   entities: EntityRow[];
   fastaContent: string;
   fastaFileUrl: string;
-  samplesheetId: string;
   alphafold2_random_seed?: number;
   alphafold2_full_dbs?: boolean;
   colabfold_num_recycles?: number;

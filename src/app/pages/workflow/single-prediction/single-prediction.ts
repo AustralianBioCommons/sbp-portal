@@ -122,7 +122,7 @@ export class SinglePredictionComponent {
     CCD_COMPOUNDS
   ).map(([code, name]) => ({ value: code, label: `${code} - ${name}` }));
 
-  private readonly samplesheetId = "single-prediction";
+  private readonly samplesheetId = `single-prediction-${this.generateRandomSuffix()}`;
   private nextRowId = 1;
   ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
   ccdLookupNames = signal<Record<number, string>>({}); // compound name resolved from the local CCD dictionary via lookupCcdCompound()
@@ -864,7 +864,7 @@ export class SinglePredictionComponent {
       {
         ...this.buildWorkflowPayload(),
         fastaFileUrl: fastaUrl,
-        samplesheetId: this.samplesheetId,
+        sample_id: this.samplesheetId,
       },
       datasetId,
       (error) => {
@@ -876,9 +876,16 @@ export class SinglePredictionComponent {
     );
   }
 
+  private generateRandomSuffix(): string {
+    return (
+      globalThis.crypto?.randomUUID?.().replace(/-/g, "") ??
+      Math.random().toString(36).slice(2)
+    ).slice(0, 8);
+  }
+
   private buildWorkflowPayload(): Omit<
     SinglePredictionPayload,
-    "fastaFileUrl" | "samplesheetId"
+    "fastaFileUrl" | "sample_id"
   > {
     return {
       workflow: "single-prediction",
