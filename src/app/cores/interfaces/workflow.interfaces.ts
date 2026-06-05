@@ -66,6 +66,7 @@ export interface DefaultWorkflowPayload {
   tool: WorkflowTool;
   runName: string;
   configProfiles?: string[];
+  sample_id: string;
 }
 
 // No extra fields currently required for interaction screening
@@ -75,7 +76,6 @@ export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   entities: EntityRow[];
   fastaContent: string;
   fastaFileUrl: string;
-  samplesheetId: string;
   alphafold2_random_seed?: number;
   alphafold2_full_dbs?: boolean;
   colabfold_num_recycles?: number;
@@ -100,7 +100,6 @@ export interface DeNovoDesignPayload
   extends DefaultWorkflowPayload,
     Record<string, unknown> {
   id: string;
-  sample_id: string;
   binder_name: string;
 }
 

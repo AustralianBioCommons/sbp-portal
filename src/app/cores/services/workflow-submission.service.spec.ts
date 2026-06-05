@@ -13,6 +13,7 @@ describe("WorkflowSubmissionService", () => {
     workflow: "interaction-screening",
     tool: "boltz",
     runName: "test-run",
+    sample_id: "test-run",
   };
 
   beforeEach(() => {

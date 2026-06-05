@@ -44,6 +44,7 @@ describe("WorkflowApiService", () => {
       workflow: "interaction-screening" as const,
       tool: "boltz" as const,
       runName: "test-run",
+      sample_id: "test-run",
     };
 
     service
