@@ -27,7 +27,7 @@ export const THEMES: ThemeConfig[] = [
       {
         id: "de-novo-design",
         label: "De Novo Design",
-        href: "/de-novo-design",
+        href: "/binder-design/de-novo-design",
       },
       {
         id: "motif-scaffolding",
@@ -43,7 +43,7 @@ export const THEMES: ThemeConfig[] = [
       },
     ],
     tools: [
-      { id: "bindcraft", label: "BindCraft", href: "/de-novo-design" },
+      { id: "bindcraft", label: "BindCraft", href: "/binder-design/de-novo-design" },
       {
         id: "rfdiffusion",
         label: "RFdiffusion",
@@ -65,30 +65,30 @@ export const THEMES: ThemeConfig[] = [
       {
         id: "single-structure-prediction",
         label: "Single Prediction",
-        href: "/single-structure-prediction",
+        href: "/structure-prediction/single-structure-prediction",
       },
       {
         id: "bulk-prediction",
         label: "Bulk Prediction",
-        href: "/bulk-prediction",
+        href: "/structure-prediction/bulk-prediction",
       },
       {
         id: "interaction-screening",
         label: "Interaction Screening",
-        href: "/interaction-screening",
+        href: "/structure-prediction/interaction-screening",
       },
     ],
     tools: [
-      { id: "boltz", label: "Boltz", href: "/single-structure-prediction" },
+      { id: "boltz", label: "Boltz", href: "/structure-prediction/single-structure-prediction" },
       {
         id: "colabfold",
         label: "ColabFold",
-        href: "/single-structure-prediction",
+        href: "/structure-prediction/single-structure-prediction",
       },
       {
         id: "alphafold2",
         label: "AlphaFold2",
-        href: "/single-structure-prediction",
+        href: "/structure-prediction/single-structure-prediction",
       },
     ],
   },

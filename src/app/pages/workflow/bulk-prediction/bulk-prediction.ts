@@ -82,7 +82,7 @@ type StepItem = Step;
   templateUrl: "./bulk-prediction.html",
   styleUrls: ["./bulk-prediction.scss"],
 })
-export class BulkPredictionComponent {
+export default class BulkPredictionComponent {
   // Auth
   public auth = inject(AuthService);
   readonly profileUrl = environment.profileUrl;

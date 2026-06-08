@@ -16,7 +16,7 @@ export interface TabItem {
   templateUrl: "./home.html",
   styleUrl: "./home.scss",
 })
-export class Home implements OnInit {
+export default class Home implements OnInit {
   private route = inject(ActivatedRoute);
 
   activeTab = signal("binder-design");
@@ -40,10 +40,9 @@ export class Home implements OnInit {
   ];
 
   ngOnInit() {
-    // Listen to query parameters to sync with header navigation
-    this.route.queryParams.subscribe((params) => {
-      if (params["tab"]) {
-        this.activeTab.set(params["tab"]);
+    this.route.data.subscribe((data) => {
+      if (data["tab"]) {
+        this.activeTab.set(data["tab"]);
       }
     });
   }

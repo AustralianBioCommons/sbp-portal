@@ -71,23 +71,17 @@ export class FooterSectionsComponent {
     {
       heading: "Themes",
       links: [
-        { label: "Binder design", href: "/themes?tab=binder-design" },
-        {
-          label: "Structure prediction",
-          href: "/themes?tab=structure-prediction",
-        },
+        { label: "Binder design", href: "/binder-design" },
+        { label: "Structure prediction", href: "/structure-prediction" },
       ],
     },
     {
       heading: "Workflows",
       links: [
-        {
-          label: "De novo design",
-          href: "/de-novo-design",
-        },
+        { label: "De novo design", href: "/binder-design/de-novo-design" },
         {
           label: "Interaction screening",
-          href: "/interaction-screening",
+          href: "/structure-prediction/interaction-screening",
         },
       ],
     },

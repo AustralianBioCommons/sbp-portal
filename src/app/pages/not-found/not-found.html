@@ -40,22 +40,18 @@
               name="heroHome"
               class="w-12 h-12 text-teal-500 mb-4"
             ></ng-icon>
-            <h3 class="text-xl font-semibold text-blue-600 mb-2">
-              Go to Themes
-            </h3>
+            <h3 class="text-xl font-semibold text-blue-600 mb-2">Go Home</h3>
             <p class="text-gray-600 mb-6 leading-normal">
               Explore our protein binder design tools and workflows
             </p>
           </div>
           <div class="mt-auto">
-            <app-button
-              variant="primary"
-              widthClass="w-full"
-              colorClasses="bg-pink-600 hover:bg-pink-500"
-              (click)="goHome()"
+            <a
+              routerLink="/binder-design"
+              class="flex items-center justify-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-white bg-pink-600 hover:bg-pink-500 rounded-md transition-all no-underline"
             >
               Take me home
-            </app-button>
+            </a>
           </div>
         </div>
 
@@ -100,14 +96,12 @@
             </p>
           </div>
           <div class="mt-auto">
-            <app-button
-              variant="primary"
-              widthClass="w-full"
-              colorClasses="bg-teal-600 hover:bg-teal-500"
-              (click)="searchResources()"
+            <a
+              routerLink="/binder-design"
+              class="flex items-center justify-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-white bg-teal-600 hover:bg-teal-500 rounded-md transition-all no-underline"
             >
               Search portal
-            </app-button>
+            </a>
           </div>
         </div>
       </div>
@@ -121,30 +115,24 @@
       <div
         class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-100 sm:max-w-150 mx-auto"
       >
-        <app-button
-          variant="secondary"
-          widthClass="w-full h-full"
-          colorClasses="shadow-md text-blue-900 text-center justify-center"
-          (click)="navigateToBinderDesign()"
+        <a
+          routerLink="/binder-design"
+          class="flex items-center justify-center w-full h-full px-3 py-2.5 text-sm font-medium rounded-md border bg-transparent hover:bg-white text-blue-900 shadow-md transition-all no-underline"
         >
           Binder Design
-        </app-button>
-        <app-button
-          variant="secondary"
-          widthClass="w-full h-full"
-          colorClasses="shadow-md text-blue-900 text-center justify-center"
-          (click)="navigateToStructurePrediction()"
+        </a>
+        <a
+          routerLink="/structure-prediction"
+          class="flex items-center justify-center w-full h-full px-3 py-2.5 text-sm font-medium rounded-md border bg-transparent hover:bg-white text-blue-900 shadow-md transition-all no-underline"
         >
           Structure Prediction
-        </app-button>
-        <app-button
-          variant="secondary"
-          widthClass="w-full h-full"
-          colorClasses="shadow-md text-blue-900 text-center justify-center"
-          (click)="navigateToSingleStructurePrediction()"
+        </a>
+        <a
+          routerLink="/structure-prediction/single-structure-prediction"
+          class="flex items-center justify-center w-full h-full px-3 py-2.5 text-sm font-medium rounded-md border bg-transparent hover:bg-white text-blue-900 shadow-md transition-all no-underline"
         >
           Single Structure Prediction
-        </app-button>
+        </a>
       </div>
     </div>
 

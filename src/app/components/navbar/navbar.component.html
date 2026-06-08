@@ -13,18 +13,13 @@
         >
           <ng-icon name="heroBars3" size="24"></ng-icon>
         </button>
-        <button
-          (click)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
-          aria-label="Navigate to home page"
-        >
+        <a routerLink="/binder-design" aria-label="Navigate to home page">
           <img
             class="w-42 min-w-42 h-auto"
             src="/assets/sbp-logo.png"
             alt="SBP Portal"
           />
-        </button>
+        </a>
       </div>
 
       <!-- Center: Nav Links -->
@@ -32,42 +27,39 @@
         class="hidden absolute left-1/2 -translate-x-1/2 md:flex items-center justify-center gap-6 font-semibold text-sky-900 transition-all text-sm"
         aria-label="Main navigation"
       >
-        <button
-          type="button"
-          class="py-2 whitespace-nowrap border-b-2"
+        <a
+          routerLink="/binder-design"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
           [class]="
-            currentRoute() === '/themes' && isActiveTab('binder-design')
+            currentRoute() === '/binder-design'
               ? 'border-sky-900'
               : 'border-transparent hover:border-sky-900/20'
           "
-          (click)="navigate('/themes', { tab: 'binder-design' })"
         >
           Binder Design
-        </button>
-        <button
-          type="button"
-          class="py-2 whitespace-nowrap border-b-2"
+        </a>
+        <a
+          routerLink="/structure-prediction"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
           [class]="
-            currentRoute() === '/themes' && isActiveTab('structure-prediction')
+            currentRoute() === '/structure-prediction'
               ? 'border-sky-900'
               : 'border-transparent hover:border-sky-900/20'
           "
-          (click)="navigate('/themes', { tab: 'structure-prediction' })"
         >
           Structure Prediction
-        </button>
-        <button
-          type="button"
-          class="py-2 whitespace-nowrap border-b-2"
+        </a>
+        <a
+          routerLink="/jobs"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
           [class]="
             currentRoute() === '/jobs'
               ? 'border-sky-900'
               : 'border-transparent hover:border-sky-900/20'
           "
-          (click)="navigate('/jobs')"
         >
           Jobs
-        </button>
+        </a>
       </nav>
 
       <!-- Right: Auth Section -->
@@ -87,19 +79,6 @@
               {{ (user$ | async)?.email || "" }}
               <ng-icon name="heroArrowTopRightOnSquare" size="12"></ng-icon>
             </span>
-            <!-- <div class="flex flex-1 items-center gap-2">
-              <div
-                class="w-3/4 h-1 rounded-full bg-gray-200 max-w-24"
-                role="progressbar"
-                aria-label="Quota usage"
-                aria-valuenow="0"
-                aria-valuemin="0"
-                aria-valuemax="100"
-              >
-                <div class="h-1 rounded-full bg-biocommons-primary w-18"></div>
-              </div>
-              <span class="text-xs text-gray-600 shrink-0">75 / 100</span>
-            </div> -->
           </div>
         </button>
         <button
@@ -147,9 +126,9 @@
     <div
       class="flex items-center justify-between px-4 border-b sticky top-0 shrink-0 bg-white z-10 h-20"
     >
-      <button
-        (click)="navigate('/themes', { tab: 'binder-design' })"
-        (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
+      <a
+        routerLink="/binder-design"
+        (click)="closeMobileMenu()"
         aria-label="Navigate to home page"
       >
         <img
@@ -157,7 +136,7 @@
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />
-      </button>
+      </a>
       <button
         type="button"
         (click)="closeMobileMenu()"
@@ -184,45 +163,37 @@
         <div class="ml-6 space-y-2">
           @for (child of item.children; track child.label) { @if
           (shouldShowNavItem(child, isAuth)) {
-          <button
-            type="button"
-            class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
+          <a
+            [routerLink]="child.path"
+            (click)="closeMobileMenu()"
+            class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all no-underline"
             [class]="
               isNavItemActive(child)
                 ? 'bg-sky-50 text-sky-900 font-semibold'
                 : 'text-sky-800 hover:bg-sky-50'
             "
-            (click)="
-              child.path
-                ? navigate(child.path, child.queryParams)
-                : executeAction(child.action)
-            "
           >
             <span>{{ child.label }}</span>
-          </button>
+          </a>
           } }
         </div>
       </div>
       } @else if (shouldShowNavItem(item, isAuth)) {
-      <button
-        type="button"
-        class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
+      <a
+        [routerLink]="item.path"
+        (click)="closeMobileMenu()"
+        class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all no-underline"
         [class]="
           isNavItemActive(item)
             ? 'bg-sky-50 text-sky-900 font-semibold'
             : 'text-sky-900 hover:bg-sky-50'
-        "
-        (click)="
-          item.path
-            ? navigate(item.path, item.queryParams)
-            : executeAction(item.action)
         "
       >
         @if (item.icon) {
         <ng-icon [name]="item.icon" size="18" class="shrink-0" />
         }
         <span>{{ item.label }}</span>
-      </button>
+      </a>
       } }
     </div>
   </div>
@@ -234,15 +205,12 @@
       class="max-w-7xl px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
       aria-label="Breadcrumb"
     >
-      <span
-        class="text-sky-900 cursor-pointer hover:text-sky-800 transition-all hover:underline"
-        tabindex="0"
-        role="button"
-        (click)="navigateToTheme(crumb.themeTab)"
-        (keyup.enter)="navigateToTheme(crumb.themeTab)"
+      <a
+        [routerLink]="'/' + crumb.themeTab"
+        class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
       >
         {{ crumb.themeLabel }}
-      </span>
+      </a>
       <ng-icon name="heroChevronRight" size="16"></ng-icon>
       <span class="text-gray-600">
         {{ crumb.workflowLabel }}

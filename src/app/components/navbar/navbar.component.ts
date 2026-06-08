@@ -7,7 +7,7 @@ import {
   ViewChild,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { NavigationEnd, Router } from "@angular/router";
+import { NavigationEnd, Router, RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowRightEndOnRectangle,
@@ -54,7 +54,7 @@ export interface BreadcrumbInfo {
 
 @Component({
   selector: "app-navbar",
-  imports: [CommonModule, NgIconComponent],
+  imports: [CommonModule, NgIconComponent, RouterLink],
   providers: [
     provideIcons({
       heroArrowRightEndOnRectangle,
@@ -127,19 +127,16 @@ export class Navbar implements AfterViewInit {
   navItems: NavItem[] = [
     {
       label: "Home",
-      path: "/themes",
-      queryParams: { tab: "binder-design" },
+      path: "/binder-design",
       icon: "heroHome",
       children: [
         {
           label: "Binder design",
-          path: "/themes",
-          queryParams: { tab: "binder-design" },
+          path: "/binder-design",
         },
         {
           label: "Structure prediction",
-          path: "/themes",
-          queryParams: { tab: "structure-prediction" },
+          path: "/structure-prediction",
           requiresAuth: false,
         },
       ],
@@ -150,19 +147,19 @@ export class Navbar implements AfterViewInit {
       children: [
         {
           label: "De Novo Design",
-          path: "/de-novo-design",
+          path: "/binder-design/de-novo-design",
         },
         {
           label: "Single Prediction",
-          path: "/single-structure-prediction",
+          path: "/structure-prediction/single-structure-prediction",
         },
         {
           label: "Bulk Prediction",
-          path: "/bulk-prediction",
+          path: "/structure-prediction/bulk-prediction",
         },
         {
           label: "Interaction Screening",
-          path: "/interaction-screening",
+          path: "/structure-prediction/interaction-screening",
         },
       ],
     },
@@ -222,13 +219,13 @@ export class Navbar implements AfterViewInit {
 
   private checkRoute(url: string) {
     const basePath = url.split("?")[0];
+    const isHomePage =
+      basePath === "/binder-design" || basePath === "/structure-prediction";
 
-    this.showTabs.set(basePath === "/themes");
+    this.showTabs.set(isHomePage);
 
-    if (basePath === "/themes") {
-      const urlTree = this.router.parseUrl(url);
-      const tab = urlTree.queryParams["tab"];
-      this.activeTab.set(tab ?? "binder-design");
+    if (isHomePage) {
+      this.activeTab.set(basePath.slice(1));
       this.showBreadcrumb.set(false);
       this.breadcrumb.set(null);
     } else {
@@ -334,7 +331,7 @@ export class Navbar implements AfterViewInit {
 
   selectTab(tabId: string) {
     this.activeTab.set(tabId);
-    this.router.navigate(["/themes"], { queryParams: { tab: tabId } });
+    this.router.navigate(["/" + tabId]);
   }
 
   isActiveTab(tabId: string): boolean {
@@ -342,7 +339,7 @@ export class Navbar implements AfterViewInit {
   }
 
   navigateToTheme(themeTab: string): void {
-    this.router.navigate(["/themes"], { queryParams: { tab: themeTab } });
+    this.router.navigate(["/" + themeTab]);
   }
 
   scrollLeft(): void {

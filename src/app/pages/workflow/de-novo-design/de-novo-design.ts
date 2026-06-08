@@ -74,7 +74,7 @@ type StepItem = Step;
   templateUrl: "./de-novo-design.html",
   styleUrls: ["./de-novo-design.scss"],
 })
-export class DeNovoDesignComponent implements OnInit, OnDestroy {
+export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   private readonly availableToolId: ToolChip["id"] = "bindcraft";
 
   // // Make Object available in template

@@ -103,7 +103,7 @@ interface ToolSettingErrors {
   templateUrl: "./single-prediction.html",
   styleUrls: ["./single-prediction.scss"],
 })
-export class SinglePredictionComponent {
+export default class SinglePredictionComponent {
   public auth = inject(AuthService);
   readonly profileUrl = environment.profileUrl;
   public workflowSubmission = inject(WorkflowSubmissionService);
