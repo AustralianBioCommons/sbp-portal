@@ -195,7 +195,8 @@ export class AuthService {
 
     const currentUrl =
       window.location.pathname + window.location.search + window.location.hash;
-    const target = returnUrl || currentUrl || this.router.url || "/binder-design";
+    const target =
+      returnUrl || currentUrl || this.router.url || "/binder-design";
 
     // Persist return URL as a fallback if Auth0 appState is unavailable on callback.
     sessionStorage.setItem(AuthService.RETURN_URL_KEY, target);

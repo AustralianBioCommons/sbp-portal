@@ -1,104 +1,102 @@
 <nav class="block sticky top-0 z-50 bg-white shadow shrink-0">
-  <div class="border-b">
-    <div
-      class="max-w-7xl px-6 mx-auto relative flex items-center justify-between min-h-20 gap-4"
-    >
-      <!-- Left: Burger Menu + Logo -->
-      <div class="flex items-center gap-4 shrink-0">
-        <button
-          type="button"
-          class="compact-menu-button text-sky-900 hover:text-sky-700 transition-all"
-          (click)="toggleMobileMenu(); $event.stopPropagation()"
-          aria-label="Open menu"
-        >
-          <ng-icon name="heroBars3" size="24"></ng-icon>
-        </button>
-        <a routerLink="/binder-design" aria-label="Navigate to home page">
-          <img
-            class="w-42 min-w-42 h-auto"
-            src="/assets/sbp-logo.png"
-            alt="SBP Portal"
-          />
-        </a>
-      </div>
-
-      <!-- Center: Nav Links -->
-      <nav
-        class="hidden absolute left-1/2 -translate-x-1/2 md:flex items-center justify-center gap-6 font-semibold text-sky-900 transition-all text-sm"
-        aria-label="Main navigation"
+  <div
+    class="px-6 border-b mx-auto relative flex items-center justify-between min-h-20 gap-4"
+  >
+    <!-- Left: Burger Menu + Logo -->
+    <div class="flex items-center gap-4 shrink-0">
+      <button
+        type="button"
+        class="compact-menu-button text-sky-900 hover:text-sky-700 transition-all"
+        (click)="toggleMobileMenu(); $event.stopPropagation()"
+        aria-label="Open menu"
       >
-        <a
-          routerLink="/binder-design"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
-          [class]="
-            currentRoute() === '/binder-design'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
-          "
-        >
-          Binder Design
-        </a>
-        <a
-          routerLink="/structure-prediction"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
-          [class]="
-            currentRoute() === '/structure-prediction'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
-          "
-        >
-          Structure Prediction
-        </a>
-        <a
-          routerLink="/jobs"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
-          [class]="
-            currentRoute() === '/jobs'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
-          "
-        >
-          Jobs
-        </a>
-      </nav>
+        <ng-icon name="heroBars3" size="24"></ng-icon>
+      </button>
+      <a routerLink="/binder-design" aria-label="Navigate to home page">
+        <img
+          class="w-42 min-w-42 h-auto"
+          src="/assets/sbp-logo.png"
+          alt="SBP Portal"
+        />
+      </a>
+    </div>
 
-      <!-- Right: Auth Section -->
-      <div class="flex items-center gap-4 shrink-0">
-        @if (isAuthenticated$ | async) {
-        <button
-          (click)="openProfile()"
-          class="rounded-full border border-gray-300 h-10 pl-2 pr-2 lg:pr-4 flex items-center gap-1 text-sky-900 hover:bg-gray-100 transition-all"
-          type="button"
-          aria-label="Open profile"
-        >
-          <ng-icon name="heroUserCircle" size="30" strokeWidth="1"></ng-icon>
-          <div class="flex flex-col">
-            <span
-              class="hidden lg:inline-flex items-center gap-1 text-xs font-mono text-gray-900 truncate"
-            >
-              {{ (user$ | async)?.email || "" }}
-              <ng-icon name="heroArrowTopRightOnSquare" size="12"></ng-icon>
-            </span>
-          </div>
-        </button>
-        <button
-          (click)="logout()"
-          class="text-sky-900 hover:bg-gray-100 transition-all rounded-full flex items-center justify-center h-10 w-10 border border-gray-300"
-          type="button"
-          aria-label="Log out"
-        >
-          <ng-icon name="heroArrowRightStartOnRectangle" size="20"></ng-icon>
-        </button>
-        } @else {
-        <button
-          type="button"
-          class="px-6 py-2 text-sm font-mono text-sky-950 bg-biocommons-primary hover:bg-teal-500 rounded-full"
-          (click)="login()"
-        >
-          <span>Login</span>
-        </button>
-        }
-      </div>
+    <!-- Center: Nav Links -->
+    <nav
+      class="hidden absolute left-1/2 -translate-x-1/2 md:flex items-center justify-center gap-6 font-semibold text-sky-900 transition-all text-sm"
+      aria-label="Main navigation"
+    >
+      <a
+        routerLink="/binder-design"
+        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+        [class]="
+          currentRoute() === '/binder-design'
+            ? 'border-sky-900'
+            : 'border-transparent hover:border-sky-900/20'
+        "
+      >
+        Binder Design
+      </a>
+      <a
+        routerLink="/structure-prediction"
+        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+        [class]="
+          currentRoute() === '/structure-prediction'
+            ? 'border-sky-900'
+            : 'border-transparent hover:border-sky-900/20'
+        "
+      >
+        Structure Prediction
+      </a>
+      <a
+        routerLink="/jobs"
+        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+        [class]="
+          currentRoute() === '/jobs'
+            ? 'border-sky-900'
+            : 'border-transparent hover:border-sky-900/20'
+        "
+      >
+        Jobs
+      </a>
+    </nav>
+
+    <!-- Right: Auth Section -->
+    <div class="flex items-center gap-4 shrink-0">
+      @if (isAuthenticated$ | async) {
+      <button
+        (click)="openProfile()"
+        class="rounded-full border border-gray-300 h-10 pl-2 pr-2 lg:pr-4 flex items-center gap-1 text-sky-900 hover:bg-gray-100 transition-all"
+        type="button"
+        aria-label="Open profile"
+      >
+        <ng-icon name="heroUserCircle" size="30" strokeWidth="1"></ng-icon>
+        <div class="flex flex-col">
+          <span
+            class="hidden lg:inline-flex items-center gap-1 text-xs font-mono text-gray-900 truncate"
+          >
+            {{ (user$ | async)?.email || "" }}
+            <ng-icon name="heroArrowTopRightOnSquare" size="12"></ng-icon>
+          </span>
+        </div>
+      </button>
+      <button
+        (click)="logout()"
+        class="text-sky-900 hover:bg-gray-100 transition-all rounded-full flex items-center justify-center h-10 w-10 border border-gray-300"
+        type="button"
+        aria-label="Log out"
+      >
+        <ng-icon name="heroArrowRightStartOnRectangle" size="20"></ng-icon>
+      </button>
+      } @else {
+      <button
+        type="button"
+        class="px-6 py-2 text-sm font-mono text-sky-950 bg-biocommons-primary hover:bg-teal-500 rounded-full"
+        (click)="login()"
+      >
+        <span>Login</span>
+      </button>
+      }
     </div>
   </div>
 
@@ -200,22 +198,20 @@
 
   <!-- Breadcrumb (only show on workflow pages) -->
   @if (showBreadcrumb() && breadcrumb(); as crumb) {
-  <div class="w-full bg-gray-50">
-    <div
-      class="max-w-7xl px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
-      aria-label="Breadcrumb"
+  <div
+    class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
+    aria-label="Breadcrumb"
+  >
+    <a
+      [routerLink]="'/' + crumb.themeTab"
+      class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
     >
-      <a
-        [routerLink]="'/' + crumb.themeTab"
-        class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
-      >
-        {{ crumb.themeLabel }}
-      </a>
-      <ng-icon name="heroChevronRight" size="16"></ng-icon>
-      <span class="text-gray-600">
-        {{ crumb.workflowLabel }}
-      </span>
-    </div>
+      {{ crumb.themeLabel }}
+    </a>
+    <ng-icon name="heroChevronRight" size="16"></ng-icon>
+    <span class="text-gray-600">
+      {{ crumb.workflowLabel }}
+    </span>
   </div>
   }
 </nav>

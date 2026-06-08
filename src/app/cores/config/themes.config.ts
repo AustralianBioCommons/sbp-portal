@@ -43,7 +43,11 @@ export const THEMES: ThemeConfig[] = [
       },
     ],
     tools: [
-      { id: "bindcraft", label: "BindCraft", href: "/binder-design/de-novo-design" },
+      {
+        id: "bindcraft",
+        label: "BindCraft",
+        href: "/binder-design/de-novo-design",
+      },
       {
         id: "rfdiffusion",
         label: "RFdiffusion",
@@ -79,7 +83,11 @@ export const THEMES: ThemeConfig[] = [
       },
     ],
     tools: [
-      { id: "boltz", label: "Boltz", href: "/structure-prediction/single-structure-prediction" },
+      {
+        id: "boltz",
+        label: "Boltz",
+        href: "/structure-prediction/single-structure-prediction",
+      },
       {
         id: "colabfold",
         label: "ColabFold",

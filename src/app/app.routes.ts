@@ -38,7 +38,9 @@ export const routes: Routes = [
       {
         path: "interaction-screening",
         loadComponent: () =>
-          import("./pages/workflow/interaction-screening/interaction-screening"),
+          import(
+            "./pages/workflow/interaction-screening/interaction-screening"
+          ),
       },
     ],
   },
