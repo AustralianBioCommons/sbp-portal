@@ -431,6 +431,7 @@ export class InteractionScreeningComponent {
             tool: this.selectedTool(),
             runName: jobName,
             workflow: "interaction-screening",
+            sample_id: jobName,
             fastaS3Uri,
             splitOutputDir,
           };
