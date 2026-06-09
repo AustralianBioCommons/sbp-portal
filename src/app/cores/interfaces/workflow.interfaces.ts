@@ -70,7 +70,6 @@ export interface DefaultWorkflowPayload {
 }
 
 export interface InteractionScreeningPayload extends DefaultWorkflowPayload {
-  sample_id: string;
   fastaS3Uri: string;
   splitOutputDir: string;
 }
