@@ -1,4 +1,4 @@
-<nav aria-label="Workflow steps" class="p-4 rounded-[10px] border">
+<nav aria-label="Workflow steps" class="p-4 rounded-lg border">
   <ol class="flex items-center">
     @for (s of steps(); track s.id; let last = $last) {
     <li class="flex items-center" [class.flex-1]="!last">
@@ -16,7 +16,7 @@
           (isStepCompleted()(s.id) ? ', completed' : '') +
           (isStepInvalid()(s.id) ? ', has errors' : '')
         "
-        class="flex items-center gap-2 p-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+        class="flex items-center gap-2 p-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <!-- Circle icon -->
         <span
@@ -30,8 +30,8 @@
             (s.id > currentStep() && !isStepVisited()(s.id)) ||
             (s.id > currentStep() && isStepVisited()(s.id))
           "
-          [class.border-blue-500]="currentStep() === s.id"
-          [class.text-blue-500]="currentStep() === s.id"
+          [class.border-sky-500]="currentStep() === s.id"
+          [class.text-sky-500]="currentStep() === s.id"
           [class.border-green-600]="
             (s.id < currentStep() || isStepVisited()(s.id)) &&
             !isStepInvalid()(s.id) &&
@@ -77,7 +77,7 @@
       @if (!last) {
       <div
         class="flex-1 h-0.5 mx-2 transition-colors"
-        [class.bg-blue-500]="s.id < currentStep()"
+        [class.bg-sky-500]="s.id < currentStep()"
         [class.bg-gray-200]="s.id >= currentStep()"
       ></div>
       }

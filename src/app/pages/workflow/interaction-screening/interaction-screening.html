@@ -89,7 +89,7 @@
         <!-- Lock overlay if user cannot execute workflows -->
         @if ((auth.canExecuteWorkflows$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-[10px] border border-gray-200 flex items-center justify-center"
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-lg border border-gray-200 flex items-center justify-center"
         >
           <div class="text-center p-4">
             <p class="text-base font-semibold text-gray-900 mb-2">
@@ -107,7 +107,7 @@
                 variant="primary"
                 widthClass="w-[218px]"
                 colorClasses="h-[47px] text-white bg-[#205A86] hover:bg-[#1a4a6e] justify-center"
-                borderRadius="rounded-[10px]"
+                borderRadius="rounded-lg"
                 (click)="loginWithReturnUrl()"
               >
                 Log in or Register
@@ -124,7 +124,7 @@
                 [href]="profileUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center justify-center w-56 h-12 text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-[10px] text-sm font-medium transition-colors"
+                class="inline-flex items-center justify-center w-56 h-12 text-white no-underline bg-[#205A86] hover:bg-[#1a4a6e] rounded-lg text-sm font-medium transition-colors"
               >
                 Add bundle
               </a>
@@ -173,7 +173,7 @@
                 [class]="
                   hasJobNameError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    : 'border-gray-300 focus:ring-sky-500 focus:border-sky-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
                 placeholder="e.g. my-screening-job"
@@ -213,7 +213,7 @@
                 [class]="
                   hasQueryError() || hasDuplicateSequencesError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    : 'border-gray-300 focus:ring-sky-500 focus:border-sky-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
                 placeholder=">seq1&#10;MKTAYIAKQRQISFVK&#10;>seq2&#10;ACDEFGHIKLMNPQRSTVWY"
@@ -252,7 +252,7 @@
                 [class]="
                   hasTargetError() || hasDuplicateSequencesError()
                     ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                    : 'border-gray-300 focus:ring-sky-500 focus:border-sky-500'
                 "
                 class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
                 placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY&#10;>target2&#10;MKTAYIAKQRQISFVK"
@@ -281,11 +281,11 @@
           title="Tool Settings — {{ selectedToolLabel() }}"
           description="Configure parameters specific to {{ selectedToolLabel() }}."
         >
-          <div class="mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="mt-4 p-6 bg-sky-50 border border-sky-200 rounded-lg">
             <div class="flex items-start">
               <div class="shrink-0">
                 <svg
-                  class="h-5 w-5 text-blue-400"
+                  class="h-5 w-5 text-sky-400"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -297,10 +297,10 @@
                 </svg>
               </div>
               <div class="ml-3">
-                <h3 class="text-sm font-medium text-blue-800">
+                <h3 class="text-sm font-medium text-sky-800">
                   No Parameters Required
                 </h3>
-                <div class="mt-2 text-sm text-blue-700">
+                <div class="mt-2 text-sm text-sky-700">
                   <p>
                     There are no configurable parameters for
                     <strong>{{ selectedToolLabel() }}</strong> in this workflow.
@@ -337,7 +337,7 @@
             variant="outline"
             (click)="previousStep()"
             [disabled]="!canGoPrev() || (auth.canExecuteWorkflows$ | async) === false"
-            borderRadius="rounded-[10px]"
+            borderRadius="rounded-lg"
             colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
@@ -349,8 +349,8 @@
               variant="primary"
               (click)="nextStep()"
               [disabled]="!canGoNext() || (auth.canExecuteWorkflows$ | async) === false"
-              borderRadius="rounded-[10px]"
-              colorClasses="px-4 py-2 text-white bg-blue-800 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              borderRadius="rounded-lg"
+              colorClasses="px-4 py-2 text-white bg-sky-800 hover:bg-sky-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Next
             </app-button>
@@ -360,7 +360,7 @@
               variant="primary"
               (click)="submitWorkflow()"
               [disabled]="!isFormValid() || workflowSubmission.isSubmitting() || (auth.canExecuteWorkflows$ | async) === false"
-              borderRadius="rounded-[10px]"
+              borderRadius="rounded-lg"
               colorClasses="px-4 py-2 text-white bg-teal-500 hover:bg-teal-400 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Submit
@@ -373,7 +373,7 @@
 
       <!-- Output Tab Content -->
       @if (isActiveTab('output')) {
-      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+      <div class="bg-gray-50 border rounded-lg p-6 space-y-2">
         <h2 class="text-base font-semibold text-gray-900">Output</h2>
         <p class="text-sm text-gray-600">
           Results, visualizations, and downloadable files will appear here after
@@ -384,7 +384,7 @@
 
       <!-- Papers Tab Content -->
       @if (isActiveTab('papers')) {
-      <div class="bg-gray-50 border rounded-[10px] p-6 space-y-2">
+      <div class="bg-gray-50 border rounded-lg p-6 space-y-2">
         <h2 class="text-base font-semibold text-gray-900">Papers</h2>
         <p class="text-sm text-gray-600">
           Relevant publications and references for the tools used in this

@@ -6,7 +6,7 @@
     <div class="flex items-center gap-4 shrink-0">
       <button
         type="button"
-        class="compact-menu-button text-sky-900 hover:text-sky-700 transition-all"
+        class="compact-menu-button text-sky-600 hover:text-sky-700 transition-all"
         (click)="toggleMobileMenu(); $event.stopPropagation()"
         aria-label="Open menu"
       >
@@ -122,7 +122,7 @@
   >
     <!-- Panel Header -->
     <div
-      class="flex items-center justify-between px-4 border-b sticky top-0 shrink-0 bg-white z-10 h-20"
+      class="flex items-center justify-between px-6 border-b sticky top-0 shrink-0 bg-white z-10 h-20"
     >
       <a
         routerLink="/binder-design"
@@ -146,15 +146,18 @@
     </div>
 
     <!-- Panel Content -->
-    <div class="p-4 flex-1 space-y-2" aria-label="Mobile navigation">
+    <div
+      class="p-6 flex-1 space-y-2 text-sm font-medium"
+      aria-label="Mobile navigation"
+    >
       @let isAuth = (isAuthenticated$ | async) || false; @for (item of navItems;
       track item.label) { @if (item.children) {
       <div>
-        <div
-          class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-sky-900"
-        >
+        <div class="flex items-center gap-2 p-2 text-gray-900">
           @if (item.icon) {
-          <ng-icon [name]="item.icon" size="18" class="shrink-0" />
+          <div class="text-sky-900 flex items-center justify-center shrink-0">
+            <ng-icon [name]="item.icon" size="18" class="shrink-0" />
+          </div>
           }
           <span>{{ item.label }}</span>
         </div>
@@ -164,11 +167,9 @@
           <a
             [routerLink]="child.path"
             (click)="closeMobileMenu()"
-            class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all no-underline"
+            class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
             [class]="
-              isNavItemActive(child)
-                ? 'bg-sky-50 text-sky-900 font-semibold'
-                : 'text-sky-800 hover:bg-sky-50'
+              isNavItemActive(child) ? 'bg-sky-50 ' : ' hover:bg-gray-50'
             "
           >
             <span>{{ child.label }}</span>
@@ -180,15 +181,11 @@
       <a
         [routerLink]="item.path"
         (click)="closeMobileMenu()"
-        class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all no-underline"
-        [class]="
-          isNavItemActive(item)
-            ? 'bg-sky-50 text-sky-900 font-semibold'
-            : 'text-sky-900 hover:bg-sky-50'
-        "
+        class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
+        [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
       >
         @if (item.icon) {
-        <ng-icon [name]="item.icon" size="18" class="shrink-0" />
+        <ng-icon [name]="item.icon" size="18" />
         }
         <span>{{ item.label }}</span>
       </a>

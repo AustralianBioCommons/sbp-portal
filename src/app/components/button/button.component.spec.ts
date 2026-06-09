@@ -74,9 +74,9 @@ describe("ButtonComponent", () => {
     });
 
     it("should update colorClasses input", () => {
-      fixture.componentRef.setInput("colorClasses", "text-blue-500");
+      fixture.componentRef.setInput("colorClasses", "text-sky-500");
       fixture.detectChanges();
-      expect(component.colorClasses()).toBe("text-blue-500");
+      expect(component.colorClasses()).toBe("text-sky-500");
     });
 
     it("should update widthClass input", () => {

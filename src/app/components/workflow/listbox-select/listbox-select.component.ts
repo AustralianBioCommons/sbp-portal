@@ -23,8 +23,8 @@ export interface ListboxSelectOption {
         [class.focus:border-red-400]="invalid"
         [class.focus:ring-red-400]="invalid"
         [class.border-slate-300]="!invalid"
-        [class.focus:border-blue-500]="!invalid"
-        [class.focus:ring-blue-500]="!invalid"
+        [class.focus:border-sky-500]="!invalid"
+        [class.focus:ring-sky-500]="!invalid"
       >
         <span class="block min-w-0 truncate">{{ selectedLabel }}</span>
         <svg

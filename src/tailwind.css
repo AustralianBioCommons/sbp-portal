@@ -22,7 +22,7 @@
   }
 
   a {
-    @apply text-sky-700 hover:text-sky-600 transition-all underline;
+    @apply text-sky-600 hover:text-sky-700 transition-all hover:underline;
   }
 }
 

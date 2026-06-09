@@ -1,8 +1,8 @@
 <div
   [class]="
     inline()
-      ? 'flex items-center justify-center p-4'
-      : 'fixed inset-0 bg-white/95 flex items-center justify-center z-1000'
+      ? 'flex items-center justify-center p-6'
+      : 'fixed inset-0 bg-white/90 flex items-center justify-center z-1000'
   "
 >
   <div class="text-center">
@@ -10,11 +10,11 @@
     <div class="relative mx-auto mb-6 w-12 h-12">
       <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
       <div
-        class="absolute inset-0 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"
+        class="absolute inset-0 border-4 border-transparent border-t-biocommons-primary rounded-full animate-spin"
       ></div>
     </div>
 
     <!-- Loading text -->
-    <p class="text-gray-900 font-semibold">{{ message() }}</p>
+    <p class="text-sky-900 font-semibold">{{ message() }}</p>
   </div>
 </div>

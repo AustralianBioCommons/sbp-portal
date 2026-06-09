@@ -98,7 +98,7 @@ export class FormFieldComponent {
 
   getInputClasses(): string {
     return (
-      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent " +
+      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent " +
       (this.hasError
         ? "border-red-300 bg-red-50 text-red-900 placeholder-red-300"
         : "border-gray-300 bg-white text-gray-900 placeholder-gray-500")
@@ -107,7 +107,7 @@ export class FormFieldComponent {
 
   getSelectClasses(): string {
     return (
-      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent " +
+      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent " +
       (this.hasError
         ? "border-red-300 bg-red-50 text-red-900"
         : "border-gray-300 bg-white text-gray-900")
@@ -116,7 +116,7 @@ export class FormFieldComponent {
 
   getFileClasses(): string {
     return (
-      "w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 " +
+      "w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 " +
       (this.hasError ? "file:bg-red-100 file:text-red-700" : "")
     );
   }

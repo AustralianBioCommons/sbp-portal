@@ -16,7 +16,7 @@ import { Component, ElementRef, input, output, ViewChild } from "@angular/core";
         <button
           type="button"
           (click)="viewRequested.emit()"
-          class="w-full px-4 py-2 text-left text-sm text-blue-900 hover:bg-gray-100 hover:text-blue-800"
+          class="w-full px-4 py-2 text-left text-sm text-sky-900 hover:bg-gray-100 hover:text-sky-800"
         >
           View job details
         </button>
@@ -24,7 +24,7 @@ import { Component, ElementRef, input, output, ViewChild } from "@angular/core";
           type="button"
           (click)="cancelRequested.emit()"
           [disabled]="cancelDisabled()"
-          class="w-full px-4 py-2 text-left text-sm text-blue-900 hover:bg-gray-100 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+          class="w-full px-4 py-2 text-left text-sm text-sky-900 hover:bg-gray-100 hover:text-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Stop
         </button>

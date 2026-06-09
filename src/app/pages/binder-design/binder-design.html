@@ -26,14 +26,14 @@
       @for (workflow of workflows(); track workflow.id) { @if
       (workflow.disabled) {
       <span
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-blue-900 opacity-50 cursor-not-allowed"
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-sky-900 opacity-50 cursor-not-allowed"
       >
         {{ workflow.label }}
       </span>
       } @else {
       <a
         [routerLink]="workflow.href"
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-blue-900 hover:text-gray-700 transition-all no-underline"
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-sky-900 hover:text-gray-700 transition-all no-underline"
       >
         {{ workflow.label }}
       </a>
@@ -47,14 +47,14 @@
     <div class="flex flex-wrap gap-4">
       @for (tool of tools(); track tool.id) { @if (tool.disabled) {
       <span
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-blue-900 opacity-50 cursor-not-allowed"
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-sky-900 opacity-50 cursor-not-allowed"
       >
         {{ tool.label }}
       </span>
       } @else {
       <a
         [routerLink]="tool.href"
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-blue-900 hover:text-gray-700 transition-all no-underline"
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-sky-900 hover:text-gray-700 transition-all no-underline"
       >
         {{ tool.label }}
       </a>
