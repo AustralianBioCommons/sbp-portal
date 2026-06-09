@@ -513,13 +513,12 @@ describe("SinglePredictionComponent", () => {
     component.submitWorkflow();
 
     expect(fastaUploadService.uploadFastaFile).toHaveBeenCalled();
-    expect(datasetUploadService.uploadDataset).toHaveBeenCalledWith(
-      jasmine.objectContaining({
-        formData: {
-          id: "single_prediction",
-          fasta: MOCK_FASTA_RESPONSE.s3Uri,
-        },
-      })
+    const datasetUploadRequest =
+      datasetUploadService.uploadDataset.calls.mostRecent().args[0];
+    const samplesheetId = datasetUploadRequest.formData["id"];
+    expect(samplesheetId).toMatch(/^single-prediction-[a-z0-9]{8}$/);
+    expect(datasetUploadRequest.formData["fasta"]).toBe(
+      MOCK_FASTA_RESPONSE.s3Uri
     );
     expect(
       workflowSubmissionService.submitWorkflowWithDataset
@@ -529,12 +528,12 @@ describe("SinglePredictionComponent", () => {
       workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
         .args[0];
     expect(payload["runName"]).toBe("test-run");
-    expect(payload["mode"]).toBe("alphafold2");
+    expect(payload["tool"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
     expect(payload["fastaContent"]).toContain(">pro_1");
     expect(payload["fastaFileUrl"]).toBe(MOCK_FASTA_RESPONSE.s3Uri);
-    expect(payload["samplesheetId"]).toBe("single_prediction");
+    expect(payload["sample_id"]).toBe(samplesheetId);
     expect(component.canSubmit()).toBe(true);
   });
 

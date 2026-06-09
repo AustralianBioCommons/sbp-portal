@@ -281,6 +281,7 @@
         <div class="mt-6 flex items-center justify-between">
           <app-button
             type="button"
+            variant="secondary"
             (click)="previousStep()"
             [disabled]="
               !canGoPrev() || (auth.canExecuteWorkflows$ | async) === false

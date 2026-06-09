@@ -2,6 +2,10 @@ import { inject, Injectable, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { getErrorMessage } from "../utils/error.utils";
 import { WorkflowApiService } from "./workflow-api.service";
+import {
+  WorkflowFormData,
+  WorkflowLaunchForm,
+} from "../interfaces/workflow.interfaces";
 
 @Injectable({
   providedIn: "root",
@@ -17,28 +21,15 @@ export class WorkflowSubmissionService {
   isSubmitting = signal<boolean>(false);
 
   /**
-   * Submit workflow with form data
-   * @param formData - The form data to submit
-   * @param onError - Optional error handler
-   */
-  submitWorkflow(
-    formData: Record<string, unknown>,
-    onError?: (error: Error) => void
-  ): void {
-    this.submitWorkflowWithDataset(formData, undefined, onError);
-  }
-
-  /**
    * Submit workflow with form data and optional dataset ID
    * @param formData - The form data to submit
    * @param datasetId - Optional dataset ID to attach to the workflow
    * @param onError - Optional error handler
    */
   submitWorkflowWithDataset(
-    formData: Record<string, unknown>,
+    formData: WorkflowFormData,
     datasetId?: string,
-    onError?: (error: Error) => void,
-    workflowName?: string
+    onError?: (error: Error) => void
   ): void {
     // Generate a random run name with timestamp and random string
     const timestamp = new Date()
@@ -48,24 +39,13 @@ export class WorkflowSubmissionService {
     const randomStr = Math.random().toString(36).substring(2, 8);
     const randomRunName = `run-${timestamp}-${randomStr}`;
 
-    // workflowName overrides formData.tool when the caller separates workflow identity
-    // from the user-selected tool (e.g. de-novo-design sends tool="bindcraft" in formData
-    const tool = workflowName || (formData.tool as string | undefined);
-    if (!tool) {
-      const error = new Error("Tool is required to launch workflow.");
-      if (onError) {
-        onError(error);
-      } else {
-        alert(`Failed to launch workflow: ${error.message}`);
-      }
-      return;
-    }
-
-    const launch = {
-      tool,
-      configProfiles: (formData.configProfiles as string[]) || ["singularity"],
-      runName: (formData.runName as string) || randomRunName,
-      paramsText: undefined as string | undefined,
+    // Construct the launch configuration
+    const launch: WorkflowLaunchForm = {
+      workflow: formData.workflow,
+      tool: formData.tool,
+      configProfiles: formData.configProfiles ?? ["singularity"],
+      runName: formData.runName || randomRunName,
+      paramsText: null,
     };
 
     console.log("Submitting workflow with launch config:", launch);

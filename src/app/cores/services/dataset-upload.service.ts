@@ -11,6 +11,7 @@ export interface DatasetUploadResponse {
   message: string;
   success: boolean;
   datasetId?: string;
+  splitOutputDir?: string;
   details?: unknown;
 }
 

@@ -28,6 +28,7 @@ const MOCK_DATASET_RESPONSE = {
   success: true,
   message: "ok",
   datasetId: "dataset-123",
+  splitOutputDir: "/g/data/yz52/sbp-service/input/interaction_screening/my-job",
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -159,6 +160,23 @@ describe("InteractionScreeningComponent", () => {
     expect(workflowSubmissionService.isSubmitting()).toBe(false);
   });
 
+  it("should submit sample_id matching the uploaded dataset runId", () => {
+    fillValidForm();
+    fixture.detectChanges();
+
+    component.submitWorkflow();
+
+    const datasetUploadRequest =
+      datasetUploadService.uploadInteractionScreeningDataset.calls.mostRecent()
+        .args[0];
+    expect(datasetUploadRequest.runId).toBe("my-job");
+
+    const payload =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+        .args[0];
+    expect(payload["sample_id"]).toBe(datasetUploadRequest.runId);
+  });
+
   it("should show error alert and set isSubmitting false when upload throws", () => {
     fillValidForm();
     fixture.detectChanges();
@@ -233,15 +251,12 @@ describe("InteractionScreeningComponent", () => {
 
   // ── 8. selectTool ──────────────────────────────────────────────────────
 
-  it("should show an error and not change selectedTool when tool is unavailable", () => {
-    const originalTool = component.selectedTool();
-
+  it("should update selectedTool when selectTool is called", () => {
     component.selectTool("colabfold");
+    expect(component.selectedTool()).toBe("colabfold");
 
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("not available yet");
-    // tool is unchanged because all tools are unavailable
-    expect(component.selectedTool()).toBe(originalTool);
+    component.selectTool("boltz");
+    expect(component.selectedTool()).toBe("boltz");
   });
 
   // ── 9. closeAlert ──────────────────────────────────────────────────────
@@ -476,6 +491,26 @@ describe("InteractionScreeningComponent", () => {
     expect(component.alertMessage()).toContain("Unknown error");
   });
 
+  // ── 20b. hasDuplicateSequencesError / getDuplicateSequencesError ──────────
+
+  it("should return false and empty string from duplicate-sequences helpers when no duplicates", () => {
+    fillValidForm(); // query and target have different headers
+    fixture.detectChanges();
+    expect(component.hasDuplicateSequencesError()).toBe(false);
+    expect(component.getDuplicateSequencesError()).toBe("");
+  });
+
+  it("should return true and an error message when query and target share a header", () => {
+    component.form.setValue({
+      jobName: "my-job",
+      queryFasta: VALID_QUERY,
+      targetFasta: VALID_QUERY, // same header as query → duplicate
+    });
+    fixture.detectChanges();
+    expect(component.hasDuplicateSequencesError()).toBe(true);
+    expect(component.getDuplicateSequencesError()).toBeTruthy();
+  });
+
   // ── 23. submitWorkflow — missing datasetId ────────────────────────────────
 
   it("should show error and set isSubmitting false when dataset upload returns no datasetId", () => {
@@ -490,6 +525,22 @@ describe("InteractionScreeningComponent", () => {
     expect(workflowSubmissionService.isSubmitting()).toBe(false);
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("no dataset ID");
+  });
+
+  // ── 23b. submitWorkflow — missing splitOutputDir ─────────────────────────
+
+  it("should show error and set isSubmitting false when dataset upload returns no splitOutputDir", () => {
+    fillValidForm();
+    fixture.detectChanges();
+    datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
+      of({ success: true, message: "ok", datasetId: "dataset-123" })
+    );
+
+    component.submitWorkflow();
+
+    expect(workflowSubmissionService.isSubmitting()).toBe(false);
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("split output directory");
   });
 
   // ── 24. submitWorkflow — workflow launch error callback ───────────────────

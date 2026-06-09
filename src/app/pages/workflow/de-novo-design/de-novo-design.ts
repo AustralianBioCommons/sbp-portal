@@ -41,6 +41,10 @@ import { SchemaLoaderService } from "../../../cores/services/schema-loader.servi
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
+import {
+  DeNovoDesignPayload,
+  WorkflowTool,
+} from "../../../cores/interfaces/workflow.interfaces";
 
 interface TabItem {
   id: "overview" | "output" | "papers";
@@ -48,7 +52,7 @@ interface TabItem {
 }
 
 interface ToolChip extends ToolOption {
-  id: "bindcraft" | "boltzgen" | "rfdiffusion";
+  id: Extract<WorkflowTool, "bindcraft" | "boltzgen" | "rfdiffusion">;
 }
 
 type StepItem = Step;
@@ -680,10 +684,9 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
             return;
           }
 
-          const workflowFormData = {
+          const workflowFormData: DeNovoDesignPayload = {
             ...formData,
-            // tool = the user-selected algorithm (e.g. "bindcraft"); stored in workflow_runs.tool.
-            // The workflow is identified by "de-novo-design" passed as workflowName below.
+            workflow: "de-novo-design",
             tool: this.selectedTool(),
           };
 
@@ -701,8 +704,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
                   error.message || "Unknown error"
                 }`
               );
-            },
-            "de-novo-design"
+            }
           );
         },
         error: (error) => {
