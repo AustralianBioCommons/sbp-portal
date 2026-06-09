@@ -43,6 +43,7 @@ import { FastaUploadService } from "../../../cores/services/fasta-upload.service
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
+import { BulkPredictionPayload } from "../../../cores/interfaces/workflow.interfaces";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
 
 function bulkFastaValidator(control: AbstractControl): ValidationErrors | null {
@@ -313,8 +314,14 @@ export class BulkPredictionComponent {
             );
             return;
           }
+          const formData: BulkPredictionPayload = {
+            workflow: "bulk-prediction",
+            tool: this.selectedTool(),
+            runName: jobName,
+            sample_id: jobName,
+          };
           this.workflowSubmission.submitWorkflowWithDataset(
-            { tool: this.selectedToolLabel(), runName: jobName },
+            formData,
             datasetId,
             (error) => {
               this.workflowSubmission.isSubmitting.set(false);

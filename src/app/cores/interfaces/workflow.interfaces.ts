@@ -72,6 +72,9 @@ export interface DefaultWorkflowPayload {
 // No extra fields currently required for interaction screening
 export type InteractionScreeningPayload = DefaultWorkflowPayload;
 
+// No extra fields currently required for bulk prediction
+export type BulkPredictionPayload = DefaultWorkflowPayload;
+
 export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   entities: EntityRow[];
   fastaContent: string;
@@ -106,7 +109,8 @@ export interface DeNovoDesignPayload
 export type WorkflowFormData =
   | SinglePredictionPayload
   | DeNovoDesignPayload
-  | InteractionScreeningPayload;
+  | InteractionScreeningPayload
+  | BulkPredictionPayload;
 
 /**
  * List runs response
