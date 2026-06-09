@@ -39,6 +39,7 @@ import { DatasetUploadService } from "../../../cores/services/dataset-upload.ser
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
+import { InteractionScreeningPayload } from "../../../cores/interfaces/workflow.interfaces";
 
 function multiFastaValidator(
   control: AbstractControl
@@ -163,20 +164,12 @@ export class InteractionScreeningComponent {
     this.activeTab.set(id);
   }
 
-  // No tools are currently available
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
     { id: "colabfold", label: "ColabFold" },
   ];
-  readonly unavailableToolLabels: string[] = this.tools.map((t) => t.label);
-  isToolAvailable = () => false;
   selectedTool = signal<ToolChip["id"]>("boltz");
   selectTool(id: ToolChip["id"]) {
-    if (!this.isToolAvailable()) {
-      const label = this.tools.find((t) => t.id === id)?.label ?? id;
-      this.showError(`${label} is not available yet.`);
-      return;
-    }
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
@@ -404,14 +397,17 @@ export class InteractionScreeningComponent {
       folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
     });
 
+    let fastaS3Uri = "";
+
     upload$
       .pipe(
-        switchMap(() =>
-          this.datasetUploadService.uploadInteractionScreeningDataset({
+        switchMap((uploadResp) => {
+          fastaS3Uri = uploadResp.s3Uri;
+          return this.datasetUploadService.uploadInteractionScreeningDataset({
             sequences: sequences.map((s) => ({ id: s.id, group: s.group })),
             runId: jobName,
-          })
-        )
+          });
+        })
       )
       .subscribe({
         next: (datasetResponse) => {
@@ -423,13 +419,24 @@ export class InteractionScreeningComponent {
             );
             return;
           }
+          const splitOutputDir = datasetResponse.splitOutputDir;
+          if (!splitOutputDir) {
+            this.workflowSubmission.isSubmitting.set(false);
+            this.showError(
+              "Dataset upload did not return a split output directory."
+            );
+            return;
+          }
+          const payload: InteractionScreeningPayload = {
+            tool: this.selectedTool(),
+            runName: jobName,
+            workflow: "interaction-screening",
+            sample_id: jobName,
+            fastaS3Uri,
+            splitOutputDir,
+          };
           this.workflowSubmission.submitWorkflowWithDataset(
-            {
-              tool: this.selectedTool(),
-              runName: jobName,
-              workflow: "interaction-screening",
-              sample_id: jobName,
-            },
+            payload,
             datasetId,
             (error) => {
               this.workflowSubmission.isSubmitting.set(false);

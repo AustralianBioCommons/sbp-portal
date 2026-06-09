@@ -44,6 +44,10 @@ describe("WorkflowApiService", () => {
       workflow: "interaction-screening" as const,
       tool: "boltz" as const,
       runName: "test-run",
+      fastaS3Uri: "s3://bucket/test.fasta",
+      splitOutputDir:
+        "/g/data/yz52/sbp-service/input/interaction_screening/test-run",
+
       sample_id: "test-run",
     };
 
