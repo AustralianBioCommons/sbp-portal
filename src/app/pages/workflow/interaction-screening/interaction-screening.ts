@@ -436,7 +436,12 @@ export class InteractionScreeningComponent {
             splitOutputDir,
           };
           this.workflowSubmission.submitWorkflowWithDataset(
-            payload,
+            {
+              tool: this.selectedTool(),
+              runName: jobName,
+              workflow: "interaction-screening",
+              sample_id: jobName,
+            },
             datasetId,
             (error) => {
               this.workflowSubmission.isSubmitting.set(false);

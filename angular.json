@@ -55,6 +55,7 @@
             "production": {
               "optimization": true,
               "sourceMap": false,
+              "outputHashing": "bundles",
               "budgets": [
                 {
                   "type": "initial",

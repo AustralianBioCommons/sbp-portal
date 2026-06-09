@@ -160,6 +160,23 @@ describe("InteractionScreeningComponent", () => {
     expect(workflowSubmissionService.isSubmitting()).toBe(false);
   });
 
+  it("should submit sample_id matching the uploaded dataset runId", () => {
+    fillValidForm();
+    fixture.detectChanges();
+
+    component.submitWorkflow();
+
+    const datasetUploadRequest =
+      datasetUploadService.uploadInteractionScreeningDataset.calls.mostRecent()
+        .args[0];
+    expect(datasetUploadRequest.runId).toBe("my-job");
+
+    const payload =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+        .args[0];
+    expect(payload["sample_id"]).toBe(datasetUploadRequest.runId);
+  });
+
   it("should show error alert and set isSubmitting false when upload throws", () => {
     fillValidForm();
     fixture.detectChanges();
