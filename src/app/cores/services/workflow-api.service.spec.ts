@@ -34,12 +34,18 @@ describe("WorkflowApiService", () => {
 
   it("should launch a workflow with launch config, form data, and dataset id", () => {
     const launch = {
-      tool: "ColabFold",
+      workflow: "interaction-screening" as const,
+      tool: "boltz" as const,
       configProfiles: ["singularity"],
       runName: "test-run",
       paramsText: null,
     };
-    const formData = { tool: "ColabFold", fastaContent: ">entity_1\nMKT" };
+    const formData = {
+      workflow: "interaction-screening" as const,
+      tool: "boltz" as const,
+      runName: "test-run",
+      sample_id: "test-run",
+    };
 
     service
       .launchWorkflow(launch, formData, "dataset-1")

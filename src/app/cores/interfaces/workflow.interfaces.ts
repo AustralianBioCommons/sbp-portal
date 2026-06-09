@@ -1,11 +1,25 @@
+export type WorkflowName =
+  | "single-prediction"
+  | "de-novo-design"
+  | "interaction-screening"
+  | "bulk-prediction";
+export type WorkflowTool =
+  | "alphafold2"
+  | "bindcraft"
+  | "boltz"
+  | "boltzgen"
+  | "colabfold"
+  | "rfdiffusion";
+
 /**
  * Workflow form data
  */
 export interface WorkflowLaunchForm {
-  tool: string;
+  workflow: WorkflowName;
+  tool: WorkflowTool;
   configProfiles?: string[];
   runName?: string;
-  paramsText?: string;
+  paramsText?: string | null;
 }
 
 /**
@@ -14,7 +28,7 @@ export interface WorkflowLaunchForm {
 export interface WorkflowLaunchPayload {
   launch: WorkflowLaunchForm;
   datasetId: string;
-  formData: Record<string, unknown>;
+  formData: WorkflowFormData;
 }
 
 /**
@@ -39,6 +53,60 @@ export interface RunInfo {
   startTime?: string;
   completeTime?: string;
 }
+
+export interface EntityRow {
+  id: string;
+  moleculeType: string;
+  copyNumber: number;
+  sequence: string;
+}
+
+export interface DefaultWorkflowPayload {
+  workflow: WorkflowName;
+  tool: WorkflowTool;
+  runName: string;
+  configProfiles?: string[];
+  sample_id: string;
+}
+
+// No extra fields currently required for interaction screening
+export type InteractionScreeningPayload = DefaultWorkflowPayload;
+
+export interface SinglePredictionPayload extends DefaultWorkflowPayload {
+  entities: EntityRow[];
+  fastaContent: string;
+  fastaFileUrl: string;
+  alphafold2_random_seed?: number;
+  alphafold2_full_dbs?: boolean;
+  colabfold_num_recycles?: number;
+  colabfold_use_templates?: boolean;
+  boltz_use_potentials?: boolean;
+}
+
+export type SinglePredictionToolSettingsPayload = Partial<
+  Pick<
+    SinglePredictionPayload,
+    | "alphafold2_random_seed"
+    | "alphafold2_full_dbs"
+    | "colabfold_num_recycles"
+    | "colabfold_use_templates"
+    | "boltz_use_potentials"
+  >
+>;
+
+// de novo design payload includes fields that are loaded from the schema dynamically,
+// can't be specified fully
+export interface DeNovoDesignPayload
+  extends DefaultWorkflowPayload,
+    Record<string, unknown> {
+  id: string;
+  binder_name: string;
+}
+
+export type WorkflowFormData =
+  | SinglePredictionPayload
+  | DeNovoDesignPayload
+  | InteractionScreeningPayload;
 
 /**
  * List runs response
