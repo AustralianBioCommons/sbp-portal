@@ -39,7 +39,7 @@
             <button
               type="button"
               title="Download all files (coming soon)"
-              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-sky-700 rounded text-white bg-sky-700 cursor-not-allowed transition-all"
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-sky-600 rounded text-white bg-sky-600 cursor-not-allowed transition-all"
               disabled
             >
               <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
@@ -80,8 +80,8 @@
             type="button"
             (click)="setActiveTab(tab.id)"
             class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-transparent border-b-3 py-3 min-w-24 w-24 text-sm font-semibold transition-all"
-            [class.border-sky-700]="activeTab() === tab.id"
-            [class.text-sky-700]="activeTab() === tab.id"
+            [class.border-sky-600]="activeTab() === tab.id"
+            [class.text-sky-600]="activeTab() === tab.id"
             [class.border-transparent]="activeTab() !== tab.id"
             [class.text-gray-600]="activeTab() !== tab.id"
             [class.hover:border-gray-600]="activeTab() !== tab.id"
@@ -152,29 +152,27 @@
 
               <ul class="space-y-2">
                 @for (file of categoryGroup.files; track file.url) {
-                <li class="rounded px-3 py-2 hover:bg-gray-50">
-                  <div class="flex items-center gap-4">
-                    <a
-                      [href]="file.url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="min-w-0 flex-1 truncate text-sm font-medium text-sky-900 hover:text-sky-700"
-                      [title]="'Download ' + file.label"
+                <li>
+                  <a
+                    [href]="file.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-4 rounded p-4 hover:bg-sky-50"
+                    [title]="'Download ' + file.label"
+                    [attr.aria-label]="'Download ' + file.label"
+                  >
+                    <span
+                      class="min-w-0 flex-1 truncate text-sm font-medium text-sky-600 hover:text-sky-700"
                     >
                       {{ file.label }}
-                    </a>
+                    </span>
 
-                    <a
-                      [href]="file.url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="shrink-0 rounded p-2 text-sky-900 hover:bg-sky-50 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-700 focus:ring-offset-2"
-                      [title]="'Download ' + file.label"
-                      [attr.aria-label]="'Download ' + file.label"
-                    >
-                      <ng-icon name="heroArrowDownTray" size="20" />
-                    </a>
-                  </div>
+                    <ng-icon
+                      name="heroArrowDownTray"
+                      size="20"
+                      class="shrink-0 text-sky-600"
+                    />
+                  </a>
                 </li>
                 }
               </ul>
@@ -208,7 +206,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 download
-                class="text-sky-700 hover:underline transition-all hover:text-sky-800 text-xs wrap-break-word font-mono"
+                class="text-sky-600 hover:underline transition-all hover:text-sky-800 text-xs wrap-break-word font-mono"
               >
                 {{ setting.value }}
               </a>

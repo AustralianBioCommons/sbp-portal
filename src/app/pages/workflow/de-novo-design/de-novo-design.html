@@ -106,7 +106,6 @@
                 variant="primary"
                 widthClass="w-[218px]"
                 colorClasses="h-[47px] text-white bg-[#205A86] hover:bg-[#1a4a6e] justify-center"
-                borderRadius="rounded-lg"
                 (click)="loginWithReturnUrl()"
               >
                 Log in or Register
@@ -394,11 +393,9 @@
         <div class="mt-6 flex items-center justify-between">
           <app-button
             type="button"
-            variant="outline"
+            variant="secondary"
             (click)="previousStep()"
             [disabled]="!canGoPrev() || (auth.canExecuteWorkflows$ | async) === false"
-            borderRadius="rounded-lg"
-            colorClasses="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </app-button>
@@ -409,8 +406,6 @@
               variant="primary"
               (click)="nextStep()"
               [disabled]="!canGoNext() || isPdbUploading() || (auth.canExecuteWorkflows$ | async) === false"
-              borderRadius="rounded-lg"
-              colorClasses="px-4 py-2 text-white bg-sky-800 hover:bg-sky-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               @if (isPdbUploading()) { Uploading… } @else { Next }
             </app-button>
@@ -420,7 +415,6 @@
               variant="primary"
               (click)="submitWorkflow()"
               [disabled]="!isFormValid() || (auth.canExecuteWorkflows$ | async) === false"
-              borderRadius="rounded-lg"
               colorClasses="px-4 py-2 border border-gray-300 text-white bg-teal-500 hover:opacity-90 disabled:opacity-60 hover:bg-teal-400 disabled:cursor-not-allowed"
             >
               Submit

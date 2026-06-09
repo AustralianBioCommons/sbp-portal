@@ -31,11 +31,7 @@
 
     <!-- Dialog Actions -->
     <div class="px-6 py-4 text-sm border-t flex justify-end gap-3">
-      <app-button
-        (click)="onCancel()"
-        [variant]="'secondary'"
-        [borderRadius]="'rounded-lg'"
-      >
+      <app-button (click)="onCancel()" [variant]="'secondary'">
         {{ cancelText }}
       </app-button>
 
@@ -43,7 +39,6 @@
         (click)="onConfirm()"
         [variant]="confirmVariant"
         [colorClasses]="confirmColorClasses"
-        [borderRadius]="'rounded-lg'"
       >
         {{ confirmText }}
       </app-button>

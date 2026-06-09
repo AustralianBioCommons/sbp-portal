@@ -1,36 +1,25 @@
-@let base = "flex items-center gap-2 px-3 py-2.5 text-sm font-medium
-transition-all whitespace-nowrap overflow-hidden disabled:cursor-not-allowed
-disabled:opacity-50 disabled:shadow-none disabled:hover:shadow-none
-disabled:hover:translate-y-0 disabled:hover:translate-x-0 focus:outline-none
-focus:ring-0 focus-visible:outline-none focus-visible:ring-2
-focus-visible:ring-offset-2"; @let primaryDefault = "bg-sky-800 hover:bg-sky-700
-focus-visible:ring-sky-500"; @let secondaryDefault = "text-sky-900
-hover:text-sky-600 focus-visible:ring-sky-500"; @let color =
-colorClasses()?.trim(); @let variantClasses = variant() === "primary" ?
-"text-white justify-center " + (color || primaryDefault) : "border-0
-bg-transparent hover:bg-white " + (color || secondaryDefault); @let
-activeClasses = active() ? "!bg-teal-300/10 !text-sky-900 !font-semibold
-!border-l-4 !border-l-teal-300 [&_span]:!text-sky-900 [&_span]:font-normal
-[&_ng-icon]:!text-teal-500 [&_img]:hue-rotate-180 [&_img]:saturate-[1.2]" : "";
+<!-- prettier-ignore -->
+@let base =
+  "rounded-md px-4 py-2.5 text-sm font-semibold transition-all whitespace-nowrap overflow-hidden " +
+  "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none " +
+  "disabled:hover:shadow-none disabled:hover:translate-y-0 disabled:hover:translate-x-0 " +
+  "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+
+@let color = colorClasses()?.trim();
+
+@let variantClasses = variant() === "primary"
+  ? "text-white " + (color || "bg-biocommons-primary hover:bg-sky-900 focus-visible:ring-biocommons-primary")
+  : "border border-gray-300 bg-white hover:bg-gray-100 " + (color || "text-biocommons-primary focus-visible:ring-biocommons-primary");
 
 <button
   [type]="type()"
   [disabled]="disabled() || loading()"
-  [class]="
-    [
-      base,
-      widthClass(),
-      borderRadius(),
-      variantClasses,
-      activeClasses,
-      color || ''
-    ].join(' ')
-  "
+  [class]="base + ' ' + widthClass() + ' ' + variantClasses"
 >
   @if (loading()) {
-  <div class="flex items-center justify-center gap-2">
+  <div class="flex items-center justify-center">
     <svg
-      class="h-4 w-4 animate-spin"
+      class="h-5 w-5 animate-spin text-white"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -49,9 +38,6 @@ activeClasses = active() ? "!bg-teal-300/10 !text-sky-900 !font-semibold
         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
       ></path>
     </svg>
-    @if (variant() === "primary") {
-    <span>Loading...</span>
-    }
   </div>
   } @else {
   <ng-content></ng-content>
