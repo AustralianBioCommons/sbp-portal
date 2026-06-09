@@ -5,7 +5,7 @@ export interface Environment {
     clientId: string;
     audience?: string;
   };
-  apiBaseUrl?: string;
+  apiBaseUrl: string;
   profileUrl: string;
   rolesClaim: string;
   workflowRole: string;
