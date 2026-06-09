@@ -30,8 +30,6 @@
     "@ng-icons/bootstrap-icons": "^33.2.2",
     "@ng-icons/core": "^32.2.0",
     "@ng-icons/heroicons": "^32.2.0",
-    "@ng-icons/simple-icons": "^32.2.0",
-    "@ng-icons/tabler-icons": "^32.2.0",
     "@tailwindcss/postcss": "^4.2.4",
     "als-normalize-urlpath": "^2.3.0",
     "date-fns": "^4.1.0",

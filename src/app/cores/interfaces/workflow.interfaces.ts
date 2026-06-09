@@ -74,6 +74,9 @@ export interface InteractionScreeningPayload extends DefaultWorkflowPayload {
   splitOutputDir: string;
 }
 
+// No extra fields currently required for bulk prediction
+export type BulkPredictionPayload = DefaultWorkflowPayload;
+
 export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   entities: EntityRow[];
   fastaContent: string;
@@ -108,7 +111,8 @@ export interface DeNovoDesignPayload
 export type WorkflowFormData =
   | SinglePredictionPayload
   | DeNovoDesignPayload
-  | InteractionScreeningPayload;
+  | InteractionScreeningPayload
+  | BulkPredictionPayload;
 
 /**
  * List runs response

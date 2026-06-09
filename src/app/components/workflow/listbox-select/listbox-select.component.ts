@@ -18,7 +18,7 @@ export interface ListboxSelectOption {
         aria-haspopup="listbox"
         [attr.aria-controls]="menuId"
         (click)="toggleMenu()"
-        class="flex h-11 w-full items-center justify-between rounded-xl border bg-white px-3 text-left text-sm text-slate-900 transition-colors focus:outline-none focus:ring-1"
+        class="flex h-11 w-full items-center justify-between rounded-lg border bg-white px-3 text-left text-sm text-slate-900 transition-colors focus:outline-none focus:ring-1"
         [class.border-red-400]="invalid"
         [class.focus:border-red-400]="invalid"
         [class.focus:ring-red-400]="invalid"
@@ -48,7 +48,7 @@ export interface ListboxSelectOption {
         [id]="menuId"
         role="listbox"
         tabindex="-1"
-        class="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-59.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
+        class="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-59.5 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
       >
         @for (option of options; track option.value) {
         <button

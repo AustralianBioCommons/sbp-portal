@@ -53,7 +53,7 @@ describe("AppComponent", () => {
 
   it("should render app structure", () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector("app-header")).toBeTruthy();
+    expect(compiled.querySelector("app-navbar")).toBeTruthy();
     expect(compiled.querySelector("main")).toBeTruthy();
     expect(compiled.querySelector("app-footer")).toBeTruthy();
   });
@@ -61,8 +61,11 @@ describe("AppComponent", () => {
   it("shows login button when logged out and triggers login", () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector("button");
-    expect(button?.textContent?.toLowerCase()).toContain("log in");
+    const buttons = Array.from(compiled.querySelectorAll("button"));
+    const button = buttons.find((b) =>
+      b.textContent?.toLowerCase().includes("login")
+    ) as HTMLButtonElement | undefined;
+    expect(button).toBeTruthy();
     button?.click();
     expect(mockAuthService.login).toHaveBeenCalled();
   });
@@ -123,8 +126,8 @@ describe("AppComponent", () => {
     const fixture2 = TestBed.createComponent(AppComponent);
     fixture2.detectChanges();
     const compiled = fixture2.nativeElement as HTMLElement;
-    const button = compiled.querySelector("button");
-    expect(button?.textContent).toContain("Profile");
+    const button = compiled.querySelector("[aria-label='Open profile']");
+    expect(button).toBeTruthy();
   });
 
   it("displays error alert with exact error message until user logs in", async () => {

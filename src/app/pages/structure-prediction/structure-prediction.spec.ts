@@ -37,7 +37,6 @@ describe("StructurePredictionComponent", () => {
       id: "bulk-prediction",
       label: "Bulk Prediction",
       href: "/bulk-prediction",
-      disabled: true,
     });
     expect(component.workflows[2]).toEqual({
       id: "interaction-screening",

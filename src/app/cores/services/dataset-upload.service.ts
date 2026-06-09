@@ -20,6 +20,11 @@ export interface InteractionScreeningDatasetUploadRequest {
   runId: string;
 }
 
+export interface BulkPredictionDatasetUploadRequest {
+  sequences: { id: string; sequence: string }[];
+  runId: string;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -41,6 +46,15 @@ export class DatasetUploadService {
   ): Observable<DatasetUploadResponse> {
     return this.http.post<DatasetUploadResponse>(
       `${this.apiUrl}/interaction-screening/upload`,
+      request
+    );
+  }
+
+  uploadBulkPredictionDataset(
+    request: BulkPredictionDatasetUploadRequest
+  ): Observable<DatasetUploadResponse> {
+    return this.http.post<DatasetUploadResponse>(
+      `${this.apiUrl}/bulk-prediction/upload`,
       request
     );
   }

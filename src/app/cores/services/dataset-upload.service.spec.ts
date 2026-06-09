@@ -83,4 +83,30 @@ describe("DatasetUploadService", () => {
       datasetId: "dataset-456",
     });
   });
+
+  it("should upload bulk prediction dataset to the correct endpoint", () => {
+    const requestBody = {
+      sequences: [
+        { id: "seq1", sequence: "ARNDCQ" },
+        { id: "seq2", sequence: "EGHILK" },
+      ],
+      runId: "bulk-run-1",
+    };
+
+    service.uploadBulkPredictionDataset(requestBody).subscribe((response) => {
+      expect(response.success).toBeTrue();
+      expect(response.datasetId).toBe("dataset-789");
+    });
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/datasets/bulk-prediction/upload`
+    );
+    expect(req.request.method).toBe("POST");
+    expect(req.request.body).toEqual(requestBody);
+    req.flush({
+      success: true,
+      message: "uploaded",
+      datasetId: "dataset-789",
+    });
+  });
 });

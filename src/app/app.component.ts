@@ -4,7 +4,7 @@ import { RouterOutlet } from "@angular/router";
 import { AlertComponent } from "./components/alert/alert.component";
 import { DialogComponent } from "./components/dialog/dialog.component";
 import { FooterSectionsComponent } from "./components/footer/footer.component";
-import { Header } from "./components/header/header.component";
+import { Navbar } from "./components/navbar/navbar.component";
 import { LoadingComponent } from "./components/loading/loading.component";
 import { AuthService } from "./cores/auth.service";
 
@@ -19,7 +19,7 @@ import { AuthService } from "./cores/auth.service";
     RouterOutlet,
     AlertComponent,
     DialogComponent,
-    Header,
+    Navbar,
     FooterSectionsComponent,
     LoadingComponent,
   ],

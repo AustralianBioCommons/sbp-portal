@@ -160,7 +160,7 @@ describe("Home", () => {
       component.activeTab.set("structure-prediction");
       fixture.detectChanges();
 
-      const container = fixture.nativeElement.querySelector(".min-h-screen");
+      const container = fixture.nativeElement.querySelector(".bg-gray-100");
       expect(container?.classList.contains("structure-prediction-bg")).toBe(
         true
       );
