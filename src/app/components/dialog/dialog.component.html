@@ -31,14 +31,14 @@
 
     <!-- Dialog Actions -->
     <div class="px-6 py-4 text-sm border-t flex justify-end gap-3">
-      <app-button (click)="onCancel()" [variant]="'secondary'">
+      <app-button variant="secondary" (click)="onCancel()">
         {{ cancelText }}
       </app-button>
 
       <app-button
-        (click)="onConfirm()"
-        [variant]="confirmVariant"
+        variant="primary"
         [colorClasses]="confirmColorClasses"
+        (click)="onConfirm()"
       >
         {{ confirmText }}
       </app-button>

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-biocommons-primary: #5ac3b1;
-  --color-biocommons-secondary: #205a86;
+  --color-biocommons-primary: #205a86;
+  --color-biocommons-secondary: #5ac3b1;
 }
 
 @layer base {
