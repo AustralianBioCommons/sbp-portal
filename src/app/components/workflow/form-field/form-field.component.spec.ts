@@ -88,26 +88,28 @@ describe("FormFieldComponent", () => {
   // ── CSS helpers ─────────────────────────────────────────────────────────────
 
   it("should return normal input classes when no error", () => {
-    expect(component.getInputClasses()).toContain("border-gray-300");
+    const classes = component.getInputClasses();
+    expect(classes).toContain("bg-white text-gray-900");
+    expect(classes).not.toContain("border-red-500");
   });
 
   it("should return error input classes when hasError is true", () => {
     component.hasError = true;
-    expect(component.getInputClasses()).toContain("border-red-300");
+    expect(component.getInputClasses()).toContain("border-red-500");
   });
 
   it("should return normal select classes when no error", () => {
     component.hasError = false;
     const classes = component.getSelectClasses();
-    expect(classes).toContain("border-gray-300 bg-white text-gray-900");
-    expect(classes).not.toContain("border-red-300");
+    expect(classes).toContain("bg-white text-gray-900");
+    expect(classes).not.toContain("border-red-500");
   });
 
   it("should return error select classes when hasError is true", () => {
     component.hasError = true;
     const classes = component.getSelectClasses();
-    expect(classes).toContain("border-red-300 bg-red-50 text-red-900");
-    expect(classes).not.toContain("border-gray-300 bg-white text-gray-900");
+    expect(classes).toContain("border-red-500 text-red-900");
+    expect(classes).not.toContain("bg-white text-gray-900");
   });
 
   it("should return normal file classes when no error", () => {

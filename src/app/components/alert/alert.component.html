@@ -43,11 +43,11 @@
   <button
     (click)="onDismiss()"
     aria-label="close"
-    class="shrink-0 rounded-md p-1 focus-visible:outline-none focus-visible:ring-2"
+    class="shrink-0 rounded-md p-1"
     [class]="
       type() === 'success'
-        ? 'text-emerald-500 hover:bg-green-100 focus-visible:ring-emerald-500'
-        : 'text-red-500 hover:bg-red-100 focus-visible:ring-red-500'
+        ? 'text-emerald-500 hover:bg-green-100'
+        : 'text-red-500 hover:bg-red-100'
     "
   >
     <svg

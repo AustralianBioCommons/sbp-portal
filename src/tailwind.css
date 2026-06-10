@@ -6,13 +6,6 @@
 }
 
 @layer base {
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
-  }
-}
-
-@layer base {
   *,
   ::after,
   ::before,
@@ -23,6 +16,20 @@
 
   a {
     @apply text-sky-600 hover:text-sky-700 transition-all hover:underline;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Keyboard focus indicator for interactive controls.
+     Uses outline (not ring) so it is never clipped by overflow-hidden
+     ancestors. Form inputs opt out and keep their own :focus ring. */
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  a:focus-visible {
+    @apply outline-2 outline-offset-2 outline-sky-500;
   }
 }
 

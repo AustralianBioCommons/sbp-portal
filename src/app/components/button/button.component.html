@@ -2,14 +2,13 @@
 @let base =
   "rounded-md px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap overflow-hidden " +
   "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none " +
-  "disabled:hover:shadow-none disabled:hover:translate-y-0 disabled:hover:translate-x-0 " +
-  "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+  "disabled:hover:shadow-none disabled:hover:translate-y-0 disabled:hover:translate-x-0";
 
 @let color = colorClasses()?.trim();
 
 @let variantClasses = variant() === "primary"
-  ? "text-white " + (color || "bg-biocommons-primary hover:bg-sky-900 focus-visible:ring-biocommons-primary")
-  : "border border-gray-300 bg-white hover:bg-gray-100 " + (color || "text-biocommons-primary focus-visible:ring-biocommons-primary");
+  ? "text-white " + (color || "bg-biocommons-primary hover:bg-sky-900")
+  : "border border-gray-300 bg-white hover:bg-gray-100 " + (color || "text-biocommons-primary");
 
 <button
   [type]="type()"

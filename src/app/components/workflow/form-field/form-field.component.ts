@@ -98,19 +98,17 @@ export class FormFieldComponent {
 
   getInputClasses(): string {
     return (
-      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent " +
+      "block h-10 w-full px-4 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100 " +
       (this.hasError
-        ? "border-red-300 bg-red-50 text-red-900 placeholder-red-300"
-        : "border-gray-300 bg-white text-gray-900 placeholder-gray-500")
+        ? "border-red-500 text-red-900 placeholder-red-400"
+        : "bg-white text-gray-900 placeholder-gray-400")
     );
   }
 
   getSelectClasses(): string {
     return (
-      "w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent " +
-      (this.hasError
-        ? "border-red-300 bg-red-50 text-red-900"
-        : "border-gray-300 bg-white text-gray-900")
+      "block h-10 w-full px-4 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100 " +
+      (this.hasError ? "border-red-500 text-red-900" : "bg-white text-gray-900")
     );
   }
 

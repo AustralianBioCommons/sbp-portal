@@ -113,7 +113,7 @@
                 [href]="profileUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-biocommons-primary"
+                class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
               >
                 Add bundle
               </a>
@@ -161,10 +161,10 @@
                 [formControl]="form.controls.jobName"
                 [class]="
                   hasJobNameError()
-                    ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-                    : 'border-gray-300 focus:ring-sky-500 focus:border-sky-500'
+                    ? 'border-red-500 focus:ring-red-100'
+                    : 'focus:ring-sky-100'
                 "
-                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
+                class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
                 placeholder="e.g. my-screening-job"
                 maxlength="60"
               />
@@ -201,10 +201,10 @@
                 [formControl]="form.controls.queryFasta"
                 [class]="
                   hasQueryError() || hasDuplicateSequencesError()
-                    ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-                    : 'border-gray-300 focus:ring-sky-500 focus:border-sky-500'
+                    ? 'border-red-500 focus:ring-red-100'
+                    : 'focus:ring-sky-100'
                 "
-                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
+                class="mt-2 block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
                 placeholder=">seq1&#10;MKTAYIAKQRQISFVK&#10;>seq2&#10;ACDEFGHIKLMNPQRSTVWY"
               ></textarea>
               @if (hasQueryError()) {
@@ -240,10 +240,10 @@
                 [formControl]="form.controls.targetFasta"
                 [class]="
                   hasTargetError() || hasDuplicateSequencesError()
-                    ? 'border-red-400 focus:ring-red-400 focus:border-red-400'
-                    : 'border-gray-300 focus:ring-sky-500 focus:border-sky-500'
+                    ? 'border-red-500 focus:ring-red-100'
+                    : 'focus:ring-sky-100'
                 "
-                class="mt-2 block w-full rounded-md border px-3 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors"
+                class="mt-2 block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
                 placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY&#10;>target2&#10;MKTAYIAKQRQISFVK"
               ></textarea>
               @if (hasTargetError()) {

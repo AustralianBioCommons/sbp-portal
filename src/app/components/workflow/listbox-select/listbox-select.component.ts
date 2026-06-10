@@ -18,13 +18,10 @@ export interface ListboxSelectOption {
         aria-haspopup="listbox"
         [attr.aria-controls]="menuId"
         (click)="toggleMenu()"
-        class="flex h-11 w-full items-center justify-between rounded-lg border bg-white px-3 text-left text-sm text-slate-900 transition-colors focus:outline-none focus:ring-1"
-        [class.border-red-400]="invalid"
-        [class.focus:border-red-400]="invalid"
-        [class.focus:ring-red-400]="invalid"
-        [class.border-slate-300]="!invalid"
-        [class.focus:border-sky-500]="!invalid"
-        [class.focus:ring-sky-500]="!invalid"
+        class="flex h-10 w-full items-center justify-between rounded-md border bg-white px-4 text-left text-sm text-gray-900 transition-colors focus:outline-none focus:ring-2"
+        [class.border-red-500]="invalid"
+        [class.focus:ring-red-100]="invalid"
+        [class.focus:ring-sky-100]="!invalid"
       >
         <span class="block min-w-0 truncate">{{ selectedLabel }}</span>
         <svg
