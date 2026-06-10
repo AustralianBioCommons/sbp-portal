@@ -1,23 +1,22 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { Component, input, output } from "@angular/core";
 
-export interface ToolOption {
-  id: string;
+export interface ToolOption<ToolId extends string = string> {
+  id: ToolId;
   label: string;
   description?: string;
 }
 
 @Component({
   selector: "app-tool-selection",
-  standalone: true,
   imports: [],
   templateUrl: "./tool-selection.component.html",
 })
-export class ToolSelectionComponent {
-  @Input({ required: true }) tools!: ToolOption[];
-  @Input({ required: true }) selectedToolId!: string;
-  @Output() toolSelect = new EventEmitter<string>();
+export class ToolSelectionComponent<ToolId extends string = string> {
+  readonly tools = input.required<ToolOption<ToolId>[]>();
+  readonly selectedToolId = input.required<ToolId>();
+  readonly toolSelect = output<ToolId>();
 
-  onToolSelect(toolId: string): void {
+  onToolSelect(toolId: ToolId): void {
     this.toolSelect.emit(toolId);
   }
 }
