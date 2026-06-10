@@ -1,5 +1,5 @@
 <!-- Dialog Backdrop -->
-@if (isOpen) {
+@if (isOpen()) {
 <div
   class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
   (click)="onBackdropClick($event)"
@@ -13,34 +13,30 @@
     class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all"
     role="dialog"
     aria-modal="true"
-    [attr.aria-labelledby]="title ? 'dialog-title' : null"
+    [attr.aria-labelledby]="title() ? 'dialog-title' : null"
   >
     <!-- Dialog Header -->
-    @if (title) {
+    @if (title()) {
     <div class="px-6 py-4 border-b">
       <h3 id="dialog-title" class="text-lg font-semibold text-black">
-        {{ title }}
+        {{ title() }}
       </h3>
     </div>
     }
 
     <!-- Dialog Content -->
     <div class="px-6 py-4">
-      <p class="text-gray-600">{{ message }}</p>
+      <p class="text-gray-600">{{ message() }}</p>
     </div>
 
     <!-- Dialog Actions -->
     <div class="px-6 py-4 text-sm border-t flex justify-end gap-3">
       <app-button variant="secondary" (click)="onCancel()">
-        {{ cancelText }}
+        {{ cancelText() }}
       </app-button>
 
-      <app-button
-        variant="primary"
-        [colorClasses]="confirmColorClasses"
-        (click)="onConfirm()"
-      >
-        {{ confirmText }}
+      <app-button variant="primary" (click)="onConfirm()">
+        {{ confirmText() }}
       </app-button>
     </div>
   </div>

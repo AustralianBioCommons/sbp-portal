@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { Component, input, output } from "@angular/core";
 
 import { ButtonComponent } from "../button/button.component";
 
@@ -10,17 +10,15 @@ import { ButtonComponent } from "../button/button.component";
   styleUrls: ["./dialog.component.scss"],
 })
 export class DialogComponent {
-  @Input() isOpen = false;
-  @Input() title = "";
-  @Input() message = "";
-  @Input() confirmText = "Confirm";
-  @Input() cancelText = "Cancel";
-  @Input() confirmVariant: "primary" | "secondary" = "primary";
-  @Input() confirmColorClasses = "";
+  isOpen = input(false);
+  title = input("");
+  message = input("");
+  confirmText = input("Confirm");
+  cancelText = input("Cancel");
 
-  @Output() confirmed = new EventEmitter<void>();
-  @Output() cancelled = new EventEmitter<void>();
-  @Output() closed = new EventEmitter<void>();
+  confirmed = output<void>();
+  cancelled = output<void>();
+  closed = output<void>();
 
   onConfirm() {
     this.confirmed.emit();

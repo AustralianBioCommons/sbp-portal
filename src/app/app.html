@@ -39,7 +39,6 @@
   [message]="'Are you sure you want to log out?'"
   [confirmText]="'Log out'"
   [cancelText]="'Cancel'"
-  [confirmVariant]="'secondary'"
   (confirmed)="onLogoutConfirmed()"
   (cancelled)="onLogoutCancelled()"
   (closed)="showLogoutDialog.set(false)"
