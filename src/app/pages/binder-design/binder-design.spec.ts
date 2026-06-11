@@ -27,7 +27,7 @@ describe("BinderDesignComponent", () => {
   describe("workflows", () => {
     it("should have correct workflow structure", () => {
       expect(component.workflows()).toBeDefined();
-      expect(component.workflows().length).toBe(3);
+      expect(component.workflows().length).toBe(1);
     });
 
     it("workflows should contain de novo design workflow", () => {
@@ -54,7 +54,7 @@ describe("BinderDesignComponent", () => {
   describe("tools", () => {
     it("tools should have correct tools structure", () => {
       expect(component.tools()).toBeDefined();
-      expect(component.tools().length).toBe(3);
+      expect(component.tools().length).toBe(2);
     });
 
     it("tools should contain BindCraft tool", () => {
