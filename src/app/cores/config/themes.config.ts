@@ -42,12 +42,6 @@ export const THEMES: ThemeConfig[] = [
         href: "/tools/rfdiffusion",
         disabled: true,
       },
-      {
-        id: "boltzgen",
-        label: "BoltzGen",
-        href: "/tools/boltzgen",
-        disabled: true,
-      },
     ],
   },
   {
