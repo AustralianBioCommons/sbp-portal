@@ -74,7 +74,7 @@ describe("LoadingComponent", () => {
       expect(wrapper.classList.contains("flex")).toBeTrue();
       expect(wrapper.classList.contains("items-center")).toBeTrue();
       expect(wrapper.classList.contains("justify-center")).toBeTrue();
-      expect(wrapper.classList.contains("p-4")).toBeTrue();
+      expect(wrapper.classList.contains("p-6")).toBeTrue();
       expect(wrapper.classList.contains("fixed")).toBeFalse();
     });
 

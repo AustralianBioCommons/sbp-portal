@@ -48,7 +48,7 @@ import {
   ],
   templateUrl: "./jobs.html",
 })
-export class JobsComponent implements OnInit {
+export default class JobsComponent implements OnInit {
   private jobsService = inject(JobsService);
 
   // Expose Math to template

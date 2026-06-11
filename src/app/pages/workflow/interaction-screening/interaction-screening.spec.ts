@@ -8,7 +8,7 @@ import {
 } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
-import { InteractionScreeningComponent } from "./interaction-screening";
+import InteractionScreeningComponent from "./interaction-screening";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 

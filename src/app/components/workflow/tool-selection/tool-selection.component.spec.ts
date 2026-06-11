@@ -19,8 +19,8 @@ describe("ToolSelectionComponent", () => {
     component = fixture.componentInstance;
 
     // Set required inputs
-    component.tools = mockTools;
-    component.selectedToolId = "tool1";
+    fixture.componentRef.setInput("tools", mockTools);
+    fixture.componentRef.setInput("selectedToolId", "tool1");
   });
 
   it("should create", () => {
@@ -52,7 +52,7 @@ describe("ToolSelectionComponent", () => {
   });
 
   it("should handle empty tools array", () => {
-    component.tools = [];
+    fixture.componentRef.setInput("tools", []);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("No tools available");

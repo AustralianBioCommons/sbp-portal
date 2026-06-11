@@ -10,10 +10,6 @@ import { AuthService } from "./cores/auth.service";
 
 @Component({
   selector: "app-root",
-  standalone: true,
-  host: {
-    class: "block w-full min-h-screen bg-white",
-  },
   imports: [
     CommonModule,
     RouterOutlet,
@@ -23,10 +19,10 @@ import { AuthService } from "./cores/auth.service";
     FooterSectionsComponent,
     LoadingComponent,
   ],
-  templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.scss"],
+  templateUrl: "./app.html",
+  styleUrl: "./app.scss",
 })
-export class AppComponent {
+export class App {
   public auth = inject(AuthService);
   public locationHref = window.location.href;
 
@@ -60,11 +56,5 @@ export class AppComponent {
 
   onLogoutCancelled() {
     // Dialog will be closed via the (closed) event
-  }
-
-  onSearch(searchTerm: string) {
-    // Handle search functionality
-    console.log("Search term:", searchTerm);
-    // TODO: Implement actual search functionality
   }
 }

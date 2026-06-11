@@ -1,6 +1,13 @@
 import { ElementRef } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { NavigationEnd, Router, UrlTree } from "@angular/router";
+import { LocationStrategy } from "@angular/common";
+import { MockLocationStrategy } from "@angular/common/testing";
+import {
+  ActivatedRoute,
+  NavigationEnd,
+  Router,
+  UrlTree,
+} from "@angular/router";
 import { of, Subject } from "rxjs";
 import { AuthService } from "../../cores/auth.service";
 
@@ -21,21 +28,31 @@ describe("Navbar", () => {
     });
 
     routerEventsSubject = new Subject();
-    mockRouter = jasmine.createSpyObj("Router", ["navigate", "parseUrl"], {
-      url: "/themes",
-      events: routerEventsSubject.asObservable(),
-    });
+    mockRouter = jasmine.createSpyObj(
+      "Router",
+      ["navigate", "parseUrl", "createUrlTree", "serializeUrl"],
+      {
+        url: "/themes",
+        events: routerEventsSubject.asObservable(),
+      }
+    );
     mockRouter.parseUrl.and.returnValue({
       queryParams: {},
       fragment: null,
     } as unknown as UrlTree);
     mockRouter.navigate.and.returnValue(Promise.resolve(true));
+    // RouterLink computes anchor hrefs via these Router APIs.
+    mockRouter.createUrlTree.and.returnValue({} as UrlTree);
+    mockRouter.serializeUrl.and.returnValue("/");
 
     await TestBed.configureTestingModule({
       imports: [Navbar],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
+        // RouterLink also injects ActivatedRoute + LocationStrategy.
+        { provide: ActivatedRoute, useValue: {} },
+        { provide: LocationStrategy, useClass: MockLocationStrategy },
       ],
     }).compileComponents();
 
@@ -54,7 +71,8 @@ describe("Navbar", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(component.activeTab()).toBe("binder-design");
-      expect(component.showTabs()).toBe(true); // Since mockRouter.url is '/themes'
+      // '/themes' is not a theme home route, so tabs stay hidden
+      expect(component.showTabs()).toBe(false);
     });
 
     it("should have correct tabs configuration", () => {
@@ -73,12 +91,12 @@ describe("Navbar", () => {
   });
 
   describe("selectTab", () => {
-    it("should navigate to themes with query param for non-tools tabs", () => {
+    it("should navigate to the theme path and set the active tab", () => {
       component.selectTab("structure-prediction");
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
-        queryParams: { tab: "structure-prediction" },
-      });
+      expect(mockRouter.navigate).toHaveBeenCalledWith([
+        "/structure-prediction",
+      ]);
       expect(component.activeTab()).toBe("structure-prediction");
     });
 
@@ -104,50 +122,35 @@ describe("Navbar", () => {
   });
 
   describe("checkRoute", () => {
-    it("should show tabs for themes route", () => {
-      component["checkRoute"]("/themes");
+    it("should show tabs for a theme home route", () => {
+      component["checkRoute"]("/binder-design");
 
       expect(component.showTabs()).toBe(true);
     });
 
-    it("should hide tabs for non-themes route", () => {
+    it("should hide tabs for non-theme route", () => {
       component["checkRoute"]("/tools");
 
       expect(component.showTabs()).toBe(false);
     });
 
-    it("should set active tab from query parameters", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: { tab: "structure-prediction" },
-        fragment: null,
-      } as unknown as UrlTree);
-
-      component["checkRoute"]("/themes?tab=structure-prediction");
+    it("should set active tab from the theme home route path", () => {
+      component["checkRoute"]("/structure-prediction");
 
       expect(component.activeTab()).toBe("structure-prediction");
       expect(component.showTabs()).toBe(true);
     });
 
-    it("should default to binder-design when no tab specified", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: {},
-        fragment: null,
-      } as unknown as UrlTree);
-
-      component["checkRoute"]("/themes");
+    it("should default to binder-design when on its home route", () => {
+      component["checkRoute"]("/binder-design");
 
       expect(component.activeTab()).toBe("binder-design");
     });
 
-    it("should handle themes route with other query parameters", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: { tab: "structure-search", search: "test" },
-        fragment: null,
-      } as unknown as UrlTree);
+    it("should strip query params from a theme home route", () => {
+      component["checkRoute"]("/structure-prediction?search=test");
 
-      component["checkRoute"]("/themes?tab=structure-search&search=test");
-
-      expect(component.activeTab()).toBe("structure-search");
+      expect(component.activeTab()).toBe("structure-prediction");
       expect(component.showTabs()).toBe(true);
     });
   });
@@ -172,19 +175,14 @@ describe("Navbar", () => {
     it("should update route state on NavigationEnd events", () => {
       const navigationEnd = new NavigationEnd(
         1,
-        "/themes?tab=structure-search",
-        "/themes?tab=structure-search"
+        "/structure-prediction",
+        "/structure-prediction"
       );
-
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: { tab: "structure-search" },
-        fragment: null,
-      } as unknown as UrlTree);
 
       routerEventsSubject.next(navigationEnd);
 
       expect(component.showTabs()).toBe(true);
-      expect(component.activeTab()).toBe("structure-search");
+      expect(component.activeTab()).toBe("structure-prediction");
     });
 
     it("should handle non-NavigationEnd router events", () => {
@@ -199,36 +197,22 @@ describe("Navbar", () => {
   });
 
   describe("edge cases and error handling", () => {
-    it("should handle null queryParams", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: {},
-        fragment: null,
-      } as unknown as UrlTree);
-
-      component["checkRoute"]("/themes");
+    it("should leave the active tab unchanged for a non-home route", () => {
+      component["checkRoute"]("/jobs");
 
       expect(component.activeTab()).toBe("binder-design");
     });
 
-    it("should handle invalid tab parameter", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: { tab: "invalid-tab-name" },
-        fragment: null,
-      } as unknown as UrlTree);
+    it("should not change the active tab when navigating to a workflow route", () => {
+      component.activeTab.set("structure-prediction");
 
-      component["checkRoute"]("/themes?tab=invalid-tab-name");
+      component["checkRoute"]("/binder-design/de-novo-design");
 
-      // Should still work and set the invalid tab
-      expect(component.activeTab()).toBe("invalid-tab-name");
+      expect(component.activeTab()).toBe("structure-prediction");
     });
 
-    it("should handle empty query parameters object", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: {},
-        fragment: null,
-      } as unknown as UrlTree);
-
-      component["checkRoute"]("/themes");
+    it("should set active tab and show tabs for the binder-design home route", () => {
+      component["checkRoute"]("/binder-design");
 
       expect(component.activeTab()).toBe("binder-design");
       expect(component.showTabs()).toBe(true);
@@ -246,26 +230,24 @@ describe("Navbar", () => {
   });
 
   describe("navigateToTheme", () => {
-    it("should navigate to themes with the given tab query param", () => {
+    it("should navigate to the binder-design theme path", () => {
       component.navigateToTheme("binder-design");
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
-        queryParams: { tab: "binder-design" },
-      });
+      expect(mockRouter.navigate).toHaveBeenCalledWith(["/binder-design"]);
     });
 
-    it("should navigate to themes with structure-prediction tab", () => {
+    it("should navigate to the structure-prediction theme path", () => {
       component.navigateToTheme("structure-prediction");
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
-        queryParams: { tab: "structure-prediction" },
-      });
+      expect(mockRouter.navigate).toHaveBeenCalledWith([
+        "/structure-prediction",
+      ]);
     });
   });
 
   describe("breadcrumb behaviour", () => {
     it("should show breadcrumb for a known workflow route", () => {
-      component["checkRoute"]("/de-novo-design");
+      component["checkRoute"]("/binder-design/de-novo-design");
 
       expect(component.showBreadcrumb()).toBe(true);
       expect(component.breadcrumb()).toEqual({
@@ -276,7 +258,9 @@ describe("Navbar", () => {
     });
 
     it("should show correct breadcrumb for single-structure-prediction route", () => {
-      component["checkRoute"]("/single-structure-prediction");
+      component["checkRoute"](
+        "/structure-prediction/single-structure-prediction"
+      );
 
       expect(component.showBreadcrumb()).toBe(true);
       expect(component.breadcrumb()).toEqual({
@@ -300,23 +284,23 @@ describe("Navbar", () => {
       expect(component.breadcrumb()).toBeNull();
     });
 
-    it("should clear breadcrumb when navigating back to /themes", () => {
-      component["checkRoute"]("/de-novo-design");
+    it("should clear breadcrumb when navigating back to a home route", () => {
+      component["checkRoute"]("/binder-design/de-novo-design");
       expect(component.showBreadcrumb()).toBe(true);
 
-      component["checkRoute"]("/themes");
+      component["checkRoute"]("/binder-design");
       expect(component.showBreadcrumb()).toBe(false);
       expect(component.breadcrumb()).toBeNull();
     });
 
     it("should not show tabs on workflow routes", () => {
-      component["checkRoute"]("/de-novo-design");
+      component["checkRoute"]("/binder-design/de-novo-design");
 
       expect(component.showTabs()).toBe(false);
     });
 
     it("should strip query params when matching workflow routes", () => {
-      component["checkRoute"]("/de-novo-design?foo=bar");
+      component["checkRoute"]("/binder-design/de-novo-design?foo=bar");
 
       expect(component.showBreadcrumb()).toBe(true);
     });
@@ -328,36 +312,25 @@ describe("Navbar", () => {
 
       component.selectTab("structure-prediction");
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
-        queryParams: { tab: "structure-prediction" },
-      });
+      expect(mockRouter.navigate).toHaveBeenCalledWith([
+        "/structure-prediction",
+      ]);
       expect(component.activeTab()).toBe("structure-prediction");
     });
 
-    it("should handle other tab navigation with query params", () => {
+    it("should navigate to the theme path for any tab", () => {
       component.selectTab("structure-prediction");
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/themes"], {
-        queryParams: { tab: "structure-prediction" },
-      });
+      expect(mockRouter.navigate).toHaveBeenCalledWith([
+        "/structure-prediction",
+      ]);
       expect(component.activeTab()).toBe("structure-prediction");
     });
   });
 
   describe("complex URL scenarios", () => {
-    it("should handle URLs with multiple query parameters", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: {
-          tab: "structure-prediction",
-          filter: "active",
-          page: "2",
-        },
-        fragment: null,
-      } as unknown as UrlTree);
-
-      component["checkRoute"](
-        "/themes?tab=structure-prediction&filter=active&page=2"
-      );
+    it("should strip multiple query params from a theme home route", () => {
+      component["checkRoute"]("/structure-prediction?filter=active&page=2");
 
       expect(component.activeTab()).toBe("structure-prediction");
     });
@@ -373,15 +346,11 @@ describe("Navbar", () => {
       expect(component.activeTab()).toBe("binder-design");
     });
 
-    it("should handle case-sensitive tab names", () => {
-      mockRouter.parseUrl.and.returnValue({
-        queryParams: { tab: "BINDER-DESIGN" },
-        fragment: null,
-      } as unknown as UrlTree);
+    it("should treat theme route matching as case-sensitive", () => {
+      component["checkRoute"]("/Binder-Design");
 
-      component["checkRoute"]("/themes?tab=BINDER-DESIGN");
-
-      expect(component.activeTab()).toBe("BINDER-DESIGN");
+      // Only the exact lowercase theme paths count as home routes
+      expect(component.showTabs()).toBe(false);
     });
   });
 
@@ -703,11 +672,11 @@ describe("Navbar", () => {
     });
 
     it("should maintain state consistency during route changes", () => {
-      // Set initial state by calling checkRoute with themes
-      component["checkRoute"]("/themes");
+      // Set initial state by calling checkRoute with a theme home route
+      component["checkRoute"]("/binder-design");
       expect(component.showTabs()).toBe(true);
 
-      // Simulate route change to non-themes
+      // Simulate route change to a non-home route
       component["checkRoute"]("/home");
       expect(component.showTabs()).toBe(false);
     });

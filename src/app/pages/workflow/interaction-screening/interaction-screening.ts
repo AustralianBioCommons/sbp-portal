@@ -109,7 +109,7 @@ type StepItem = Step;
   templateUrl: "./interaction-screening.html",
   styleUrls: ["./interaction-screening.scss"],
 })
-export class InteractionScreeningComponent {
+export default class InteractionScreeningComponent {
   // Auth
   public auth = inject(AuthService);
   readonly profileUrl = environment.profileUrl;

@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ActivatedRoute } from "@angular/router";
 import { of } from "rxjs";
-import { AppComponent } from "./app.component";
+import { App } from "./app";
 import { AuthService } from "./cores/auth.service";
 
-describe("AppComponent", () => {
-  let fixture: ComponentFixture<AppComponent>;
-  let component: AppComponent;
+describe("App", () => {
+  let fixture: ComponentFixture<App>;
+  let component: App;
   let mockAuthService: jasmine.SpyObj<AuthService>;
 
   beforeEach(async () => {
@@ -35,14 +35,14 @@ describe("AppComponent", () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [App],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AppComponent);
+    fixture = TestBed.createComponent(App);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -116,14 +116,14 @@ describe("AppComponent", () => {
 
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [App],
       providers: [
         { provide: AuthService, useValue: mockAuthServiceLoggedIn },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
       ],
     }).compileComponents();
 
-    const fixture2 = TestBed.createComponent(AppComponent);
+    const fixture2 = TestBed.createComponent(App);
     fixture2.detectChanges();
     const compiled = fixture2.nativeElement as HTMLElement;
     const button = compiled.querySelector("[aria-label='Open profile']");
@@ -148,14 +148,14 @@ describe("AppComponent", () => {
 
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [App],
       providers: [
         { provide: AuthService, useValue: mockAuthServiceWithError },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
       ],
     }).compileComponents();
 
-    const fixture2 = TestBed.createComponent(AppComponent);
+    const fixture2 = TestBed.createComponent(App);
     fixture2.detectChanges();
     const compiled = fixture2.nativeElement as HTMLElement;
 
@@ -171,15 +171,6 @@ describe("AppComponent", () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const errorBanner = compiled.querySelector(".bg-red-50");
     expect(errorBanner).toBeFalsy();
-  });
-
-  it("handles search functionality", () => {
-    const consoleLogSpy = spyOn(console, "log");
-    const searchTerm = "test search";
-
-    component.onSearch(searchTerm);
-
-    expect(consoleLogSpy).toHaveBeenCalledWith("Search term:", searchTerm);
   });
 
   it("should set locationHref property from window.location.href", () => {

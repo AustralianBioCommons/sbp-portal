@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "esModuleInterop": true,
@@ -16,9 +15,11 @@
     "skipLibCheck": true,
     "paths": {
       "@auth0/auth0-angular/public-api": [
-        "node_modules/@auth0/auth0-angular/public-api"
+        "./node_modules/@auth0/auth0-angular/public-api"
       ],
-      "@auth0/auth0-angular/lib/*": ["node_modules/@auth0/auth0-angular/lib/*"]
+      "@auth0/auth0-angular/lib/*": [
+        "./node_modules/@auth0/auth0-angular/lib/*"
+      ]
     }
   }
 }

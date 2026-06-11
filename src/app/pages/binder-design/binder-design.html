@@ -23,18 +23,21 @@
   <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Workflows</h2>
     <div class="flex flex-wrap gap-4">
-      @for (workflow of workflows(); track workflow.id) {
-      <app-button
-        variant="secondary"
-        widthClass="w-auto"
-        borderRadius="rounded-full"
-        colorClasses="!px-6 !py-3 text-sm font-medium !border shadow hover:shadow-md hover:-translate-y-0.5 !bg-white !text-blue-900 hover:!text-gray-700"
-        [disabled]="workflow.disabled"
-        (click)="navigateToWorkflow(workflow.id)"
+      @for (workflow of workflows(); track workflow.id) { @if
+      (workflow.disabled) {
+      <span
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-sky-900 opacity-50 cursor-not-allowed"
       >
         {{ workflow.label }}
-      </app-button>
-      }
+      </span>
+      } @else {
+      <a
+        [routerLink]="workflow.href"
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-sky-900 hover:text-sky-700 transition-all no-underline"
+      >
+        {{ workflow.label }}
+      </a>
+      } }
     </div>
   </div>
 
@@ -42,18 +45,20 @@
   <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Tools</h2>
     <div class="flex flex-wrap gap-4">
-      @for (tool of tools(); track tool.id) {
-      <app-button
-        variant="secondary"
-        widthClass="w-auto"
-        borderRadius="rounded-full"
-        colorClasses="!px-6 !py-3 text-sm font-medium shadow hover:shadow-md hover:-translate-y-0.5 !border !bg-white !text-blue-900 hover:!text-gray-700"
-        [disabled]="tool.disabled"
-        (click)="navigateToTool(tool.id)"
+      @for (tool of tools(); track tool.id) { @if (tool.disabled) {
+      <span
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-sky-900 opacity-50 cursor-not-allowed"
       >
         {{ tool.label }}
-      </app-button>
-      }
+      </span>
+      } @else {
+      <a
+        [routerLink]="tool.href"
+        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-sky-900 hover:text-sky-700 transition-all no-underline"
+      >
+        {{ tool.label }}
+      </a>
+      } }
     </div>
   </div>
 

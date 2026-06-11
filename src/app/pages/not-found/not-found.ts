@@ -1,56 +1,23 @@
-import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
-import { Router, RouterModule } from "@angular/router";
+import { ChangeDetectionStrategy, Component } from "@angular/core";
+import { RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowLeft,
   heroHome,
   heroMagnifyingGlass,
 } from "@ng-icons/heroicons/outline";
-import { ButtonComponent } from "src/app/components/button/button.component";
+import { ButtonComponent } from "../../components/button/button.component";
 
 @Component({
   selector: "app-not-found",
-  imports: [NgIconComponent, ButtonComponent, RouterModule],
+  imports: [NgIconComponent, ButtonComponent, RouterLink],
   providers: [provideIcons({ heroHome, heroArrowLeft, heroMagnifyingGlass })],
   templateUrl: "./not-found.html",
   styleUrl: "./not-found.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NotFoundComponent {
-  private router = inject(Router);
-
-  goHome() {
-    this.router.navigate(["/themes"]);
-  }
-
+export default class NotFoundComponent {
   goBack() {
     window.history.back();
-  }
-
-  searchResources() {
-    // Navigate to themes with focus on search
-    this.router.navigate(["/themes"], { queryParams: { search: "true" } });
-  }
-
-  navigateToBinderDesign() {
-    this.router.navigate(["/themes"], {
-      queryParams: { tab: "binder-design" },
-    });
-  }
-
-  navigateToStructurePrediction() {
-    this.router.navigate(["/themes"], {
-      queryParams: { tab: "structure-prediction" },
-    });
-  }
-
-  navigateToStructureSearch() {
-    this.router.navigate(["/themes"], {
-      queryParams: { tab: "structure-search" },
-    });
-  }
-
-  navigateToSingleStructurePrediction() {
-    this.router.navigate(["/single-structure-prediction"]);
   }
 }

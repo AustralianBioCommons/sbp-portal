@@ -5,7 +5,7 @@ import { Component, Input } from "@angular/core";
   standalone: true,
   imports: [],
   template: `
-    <div class="mt-4 border border-gray-200 rounded-[10px] p-4 bg-white">
+    <div class="mt-4 border border-gray-200 rounded-lg p-4 bg-white">
       @if (title) {
       <h5 class="text-base font-semibold text-gray-900">{{ title }}</h5>
       } @if (description) {

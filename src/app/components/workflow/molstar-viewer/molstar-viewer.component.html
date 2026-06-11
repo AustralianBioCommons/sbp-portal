@@ -106,7 +106,7 @@
   @if (status() === 'loading') {
   <div class="flex items-center gap-2 text-sm text-gray-500 py-2">
     <svg
-      class="animate-spin h-4 w-4 text-blue-600"
+      class="animate-spin h-4 w-4 text-sky-600"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -160,23 +160,23 @@
 
   <!-- Selection bar -->
   @if (status() === 'loaded') {
-  <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm">
-    <p class="font-medium text-blue-800">Hotspot residue selection</p>
+  <div class="rounded-md border border-sky-100 bg-sky-50 px-4 py-3 text-sm">
+    <p class="font-medium text-sky-800">Hotspot residue selection</p>
     @if (selectedResidues().length > 0) {
-    <p class="mt-1 text-blue-700 font-mono break-all">
+    <p class="mt-1 text-sky-700 font-mono break-all">
       {{ selectedResidues().join(",") }}
     </p>
     <button
       type="button"
-      class="mt-2 text-xs text-blue-600 underline hover:text-blue-800"
+      class="mt-2 text-xs text-sky-600 underline hover:text-sky-800 rounded-sm"
       (click)="clearSelection()"
     >
       Clear selection
     </button>
     } @else {
-    <p class="mt-1 text-blue-600">
+    <p class="mt-1 text-sky-600">
       Click residues in the viewer to add them as hotspots. Hold
-      <kbd class="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">Shift</kbd>
+      <kbd class="rounded bg-sky-100 px-1 py-0.5 font-mono text-xs">Shift</kbd>
       to add to the selection; click empty space to deselect.
     </p>
     }

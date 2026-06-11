@@ -18,7 +18,7 @@ import {
   validateProteinSequence,
   validateRnaSequence,
 } from "../../../cores/utils/fasta.utils";
-import { SinglePredictionComponent } from "./single-prediction";
+import SinglePredictionComponent from "./single-prediction";
 
 // ── Typed mock responses conforming to service interfaces ──────────────────
 

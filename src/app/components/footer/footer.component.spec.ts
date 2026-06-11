@@ -37,7 +37,7 @@ describe("FooterSectionsComponent", () => {
       expect(component.linkGroups[0].links.length).toBe(2);
       expect(component.linkGroups[0].links[0]).toEqual({
         label: "Binder design",
-        href: "/themes?tab=binder-design",
+        href: "/binder-design",
       });
     });
 

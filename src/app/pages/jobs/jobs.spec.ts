@@ -4,7 +4,7 @@ import { By } from "@angular/platform-browser";
 import { of, throwError } from "rxjs";
 import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { ResultsService } from "../../cores/services/results.service";
-import { JobsComponent } from "./jobs";
+import JobsComponent from "./jobs";
 import {
   JobListItem,
   JobListResponse,

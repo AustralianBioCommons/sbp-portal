@@ -1,15 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-biocommons-primary: #5ac3b1;
-  --color-biocommons-secondary: #205a86;
-}
-
-@layer base {
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
-  }
+  --color-biocommons-primary: #205a86;
+  --color-biocommons-secondary: #5ac3b1;
 }
 
 @layer base {
@@ -22,7 +15,21 @@
   }
 
   a {
-    @apply text-blue-900 hover:text-blue-700 transition-all underline;
+    @apply text-sky-600 hover:text-sky-700 transition-all hover:underline;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Keyboard focus indicator for interactive controls.
+     Uses outline (not ring) so it is never clipped by overflow-hidden
+     ancestors. Form inputs opt out and keep their own :focus ring. */
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  a:focus-visible {
+    @apply outline-2 outline-offset-2 outline-sky-500;
   }
 }
 

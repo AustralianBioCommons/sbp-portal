@@ -33,10 +33,6 @@ describe("ButtonComponent", () => {
       expect(component.widthClass()).toBe("w-28");
     });
 
-    it("should have default border radius", () => {
-      expect(component.borderRadius()).toBe("rounded-md");
-    });
-
     it("should have default disabled state as false", () => {
       expect(component.disabled()).toBe(false);
     });
@@ -47,10 +43,6 @@ describe("ButtonComponent", () => {
 
     it("should have undefined colorClasses by default", () => {
       expect(component.colorClasses()).toBeUndefined();
-    });
-
-    it("should have undefined href by default", () => {
-      expect(component.href()).toBeUndefined();
     });
   });
 
@@ -74,21 +66,15 @@ describe("ButtonComponent", () => {
     });
 
     it("should update colorClasses input", () => {
-      fixture.componentRef.setInput("colorClasses", "text-blue-500");
+      fixture.componentRef.setInput("colorClasses", "text-sky-500");
       fixture.detectChanges();
-      expect(component.colorClasses()).toBe("text-blue-500");
+      expect(component.colorClasses()).toBe("text-sky-500");
     });
 
     it("should update widthClass input", () => {
       fixture.componentRef.setInput("widthClass", "w-full");
       fixture.detectChanges();
       expect(component.widthClass()).toBe("w-full");
-    });
-
-    it("should update borderRadius input", () => {
-      fixture.componentRef.setInput("borderRadius", "rounded-lg");
-      fixture.detectChanges();
-      expect(component.borderRadius()).toBe("rounded-lg");
     });
 
     it("should update disabled input", () => {
@@ -101,12 +87,6 @@ describe("ButtonComponent", () => {
       fixture.componentRef.setInput("loading", true);
       fixture.detectChanges();
       expect(component.loading()).toBe(true);
-    });
-
-    it("should update href input", () => {
-      fixture.componentRef.setInput("href", "https://example.com");
-      fixture.detectChanges();
-      expect(component.href()).toBe("https://example.com");
     });
   });
 

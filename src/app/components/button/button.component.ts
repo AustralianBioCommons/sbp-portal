@@ -15,9 +15,6 @@ export class ButtonComponent {
   variant = input<ButtonVariant>("primary");
   colorClasses = input<string | undefined>();
   widthClass = input<string>("w-28");
-  borderRadius = input<string>("rounded-md");
   disabled = input<boolean>(false);
   loading = input<boolean>(false);
-  active = input<boolean>(false);
-  href = input<string | undefined>();
 }

@@ -15,13 +15,13 @@ export interface SummaryItem {
   template: `
     <div class="mt-4 space-y-4">
       <!-- Selected Tool -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h6 class="text-sm font-semibold text-blue-900 mb-2">Selected Tool</h6>
-        <p class="text-sm text-blue-800">
+      <div class="bg-sky-50 border border-sky-200 rounded-lg p-4">
+        <h6 class="text-sm font-semibold text-sky-900 mb-2">Selected Tool</h6>
+        <p class="text-sm text-sky-800">
           <span class="font-medium">{{ selectedTool }}</span>
           @if (hasParameters) {
           <span
-            class="ml-2 text-xs bg-blue-200 text-blue-900 px-2 py-1 rounded-full"
+            class="ml-2 text-xs bg-sky-200 text-sky-900 px-2 py-1 rounded-full"
             >Has Parameters</span
           >
           } @else {
@@ -53,7 +53,7 @@ export interface SummaryItem {
               target="_blank"
               rel="noopener noreferrer"
               download
-              class="text-sm text-blue-700 underline hover:text-blue-900 sm:w-2/3 break-all"
+              class="text-sm text-sky-700 underline hover:text-sky-900 sm:w-2/3 break-all"
               >{{ item.value }}</a
             >
             } @else {

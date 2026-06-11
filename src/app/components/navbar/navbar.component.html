@@ -1,125 +1,102 @@
 <nav class="block sticky top-0 z-50 bg-white shadow shrink-0">
-  <div class="border-b">
-    <div
-      class="max-w-7xl px-6 mx-auto relative flex items-center justify-between min-h-20 gap-4"
-    >
-      <!-- Left: Burger Menu + Logo -->
-      <div class="flex items-center gap-4 shrink-0">
-        <button
-          type="button"
-          class="compact-menu-button text-sky-900 hover:text-sky-700 transition-all"
-          (click)="toggleMobileMenu(); $event.stopPropagation()"
-          aria-label="Open menu"
-        >
-          <ng-icon name="heroBars3" size="24"></ng-icon>
-        </button>
-        <button
-          (click)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
-          (keydown.space)="navigate('/themes', { tab: 'binder-design' })"
-          aria-label="Navigate to home page"
-        >
-          <img
-            class="w-42 min-w-42 h-auto"
-            src="/assets/sbp-logo.png"
-            alt="SBP Portal"
-          />
-        </button>
-      </div>
-
-      <!-- Center: Nav Links -->
-      <nav
-        class="hidden absolute left-1/2 -translate-x-1/2 md:flex items-center justify-center gap-6 font-semibold text-sky-900 transition-all text-sm"
-        aria-label="Main navigation"
+  <div
+    class="px-6 border-b mx-auto relative flex items-center justify-between min-h-22 gap-4"
+  >
+    <!-- Left: Burger Menu + Logo -->
+    <div class="flex items-center gap-4 shrink-0">
+      <button
+        type="button"
+        class="compact-menu-button text-sky-600 hover:text-sky-700 transition-all rounded"
+        (click)="toggleMobileMenu(); $event.stopPropagation()"
+        aria-label="Open menu"
       >
-        <button
-          type="button"
-          class="py-2 whitespace-nowrap border-b-2"
-          [class]="
-            currentRoute() === '/themes' && isActiveTab('binder-design')
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
-          "
-          (click)="navigate('/themes', { tab: 'binder-design' })"
-        >
-          Binder Design
-        </button>
-        <button
-          type="button"
-          class="py-2 whitespace-nowrap border-b-2"
-          [class]="
-            currentRoute() === '/themes' && isActiveTab('structure-prediction')
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
-          "
-          (click)="navigate('/themes', { tab: 'structure-prediction' })"
-        >
-          Structure Prediction
-        </button>
-        <button
-          type="button"
-          class="py-2 whitespace-nowrap border-b-2"
-          [class]="
-            currentRoute() === '/jobs'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
-          "
-          (click)="navigate('/jobs')"
-        >
-          Jobs
-        </button>
-      </nav>
+        <ng-icon name="heroBars3" size="24"></ng-icon>
+      </button>
+      <a routerLink="/binder-design" aria-label="Navigate to home page">
+        <img
+          class="w-48 min-w-48 h-auto"
+          src="/assets/sbp-logo.png"
+          alt="SBP Portal"
+        />
+      </a>
+    </div>
 
-      <!-- Right: Auth Section -->
-      <div class="flex items-center gap-4 shrink-0">
-        @if (isAuthenticated$ | async) {
-        <button
-          (click)="openProfile()"
-          class="rounded-full border border-gray-300 h-10 pl-2 pr-2 lg:pr-4 flex items-center gap-1 text-sky-900 hover:bg-gray-100 transition-all"
-          type="button"
-          aria-label="Open profile"
-        >
-          <ng-icon name="heroUserCircle" size="30" strokeWidth="1"></ng-icon>
-          <div class="flex flex-col">
-            <span
-              class="hidden lg:inline-flex items-center gap-1 text-xs font-mono text-gray-900 truncate"
-            >
-              {{ (user$ | async)?.email || "" }}
-              <ng-icon name="heroArrowTopRightOnSquare" size="12"></ng-icon>
-            </span>
-            <!-- <div class="flex flex-1 items-center gap-2">
-              <div
-                class="w-3/4 h-1 rounded-full bg-gray-200 max-w-24"
-                role="progressbar"
-                aria-label="Quota usage"
-                aria-valuenow="0"
-                aria-valuemin="0"
-                aria-valuemax="100"
-              >
-                <div class="h-1 rounded-full bg-biocommons-primary w-18"></div>
-              </div>
-              <span class="text-xs text-gray-600 shrink-0">75 / 100</span>
-            </div> -->
-          </div>
-        </button>
-        <button
-          (click)="logout()"
-          class="text-sky-900 hover:bg-gray-100 transition-all rounded-full flex items-center justify-center h-10 w-10 border border-gray-300"
-          type="button"
-          aria-label="Log out"
-        >
-          <ng-icon name="heroArrowRightStartOnRectangle" size="20"></ng-icon>
-        </button>
-        } @else {
-        <button
-          type="button"
-          class="px-6 py-2 text-sm font-mono text-sky-950 bg-biocommons-primary hover:bg-teal-500 rounded-full"
-          (click)="login()"
-        >
-          <span>Login</span>
-        </button>
-        }
-      </div>
+    <!-- Center: Nav Links -->
+    <nav
+      class="hidden absolute left-1/2 -translate-x-1/2 md:flex items-center justify-center gap-6 font-semibold text-sky-900 transition-all text-sm"
+      aria-label="Main navigation"
+    >
+      <a
+        routerLink="/binder-design"
+        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+        [class]="
+          currentRoute() === '/binder-design'
+            ? 'border-sky-900'
+            : 'border-transparent hover:border-sky-900/20'
+        "
+      >
+        Binder Design
+      </a>
+      <a
+        routerLink="/structure-prediction"
+        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+        [class]="
+          currentRoute() === '/structure-prediction'
+            ? 'border-sky-900'
+            : 'border-transparent hover:border-sky-900/20'
+        "
+      >
+        Structure Prediction
+      </a>
+      <a
+        routerLink="/jobs"
+        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+        [class]="
+          currentRoute() === '/jobs'
+            ? 'border-sky-900'
+            : 'border-transparent hover:border-sky-900/20'
+        "
+      >
+        Jobs
+      </a>
+    </nav>
+
+    <!-- Right: Auth Section -->
+    <div class="flex items-center gap-4 shrink-0">
+      @if (isAuthenticated$ | async) {
+      <button
+        (click)="openProfile()"
+        class="rounded-full border border-gray-300 h-10 pl-2 pr-2 lg:pr-4 flex items-center gap-1 text-sky-900 hover:bg-gray-100 transition-all"
+        type="button"
+        aria-label="Open profile"
+      >
+        <ng-icon name="heroUserCircle" size="30" strokeWidth="1"></ng-icon>
+        <div class="flex flex-col">
+          <span
+            class="hidden lg:inline-flex items-center gap-1 text-xs font-mono text-gray-900 truncate"
+          >
+            {{ (user$ | async)?.email || "" }}
+            <ng-icon name="heroArrowTopRightOnSquare" size="12"></ng-icon>
+          </span>
+        </div>
+      </button>
+      <button
+        (click)="logout()"
+        class="text-sky-900 hover:bg-gray-100 transition-all rounded-full flex items-center justify-center h-10 w-10 border border-gray-300"
+        type="button"
+        aria-label="Log out"
+      >
+        <ng-icon name="heroArrowRightStartOnRectangle" size="20"></ng-icon>
+      </button>
+      } @else {
+      <button
+        type="button"
+        class="px-6 py-2 text-sm font-mono text-sky-950 bg-biocommons-secondary hover:bg-teal-500 rounded-full"
+        (click)="login()"
+      >
+        <span>Login</span>
+      </button>
+      }
     </div>
   </div>
 
@@ -145,19 +122,19 @@
   >
     <!-- Panel Header -->
     <div
-      class="flex items-center justify-between px-4 border-b sticky top-0 shrink-0 bg-white z-10 h-20"
+      class="flex items-center justify-between px-6 border-b sticky top-0 shrink-0 bg-white z-10 h-22"
     >
-      <button
-        (click)="navigate('/themes', { tab: 'binder-design' })"
-        (keydown.enter)="navigate('/themes', { tab: 'binder-design' })"
+      <a
+        routerLink="/binder-design"
+        (click)="closeMobileMenu()"
         aria-label="Navigate to home page"
       >
         <img
-          class="w-42 min-w-42 h-auto"
+          class="w-48 min-w-48 h-auto"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />
-      </button>
+      </a>
       <button
         type="button"
         (click)="closeMobileMenu()"
@@ -169,85 +146,69 @@
     </div>
 
     <!-- Panel Content -->
-    <div class="p-4 flex-1 space-y-2" aria-label="Mobile navigation">
+    <div
+      class="p-6 flex-1 space-y-2 text-sm font-medium"
+      aria-label="Mobile navigation"
+    >
       @let isAuth = (isAuthenticated$ | async) || false; @for (item of navItems;
       track item.label) { @if (item.children) {
       <div>
-        <div
-          class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-sky-900"
-        >
+        <div class="flex items-center gap-2 p-2 text-gray-900">
           @if (item.icon) {
-          <ng-icon [name]="item.icon" size="18" class="shrink-0" />
+          <div class="text-sky-900 flex items-center justify-center shrink-0">
+            <ng-icon [name]="item.icon" size="18" class="shrink-0" />
+          </div>
           }
           <span>{{ item.label }}</span>
         </div>
         <div class="ml-6 space-y-2">
           @for (child of item.children; track child.label) { @if
           (shouldShowNavItem(child, isAuth)) {
-          <button
-            type="button"
-            class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
+          <a
+            [routerLink]="child.path"
+            (click)="closeMobileMenu()"
+            class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
             [class]="
-              isNavItemActive(child)
-                ? 'bg-sky-50 text-sky-900 font-semibold'
-                : 'text-sky-800 hover:bg-sky-50'
-            "
-            (click)="
-              child.path
-                ? navigate(child.path, child.queryParams)
-                : executeAction(child.action)
+              isNavItemActive(child) ? 'bg-sky-50 ' : ' hover:bg-gray-50'
             "
           >
             <span>{{ child.label }}</span>
-          </button>
+          </a>
           } }
         </div>
       </div>
       } @else if (shouldShowNavItem(item, isAuth)) {
-      <button
-        type="button"
-        class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-all"
-        [class]="
-          isNavItemActive(item)
-            ? 'bg-sky-50 text-sky-900 font-semibold'
-            : 'text-sky-900 hover:bg-sky-50'
-        "
-        (click)="
-          item.path
-            ? navigate(item.path, item.queryParams)
-            : executeAction(item.action)
-        "
+      <a
+        [routerLink]="item.path"
+        (click)="closeMobileMenu()"
+        class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
+        [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
       >
         @if (item.icon) {
-        <ng-icon [name]="item.icon" size="18" class="shrink-0" />
+        <ng-icon [name]="item.icon" size="18" />
         }
         <span>{{ item.label }}</span>
-      </button>
+      </a>
       } }
     </div>
   </div>
 
   <!-- Breadcrumb (only show on workflow pages) -->
   @if (showBreadcrumb() && breadcrumb(); as crumb) {
-  <div class="w-full bg-gray-50">
-    <div
-      class="max-w-7xl px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
-      aria-label="Breadcrumb"
+  <div
+    class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
+    aria-label="Breadcrumb"
+  >
+    <a
+      [routerLink]="'/' + crumb.themeTab"
+      class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
     >
-      <span
-        class="text-sky-900 cursor-pointer hover:text-sky-800 transition-all hover:underline"
-        tabindex="0"
-        role="button"
-        (click)="navigateToTheme(crumb.themeTab)"
-        (keyup.enter)="navigateToTheme(crumb.themeTab)"
-      >
-        {{ crumb.themeLabel }}
-      </span>
-      <ng-icon name="heroChevronRight" size="16"></ng-icon>
-      <span class="text-gray-600">
-        {{ crumb.workflowLabel }}
-      </span>
-    </div>
+      {{ crumb.themeLabel }}
+    </a>
+    <ng-icon name="heroChevronRight" size="16"></ng-icon>
+    <span class="text-gray-600">
+      {{ crumb.workflowLabel }}
+    </span>
   </div>
   }
 </nav>

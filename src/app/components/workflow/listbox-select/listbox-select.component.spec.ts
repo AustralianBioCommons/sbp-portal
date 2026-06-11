@@ -57,7 +57,7 @@ describe("ListboxSelectComponent", () => {
     fixture.detectChanges();
 
     const button = fixture.debugElement.query(By.css("button"));
-    expect(button.nativeElement.className).toContain("border-red-400");
+    expect(button.nativeElement.className).toContain("border-red-500");
   });
 
   it("should toggle the menu open and closed", () => {

@@ -1,20 +1,16 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { Router } from "@angular/router";
+import { provideRouter, RouterLink } from "@angular/router";
+import { By } from "@angular/platform-browser";
 import { StructurePredictionComponent } from "./structure-prediction";
 
 describe("StructurePredictionComponent", () => {
   let component: StructurePredictionComponent;
   let fixture: ComponentFixture<StructurePredictionComponent>;
-  let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    mockRouter = jasmine.createSpyObj("Router", ["navigate", "navigateByUrl"]);
-    mockRouter.navigate.and.returnValue(Promise.resolve(true));
-    mockRouter.navigateByUrl.and.returnValue(Promise.resolve(true));
-
     await TestBed.configureTestingModule({
       imports: [StructurePredictionComponent],
-      providers: [{ provide: Router, useValue: mockRouter }],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StructurePredictionComponent);
@@ -31,17 +27,17 @@ describe("StructurePredictionComponent", () => {
     expect(component.workflows[0]).toEqual({
       id: "single-structure-prediction",
       label: "Single Prediction",
-      href: "/single-structure-prediction",
+      href: "/structure-prediction/single-structure-prediction",
     });
     expect(component.workflows[1]).toEqual({
       id: "bulk-prediction",
       label: "Bulk Prediction",
-      href: "/bulk-prediction",
+      href: "/structure-prediction/bulk-prediction",
     });
     expect(component.workflows[2]).toEqual({
       id: "interaction-screening",
       label: "Interaction Screening",
-      href: "/interaction-screening",
+      href: "/structure-prediction/interaction-screening",
     });
   });
 
@@ -50,67 +46,32 @@ describe("StructurePredictionComponent", () => {
     expect(component.tools[0]).toEqual({
       id: "boltz",
       label: "Boltz",
-      href: "/single-structure-prediction",
+      href: "/structure-prediction/single-structure-prediction",
     });
     expect(component.tools[1]).toEqual({
       id: "colabfold",
       label: "ColabFold",
-      href: "/single-structure-prediction",
+      href: "/structure-prediction/single-structure-prediction",
     });
     expect(component.tools[2]).toEqual({
       id: "alphafold2",
       label: "AlphaFold2",
-      href: "/single-structure-prediction",
+      href: "/structure-prediction/single-structure-prediction",
     });
   });
 
-  it("should navigate to workflow when enabled", () => {
-    component.navigateToWorkflow("single-structure-prediction");
-    expect(mockRouter.navigate).toHaveBeenCalledWith([
-      "/single-structure-prediction",
-    ]);
-  });
+  it("should render enabled workflows and tools as routerLink anchors", () => {
+    const linkTexts = fixture.debugElement
+      .queryAll(By.directive(RouterLink))
+      .map((link) => link.nativeElement.textContent.trim());
 
-  it("should not navigate to workflow when disabled", () => {
-    component.workflows = [
-      {
-        id: "single-structure-prediction",
-        label: "Single Prediction",
-        href: "/single-structure-prediction",
-        disabled: true,
-      },
-    ];
-    component.navigateToWorkflow("single-structure-prediction");
-    expect(mockRouter.navigate).not.toHaveBeenCalled();
-  });
-
-  it("should not navigate to workflow when id is unknown", () => {
-    component.navigateToWorkflow("unknown-workflow");
-    expect(mockRouter.navigate).not.toHaveBeenCalled();
-  });
-
-  it("should navigate to tool when enabled", () => {
-    component.navigateToTool("boltz");
-    expect(mockRouter.navigateByUrl).toHaveBeenCalledWith(
-      "/single-structure-prediction"
-    );
-  });
-
-  it("should not navigate to tool when disabled", () => {
-    component.tools = [
-      {
-        id: "boltz",
-        label: "Boltz",
-        href: "/single-structure-prediction",
-        disabled: true,
-      },
-    ];
-    component.navigateToTool("boltz");
-    expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
-  });
-
-  it("should not navigate to tool when id is unknown", () => {
-    component.navigateToTool("unknown-tool");
-    expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
+    [
+      "Single Prediction",
+      "Bulk Prediction",
+      "Interaction Screening",
+      "Boltz",
+      "ColabFold",
+      "AlphaFold2",
+    ].forEach((label) => expect(linkTexts).toContain(label));
   });
 });
