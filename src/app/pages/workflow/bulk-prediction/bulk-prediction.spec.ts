@@ -11,7 +11,7 @@ import {
   DatasetUploadService,
 } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
-import { BulkPredictionComponent } from "./bulk-prediction";
+import BulkPredictionComponent from "./bulk-prediction";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 

@@ -2,21 +2,21 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ActivatedRoute } from "@angular/router";
 import { of, BehaviorSubject } from "rxjs";
 
-import { Home } from "./home";
+import Home from "./home";
 
 describe("Home", () => {
   let component: Home;
   let fixture: ComponentFixture<Home>;
-  let queryParamsSubject: BehaviorSubject<Record<string, string>>;
+  let dataSubject: BehaviorSubject<Record<string, string>>;
 
   beforeEach(async () => {
-    queryParamsSubject = new BehaviorSubject({});
+    dataSubject = new BehaviorSubject({});
 
     const activatedRouteMock = {
       params: of({}),
-      queryParams: queryParamsSubject.asObservable(),
+      queryParams: of({}),
       fragment: of(null),
-      data: of({}),
+      data: dataSubject.asObservable(),
     };
 
     await TestBed.configureTestingModule({
@@ -53,41 +53,41 @@ describe("Home", () => {
     });
   });
 
-  describe("ngOnInit and query parameter handling", () => {
-    it("should update active tab when tab query parameter is provided", () => {
-      queryParamsSubject.next({ tab: "structure-prediction" });
+  describe("ngOnInit and route data handling", () => {
+    it("should update active tab when tab route data is provided", () => {
+      dataSubject.next({ tab: "structure-prediction" });
 
       expect(component.activeTab()).toBe("structure-prediction");
     });
 
-    it("should update active tab when different tab query parameter is provided", () => {
-      queryParamsSubject.next({ tab: "structure-search" });
+    it("should update active tab when different tab route data is provided", () => {
+      dataSubject.next({ tab: "structure-search" });
 
       expect(component.activeTab()).toBe("structure-search");
     });
 
-    it("should update active tab when tools tab query parameter is provided", () => {
-      queryParamsSubject.next({ tab: "tools" });
+    it("should update active tab when tools tab route data is provided", () => {
+      dataSubject.next({ tab: "tools" });
 
       expect(component.activeTab()).toBe("tools");
     });
 
-    it("should not change active tab when no tab query parameter is provided", () => {
+    it("should not change active tab when no tab route data is provided", () => {
       const initialTab = component.activeTab();
-      queryParamsSubject.next({ otherParam: "value" });
+      dataSubject.next({ otherData: "value" });
 
       expect(component.activeTab()).toBe(initialTab);
     });
 
-    it("should not change active tab when tab query parameter is empty", () => {
+    it("should not change active tab when tab route data is empty", () => {
       const initialTab = component.activeTab();
-      queryParamsSubject.next({ tab: "" });
+      dataSubject.next({ tab: "" });
 
       expect(component.activeTab()).toBe(initialTab);
     });
 
-    it("should handle multiple query parameters with tab parameter", () => {
-      queryParamsSubject.next({
+    it("should handle multiple route data properties with tab property", () => {
+      dataSubject.next({
         tab: "structure-prediction",
         search: "test",
         filter: "active",
@@ -96,14 +96,14 @@ describe("Home", () => {
       expect(component.activeTab()).toBe("structure-prediction");
     });
 
-    it("should handle query parameter updates multiple times", () => {
-      queryParamsSubject.next({ tab: "structure-prediction" });
+    it("should handle route data updates multiple times", () => {
+      dataSubject.next({ tab: "structure-prediction" });
       expect(component.activeTab()).toBe("structure-prediction");
 
-      queryParamsSubject.next({ tab: "structure-search" });
+      dataSubject.next({ tab: "structure-search" });
       expect(component.activeTab()).toBe("structure-search");
 
-      queryParamsSubject.next({ tab: "binder-design" });
+      dataSubject.next({ tab: "binder-design" });
       expect(component.activeTab()).toBe("binder-design");
     });
   });

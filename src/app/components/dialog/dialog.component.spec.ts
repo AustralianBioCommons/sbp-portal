@@ -20,16 +20,16 @@ describe("DialogComponent", () => {
   });
 
   it("should not display dialog when isOpen is false", () => {
-    component.isOpen = false;
+    fixture.componentRef.setInput("isOpen", false);
     fixture.detectChanges();
     const dialogElement = fixture.nativeElement.querySelector(".fixed.inset-0");
     expect(dialogElement).toBeFalsy();
   });
 
   it("should display dialog when isOpen is true", () => {
-    component.isOpen = true;
-    component.title = "Test Title";
-    component.message = "Test Message";
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("title", "Test Title");
+    fixture.componentRef.setInput("message", "Test Message");
     fixture.detectChanges();
 
     const dialogElement = fixture.nativeElement.querySelector(".fixed.inset-0");
@@ -90,8 +90,8 @@ describe("DialogComponent", () => {
   });
 
   it("should display title when title is provided", () => {
-    component.isOpen = true;
-    component.title = "Custom Title";
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("title", "Custom Title");
     fixture.detectChanges();
 
     const titleElement = fixture.nativeElement.querySelector("#dialog-title");
@@ -100,8 +100,8 @@ describe("DialogComponent", () => {
   });
 
   it("should not display title section when title is empty", () => {
-    component.isOpen = true;
-    component.title = "";
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("title", "");
     fixture.detectChanges();
 
     const titleElement = fixture.nativeElement.querySelector("#dialog-title");
@@ -109,27 +109,17 @@ describe("DialogComponent", () => {
   });
 
   it("should display custom button texts", () => {
-    component.isOpen = true;
-    component.confirmText = "Yes";
-    component.cancelText = "No";
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("confirmText", "Yes");
+    fixture.componentRef.setInput("cancelText", "No");
     fixture.detectChanges();
 
     const buttons = fixture.nativeElement.querySelectorAll("app-button");
     expect(buttons.length).toBe(2);
   });
 
-  it("should apply custom confirm variant", () => {
-    component.confirmVariant = "secondary";
-    expect(component.confirmVariant).toBe("secondary");
-  });
-
-  it("should apply custom confirm color classes", () => {
-    component.confirmColorClasses = "bg-red-500";
-    expect(component.confirmColorClasses).toBe("bg-red-500");
-  });
-
   it("should handle keyboard events on backdrop", () => {
-    component.isOpen = true;
+    fixture.componentRef.setInput("isOpen", true);
     fixture.detectChanges();
 
     spyOn(component, "onCancel");
@@ -144,8 +134,8 @@ describe("DialogComponent", () => {
   });
 
   it("should have proper accessibility attributes", () => {
-    component.isOpen = true;
-    component.title = "Test Title";
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("title", "Test Title");
     fixture.detectChanges();
 
     const backdrop = fixture.nativeElement.querySelector(".fixed.inset-0");
@@ -159,8 +149,8 @@ describe("DialogComponent", () => {
   });
 
   it("should not have aria-labelledby when title is empty", () => {
-    component.isOpen = true;
-    component.title = "";
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("title", "");
     fixture.detectChanges();
 
     const dialog = fixture.nativeElement.querySelector('[role="dialog"]');

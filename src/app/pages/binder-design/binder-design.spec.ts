@@ -1,20 +1,18 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { Router } from "@angular/router";
+import { provideRouter } from "@angular/router";
+import { By } from "@angular/platform-browser";
+import { RouterLink } from "@angular/router";
 
 import { BinderDesignComponent } from "./binder-design";
 
 describe("BinderDesignComponent", () => {
   let component: BinderDesignComponent;
   let fixture: ComponentFixture<BinderDesignComponent>;
-  let mockRouter: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    mockRouter = jasmine.createSpyObj("Router", ["navigate"]);
-    mockRouter.navigate.and.returnValue(Promise.resolve(true));
-
     await TestBed.configureTestingModule({
       imports: [BinderDesignComponent],
-      providers: [{ provide: Router, useValue: mockRouter }],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BinderDesignComponent);
@@ -38,7 +36,7 @@ describe("BinderDesignComponent", () => {
         .find((w) => w.id === "de-novo-design");
       expect(deNovoWorkflow).toBeDefined();
       expect(deNovoWorkflow?.label).toBe("De Novo Design");
-      expect(deNovoWorkflow?.href).toBe("/de-novo-design");
+      expect(deNovoWorkflow?.href).toBe("/binder-design/de-novo-design");
     });
 
     it("workflows should contain motif scaffolding workflow", () => {
@@ -85,7 +83,7 @@ describe("BinderDesignComponent", () => {
         .find((t) => t.label === "BindCraft");
       expect(bindCraftTool).toBeDefined();
       expect(bindCraftTool?.id).toBe("bindcraft");
-      expect(bindCraftTool?.href).toBe("/de-novo-design");
+      expect(bindCraftTool?.href).toBe("/binder-design/de-novo-design");
     });
 
     it("tools should contain RFdiffusion tool", () => {
@@ -205,73 +203,32 @@ describe("BinderDesignComponent", () => {
     });
   });
 
-  describe("navigation methods", () => {
-    describe("navigateToWorkflow", () => {
-      it("should navigate to the specified workflow", () => {
-        component.navigateToWorkflow("de-novo-design");
+  describe("link rendering", () => {
+    it("should render enabled workflows and tools as routerLink anchors", () => {
+      const linkTexts = fixture.debugElement
+        .queryAll(By.directive(RouterLink))
+        .map((link) => link.nativeElement.textContent.trim());
 
-        expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
-      });
-
-      it("should handle navigation to each workflow", () => {
-        const workflowIds = ["de-novo-design"];
-
-        workflowIds.forEach((workflowId) => {
-          component.navigateToWorkflow(workflowId);
-          expect(mockRouter.navigate).toHaveBeenCalledWith([`/${workflowId}`]);
-        });
-
-        expect(mockRouter.navigate).toHaveBeenCalledTimes(workflowIds.length);
-      });
-
-      it("should not navigate for disabled workflows", () => {
-        component.navigateToWorkflow("motif-scaffolding");
-        component.navigateToWorkflow("partial-diffusion");
-
-        expect(mockRouter.navigate).not.toHaveBeenCalled();
-      });
+      expect(linkTexts).toContain("De Novo Design");
+      expect(linkTexts).toContain("BindCraft");
     });
 
-    describe("navigateToTool", () => {
-      it("should navigate to the specified tool", () => {
-        component.navigateToTool("bindcraft");
+    it("should render disabled workflows and tools as non-clickable spans", () => {
+      const disabledText = fixture.debugElement
+        .queryAll(By.css("span.cursor-not-allowed"))
+        .map((el) => el.nativeElement.textContent.trim());
+      const linkTexts = fixture.debugElement
+        .queryAll(By.directive(RouterLink))
+        .map((link) => link.nativeElement.textContent.trim());
 
-        expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
-      });
-
-      it("should handle navigation to each tool", () => {
-        const toolIds = ["bindcraft"];
-
-        toolIds.forEach((toolId) => {
-          component.navigateToTool(toolId);
-          expect(mockRouter.navigate).toHaveBeenCalledWith(["/de-novo-design"]);
-        });
-
-        expect(mockRouter.navigate).toHaveBeenCalledTimes(toolIds.length);
-      });
-
-      it("should not navigate for disabled tools", () => {
-        component.navigateToTool("rfdiffusion");
-        component.navigateToTool("boltzgen");
-
-        expect(mockRouter.navigate).not.toHaveBeenCalled();
-      });
-
-      it("should navigate to generic tools route for non-bindcraft enabled tools", () => {
-        component.tools.set([
-          {
-            id: "rfdiffusion",
-            label: "RFdiffusion",
-            href: "/tools/rfdiffusion",
-          },
-        ]);
-
-        component.navigateToTool("rfdiffusion");
-
-        expect(mockRouter.navigate).toHaveBeenCalledWith([
-          "/tools",
-          "rfdiffusion",
-        ]);
+      [
+        "Motif Scaffolding",
+        "Partial Diffusion",
+        "RFdiffusion",
+        "BoltzGen",
+      ].forEach((label) => {
+        expect(disabledText).toContain(label);
+        expect(linkTexts).not.toContain(label);
       });
     });
   });
