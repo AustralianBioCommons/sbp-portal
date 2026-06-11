@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   Component,
+  computed,
   ElementRef,
   inject,
   signal,
@@ -24,9 +25,13 @@ import {
   heroUserCircle,
   heroXMark,
 } from "@ng-icons/heroicons/outline";
-import { filter } from "rxjs/operators";
+import { catchError, distinctUntilChanged, filter, of, switchMap } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../cores/auth.service";
+import {
+  CreditsService,
+  TOTAL_CREDITS,
+} from "../../cores/services/credits.service";
 import { THEMES } from "../../cores/config/themes.config";
 
 export interface NavItem {
@@ -77,12 +82,23 @@ export interface BreadcrumbInfo {
 })
 export class Navbar implements AfterViewInit {
   private auth = inject(AuthService);
+  private credits = inject(CreditsService);
   private router = inject(Router);
   private readonly profileUrl = environment.profileUrl;
 
   // Login state
   isAuthenticated$ = this.auth.isAuthenticated$;
   user$ = this.auth.user$;
+
+  // Remaining credit balance fetched from GET /api/users/me/credit.
+  // null while loading or when the balance is unavailable.
+  creditsRemaining = signal<number | null>(null);
+  readonly creditsTotal = TOTAL_CREDITS;
+  creditsPercent = computed(() => {
+    const remaining = this.creditsRemaining();
+    if (remaining === null || this.creditsTotal <= 0) return 0;
+    return Math.min(100, Math.max(0, (remaining / this.creditsTotal) * 100));
+  });
 
   // Navbar state
   isMobileMenuOpen = signal(false);
@@ -196,6 +212,27 @@ export class Navbar implements AfterViewInit {
       .subscribe((event: NavigationEnd) => {
         this.checkRoute(event.url);
         this.updateRouteState();
+      });
+
+    // Load the remaining credit balance whenever the user is authenticated.
+    this.isAuthenticated$
+      .pipe(
+        distinctUntilChanged(),
+        switchMap((isAuthenticated) => {
+          if (!isAuthenticated) {
+            this.creditsRemaining.set(null);
+            return of(null);
+          }
+          return this.credits.getMyCredit().pipe(
+            catchError((error) => {
+              console.warn("Failed to load credit balance", error);
+              return of(null);
+            })
+          );
+        })
+      )
+      .subscribe((response) => {
+        this.creditsRemaining.set(response?.credit ?? null);
       });
 
     document.addEventListener("click", (event) => {

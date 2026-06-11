@@ -34,6 +34,7 @@ import {
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
+import { CreditsService } from "../../../cores/services/credits.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -119,8 +120,35 @@ export default class InteractionScreeningComponent {
   private fastaUploadService = inject(FastaUploadService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
+  // Credits service (per-tool credit multipliers)
+  private creditsService = inject(CreditsService);
   // Form
   private fb = inject(NonNullableFormBuilder);
+
+  constructor() {
+    this.loadToolCredits();
+  }
+
+  /** Fetch per-tool credit multipliers and annotate the tool chips. */
+  private loadToolCredits(): void {
+    this.creditsService.getWorkflowCredits().subscribe({
+      next: (response) => {
+        const config = response.workflows.find(
+          (w) => w.category === "interaction-screening"
+        );
+        if (!config) return;
+        for (const tool of this.tools) {
+          const multiplier = config.toolMultipliers[tool.id];
+          if (multiplier != null) {
+            tool.credits = multiplier;
+          }
+        }
+      },
+      error: (error) => {
+        console.warn("Failed to load workflow credits", error);
+      },
+    });
+  }
   readonly form = this.fb.group(
     {
       jobName: ["", JOB_NAME_VALIDATORS],
