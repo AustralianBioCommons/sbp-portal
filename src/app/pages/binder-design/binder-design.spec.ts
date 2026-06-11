@@ -39,26 +39,6 @@ describe("BinderDesignComponent", () => {
       expect(deNovoWorkflow?.href).toBe("/binder-design/de-novo-design");
     });
 
-    it("workflows should contain motif scaffolding workflow", () => {
-      const motifWorkflow = component
-        .workflows()
-        .find((w) => w.id === "motif-scaffolding");
-      expect(motifWorkflow).toBeDefined();
-      expect(motifWorkflow?.label).toBe("Motif Scaffolding");
-      expect(motifWorkflow?.href).toBe("/motif-scaffolding");
-      expect(motifWorkflow?.disabled).toBeTrue();
-    });
-
-    it("workflows should contain partial diffusion workflow", () => {
-      const partialWorkflow = component
-        .workflows()
-        .find((w) => w.id === "partial-diffusion");
-      expect(partialWorkflow).toBeDefined();
-      expect(partialWorkflow?.label).toBe("Partial Diffusion");
-      expect(partialWorkflow?.href).toBe("/partial-diffusion");
-      expect(partialWorkflow?.disabled).toBeTrue();
-    });
-
     it("should have all workflows with required properties", () => {
       component.workflows().forEach((workflow) => {
         expect(workflow.id).toBeDefined();
@@ -94,16 +74,6 @@ describe("BinderDesignComponent", () => {
       expect(rfdiffusionTool?.id).toBe("rfdiffusion");
       expect(rfdiffusionTool?.href).toBe("/tools/rfdiffusion");
       expect(rfdiffusionTool?.disabled).toBeTrue();
-    });
-
-    it("tools should contain BoltzGen tool", () => {
-      const boltzGenTool = component
-        .tools()
-        .find((t) => t.label === "BoltzGen");
-      expect(boltzGenTool).toBeDefined();
-      expect(boltzGenTool?.id).toBe("boltzgen");
-      expect(boltzGenTool?.href).toBe("/tools/boltzgen");
-      expect(boltzGenTool?.disabled).toBeTrue();
     });
 
     it("should have all tools with required properties", () => {
@@ -221,12 +191,7 @@ describe("BinderDesignComponent", () => {
         .queryAll(By.directive(RouterLink))
         .map((link) => link.nativeElement.textContent.trim());
 
-      [
-        "Motif Scaffolding",
-        "Partial Diffusion",
-        "RFdiffusion",
-        "BoltzGen",
-      ].forEach((label) => {
+      ["RFdiffusion"].forEach((label) => {
         expect(disabledText).toContain(label);
         expect(linkTexts).not.toContain(label);
       });

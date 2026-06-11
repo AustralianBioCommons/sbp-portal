@@ -29,18 +29,6 @@ export const THEMES: ThemeConfig[] = [
         label: "De Novo Design",
         href: "/binder-design/de-novo-design",
       },
-      {
-        id: "motif-scaffolding",
-        label: "Motif Scaffolding",
-        href: "/motif-scaffolding",
-        disabled: true,
-      },
-      {
-        id: "partial-diffusion",
-        label: "Partial Diffusion",
-        href: "/partial-diffusion",
-        disabled: true,
-      },
     ],
     tools: [
       {
