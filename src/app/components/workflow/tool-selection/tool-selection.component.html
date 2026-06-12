@@ -29,7 +29,7 @@
         </div>
         <span class="text-sm text-gray-900">
           <span class="font-semibold">{{ tool.label }}</span>
-          @if (tool.credits != null) {
+          @if (tool.credits !== undefined) {
           <span class="font-normal text-gray-500">
             from {{ tool.credits }}
             {{ tool.credits === 1 ? "credit" : "credits" }}
