@@ -31,6 +31,7 @@ import {
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
+import { CreditsService } from "../../../cores/services/credits.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -117,6 +118,32 @@ export default class SinglePredictionComponent {
   public workflowSubmission = inject(WorkflowSubmissionService);
   private datasetUploadService = inject(DatasetUploadService);
   private fastaUploadService = inject(FastaUploadService);
+  private creditsService = inject(CreditsService);
+
+  constructor() {
+    this.loadToolCredits();
+  }
+
+  /** Fetch per-tool credit multipliers and annotate the tool chips. */
+  private loadToolCredits(): void {
+    this.creditsService.getWorkflowCredits().subscribe({
+      next: (response) => {
+        const config = response.workflows.find(
+          (w) => w.category === "single-prediction"
+        );
+        if (!config) return;
+        for (const tool of this.tools) {
+          const multiplier = config.toolMultipliers[tool.id];
+          if (multiplier != null) {
+            tool.credits = multiplier;
+          }
+        }
+      },
+      error: (error) => {
+        console.warn("Failed to load workflow credits", error);
+      },
+    });
+  }
 
   readonly ccdOptions: ListboxSelectOption[] = Object.entries(
     CCD_COMPOUNDS

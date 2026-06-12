@@ -35,6 +35,7 @@ import {
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
+import { CreditsService } from "../../../cores/services/credits.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
@@ -97,6 +98,8 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   private datasetUploadService = inject(DatasetUploadService);
   // PDB upload service
   private pdbUploadService = inject(PdbUploadService);
+  // Credits service (per-tool credit multipliers)
+  private creditsService = inject(CreditsService);
 
   // Alert state
   showAlert = signal(false);
@@ -541,6 +544,31 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         this.loadInputSchema();
       }
     }, 5000);
+
+    this.loadToolCredits();
+  }
+
+  /** Fetch per-tool credit multipliers and annotate the tool chips. */
+  private loadToolCredits(): void {
+    this.subscription.add(
+      this.creditsService.getWorkflowCredits().subscribe({
+        next: (response) => {
+          const config = response.workflows.find(
+            (w) => w.category === "de-novo-design"
+          );
+          if (!config) return;
+          for (const tool of this.tools) {
+            const multiplier = config.toolMultipliers[tool.id];
+            if (multiplier != null) {
+              tool.credits = multiplier;
+            }
+          }
+        },
+        error: (error) => {
+          console.warn("Failed to load workflow credits", error);
+        },
+      })
+    );
   }
 
   ngOnDestroy() {
