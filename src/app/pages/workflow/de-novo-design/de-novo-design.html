@@ -298,6 +298,13 @@
                       (fieldBlur)="validateRowField(row.id, field.name)"
                     ></app-form-field>
                     } }
+
+                    <!-- Credit cost summary -->
+                    <app-credit-summary
+                      [total]="creditCost()"
+                      [remaining]="creditsRemaining()"
+                      reduceHint="reduce the number of designs"
+                    ></app-credit-summary>
                   </div>
                 </div>
               </div>
@@ -402,7 +409,12 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!canGoNext() || isPdbUploading() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !canGoNext() ||
+                isPdbUploading() ||
+                creditsInsufficient() ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="nextStep()"
             >
               @if (isPdbUploading()) { Uploading… } @else { Next }
@@ -411,7 +423,11 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!isFormValid() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !isFormValid() ||
+                creditsInsufficient() ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="submitWorkflow()"
             >
               Submit

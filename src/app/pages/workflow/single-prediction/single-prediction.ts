@@ -16,6 +16,7 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
+import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import {
   ListboxSelectComponent,
   ListboxSelectOption,
@@ -105,6 +106,7 @@ interface ToolSettingErrors {
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
+    CreditSummaryComponent,
   ],
   host: {
     class: "block w-full single-prediction-bg",
@@ -124,7 +126,31 @@ export default class SinglePredictionComponent {
     this.loadToolCredits();
   }
 
-  /** Fetch per-tool credit multipliers and annotate the tool chips. */
+  /** Per-tool credit multipliers for this workflow (from the backend). */
+  private toolMultipliers = signal<Partial<Record<SinglePredictionTool, number>>>(
+    {}
+  );
+  /**
+   * Remaining credit balance for the current user. Defaults to a dummy value so
+   * the insufficient-credit UI is testable; replaced by the real balance from
+   * getMyCredit() when available.
+   */
+  creditsRemaining = signal<number | null>(250);
+
+  /** Credit cost of the run: tool multiplier × 1 (a single prediction). */
+  creditCost = computed<number | null>(() => {
+    const multiplier = this.toolMultipliers()[this.selectedTool()];
+    return multiplier == null ? null : multiplier;
+  });
+
+  /** True when the run's cost is known to exceed the user's remaining balance. */
+  creditsInsufficient = computed<boolean>(() => {
+    const cost = this.creditCost();
+    const remaining = this.creditsRemaining();
+    return cost !== null && remaining !== null && cost > remaining;
+  });
+
+  /** Fetch per-tool credit multipliers and the user's remaining balance. */
   private loadToolCredits(): void {
     this.creditsService.getWorkflowCredits().subscribe({
       next: (response) => {
@@ -132,6 +158,7 @@ export default class SinglePredictionComponent {
           (w) => w.category === "single-prediction"
         );
         if (!config) return;
+        this.toolMultipliers.set(config.toolMultipliers);
         for (const tool of this.tools) {
           const multiplier = config.toolMultipliers[tool.id];
           if (multiplier != null) {
@@ -141,6 +168,12 @@ export default class SinglePredictionComponent {
       },
       error: (error) => {
         console.warn("Failed to load workflow credits", error);
+      },
+    });
+    this.creditsService.getMyCredit().subscribe({
+      next: (response) => this.creditsRemaining.set(response.credit),
+      error: (error) => {
+        console.warn("Failed to load credit balance", error);
       },
     });
   }

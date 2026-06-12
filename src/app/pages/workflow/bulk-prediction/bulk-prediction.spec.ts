@@ -521,4 +521,52 @@ describe("BulkPredictionComponent", () => {
     component.goToJobs();
     expect(workflowSubmissionService.goToJobs).toHaveBeenCalled();
   });
+
+  // ── 25. creditCost ───────────────────────────────────────────────────
+
+  describe("creditCost", () => {
+    it("computes tool multiplier × number of FASTA entries", () => {
+      component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
+      component.selectTool("boltz");
+      component.form.controls.fasta.setValue(
+        ">seq1\nARNDCQEGHILKMFPSTWYV\n>seq2\nVYWTSPFMKLIHGEQCDNRA"
+      );
+      fixture.detectChanges();
+
+      expect(component.creditCost()).toBe(2);
+    });
+
+    it("returns null when the FASTA input is empty or invalid", () => {
+      component["toolMultipliers"].set({ boltz: 1 });
+      component.selectTool("boltz");
+      component.form.controls.fasta.setValue("");
+      fixture.detectChanges();
+
+      expect(component.creditCost()).toBeNull();
+    });
+
+    it("flags insufficient credits when the cost exceeds the balance", () => {
+      component["toolMultipliers"].set({ boltz: 1 });
+      component.selectTool("boltz");
+      component.form.controls.fasta.setValue(
+        ">seq1\nARNDCQEGHILKMFPSTWYV\n>seq2\nVYWTSPFMKLIHGEQCDNRA"
+      );
+      component["creditsRemaining"].set(1);
+      fixture.detectChanges();
+
+      expect(component.creditsInsufficient()).toBe(true);
+    });
+
+    it("does not flag insufficient when the balance is unknown", () => {
+      component["toolMultipliers"].set({ boltz: 1 });
+      component.selectTool("boltz");
+      component.form.controls.fasta.setValue(
+        ">seq1\nARNDCQEGHILKMFPSTWYV\n>seq2\nVYWTSPFMKLIHGEQCDNRA"
+      );
+      component["creditsRemaining"].set(null);
+      fixture.detectChanges();
+
+      expect(component.creditsInsufficient()).toBe(false);
+    });
+  });
 });

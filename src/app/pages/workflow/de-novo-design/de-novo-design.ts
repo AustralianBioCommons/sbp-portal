@@ -33,6 +33,7 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
+import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import { CreditsService } from "../../../cores/services/credits.service";
@@ -75,6 +76,7 @@ type StepItem = Step;
     ConfigurationSummaryComponent,
     MolstarViewerComponent,
     LengthRangeSliderComponent,
+    CreditSummaryComponent,
   ],
   templateUrl: "./de-novo-design.html",
   styleUrls: ["./de-novo-design.scss"],
@@ -548,7 +550,34 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.loadToolCredits();
   }
 
-  /** Fetch per-tool credit multipliers and annotate the tool chips. */
+  /** Per-tool credit multipliers for this workflow (from the backend). */
+  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
+  /**
+   * Remaining credit balance for the current user. Defaults to a dummy value so
+   * the insufficient-credit UI is testable; replaced by the real balance from
+   * getMyCredit() when available.
+   */
+  creditsRemaining = signal<number | null>(250);
+
+  /** Credit cost of the run: tool multiplier × number of final designs. */
+  creditCost = computed<number | null>(() => {
+    const multiplier = this.toolMultipliers()[this.selectedTool()];
+    if (multiplier == null) return null;
+    const rowId = this.schemaLoader.inputRows()[0]?.id;
+    if (!rowId) return null;
+    const count = this.getRowNumberValue(rowId, "number_of_final_designs", 0);
+    if (!Number.isFinite(count) || count < 1) return null;
+    return multiplier * count;
+  });
+
+  /** True when the run's cost is known to exceed the user's remaining balance. */
+  creditsInsufficient = computed<boolean>(() => {
+    const cost = this.creditCost();
+    const remaining = this.creditsRemaining();
+    return cost !== null && remaining !== null && cost > remaining;
+  });
+
+  /** Fetch per-tool credit multipliers and the user's remaining balance. */
   private loadToolCredits(): void {
     this.subscription.add(
       this.creditsService.getWorkflowCredits().subscribe({
@@ -557,6 +586,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
             (w) => w.category === "de-novo-design"
           );
           if (!config) return;
+          this.toolMultipliers.set(config.toolMultipliers);
           for (const tool of this.tools) {
             const multiplier = config.toolMultipliers[tool.id];
             if (multiplier != null) {
@@ -566,6 +596,14 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.warn("Failed to load workflow credits", error);
+        },
+      })
+    );
+    this.subscription.add(
+      this.creditsService.getMyCredit().subscribe({
+        next: (response) => this.creditsRemaining.set(response.credit),
+        error: (error) => {
+          console.warn("Failed to load credit balance", error);
         },
       })
     );

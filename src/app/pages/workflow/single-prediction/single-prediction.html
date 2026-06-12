@@ -70,6 +70,7 @@
         ></app-tool-selection>
       </div>
 
+
       <div class="relative">
         @if ((auth.canExecuteWorkflows$ | async) === false) {
         <div
@@ -454,6 +455,15 @@
         </app-step-content>
         }
 
+        <!-- Credit cost summary -->
+        <div class="mt-6">
+          <app-credit-summary
+            [total]="creditCost()"
+            [remaining]="creditsRemaining()"
+            reduceHint="top up your credits"
+          ></app-credit-summary>
+        </div>
+
         <div class="mt-6 flex items-center justify-between">
           <app-button
             type="button"
@@ -468,7 +478,11 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!canGoNext() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !canGoNext() ||
+                creditsInsufficient() ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="nextStep()"
             >
               Next
@@ -477,7 +491,12 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!canSubmit() || !isToolAvailable() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !canSubmit() ||
+                !isToolAvailable() ||
+                creditsInsufficient() ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="submitWorkflow()"
             >
               Submit

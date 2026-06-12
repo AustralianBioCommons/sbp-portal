@@ -18,6 +18,7 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
+import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
   Step,
@@ -103,6 +104,7 @@ type StepItem = Step;
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
+    CreditSummaryComponent,
   ],
   host: {
     class: "block w-full interaction-screening-bg",
@@ -129,7 +131,38 @@ export default class InteractionScreeningComponent {
     this.loadToolCredits();
   }
 
-  /** Fetch per-tool credit multipliers and annotate the tool chips. */
+  /** Per-tool credit multipliers for this workflow (from the backend). */
+  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
+  /**
+   * Remaining credit balance for the current user. Defaults to a dummy value so
+   * the insufficient-credit UI is testable; replaced by the real balance from
+   * getMyCredit() when available.
+   */
+  creditsRemaining = signal<number | null>(250);
+
+  /**
+   * Credit cost of the run: tool multiplier × (query entries × target entries).
+   */
+  creditCost = computed<number | null>(() => {
+    const multiplier = this.toolMultipliers()[this.selectedTool()];
+    if (multiplier == null) return null;
+    const val = this.formValue();
+    const query = validateMultiFastaProtein(val?.queryFasta ?? "");
+    const target = validateMultiFastaProtein(val?.targetFasta ?? "");
+    if (!query.valid || !target.valid) return null;
+    const product = query.sequenceCount * target.sequenceCount;
+    if (!product) return null;
+    return multiplier * product;
+  });
+
+  /** True when the run's cost is known to exceed the user's remaining balance. */
+  creditsInsufficient = computed<boolean>(() => {
+    const cost = this.creditCost();
+    const remaining = this.creditsRemaining();
+    return cost !== null && remaining !== null && cost > remaining;
+  });
+
+  /** Fetch per-tool credit multipliers and the user's remaining balance. */
   private loadToolCredits(): void {
     this.creditsService.getWorkflowCredits().subscribe({
       next: (response) => {
@@ -137,6 +170,7 @@ export default class InteractionScreeningComponent {
           (w) => w.category === "interaction-screening"
         );
         if (!config) return;
+        this.toolMultipliers.set(config.toolMultipliers);
         for (const tool of this.tools) {
           const multiplier = config.toolMultipliers[tool.id];
           if (multiplier != null) {
@@ -146,6 +180,12 @@ export default class InteractionScreeningComponent {
       },
       error: (error) => {
         console.warn("Failed to load workflow credits", error);
+      },
+    });
+    this.creditsService.getMyCredit().subscribe({
+      next: (response) => this.creditsRemaining.set(response.credit),
+      error: (error) => {
+        console.warn("Failed to load credit balance", error);
       },
     });
   }

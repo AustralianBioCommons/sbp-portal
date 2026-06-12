@@ -260,6 +260,13 @@
               </p>
               }
             </div>
+
+            <!-- Credit cost summary -->
+            <app-credit-summary
+              [total]="creditCost()"
+              [remaining]="creditsRemaining()"
+              reduceHint="reduce the number of sequences"
+            ></app-credit-summary>
           </div>
         </app-step-content>
         }
@@ -334,7 +341,11 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!canGoNext() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !canGoNext() ||
+                creditsInsufficient() ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="nextStep()"
             >
               Next
@@ -343,7 +354,12 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!isFormValid() || workflowSubmission.isSubmitting() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !isFormValid() ||
+                workflowSubmission.isSubmitting() ||
+                creditsInsufficient() ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="submitWorkflow()"
             >
               Submit
