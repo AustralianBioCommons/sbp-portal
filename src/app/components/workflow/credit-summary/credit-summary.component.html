@@ -1,0 +1,16 @@
+<div class="rounded-lg border border-gray-200 px-4 py-3">
+  <p class="text-sm font-semibold text-gray-900">
+    Total:
+    <span [class]="insufficient() ? 'text-red-600' : 'text-sky-900'">
+      {{ total() ?? "—" }} Credits<span class="align-super">*</span>
+    </span>
+  </p>
+  @if (insufficient()) {
+  <p class="mt-1 text-xs font-medium text-red-600">
+    You have insufficient SBP credits to execute this workflow. Please reduce
+    resource requirements or come back next month when your credit allocation is
+    reset.
+  </p>
+  }
+  <p class="mt-1 text-xs text-gray-400">* Deducted on final submission.</p>
+</div>
