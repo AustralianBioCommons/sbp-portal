@@ -70,7 +70,6 @@
         ></app-tool-selection>
       </div>
 
-
       <div class="relative">
         @if ((auth.canExecuteWorkflows$ | async) === false) {
         <div
@@ -460,7 +459,6 @@
           <app-credit-summary
             [total]="creditCost()"
             [remaining]="creditsRemaining()"
-            reduceHint="top up your credits"
           ></app-credit-summary>
         </div>
 

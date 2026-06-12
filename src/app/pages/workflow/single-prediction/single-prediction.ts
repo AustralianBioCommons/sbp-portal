@@ -127,9 +127,9 @@ export default class SinglePredictionComponent {
   }
 
   /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<Partial<Record<SinglePredictionTool, number>>>(
-    {}
-  );
+  private toolMultipliers = signal<
+    Partial<Record<SinglePredictionTool, number>>
+  >({});
   /**
    * Remaining credit balance for the current user. Defaults to a dummy value so
    * the insufficient-credit UI is testable; replaced by the real balance from

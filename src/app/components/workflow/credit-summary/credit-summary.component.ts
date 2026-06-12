@@ -17,8 +17,6 @@ export class CreditSummaryComponent {
   @Input() total: number | null = null;
   /** Remaining credit balance for the user. Null while unknown. */
   @Input() remaining: number | null = null;
-  /** Trailing hint in the insufficient-credits message, e.g. "reduce the number of designs". */
-  @Input() reduceHint = "reduce the size of this job";
 
   /** True when the cost is known to exceed the user's remaining balance. */
   get insufficient(): boolean {

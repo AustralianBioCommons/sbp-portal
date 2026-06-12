@@ -596,9 +596,7 @@ describe("InteractionScreeningComponent", () => {
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
-      component.form.controls.targetFasta.setValue(
-        ">t1\nARNDCQEGHILKMFPSTWYV"
-      );
+      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
       fixture.detectChanges();
 
       // 1 (boltz) × (2 query × 1 target)
@@ -621,9 +619,7 @@ describe("InteractionScreeningComponent", () => {
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
-      component.form.controls.targetFasta.setValue(
-        ">t1\nARNDCQEGHILKMFPSTWYV"
-      );
+      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
       component["creditsRemaining"].set(1);
       fixture.detectChanges();
 
@@ -636,9 +632,7 @@ describe("InteractionScreeningComponent", () => {
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
-      component.form.controls.targetFasta.setValue(
-        ">t1\nARNDCQEGHILKMFPSTWYV"
-      );
+      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
       component["creditsRemaining"].set(null);
       fixture.detectChanges();
 

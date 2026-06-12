@@ -47,13 +47,13 @@ describe("CreditSummaryComponent", () => {
   it("is insufficient and warns when the total exceeds the balance", () => {
     component.total = 300;
     component.remaining = 250;
-    component.reduceHint = "reduce the number of designs";
     fixture.detectChanges();
 
     expect(component.insufficient).toBe(true);
-    expect(text()).toContain("Insufficient credits");
-    expect(text()).toContain("250 credits available");
-    expect(text()).toContain("reduce the number of designs");
+    expect(text()).toContain(
+      "You have insufficient SBP credits to execute this workflow"
+    );
+    expect(text()).toContain("credit allocation is reset");
   });
 
   it("renders an em dash when the total is unknown", () => {
