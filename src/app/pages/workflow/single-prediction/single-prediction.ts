@@ -131,11 +131,10 @@ export default class SinglePredictionComponent {
     Partial<Record<SinglePredictionTool, number>>
   >({});
   /**
-   * Remaining credit balance for the current user. Defaults to a dummy value so
-   * the insufficient-credit UI is testable; replaced by the real balance from
-   * getMyCredit() when available.
+   * Remaining credit balance for the current user. Starts at 0 until the real
+   * balance from getMyCredit() loads.
    */
-  creditsRemaining = signal<number | null>(250);
+  creditsRemaining = signal<number | null>(0);
 
   /** Credit cost of the run: tool multiplier × 1 (a single prediction). */
   creditCost = computed<number | null>(() => {

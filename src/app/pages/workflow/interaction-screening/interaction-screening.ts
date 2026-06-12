@@ -134,11 +134,10 @@ export default class InteractionScreeningComponent {
   /** Per-tool credit multipliers for this workflow (from the backend). */
   private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
   /**
-   * Remaining credit balance for the current user. Defaults to a dummy value so
-   * the insufficient-credit UI is testable; replaced by the real balance from
-   * getMyCredit() when available.
+   * Remaining credit balance for the current user. Starts at 0 until the real
+   * balance from getMyCredit() loads.
    */
-  creditsRemaining = signal<number | null>(250);
+  creditsRemaining = signal<number | null>(0);
 
   /**
    * Credit cost of the run: tool multiplier × (query entries × target entries).

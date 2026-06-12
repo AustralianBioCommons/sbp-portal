@@ -1,4 +1,4 @@
-import { Component, Input } from "@angular/core";
+import { Component, computed, input } from "@angular/core";
 
 /**
  * Shows the computed credit cost of a workflow run, an insufficient-balance
@@ -14,16 +14,14 @@ import { Component, Input } from "@angular/core";
 })
 export class CreditSummaryComponent {
   /** Total credits the run will cost. Null while the cost can't be computed. */
-  @Input() total: number | null = null;
+  total = input<number | null>(null);
   /** Remaining credit balance for the user. Null while unknown. */
-  @Input() remaining: number | null = null;
+  remaining = input<number | null>(null);
 
   /** True when the cost is known to exceed the user's remaining balance. */
-  get insufficient(): boolean {
-    return (
-      this.total !== null &&
-      this.remaining !== null &&
-      this.total > this.remaining
-    );
-  }
+  insufficient = computed<boolean>(() => {
+    const total = this.total();
+    const remaining = this.remaining();
+    return total !== null && remaining !== null && total > remaining;
+  });
 }
