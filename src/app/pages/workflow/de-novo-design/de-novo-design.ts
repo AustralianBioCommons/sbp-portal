@@ -52,7 +52,7 @@ interface TabItem {
 }
 
 interface ToolChip extends ToolOption {
-  id: Extract<WorkflowTool, "bindcraft" | "boltzgen" | "rfdiffusion">;
+  id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
 }
 
 type StepItem = Step;
@@ -134,10 +134,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   // Tools
   readonly tools: ToolChip[] = [
     {
-      id: "boltzgen",
-      label: "BoltzGen",
-    },
-    {
       id: "rfdiffusion",
       label: "RFDiffusion",
     },
@@ -173,7 +169,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     ToolChip["id"],
     { name: string; label: string; description?: string }[]
   > = {
-    boltzgen: [],
     rfdiffusion: [],
     bindcraft: [],
   };
