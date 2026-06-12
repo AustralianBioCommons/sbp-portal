@@ -1,5 +1,7 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
 import {
@@ -103,6 +105,8 @@ describe("SinglePredictionComponent", () => {
     await TestBed.configureTestingModule({
       imports: [SinglePredictionComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: DatasetUploadService, useValue: datasetUploadService },
         { provide: FastaUploadService, useValue: fastaUploadService },

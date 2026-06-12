@@ -1,5 +1,7 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
 import {
@@ -91,6 +93,8 @@ describe("InteractionScreeningComponent", () => {
     await TestBed.configureTestingModule({
       imports: [InteractionScreeningComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: FastaUploadService, useValue: fastaUploadService },
         { provide: DatasetUploadService, useValue: datasetUploadService },

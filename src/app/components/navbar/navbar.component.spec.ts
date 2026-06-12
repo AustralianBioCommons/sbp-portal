@@ -1,5 +1,7 @@
 import { ElementRef } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { LocationStrategy } from "@angular/common";
 import { MockLocationStrategy } from "@angular/common/testing";
 import {
@@ -48,6 +50,8 @@ describe("Navbar", () => {
     await TestBed.configureTestingModule({
       imports: [Navbar],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
         // RouterLink also injects ActivatedRoute + LocationStrategy.
