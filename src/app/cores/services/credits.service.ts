@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { catchError, Observable, of } from "rxjs";
+import { Observable } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { WorkflowName, WorkflowTool } from "../interfaces/workflow.interfaces";
 
@@ -29,46 +29,26 @@ export interface WorkflowCreditsResponse {
   workflows: WorkflowCreditConfig[];
 }
 
-/**
- * Dev-only dummy data so `npm start` shows the credits UI even when the
- * backend is unreachable or hasn't deployed these endpoints yet. Mirrors the
- * multipliers in sbp-backend/app/services/credits.py. Never used in production
- * builds — real failures there propagate so callers can degrade gracefully.
- */
-const DEV_USER_CREDIT: UserCreditResponse = { userId: "dev-user", credit: 250 };
-const DEV_WORKFLOW_CREDITS: WorkflowCreditsResponse = {
-  workflows: [
-    {
-      category: "de-novo-design",
-      displayName: "De novo Design",
-      basis: "final_design_count",
-      toolMultipliers: { bindcraft: 20, rfdiffusion: 10 },
-    },
-    {
-      category: "single-prediction",
-      displayName: "Single Prediction",
-      basis: "constant",
-      toolMultipliers: { boltz: 1, colabfold: 5, alphafold2: 5 },
-    },
-    {
-      category: "bulk-prediction",
-      displayName: "Bulk Prediction",
-      basis: "fasta_entry_count",
-      toolMultipliers: { boltz: 1, colabfold: 1 },
-    },
-    {
-      category: "interaction-screening",
-      displayName: "Interaction Screening",
-      basis: "fasta_pair_product",
-      toolMultipliers: { boltz: 1, colabfold: 1 },
-    },
-  ],
-};
+/** Inputs for POST /api/workflows/credits/estimate (display only). */
+export interface CreditEstimateRequest {
+  workflow: string;
+  tool: string;
+  finalDesignCount?: number | null;
+  fasta?: string | null;
+  queryFasta?: string | null;
+  targetFasta?: string | null;
+}
+
+/** Response shape of POST /api/workflows/credits/estimate. */
+export interface CreditEstimateResponse {
+  cost: number | null;
+}
 
 /**
  * Fetches the authenticated user's remaining credit balance and the per-tool
  * credit multipliers. The Auth0 HTTP interceptor attaches the bearer token for
- * /api/* requests.
+ * /api/* requests. Request errors propagate to callers — there is no dummy
+ * fallback, so an unavailable backend surfaces as a failed request.
  */
 @Injectable({
   providedIn: "root",
@@ -79,29 +59,29 @@ export class CreditsService {
 
   /** Return the current user's remaining credit balance. */
   getMyCredit(): Observable<UserCreditResponse> {
-    return this.http
-      .get<UserCreditResponse>(`${this.baseUrl}/api/users/me/credit`)
-      .pipe(this.devFallback(DEV_USER_CREDIT));
+    return this.http.get<UserCreditResponse>(
+      `${this.baseUrl}/api/users/me/credit`
+    );
   }
 
   /** Return the per-tool credit multipliers for each workflow category. */
   getWorkflowCredits(): Observable<WorkflowCreditsResponse> {
-    return this.http
-      .get<WorkflowCreditsResponse>(`${this.baseUrl}/api/workflows/credits`)
-      .pipe(this.devFallback(DEV_WORKFLOW_CREDITS));
+    return this.http.get<WorkflowCreditsResponse>(
+      `${this.baseUrl}/api/workflows/credits`
+    );
   }
 
   /**
-   * In non-production builds, swallow request errors and emit dummy data so the
-   * UI is previewable without a backend. In production the error propagates.
+   * Estimate a run's credit cost for display. The backend is the single source
+   * of truth for the calculation; authoritative deduction happens server-side
+   * at launch, so this is a non-binding preview.
    */
-  private devFallback<T>(fallback: T) {
-    return catchError<T, Observable<T>>((error) => {
-      if (environment.production) {
-        throw error;
-      }
-      console.warn("Credits request failed; using dev dummy data", error);
-      return of(fallback);
-    });
+  estimateCost(
+    request: CreditEstimateRequest
+  ): Observable<CreditEstimateResponse> {
+    return this.http.post<CreditEstimateResponse>(
+      `${this.baseUrl}/api/workflows/credits/estimate`,
+      request
+    );
   }
 }

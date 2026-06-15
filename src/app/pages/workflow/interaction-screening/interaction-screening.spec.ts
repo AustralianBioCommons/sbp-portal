@@ -587,54 +587,26 @@ describe("InteractionScreeningComponent", () => {
     expect(component.alertMessage()).toContain("Unknown error");
   });
 
-  // ── creditCost ─────────────────────────────────────────────────────────
+  // ── creditsInsufficient ──────────────────────────────────────────────
 
-  describe("creditCost", () => {
-    it("computes tool multiplier × (query entries × target entries)", () => {
-      component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
-      component.selectTool("boltz");
-      component.form.controls.queryFasta.setValue(
-        ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
-      );
-      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
-      fixture.detectChanges();
-
-      // 1 (boltz) × (2 query × 1 target)
-      expect(component.creditCost()).toBe(2);
-    });
-
-    it("returns null when either FASTA input is empty or invalid", () => {
-      component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
-      component.form.controls.queryFasta.setValue("");
-      component.form.controls.targetFasta.setValue("");
-      fixture.detectChanges();
-
-      expect(component.creditCost()).toBeNull();
-    });
-
+  describe("creditsInsufficient", () => {
     it("flags insufficient credits when the cost exceeds the balance", () => {
-      component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
-      component.form.controls.queryFasta.setValue(
-        ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
-      );
-      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
+      component.creditCost.set(2);
       component["creditsRemaining"].set(1);
-      fixture.detectChanges();
 
       expect(component.creditsInsufficient()).toBe(true);
     });
 
+    it("does not flag insufficient when the cost is unknown", () => {
+      component.creditCost.set(null);
+      component["creditsRemaining"].set(1);
+
+      expect(component.creditsInsufficient()).toBe(false);
+    });
+
     it("does not flag insufficient when the balance is unknown", () => {
-      component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
-      component.form.controls.queryFasta.setValue(
-        ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
-      );
-      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
+      component.creditCost.set(2);
       component["creditsRemaining"].set(null);
-      fixture.detectChanges();
 
       expect(component.creditsInsufficient()).toBe(false);
     });

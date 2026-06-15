@@ -1,6 +1,11 @@
 import { CommonModule } from "@angular/common";
 import { Component, computed, inject, Signal, signal } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
+import {
+  takeUntilDestroyed,
+  toObservable,
+  toSignal,
+} from "@angular/core/rxjs-interop";
+import { of } from "rxjs";
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -12,7 +17,13 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { map, startWith, switchMap } from "rxjs/operators";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  startWith,
+  switchMap,
+} from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -36,6 +47,7 @@ import {
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
+  CreditEstimateRequest,
   CreditsService,
   USER_CREDITS_ENABLED,
 } from "../../../cores/services/credits.service";
@@ -135,30 +147,41 @@ export default class InteractionScreeningComponent {
     /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       this.loadToolCredits();
+      toObservable(this.estimateInputs)
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged(
+            (a, b) => JSON.stringify(a) === JSON.stringify(b)
+          ),
+          switchMap((req) =>
+            req ? this.creditsService.estimateCost(req) : of({ cost: null })
+          ),
+          takeUntilDestroyed()
+        )
+        .subscribe((res) => this.creditCost.set(res.cost));
     }
   }
 
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
   /**
    * Remaining credit balance for the current user. Starts at 0 until the real
    * balance from getMyCredit() loads.
    */
   creditsRemaining = signal<number | null>(0);
 
-  /**
-   * Credit cost of the run: tool multiplier × (query entries × target entries).
-   */
-  creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
-    if (multiplier == null) return null;
+  /** Credit cost of the run, estimated by the backend (display only). */
+  creditCost = signal<number | null>(null);
+
+  /** Inputs sent to the backend cost-estimate endpoint. */
+  /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
+  private estimateInputs = computed<CreditEstimateRequest | null>(() => {
+    if (!this.creditsEnabled) return null;
     const val = this.formValue();
-    const query = validateMultiFastaProtein(val?.queryFasta ?? "");
-    const target = validateMultiFastaProtein(val?.targetFasta ?? "");
-    if (!query.valid || !target.valid) return null;
-    const product = query.sequenceCount * target.sequenceCount;
-    if (!product) return null;
-    return multiplier * product;
+    return {
+      workflow: "interaction-screening",
+      tool: this.selectedTool(),
+      queryFasta: val?.queryFasta ?? "",
+      targetFasta: val?.targetFasta ?? "",
+    };
   });
 
   /** True when the run's cost is known to exceed the user's remaining balance. */
@@ -176,7 +199,6 @@ export default class InteractionScreeningComponent {
           (w) => w.category === "interaction-screening"
         );
         if (!config) return;
-        this.toolMultipliers.set(config.toolMultipliers);
         for (const tool of this.tools) {
           const multiplier = config.toolMultipliers[tool.id];
           if (multiplier != null) {

@@ -17,7 +17,16 @@ import { Router } from "@angular/router";
 import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
 
-import { filter, Subscription, take } from "rxjs";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  of,
+  Subscription,
+  switchMap,
+  take,
+} from "rxjs";
+import { toObservable } from "@angular/core/rxjs-interop";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -37,6 +46,7 @@ import { CreditSummaryComponent } from "../../../components/workflow/credit-summ
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
+  CreditEstimateRequest,
   CreditsService,
   USER_CREDITS_ENABLED,
 } from "../../../cores/services/credits.service";
@@ -554,26 +564,43 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       this.loadToolCredits();
+      this.subscription.add(
+        toObservable(this.estimateInputs)
+          .pipe(
+            debounceTime(300),
+            distinctUntilChanged(
+              (a, b) => JSON.stringify(a) === JSON.stringify(b)
+            ),
+            switchMap((req) =>
+              req ? this.creditsService.estimateCost(req) : of({ cost: null })
+            )
+          )
+          .subscribe((res) => this.creditCost.set(res.cost))
+      );
     }
   }
 
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
   /**
    * Remaining credit balance for the current user. Starts at 0 until the real
    * balance from getMyCredit() loads.
    */
   creditsRemaining = signal<number | null>(0);
 
-  /** Credit cost of the run: tool multiplier × number of final designs. */
-  creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
-    if (multiplier == null) return null;
+  /** Credit cost of the run, estimated by the backend (display only). */
+  creditCost = signal<number | null>(null);
+
+  /** Inputs sent to the backend cost-estimate endpoint. */
+  private estimateInputs = computed<CreditEstimateRequest | null>(() => {
+    if (!this.creditsEnabled) return null;
     const rowId = this.schemaLoader.inputRows()[0]?.id;
-    if (!rowId) return null;
-    const count = this.getRowNumberValue(rowId, "number_of_final_designs", 0);
-    if (!Number.isFinite(count) || count < 1) return null;
-    return multiplier * count;
+    const count = rowId
+      ? this.getRowNumberValue(rowId, "number_of_final_designs", 0)
+      : 0;
+    return {
+      workflow: "de-novo-design",
+      tool: this.selectedTool(),
+      finalDesignCount: count,
+    };
   });
 
   /** True when the run's cost is known to exceed the user's remaining balance. */
@@ -592,7 +619,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
             (w) => w.category === "de-novo-design"
           );
           if (!config) return;
-          this.toolMultipliers.set(config.toolMultipliers);
           for (const tool of this.tools) {
             const multiplier = config.toolMultipliers[tool.id];
             if (multiplier != null) {

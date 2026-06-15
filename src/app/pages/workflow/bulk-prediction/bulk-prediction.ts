@@ -8,7 +8,12 @@ import {
   Signal,
   signal,
 } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
+import {
+  takeUntilDestroyed,
+  toObservable,
+  toSignal,
+} from "@angular/core/rxjs-interop";
+import { of } from "rxjs";
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -19,7 +24,13 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { map, startWith, switchMap } from "rxjs/operators";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  startWith,
+  switchMap,
+} from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -43,6 +54,7 @@ import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
   CreditsService,
+  CreditEstimateRequest,
   USER_CREDITS_ENABLED,
 } from "../../../cores/services/credits.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
@@ -112,24 +124,42 @@ export default class BulkPredictionComponent {
     /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       this.loadToolCredits();
+      toObservable(this.estimateInputs)
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged(
+            (a, b) => JSON.stringify(a) === JSON.stringify(b)
+          ),
+          switchMap((req) =>
+            req ? this.creditsService.estimateCost(req) : of({ cost: null })
+          ),
+          takeUntilDestroyed()
+        )
+        .subscribe((res) => {
+          this.creditCost.set(res.cost);
+          this.cdr.markForCheck();
+        });
     }
   }
 
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
   /**
    * Remaining credit balance for the current user. Starts at 0 until the real
    * balance from getMyCredit() loads.
    */
   creditsRemaining = signal<number | null>(0);
 
-  /** Credit cost of the run: tool multiplier × number of FASTA entries. */
-  creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
-    if (multiplier == null) return null;
-    const result = validateBulkFastaProtein(this.formValue()?.fasta ?? "");
-    if (!result.valid || !result.sequenceCount) return null;
-    return multiplier * result.sequenceCount;
+  /** Credit cost of the run, estimated by the backend (display only). */
+  creditCost = signal<number | null>(null);
+
+  /** Inputs sent to the backend cost-estimate endpoint. */
+  /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
+  private estimateInputs = computed<CreditEstimateRequest | null>(() => {
+    if (!this.creditsEnabled) return null;
+    return {
+      workflow: "bulk-prediction",
+      tool: this.selectedTool(),
+      fasta: this.formValue()?.fasta ?? "",
+    };
   });
 
   /** True when the run's cost is known to exceed the user's remaining balance. */
@@ -147,7 +177,6 @@ export default class BulkPredictionComponent {
           (w) => w.category === "bulk-prediction"
         );
         if (!config) return;
-        this.toolMultipliers.set(config.toolMultipliers);
         for (const tool of this.tools) {
           const multiplier = config.toolMultipliers[tool.id];
           if (multiplier != null) {

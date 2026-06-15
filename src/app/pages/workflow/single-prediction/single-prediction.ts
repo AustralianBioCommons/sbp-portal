@@ -1,5 +1,6 @@
-import { switchMap, map } from "rxjs";
+import { debounceTime, distinctUntilChanged, of, switchMap, map } from "rxjs";
 import { CommonModule } from "@angular/common";
+import { takeUntilDestroyed, toObservable } from "@angular/core/rxjs-interop";
 import {
   CdkDragDrop,
   DragDropModule,
@@ -33,6 +34,7 @@ import {
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
+  CreditEstimateRequest,
   CreditsService,
   USER_CREDITS_ENABLED,
 } from "../../../cores/services/credits.service";
@@ -130,23 +132,32 @@ export default class SinglePredictionComponent {
     /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       this.loadToolCredits();
+      toObservable(this.estimateInputs)
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+          switchMap((req) =>
+            req ? this.creditsService.estimateCost(req) : of({ cost: null })
+          ),
+          takeUntilDestroyed()
+        )
+        .subscribe((res) => this.creditCost.set(res.cost));
     }
   }
 
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<
-    Partial<Record<SinglePredictionTool, number>>
-  >({});
   /**
    * Remaining credit balance for the current user. Starts at 0 until the real
    * balance from getMyCredit() loads.
    */
   creditsRemaining = signal<number | null>(0);
 
-  /** Credit cost of the run: tool multiplier × 1 (a single prediction). */
-  creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
-    return multiplier == null ? null : multiplier;
+  /** Credit cost of the run, estimated by the backend (display only). */
+  creditCost = signal<number | null>(null);
+
+  /** Inputs sent to the backend cost-estimate endpoint. */
+  private estimateInputs = computed<CreditEstimateRequest | null>(() => {
+    if (!this.creditsEnabled) return null;
+    return { workflow: "single-prediction", tool: this.selectedTool() };
   });
 
   /** True when the run's cost is known to exceed the user's remaining balance. */
@@ -164,7 +175,6 @@ export default class SinglePredictionComponent {
           (w) => w.category === "single-prediction"
         );
         if (!config) return;
-        this.toolMultipliers.set(config.toolMultipliers);
         for (const tool of this.tools) {
           const multiplier = config.toolMultipliers[tool.id];
           if (multiplier != null) {

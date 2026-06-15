@@ -69,38 +69,27 @@ describe("CreditsService", () => {
     expect(result).toEqual({ workflows: [] });
   });
 
-  it("falls back to dummy user credit on error in non-production builds", () => {
-    environment.production = false;
+  it("estimateCost POSTs the estimate endpoint and returns the body", () => {
     const service = setup();
-    let result: UserCreditResponse | undefined;
-    service.getMyCredit().subscribe((r) => (result = r));
+    let result: { cost: number | null } | undefined;
+    service
+      .estimateCost({ workflow: "single-prediction", tool: "boltz" })
+      .subscribe((r) => (result = r));
 
-    httpMock
-      .expectOne(`${environment.apiBaseUrl}/api/users/me/credit`)
-      .error(new ProgressEvent("error"));
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/workflows/credits/estimate`
+    );
+    expect(req.request.method).toBe("POST");
+    expect(req.request.body).toEqual({
+      workflow: "single-prediction",
+      tool: "boltz",
+    });
+    req.flush({ cost: 1 });
 
-    expect(result?.credit).toBe(250);
+    expect(result).toEqual({ cost: 1 });
   });
 
-  it("falls back to dummy workflow credits on error in non-production builds", () => {
-    environment.production = false;
-    const service = setup();
-    let result: WorkflowCreditsResponse | undefined;
-    service.getWorkflowCredits().subscribe((r) => (result = r));
-
-    httpMock
-      .expectOne(`${environment.apiBaseUrl}/api/workflows/credits`)
-      .error(new ProgressEvent("error"));
-
-    expect(result?.workflows.length).toBeGreaterThan(0);
-    expect(
-      result?.workflows.find((w) => w.category === "de-novo-design")
-        ?.toolMultipliers
-    ).toEqual({ bindcraft: 20, rfdiffusion: 10 });
-  });
-
-  it("propagates the error in production builds", () => {
-    environment.production = true;
+  it("propagates request errors to the caller", () => {
     const service = setup();
     let errored = false;
     service.getMyCredit().subscribe({
