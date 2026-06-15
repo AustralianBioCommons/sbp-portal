@@ -6,8 +6,13 @@ import { WorkflowName, WorkflowTool } from "../interfaces/workflow.interfaces";
 
 /** Total credit allowance per user (no per-user total is stored server-side). */
 export const TOTAL_CREDITS = 1000;
-/** Temporary switch to keep credit UI/API work disabled while submissions run without credits. */
-export const USER_CREDITS_ENABLED = false;
+/**
+ * Switch for the user-facing credit UI/API work. Credit deduction is enforced
+ * server-side at launch (gated independently by the backend's ENABLE_CREDITS);
+ * this flag controls whether the portal shows balances, cost summaries, and the
+ * insufficient-credit handling.
+ */
+export const USER_CREDITS_ENABLED = true;
 
 /** Shown when the backend rejects a launch for insufficient credit (HTTP 402). */
 export const INSUFFICIENT_CREDITS_MESSAGE =

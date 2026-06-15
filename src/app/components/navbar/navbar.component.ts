@@ -216,7 +216,6 @@ export class Navbar implements AfterViewInit {
         this.updateRouteState();
       });
 
-    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       // Keep the shared balance current with the auth state: refresh it on
       // login, clear it on logout.
