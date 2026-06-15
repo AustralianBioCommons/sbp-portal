@@ -65,19 +65,19 @@ describe("ListboxSelectComponent", () => {
 
     trigger.nativeElement.click();
     fixture.detectChanges();
-    expect(component.isOpen).toBe(true);
+    expect(component.isOpen()).toBe(true);
     expect(fixture.debugElement.query(By.css('[role="listbox"]'))).toBeTruthy();
 
     trigger.nativeElement.click();
     fixture.detectChanges();
-    expect(component.isOpen).toBe(false);
+    expect(component.isOpen()).toBe(false);
     expect(fixture.debugElement.query(By.css('[role="listbox"]'))).toBeFalsy();
   });
 
   it("should emit valueChange and blurred when an option is selected", () => {
     spyOn(component.valueChange, "emit");
     spyOn(component.blurred, "emit");
-    component.isOpen = true;
+    component.isOpen.set(true);
     fixture.detectChanges();
 
     const optionButtons = fixture.debugElement.queryAll(
@@ -87,12 +87,12 @@ describe("ListboxSelectComponent", () => {
 
     expect(component.valueChange.emit).toHaveBeenCalledWith("dna");
     expect(component.blurred.emit).toHaveBeenCalled();
-    expect(component.isOpen).toBe(false);
+    expect(component.isOpen()).toBe(false);
   });
 
   it("should keep the menu open when focus stays inside the component", () => {
     spyOn(component.blurred, "emit");
-    component.isOpen = true;
+    component.isOpen.set(true);
     fixture.detectChanges();
 
     const wrapper = fixture.debugElement.query(By.css("div.relative"))
@@ -106,12 +106,12 @@ describe("ListboxSelectComponent", () => {
     } as unknown as FocusEvent);
 
     expect(component.blurred.emit).not.toHaveBeenCalled();
-    expect(component.isOpen).toBe(true);
+    expect(component.isOpen()).toBe(true);
   });
 
   it("should emit blurred and close the menu when focus leaves the component", () => {
     spyOn(component.blurred, "emit");
-    component.isOpen = true;
+    component.isOpen.set(true);
 
     component.handleFocusOut({
       currentTarget: document.createElement("div"),
@@ -119,6 +119,6 @@ describe("ListboxSelectComponent", () => {
     } as unknown as FocusEvent);
 
     expect(component.blurred.emit).toHaveBeenCalled();
-    expect(component.isOpen).toBe(false);
+    expect(component.isOpen()).toBe(false);
   });
 });
