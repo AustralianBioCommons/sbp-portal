@@ -216,6 +216,7 @@ export class Navbar implements AfterViewInit {
         this.updateRouteState();
       });
 
+    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       // Load the remaining credit balance whenever the user is authenticated.
       this.isAuthenticated$

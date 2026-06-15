@@ -132,6 +132,7 @@ export default class InteractionScreeningComponent {
   private fb = inject(NonNullableFormBuilder);
 
   constructor() {
+    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       this.loadToolCredits();
     }

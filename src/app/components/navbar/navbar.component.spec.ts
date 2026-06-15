@@ -537,6 +537,14 @@ describe("Navbar", () => {
       component.toggleMobileMenu();
       expect(component.isMobileMenuOpen()).toBe(false);
     });
+
+    it("should close the mobile menu when Escape is pressed", () => {
+      component.isMobileMenuOpen.set(true);
+
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+      expect(component.isMobileMenuOpen()).toBe(false);
+    });
   });
 
   describe("navigate", () => {
@@ -561,6 +569,7 @@ describe("Navbar", () => {
     });
 
     it("should close mobile menu even when navigation rejects", async () => {
+      spyOn(console, "error");
       mockRouter.navigate.and.returnValue(
         Promise.reject(new Error("nav error"))
       );
@@ -568,6 +577,22 @@ describe("Navbar", () => {
       component.navigate("/about");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
+      expect(component.isMobileMenuOpen()).toBe(false);
+    });
+
+    it("should close mobile menu when queryParam navigation rejects", async () => {
+      spyOn(console, "error");
+      mockRouter.navigate.and.returnValue(
+        Promise.reject(new Error("nav error"))
+      );
+      component.isMobileMenuOpen.set(true);
+
+      component.navigate("/jobs", { filter: "active" });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(["/jobs"], {
+        queryParams: { filter: "active" },
+      });
       expect(component.isMobileMenuOpen()).toBe(false);
     });
   });

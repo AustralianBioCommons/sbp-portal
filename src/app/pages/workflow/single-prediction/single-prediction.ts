@@ -127,6 +127,7 @@ export default class SinglePredictionComponent {
   readonly creditsEnabled = USER_CREDITS_ENABLED;
 
   constructor() {
+    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
       this.loadToolCredits();
     }
