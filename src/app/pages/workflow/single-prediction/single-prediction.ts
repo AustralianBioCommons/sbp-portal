@@ -634,7 +634,7 @@ export default class SinglePredictionComponent {
   }
 
   submitNewJob() {
-    window.location.reload();
+    this.workflowSubmission.startNewJob();
   }
 
   goToJobs() {
