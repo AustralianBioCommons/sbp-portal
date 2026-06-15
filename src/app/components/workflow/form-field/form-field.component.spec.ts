@@ -215,6 +215,48 @@ describe("FormFieldComponent", () => {
     expect(component.alertMessage()).toBe("");
   });
 
+  // ── Range helpers ─────────────────────────────────────────────────────────
+
+  it("should report no range when validation is absent", () => {
+    expect(component.hasRange).toBe(false);
+    expect(component.getRangeText()).toBe("");
+  });
+
+  it("should report a range when both min and max are set", () => {
+    fixture.componentRef.setInput("field", {
+      name: "n",
+      type: "number",
+      required: true,
+      validation: { min: 0, max: 100 },
+    } as InputSchemaField);
+    expect(component.hasRange).toBe(true);
+    expect(component.getRangeText()).toBe("Range: 0 - 100");
+  });
+
+  it("should report min only with short and long labels", () => {
+    fixture.componentRef.setInput("field", {
+      name: "n",
+      type: "number",
+      required: true,
+      validation: { min: 5 },
+    } as InputSchemaField);
+    expect(component.hasRange).toBe(true);
+    expect(component.getRangeText()).toBe("Min: 5");
+    expect(component.getRangeText(true)).toBe("Minimum: 5");
+  });
+
+  it("should report max only with short and long labels", () => {
+    fixture.componentRef.setInput("field", {
+      name: "n",
+      type: "number",
+      required: true,
+      validation: { max: 9 },
+    } as InputSchemaField);
+    expect(component.hasRange).toBe(true);
+    expect(component.getRangeText()).toBe("Max: 9");
+    expect(component.getRangeText(true)).toBe("Maximum: 9");
+  });
+
   // ── Field type helpers (state assertions) ───────────────────────────────────
 
   it("should handle number field type", () => {
