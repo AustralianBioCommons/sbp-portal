@@ -32,7 +32,10 @@ import {
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
-import { CreditsService } from "../../../cores/services/credits.service";
+import {
+  CreditsService,
+  USER_CREDITS_ENABLED,
+} from "../../../cores/services/credits.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -121,9 +124,13 @@ export default class SinglePredictionComponent {
   private datasetUploadService = inject(DatasetUploadService);
   private fastaUploadService = inject(FastaUploadService);
   private creditsService = inject(CreditsService);
+  readonly creditsEnabled = USER_CREDITS_ENABLED;
 
   constructor() {
-    this.loadToolCredits();
+    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
+    if (this.creditsEnabled) {
+      this.loadToolCredits();
+    }
   }
 
   /** Per-tool credit multipliers for this workflow (from the backend). */

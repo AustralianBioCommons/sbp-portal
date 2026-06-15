@@ -6,6 +6,8 @@ import { WorkflowName, WorkflowTool } from "../interfaces/workflow.interfaces";
 
 /** Total credit allowance per user (no per-user total is stored server-side). */
 export const TOTAL_CREDITS = 1000;
+/** Temporary switch to keep credit UI/API work disabled while submissions run without credits. */
+export const USER_CREDITS_ENABLED = false;
 
 /** Response shape of GET /api/users/me/credit. */
 export interface UserCreditResponse {
