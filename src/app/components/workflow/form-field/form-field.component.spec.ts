@@ -26,8 +26,8 @@ describe("FormFieldComponent", () => {
 
     fixture = TestBed.createComponent(FormFieldComponent);
     component = fixture.componentInstance;
-    component.field = mockStringField;
-    component.value = "";
+    fixture.componentRef.setInput("field", mockStringField);
+    fixture.componentRef.setInput("value", "");
   });
 
   it("should create", () => {
@@ -57,31 +57,31 @@ describe("FormFieldComponent", () => {
   // ── Display label ───────────────────────────────────────────────────────────
 
   it("should format Pdb as PDB in display label", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "starting_pdb",
       label: "Starting Pdb",
       type: "string",
       required: true,
-    };
+    });
     expect(component.getDisplayFieldLabel()).toBe("Starting PDB");
   });
 
   it("should fall back to field name when label is missing", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "starting Pdb",
       type: "string",
       required: false,
-    } as InputSchemaField;
+    } as InputSchemaField);
     expect(component.getDisplayFieldLabel()).toBe("starting PDB");
   });
 
   it("should leave label unchanged when no Pdb token exists", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "starting_structure",
       label: "Starting Structure",
       type: "string",
       required: true,
-    };
+    });
     expect(component.getDisplayFieldLabel()).toBe("Starting Structure");
   });
 
@@ -94,33 +94,33 @@ describe("FormFieldComponent", () => {
   });
 
   it("should return error input classes when hasError is true", () => {
-    component.hasError = true;
+    fixture.componentRef.setInput("hasError", true);
     expect(component.getInputClasses()).toContain("border-red-500");
   });
 
   it("should return normal select classes when no error", () => {
-    component.hasError = false;
+    fixture.componentRef.setInput("hasError", false);
     const classes = component.getSelectClasses();
     expect(classes).toContain("bg-white text-gray-900");
     expect(classes).not.toContain("border-red-500");
   });
 
   it("should return error select classes when hasError is true", () => {
-    component.hasError = true;
+    fixture.componentRef.setInput("hasError", true);
     const classes = component.getSelectClasses();
     expect(classes).toContain("border-red-500 text-red-900");
     expect(classes).not.toContain("bg-white text-gray-900");
   });
 
   it("should return normal file classes when no error", () => {
-    component.hasError = false;
+    fixture.componentRef.setInput("hasError", false);
     const classes = component.getFileClasses();
     expect(classes).toContain("file:mr-4");
     expect(classes).not.toContain("file:bg-red-100 file:text-red-700");
   });
 
   it("should return error file classes when hasError is true", () => {
-    component.hasError = true;
+    fixture.componentRef.setInput("hasError", true);
     const classes = component.getFileClasses();
     expect(classes).toContain("file:mr-4");
     expect(classes).toContain("file:bg-red-100 file:text-red-700");
@@ -218,39 +218,39 @@ describe("FormFieldComponent", () => {
   // ── Field type helpers (state assertions) ───────────────────────────────────
 
   it("should handle number field type", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "n",
       label: "N",
       type: "number",
       required: true,
       validation: { min: 0, max: 100 },
-    };
-    expect(component.field.type).toBe("number");
+    });
+    expect(component.field().type).toBe("number");
   });
 
   it("should handle boolean field type", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "b",
       label: "B",
       type: "boolean",
       required: false,
-    };
-    expect(component.field.type).toBe("boolean");
+    });
+    expect(component.field().type).toBe("boolean");
   });
 
   it("should handle select field with string options", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "s",
       label: "S",
       type: "string",
       required: true,
       options: ["a", "b", "c"],
-    };
-    expect(component.field.options?.length).toBe(3);
+    });
+    expect(component.field().options?.length).toBe(3);
   });
 
   it("should handle select field with object options", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "s",
       label: "S",
       type: "string",
@@ -259,40 +259,45 @@ describe("FormFieldComponent", () => {
         { value: "v1", label: "L1" },
         { value: "v2", label: "L2" },
       ],
-    };
-    expect(component.field.options?.length).toBe(2);
+    });
+    expect(component.field().options?.length).toBe(2);
   });
 
   it("should reflect errorMessage and hasError inputs", () => {
-    component.hasError = true;
-    component.errorMessage = "This field is required";
-    expect(component.hasError).toBe(true);
-    expect(component.errorMessage).toBe("This field is required");
+    fixture.componentRef.setInput("hasError", true);
+    fixture.componentRef.setInput("errorMessage", "This field is required");
+    expect(component.hasError()).toBe(true);
+    expect(component.errorMessage()).toBe("This field is required");
   });
 
   it("should handle file field type", () => {
-    component.field = { name: "f", label: "F", type: "file", required: true };
-    expect(component.field.type).toBe("file");
+    fixture.componentRef.setInput("field", {
+      name: "f",
+      label: "F",
+      type: "file",
+      required: true,
+    });
+    expect(component.field().type).toBe("file");
   });
 
   it("should handle field with description", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "t",
       label: "T",
       type: "string",
       description: "desc",
       required: true,
-    };
-    expect(component.field.description).toBe("desc");
+    });
+    expect(component.field().description).toBe("desc");
   });
 
   it("should handle optional field", () => {
-    component.field = {
+    fixture.componentRef.setInput("field", {
       name: "o",
       label: "O",
       type: "string",
       required: false,
-    };
-    expect(component.field.required).toBe(false);
+    });
+    expect(component.field().required).toBe(false);
   });
 });

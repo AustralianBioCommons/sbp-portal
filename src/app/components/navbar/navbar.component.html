@@ -63,31 +63,64 @@
 
     <!-- Right: Auth Section -->
     <div class="flex items-center gap-4 shrink-0">
-      @if (isAuthenticated$ | async) {
-      <button
-        (click)="openProfile()"
-        class="rounded-full border border-gray-300 h-10 pl-2 pr-2 lg:pr-4 flex items-center gap-1 text-sky-900 hover:bg-gray-100 transition-all"
-        type="button"
-        aria-label="Open profile"
+      @if (isAuthenticated$ | async) { @let user = (user$ | async);
+      <app-dropdown-menu
+        [isOpen]="userMenuOpen()"
+        (isOpenChange)="userMenuOpen.set($event)"
       >
-        <ng-icon name="heroUserCircle" size="30" strokeWidth="1"></ng-icon>
-        <div class="flex flex-col">
-          <span
-            class="hidden lg:inline-flex items-center gap-1 text-xs font-mono text-gray-900 truncate"
+        <ng-template #trigger>
+          <button
+            type="button"
+            (click)="userMenuOpen.set(!userMenuOpen())"
+            class="focus:outline-hidden relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm hover:cursor-pointer focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-sky-200"
+            id="user-menu-button"
+            [attr.aria-expanded]="userMenuOpen()"
+            aria-haspopup="true"
           >
-            {{ (user$ | async)?.email || "" }}
-            <ng-icon name="heroArrowTopRightOnSquare" size="12"></ng-icon>
-          </span>
-        </div>
-      </button>
-      <button
-        (click)="logout()"
-        class="text-sky-900 hover:bg-gray-100 transition-all rounded-full flex items-center justify-center h-10 w-10 border border-gray-300"
-        type="button"
-        aria-label="Log out"
-      >
-        <ng-icon name="heroArrowRightStartOnRectangle" size="20"></ng-icon>
-      </button>
+            <span class="absolute -inset-1.5"></span>
+            <span class="sr-only">Open user menu</span>
+            @if (user?.picture) { @if (!profileImageLoaded()) {
+            <ng-icon name="heroUser" size="24" class="text-gray-600"></ng-icon>
+            }
+            <img
+              class="h-10 w-10 rounded-full"
+              [class.hidden]="!profileImageLoaded()"
+              [src]="user?.picture"
+              alt="User"
+              (load)="profileImageLoaded.set(true)"
+              (error)="profileImageLoaded.set(false)"
+            />
+            } @else {
+            <ng-icon name="heroUser" size="24" class="text-gray-600"></ng-icon>
+            }
+          </button>
+        </ng-template>
+        <ng-template #menu>
+          <div class="truncate px-4 pt-2 pb-3 text-sm text-sky-900 border-b">
+            {{ user?.email || "" }}
+          </div>
+          <button
+            type="button"
+            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900"
+            role="menuitem"
+            tabindex="-1"
+            (click)="userMenuOpen.set(false); openProfile()"
+          >
+            <ng-icon name="heroUserCircle" size="20"></ng-icon>
+            My Profile
+          </button>
+          <button
+            type="button"
+            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900"
+            role="menuitem"
+            tabindex="-1"
+            (click)="logout()"
+          >
+            <ng-icon name="heroArrowRightStartOnRectangle" size="20"></ng-icon>
+            Log out
+          </button>
+        </ng-template>
+      </app-dropdown-menu>
       } @else {
       <button
         type="button"

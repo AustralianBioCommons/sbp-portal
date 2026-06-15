@@ -22,10 +22,10 @@ describe("ConfigurationSummaryComponent", () => {
     component = fixture.componentInstance;
 
     // Set required inputs
-    component.selectedTool = "Test Tool";
-    component.summaryItems = mockSummaryItems;
-    component.requiredFieldCount = 2;
-    component.isValid = true;
+    fixture.componentRef.setInput("selectedTool", "Test Tool");
+    fixture.componentRef.setInput("summaryItems", mockSummaryItems);
+    fixture.componentRef.setInput("requiredFieldCount", 2);
+    fixture.componentRef.setInput("isValid", true);
   });
 
   it("should create", () => {
@@ -46,32 +46,32 @@ describe("ConfigurationSummaryComponent", () => {
   });
 
   it("should show valid status when configuration is valid", () => {
-    component.isValid = true;
+    fixture.componentRef.setInput("isValid", true);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Configuration Valid");
   });
 
   it("should show invalid status when configuration is invalid", () => {
-    component.isValid = false;
+    fixture.componentRef.setInput("isValid", false);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Configuration Incomplete");
   });
 
   it("should display parameter status correctly", () => {
-    component.hasParameters = true;
+    fixture.componentRef.setInput("hasParameters", true);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Has Parameters");
 
-    component.hasParameters = false;
+    fixture.componentRef.setInput("hasParameters", false);
     fixture.detectChanges();
     expect(compiled.textContent).toContain("No Parameters");
   });
 
   it("should handle empty summary items", () => {
-    component.summaryItems = [];
+    fixture.componentRef.setInput("summaryItems", []);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("No input configuration provided");

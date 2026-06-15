@@ -1,0 +1,52 @@
+<div class="relative" (focusout)="handleFocusOut($event)">
+  <button
+    [id]="inputId()"
+    type="button"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="listbox"
+    [attr.aria-controls]="menuId"
+    (click)="toggleMenu()"
+    class="flex h-10 w-full items-center justify-between rounded-md border bg-white px-4 text-left text-sm text-gray-900 transition-colors focus:outline-none focus:ring-2"
+    [class.border-red-500]="invalid()"
+    [class.focus:ring-red-100]="invalid()"
+    [class.focus:ring-sky-100]="!invalid()"
+  >
+    <span class="block min-w-0 truncate">{{ selectedLabel }}</span>
+    <svg
+      class="ml-3 h-4 w-4 shrink-0 text-gray-500"
+      fill="none"
+      viewBox="0 0 20 20"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="m6 8 4 4 4-4"
+      />
+    </svg>
+  </button>
+
+  @if (isOpen()) {
+  <div
+    [id]="menuId"
+    role="listbox"
+    tabindex="-1"
+    class="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-59.5 overflow-y-auto rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
+  >
+    @for (option of options(); track option.value) {
+    <button
+      type="button"
+      role="option"
+      [attr.aria-selected]="value() === option.value"
+      (click)="selectOption(option.value)"
+      class="flex min-h-8 w-full items-center rounded-lg px-2 py-1.5 text-left text-xs leading-tight text-gray-900 transition-colors hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+      [class.bg-gray-100]="value() === option.value"
+    >
+      {{ option.label }}
+    </button>
+    }
+  </div>
+  }
+</div>

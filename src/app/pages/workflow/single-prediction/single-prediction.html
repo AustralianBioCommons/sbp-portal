@@ -73,7 +73,7 @@
       <div class="relative">
         @if ((auth.canExecuteWorkflows$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-lg border border-gray-200 flex items-center justify-center"
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-xs rounded-lg border border-gray-200 flex items-center justify-center"
         >
           <div class="text-center p-4">
             <p class="text-base font-semibold text-gray-900 mb-2">
@@ -167,7 +167,7 @@
           </div>
 
           <div
-            class="sequence-list mt-6 space-y-2"
+            class="sequence-list relative mt-6 flex flex-col gap-2"
             cdkDropList
             cdkDropListOrientation="vertical"
             [cdkDropListData]="entityRows()"
@@ -175,35 +175,38 @@
           >
             @for (row of entityRows(); track row.id; let i = $index) {
             <div
-              class="entity-row rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:bg-slate-50/60"
+              class="entity-row rounded-lg border border-gray-200 bg-white px-4 py-3 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:duration-200"
               cdkDrag
               cdkDragLockAxis="y"
               cdkDragBoundary=".sequence-list"
               cdkDragPreviewContainer="parent"
             >
               <div
-                class="grid gap-3 lg:grid-cols-[44px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
+                class="grid gap-3 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
               >
-                <div
-                  class="entity-row__handle flex flex-col items-center gap-1 pt-1"
-                >
-                  <span class="text-[11px] font-semibold text-slate-500"
+                <div class="flex shrink-0 cursor-grab flex-col items-center">
+                  <span
+                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
                     >#{{ i + 1 }}</span
                   >
                   <div
-                    class="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                    class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
                     cdkDragHandle
-                    title="Drag row"
-                    aria-label="Drag row"
+                    title="Drag to reorder"
+                    [attr.aria-label]="'Drag to reorder entity ' + (i + 1)"
                   >
-                    <span class="drag-dots"></span>
+                    <ng-icon
+                      name="bootstrapGripVertical"
+                      size="18"
+                      aria-hidden="true"
+                    ></ng-icon>
                   </div>
                 </div>
 
                 <div>
                   <label
                     [for]="'molecule-type-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
+                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
                   >
                     Type
                   </label>
@@ -219,7 +222,7 @@
                 <div>
                   <label
                     [for]="'copy-number-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
+                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
                   >
                     Copies
                   </label>
@@ -249,7 +252,7 @@
                 <div class="min-w-0">
                   <label
                     [for]="'sequence-' + row.id"
-                    class="mb-1 block text-[11px] font-semibold tracking-[0.08em] text-slate-500"
+                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
                   >
                     Sequence
                   </label>
@@ -302,29 +305,25 @@
                   }
                 </div>
 
-                <div class="flex self-start pt-5 justify-center">
+                <div class="flex flex-col items-center">
+                  <span
+                    class="mb-1 block text-xs font-semibold opacity-0 select-none"
+                    aria-hidden="true"
+                    >&middot;</span
+                  >
                   <button
                     type="button"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    class="flex h-10 w-10 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
                     [disabled]="entityRows().length === 1"
                     (click)="removeEntityRow(row.id)"
                     [attr.aria-label]="'Delete entity ' + (i + 1)"
                     title="Delete row"
                   >
-                    <svg
-                      class="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                    <ng-icon
+                      name="heroTrash"
+                      size="18"
                       aria-hidden="true"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
+                    ></ng-icon>
                   </button>
                 </div>
               </div>

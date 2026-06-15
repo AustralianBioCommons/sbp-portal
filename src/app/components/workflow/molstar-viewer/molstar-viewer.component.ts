@@ -70,7 +70,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
 
   constructor() {
-    // Replaces ngOnChanges: react to pdbFile changes after view is ready.
+    // React to pdbFile changes after view is ready.
     effect(() => {
       const file = this.pdbFile();
       untracked(() => {
@@ -87,7 +87,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         if (!this._viewInitialized) return;
         if (this.status() === "loaded") {
           this.zone.runOutsideAngular(
-            () => void this.applyExternalSelection(sel)
+            () => void this.applyExternalSelection(sel),
           );
         }
       });
@@ -192,7 +192,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       }
     } catch (err) {
       this.errorMessage.set(
-        err instanceof Error ? err.message : "Could not render PDB file."
+        err instanceof Error ? err.message : "Could not render PDB file.",
       );
       this.status.set("error");
     }
@@ -228,7 +228,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       });
     } catch {
       console.warn(
-        "Mol* selection hook unavailable; hotspot auto-fill disabled."
+        "Mol* selection hook unavailable; hotspot auto-fill disabled.",
       );
     }
   }
@@ -271,7 +271,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
               MS.set(...Array.from(residues)),
               MS.ammp("auth_seq_id"),
             ]),
-          })
+          }),
       );
       const expr =
         chainExprs.length === 1
@@ -324,7 +324,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
    */
   private visitStructureUnits(
     structure: Structure,
-    out: Map<string, number>
+    out: Map<string, number>,
   ): void {
     for (const unit of structure.units) {
       if (!Unit.isAtomic(unit)) continue;
@@ -337,7 +337,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
         OrderedSet.forEach(unit.elements, (atomIdx) => {
           const label = `${chainIdVal(chainIdx[atomIdx])}${seqIdVal(
-            residueIdx[atomIdx]
+            residueIdx[atomIdx],
           )}`;
           if (!out.has(label)) out.set(label, atomIdx);
         });
@@ -382,7 +382,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           await this.plugin.builders.structure.tryCreateComponentStatic(
             s.cell,
             "polymer",
-            { label: "Polymer" }
+            { label: "Polymer" },
           );
         if (!polymer) continue;
         await reprBuilder.addRepresentation(polymer, { type: "cartoon" });
@@ -474,7 +474,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       result.push(
         j - i === 1
           ? cur.label
-          : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`
+          : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`,
       );
       i = j;
     }
@@ -501,7 +501,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           }
         }
       },
-      { capture: true, signal: this.formSubmitAbortCtrl.signal }
+      { capture: true, signal: this.formSubmitAbortCtrl.signal },
     );
   }
 
@@ -513,7 +513,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   /** Parse a residue token ("A56" or same-chain range "A12-A14") into
    *  { chain, resStart, resEnd }, or null for an unrecognised format. */
   static parseResidueToken(
-    token: string
+    token: string,
   ): { chain: string; resStart: number; resEnd: number } | null {
     const range = token.match(/^([A-Za-z]+)(\d+)-([A-Za-z]+)(\d+)$/);
     if (range) {
@@ -533,7 +533,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   private parseResidueLabel(
-    label: string
+    label: string,
   ): { chain: string; seq: number } | null {
     const m = label.match(/^([A-Za-z]+)(-?\d+)$/);
     return m ? { chain: m[1], seq: parseInt(m[2], 10) } : null;
