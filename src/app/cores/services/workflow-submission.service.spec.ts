@@ -1,4 +1,6 @@
 import { TestBed } from "@angular/core/testing";
+import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Router } from "@angular/router";
 import { of, Subject, throwError } from "rxjs";
 import {
@@ -7,6 +9,7 @@ import {
 } from "../interfaces/workflow.interfaces";
 import { WorkflowApiService } from "./workflow-api.service";
 import { WorkflowSubmissionService } from "./workflow-submission.service";
+import { INSUFFICIENT_CREDITS_MESSAGE } from "./credits.service";
 
 describe("WorkflowSubmissionService", () => {
   let service: WorkflowSubmissionService;
@@ -31,6 +34,8 @@ describe("WorkflowSubmissionService", () => {
 
     TestBed.configureTestingModule({
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         WorkflowSubmissionService,
         { provide: WorkflowApiService, useValue: workflowApiService },
         { provide: Router, useValue: router },
@@ -135,6 +140,24 @@ describe("WorkflowSubmissionService", () => {
     service.submitWorkflowWithDataset(minimalPayload, "dataset-789", onError);
 
     expect(onError).toHaveBeenCalledWith(jasmine.any(Error));
+    expect(service.isSubmitting()).toBeFalse();
+    expect(service.showSuccessDialog()).toBeFalse();
+  });
+
+  it("should surface the insufficient-credit message on a 402 response", () => {
+    const onError = jasmine.createSpy("onError");
+    workflowApiService.launchWorkflow.and.returnValue(
+      throwError(() => ({
+        status: 402,
+        error: { detail: "Insufficient credits to launch this workflow." },
+      }))
+    );
+
+    service.submitWorkflowWithDataset(minimalPayload, "dataset-789", onError);
+
+    expect(onError).toHaveBeenCalledWith(jasmine.any(Error));
+    const passedError = onError.calls.mostRecent().args[0] as Error;
+    expect(passedError.message).toBe(INSUFFICIENT_CREDITS_MESSAGE);
     expect(service.isSubmitting()).toBeFalse();
     expect(service.showSuccessDialog()).toBeFalse();
   });
