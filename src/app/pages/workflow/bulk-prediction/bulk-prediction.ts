@@ -414,7 +414,7 @@ export default class BulkPredictionComponent {
   }
 
   submitNewJob(): void {
-    this.workflowSubmission.startNewJob();
+    window.location.reload();
   }
 
   goToJobs(): void {

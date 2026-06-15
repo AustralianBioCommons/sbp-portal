@@ -782,9 +782,9 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Reset the form for a new job on this workflow (delegates to service)
+  // Refresh the page to submit a new job
   submitNewJob() {
-    this.workflowSubmission.startNewJob();
+    window.location.reload();
   }
 
   // Navigate to jobs page (delegates to service)

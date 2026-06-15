@@ -115,24 +115,6 @@ export class WorkflowSubmissionService {
   }
 
   /**
-   * Start a new job on the current workflow with a fresh form.
-   *
-   * Uses client-side router navigation (navigate away to "/" then back to the
-   * current route) to force the workflow component to be recreated with clean
-   * state. This deliberately avoids `window.location.reload()`, which triggers
-   * a full server request for the current deep route (e.g.
-   * "/binder-design/de-novo-design"). Hosting has no SPA fallback for those
-   * paths, so a hard reload would 404 instead of reopening the form.
-   */
-  startNewJob(): void {
-    this.resetSubmissionState();
-    const currentUrl = this.router.url;
-    this.router
-      .navigateByUrl("/", { skipLocationChange: true })
-      .then(() => this.router.navigateByUrl(currentUrl));
-  }
-
-  /**
    * Close the success dialog without navigation
    */
   closeSuccessDialog(): void {

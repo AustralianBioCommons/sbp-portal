@@ -528,7 +528,7 @@ export default class InteractionScreeningComponent {
   }
 
   submitNewJob() {
-    this.workflowSubmission.startNewJob();
+    window.location.reload();
   }
   goToJobs() {
     this.workflowSubmission.goToJobs();
