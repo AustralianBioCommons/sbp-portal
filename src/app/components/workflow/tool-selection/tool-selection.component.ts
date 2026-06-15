@@ -4,6 +4,8 @@ export interface ToolOption<ToolId extends string = string> {
   id: ToolId;
   label: string;
   description?: string;
+  /** Starting credit cost for running this tool. When set, shown as "from N credit(s)". */
+  credits?: number;
 }
 
 @Component({

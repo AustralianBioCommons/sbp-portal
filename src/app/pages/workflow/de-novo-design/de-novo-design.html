@@ -297,7 +297,13 @@
                       (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
                       (fieldBlur)="validateRowField(row.id, field.name)"
                     ></app-form-field>
-                    } }
+                    } } @if (creditsEnabled) {
+                    <!-- Credit cost summary -->
+                    <app-credit-summary
+                      [total]="creditCost()"
+                      [remaining]="creditsRemaining()"
+                    ></app-credit-summary>
+                    }
                   </div>
                 </div>
               </div>
@@ -402,7 +408,12 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!canGoNext() || isPdbUploading() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !canGoNext() ||
+                isPdbUploading() ||
+                (creditsEnabled && creditsInsufficient()) ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="nextStep()"
             >
               @if (isPdbUploading()) { Uploading… } @else { Next }
@@ -411,7 +422,11 @@
             <app-button
               type="button"
               variant="primary"
-              [disabled]="!isFormValid() || (auth.canExecuteWorkflows$ | async) === false"
+              [disabled]="
+                !isFormValid() ||
+                (creditsEnabled && creditsInsufficient()) ||
+                (auth.canExecuteWorkflows$ | async) === false
+              "
               (click)="submitWorkflow()"
             >
               Submit

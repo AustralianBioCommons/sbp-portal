@@ -2,7 +2,7 @@
   <div
     class="px-6 border-b mx-auto relative flex items-center justify-between min-h-22 gap-4"
   >
-    <!-- Left: Burger Menu + Logo -->
+    <!-- Left: Burger Menu + Logo + Nav Links -->
     <div class="flex items-center gap-4 shrink-0">
       <button
         type="button"
@@ -14,56 +14,97 @@
       </button>
       <a routerLink="/binder-design" aria-label="Navigate to home page">
         <img
-          class="w-48 min-w-48 h-auto"
+          class="lg:w-48 lg:min-w-48 w-36 min-w-36 h-auto"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />
       </a>
-    </div>
 
-    <!-- Center: Nav Links -->
-    <nav
-      class="hidden absolute left-1/2 -translate-x-1/2 md:flex items-center justify-center gap-6 font-semibold text-sky-900 transition-all text-sm"
-      aria-label="Main navigation"
-    >
-      <a
-        routerLink="/binder-design"
-        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
-        [class]="
-          currentRoute() === '/binder-design'
-            ? 'border-sky-900'
-            : 'border-transparent hover:border-sky-900/20'
-        "
+      <!-- Divider -->
+      <span
+        class="hidden md:block h-8 w-px bg-gray-300 mr-2 lg:mr-4"
+        aria-hidden="true"
+      ></span>
+
+      <!-- Nav Links -->
+      <nav
+        class="hidden md:flex items-center gap-4 lg:gap-6 font-semibold text-sky-900 transition-all text-sm"
+        aria-label="Main navigation"
       >
-        Binder Design
-      </a>
-      <a
-        routerLink="/structure-prediction"
-        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
-        [class]="
-          currentRoute() === '/structure-prediction'
-            ? 'border-sky-900'
-            : 'border-transparent hover:border-sky-900/20'
-        "
-      >
-        Structure Prediction
-      </a>
-      <a
-        routerLink="/jobs"
-        class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
-        [class]="
-          currentRoute() === '/jobs'
-            ? 'border-sky-900'
-            : 'border-transparent hover:border-sky-900/20'
-        "
-      >
-        Jobs
-      </a>
-    </nav>
+        <a
+          routerLink="/binder-design"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          [class]="
+            currentRoute() === '/binder-design'
+              ? 'border-sky-900'
+              : 'border-transparent hover:border-sky-900/20'
+          "
+        >
+          Binder Design
+        </a>
+        <a
+          routerLink="/structure-prediction"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          [class]="
+            currentRoute() === '/structure-prediction'
+              ? 'border-sky-900'
+              : 'border-transparent hover:border-sky-900/20'
+          "
+        >
+          Structure Prediction
+        </a>
+        <a
+          routerLink="/jobs"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          [class]="
+            currentRoute() === '/jobs'
+              ? 'border-sky-900'
+              : 'border-transparent hover:border-sky-900/20'
+          "
+        >
+          Jobs
+        </a>
+      </nav>
+    </div>
 
     <!-- Right: Auth Section -->
     <div class="flex items-center gap-4 shrink-0">
-      @if (isAuthenticated$ | async) { @let user = (user$ | async);
+      @if (isAuthenticated$ | async) { @let user = (user$ | async); @if
+      (creditsEnabled) {
+      <!-- Credits remaining -->
+      <div
+        class="flex items-center gap-2 rounded-xl border bg-white px-2 h-10"
+        aria-label="Credits remaining"
+      >
+        <div class="flex flex-col justify-center gap-1">
+          <span class="text-xs font-medium leading-none text-gray-700">
+            Credits remaining
+          </span>
+          <div class="flex items-center gap-2">
+            <div
+              class="h-1.5 w-12 rounded-full bg-gray-200"
+              role="progressbar"
+              [attr.aria-valuenow]="creditsRemaining()"
+              aria-valuemin="0"
+              [attr.aria-valuemax]="creditsTotal"
+            >
+              <div
+                class="h-1.5 rounded-full bg-biocommons-primary transition-all"
+                [style.width.%]="creditsPercent()"
+              ></div>
+            </div>
+            <span class="text-xs font-mono leading-none text-gray-400 shrink-0">
+              {{ creditsRemaining() ?? "—" }}/{{ creditsTotal }}
+            </span>
+          </div>
+        </div>
+        <ng-icon
+          name="heroInformationCircle"
+          size="18"
+          class="text-gray-400"
+        ></ng-icon>
+      </div>
+      }
       <app-dropdown-menu
         [isOpen]="userMenuOpen()"
         (isOpenChange)="userMenuOpen.set($event)"
@@ -163,7 +204,7 @@
         aria-label="Navigate to home page"
       >
         <img
-          class="w-48 min-w-48 h-auto"
+          class="lg:w-48 lg:min-w-48 w-36 min-w-36 h-auto"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />

@@ -7,7 +7,6 @@ export type WorkflowTool =
   | "alphafold2"
   | "bindcraft"
   | "boltz"
-  | "boltzgen"
   | "colabfold"
   | "rfdiffusion";
 

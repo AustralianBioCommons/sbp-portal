@@ -1,5 +1,7 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../cores/auth.service";
 import {
@@ -91,6 +93,8 @@ describe("InteractionScreeningComponent", () => {
     await TestBed.configureTestingModule({
       imports: [InteractionScreeningComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: FastaUploadService, useValue: fastaUploadService },
         { provide: DatasetUploadService, useValue: datasetUploadService },
@@ -581,5 +585,58 @@ describe("InteractionScreeningComponent", () => {
     component.submitWorkflow();
 
     expect(component.alertMessage()).toContain("Unknown error");
+  });
+
+  // ── creditCost ─────────────────────────────────────────────────────────
+
+  describe("creditCost", () => {
+    it("computes tool multiplier × (query entries × target entries)", () => {
+      component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
+      component.selectTool("boltz");
+      component.form.controls.queryFasta.setValue(
+        ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
+      );
+      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
+      fixture.detectChanges();
+
+      // 1 (boltz) × (2 query × 1 target)
+      expect(component.creditCost()).toBe(2);
+    });
+
+    it("returns null when either FASTA input is empty or invalid", () => {
+      component["toolMultipliers"].set({ boltz: 1 });
+      component.selectTool("boltz");
+      component.form.controls.queryFasta.setValue("");
+      component.form.controls.targetFasta.setValue("");
+      fixture.detectChanges();
+
+      expect(component.creditCost()).toBeNull();
+    });
+
+    it("flags insufficient credits when the cost exceeds the balance", () => {
+      component["toolMultipliers"].set({ boltz: 1 });
+      component.selectTool("boltz");
+      component.form.controls.queryFasta.setValue(
+        ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
+      );
+      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
+      component["creditsRemaining"].set(1);
+      fixture.detectChanges();
+
+      expect(component.creditsInsufficient()).toBe(true);
+    });
+
+    it("does not flag insufficient when the balance is unknown", () => {
+      component["toolMultipliers"].set({ boltz: 1 });
+      component.selectTool("boltz");
+      component.form.controls.queryFasta.setValue(
+        ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
+      );
+      component.form.controls.targetFasta.setValue(">t1\nARNDCQEGHILKMFPSTWYV");
+      component["creditsRemaining"].set(null);
+      fixture.detectChanges();
+
+      expect(component.creditsInsufficient()).toBe(false);
+    });
   });
 });

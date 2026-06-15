@@ -33,8 +33,13 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
+import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
+import {
+  CreditsService,
+  USER_CREDITS_ENABLED,
+} from "../../../cores/services/credits.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
@@ -52,7 +57,7 @@ interface TabItem {
 }
 
 interface ToolChip extends ToolOption {
-  id: Extract<WorkflowTool, "bindcraft" | "boltzgen" | "rfdiffusion">;
+  id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
 }
 
 type StepItem = Step;
@@ -74,6 +79,7 @@ type StepItem = Step;
     ConfigurationSummaryComponent,
     MolstarViewerComponent,
     LengthRangeSliderComponent,
+    CreditSummaryComponent,
   ],
   templateUrl: "./de-novo-design.html",
   styleUrls: ["./de-novo-design.scss"],
@@ -97,6 +103,9 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   private datasetUploadService = inject(DatasetUploadService);
   // PDB upload service
   private pdbUploadService = inject(PdbUploadService);
+  // Credits service (per-tool credit multipliers)
+  private creditsService = inject(CreditsService);
+  readonly creditsEnabled = USER_CREDITS_ENABLED;
 
   // Alert state
   showAlert = signal(false);
@@ -134,10 +143,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   // Tools
   readonly tools: ToolChip[] = [
     {
-      id: "boltzgen",
-      label: "BoltzGen",
-    },
-    {
       id: "rfdiffusion",
       label: "RFDiffusion",
     },
@@ -173,7 +178,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     ToolChip["id"],
     { name: string; label: string; description?: string }[]
   > = {
-    boltzgen: [],
     rfdiffusion: [],
     bindcraft: [],
   };
@@ -546,6 +550,69 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         this.loadInputSchema();
       }
     }, 5000);
+
+    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
+    if (this.creditsEnabled) {
+      this.loadToolCredits();
+    }
+  }
+
+  /** Per-tool credit multipliers for this workflow (from the backend). */
+  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
+  /**
+   * Remaining credit balance for the current user. Starts at 0 until the real
+   * balance from getMyCredit() loads.
+   */
+  creditsRemaining = signal<number | null>(0);
+
+  /** Credit cost of the run: tool multiplier × number of final designs. */
+  creditCost = computed<number | null>(() => {
+    const multiplier = this.toolMultipliers()[this.selectedTool()];
+    if (multiplier == null) return null;
+    const rowId = this.schemaLoader.inputRows()[0]?.id;
+    if (!rowId) return null;
+    const count = this.getRowNumberValue(rowId, "number_of_final_designs", 0);
+    if (!Number.isFinite(count) || count < 1) return null;
+    return multiplier * count;
+  });
+
+  /** True when the run's cost is known to exceed the user's remaining balance. */
+  creditsInsufficient = computed<boolean>(() => {
+    const cost = this.creditCost();
+    const remaining = this.creditsRemaining();
+    return cost !== null && remaining !== null && cost > remaining;
+  });
+
+  /** Fetch per-tool credit multipliers and the user's remaining balance. */
+  private loadToolCredits(): void {
+    this.subscription.add(
+      this.creditsService.getWorkflowCredits().subscribe({
+        next: (response) => {
+          const config = response.workflows.find(
+            (w) => w.category === "de-novo-design"
+          );
+          if (!config) return;
+          this.toolMultipliers.set(config.toolMultipliers);
+          for (const tool of this.tools) {
+            const multiplier = config.toolMultipliers[tool.id];
+            if (multiplier != null) {
+              tool.credits = multiplier;
+            }
+          }
+        },
+        error: (error) => {
+          console.warn("Failed to load workflow credits", error);
+        },
+      })
+    );
+    this.subscription.add(
+      this.creditsService.getMyCredit().subscribe({
+        next: (response) => this.creditsRemaining.set(response.credit),
+        error: (error) => {
+          console.warn("Failed to load credit balance", error);
+        },
+      })
+    );
   }
 
   ngOnDestroy() {

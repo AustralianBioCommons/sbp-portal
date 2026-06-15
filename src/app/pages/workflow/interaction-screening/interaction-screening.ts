@@ -18,6 +18,7 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
+import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
   Step,
@@ -34,6 +35,10 @@ import {
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
+import {
+  CreditsService,
+  USER_CREDITS_ENABLED,
+} from "../../../cores/services/credits.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -102,6 +107,7 @@ type StepItem = Step;
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
+    CreditSummaryComponent,
   ],
   host: {
     class: "block w-full interaction-screening-bg",
@@ -119,8 +125,76 @@ export default class InteractionScreeningComponent {
   private fastaUploadService = inject(FastaUploadService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
+  // Credits service (per-tool credit multipliers)
+  private creditsService = inject(CreditsService);
+  readonly creditsEnabled = USER_CREDITS_ENABLED;
   // Form
   private fb = inject(NonNullableFormBuilder);
+
+  constructor() {
+    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
+    if (this.creditsEnabled) {
+      this.loadToolCredits();
+    }
+  }
+
+  /** Per-tool credit multipliers for this workflow (from the backend). */
+  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
+  /**
+   * Remaining credit balance for the current user. Starts at 0 until the real
+   * balance from getMyCredit() loads.
+   */
+  creditsRemaining = signal<number | null>(0);
+
+  /**
+   * Credit cost of the run: tool multiplier × (query entries × target entries).
+   */
+  creditCost = computed<number | null>(() => {
+    const multiplier = this.toolMultipliers()[this.selectedTool()];
+    if (multiplier == null) return null;
+    const val = this.formValue();
+    const query = validateMultiFastaProtein(val?.queryFasta ?? "");
+    const target = validateMultiFastaProtein(val?.targetFasta ?? "");
+    if (!query.valid || !target.valid) return null;
+    const product = query.sequenceCount * target.sequenceCount;
+    if (!product) return null;
+    return multiplier * product;
+  });
+
+  /** True when the run's cost is known to exceed the user's remaining balance. */
+  creditsInsufficient = computed<boolean>(() => {
+    const cost = this.creditCost();
+    const remaining = this.creditsRemaining();
+    return cost !== null && remaining !== null && cost > remaining;
+  });
+
+  /** Fetch per-tool credit multipliers and the user's remaining balance. */
+  private loadToolCredits(): void {
+    this.creditsService.getWorkflowCredits().subscribe({
+      next: (response) => {
+        const config = response.workflows.find(
+          (w) => w.category === "interaction-screening"
+        );
+        if (!config) return;
+        this.toolMultipliers.set(config.toolMultipliers);
+        for (const tool of this.tools) {
+          const multiplier = config.toolMultipliers[tool.id];
+          if (multiplier != null) {
+            tool.credits = multiplier;
+          }
+        }
+      },
+      error: (error) => {
+        console.warn("Failed to load workflow credits", error);
+      },
+    });
+    this.creditsService.getMyCredit().subscribe({
+      next: (response) => this.creditsRemaining.set(response.credit),
+      error: (error) => {
+        console.warn("Failed to load credit balance", error);
+      },
+    });
+  }
   readonly form = this.fb.group(
     {
       jobName: ["", JOB_NAME_VALIDATORS],
