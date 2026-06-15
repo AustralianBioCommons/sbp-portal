@@ -1,9 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DropdownMenuComponent } from './dropdown-menu.component';
-import { Component, signal } from '@angular/core';
+import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { DropdownMenuComponent } from "./dropdown-menu.component";
+import { Component, signal } from "@angular/core";
 
 @Component({
-  selector: 'app-test-host',
+  selector: "app-test-host",
   standalone: true,
   imports: [DropdownMenuComponent],
   template: `
@@ -24,7 +24,7 @@ class TestHostComponent {
   isOpen = signal(false);
 }
 
-describe('DropdownMenuComponent', () => {
+describe("DropdownMenuComponent", () => {
   let component: TestHostComponent;
   let fixture: ComponentFixture<TestHostComponent>;
 
@@ -38,33 +38,33 @@ describe('DropdownMenuComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render trigger button', () => {
+  it("should render trigger button", () => {
     const triggerButton =
-      fixture.nativeElement.querySelector('.trigger-button');
+      fixture.nativeElement.querySelector(".trigger-button");
     expect(triggerButton).toBeTruthy();
-    expect(triggerButton.textContent).toContain('Toggle');
+    expect(triggerButton.textContent).toContain("Toggle");
   });
 
-  it('should not show menu initially', () => {
-    const menuItems = fixture.nativeElement.querySelectorAll('.menu-item');
+  it("should not show menu initially", () => {
+    const menuItems = fixture.nativeElement.querySelectorAll(".menu-item");
     expect(menuItems.length).toBe(0);
   });
 
-  it('should show menu when isOpen is true', () => {
+  it("should show menu when isOpen is true", () => {
     component.isOpen.set(true);
     fixture.detectChanges();
 
-    const menuItems = fixture.nativeElement.querySelectorAll('.menu-item');
+    const menuItems = fixture.nativeElement.querySelectorAll(".menu-item");
     expect(menuItems.length).toBe(2);
   });
 
-  it('should toggle menu when trigger is clicked', () => {
+  it("should toggle menu when trigger is clicked", () => {
     const triggerButton =
-      fixture.nativeElement.querySelector('.trigger-button');
+      fixture.nativeElement.querySelector(".trigger-button");
 
     expect(component.isOpen()).toBe(false);
 
@@ -77,7 +77,7 @@ describe('DropdownMenuComponent', () => {
     expect(component.isOpen()).toBe(false);
   });
 
-  it('should close menu when clicking outside', (done) => {
+  it("should close menu when clicking outside", (done) => {
     component.isOpen.set(true);
     fixture.detectChanges();
 
@@ -85,7 +85,7 @@ describe('DropdownMenuComponent', () => {
 
     // Simulate pointerdown outside
     setTimeout(() => {
-      const pointerdownEvent = new PointerEvent('pointerdown', {
+      const pointerdownEvent = new PointerEvent("pointerdown", {
         bubbles: true,
         cancelable: true,
       });
@@ -99,11 +99,11 @@ describe('DropdownMenuComponent', () => {
     }, 10);
   });
 
-  it('should apply right alignment by default', () => {
+  it("should apply right alignment by default", () => {
     component.isOpen.set(true);
     fixture.detectChanges();
 
     const menu = fixture.nativeElement.querySelector('[role="menu"]');
-    expect(menu.classList.contains('right-0')).toBe(true);
+    expect(menu.classList.contains("right-0")).toBe(true);
   });
 });

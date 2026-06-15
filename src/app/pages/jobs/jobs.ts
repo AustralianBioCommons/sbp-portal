@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { LoadingComponent } from "../../components/loading/loading.component";
+import { DropdownMenuComponent } from "../../components/dropdown-menu/dropdown-menu.component";
 import {
   JobListItem,
   JobListQueryParams,
@@ -32,6 +33,7 @@ import {
     JobResultsComponent,
     LoadingComponent,
     NgIconComponent,
+    DropdownMenuComponent,
   ],
   providers: [
     provideIcons({
@@ -369,13 +371,6 @@ export default class JobsComponent implements OnInit {
    */
   toggleStatusDropdown(): void {
     this.showStatusDropdown.update((v) => !v);
-  }
-
-  /**
-   * Close status dropdown
-   */
-  closeStatusDropdown(): void {
-    this.showStatusDropdown.set(false);
   }
 
   /**

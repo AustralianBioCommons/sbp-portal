@@ -166,7 +166,7 @@ export default class SinglePredictionComponent {
     this.creditsService.getWorkflowCredits().subscribe({
       next: (response) => {
         const config = response.workflows.find(
-          (w) => w.category === "single-prediction",
+          (w) => w.category === "single-prediction"
         );
         if (!config) return;
         this.toolMultipliers.set(config.toolMultipliers);
@@ -190,7 +190,7 @@ export default class SinglePredictionComponent {
   }
 
   readonly ccdOptions: ListboxSelectOption[] = Object.entries(
-    CCD_COMPOUNDS,
+    CCD_COMPOUNDS
   ).map(([code, name]) => ({ value: code, label: `${code} - ${name}` }));
 
   private readonly samplesheetId = `single-prediction-${this.generateRandomSuffix()}`;
@@ -222,7 +222,7 @@ export default class SinglePredictionComponent {
   selectedTool = signal<SinglePredictionTool>("colabfold");
   selectedToolLabel: Signal<string> = computed(
     () =>
-      this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? "",
+      this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? ""
   );
 
   readonly moleculeTypes: { value: MoleculeType; label: string }[] = [
@@ -233,7 +233,7 @@ export default class SinglePredictionComponent {
     { value: "ccd", label: "Ligand (CCD)" },
   ];
   readonly moleculeTypeOptions: ListboxSelectOption[] = this.moleculeTypes.map(
-    (item) => ({ value: item.value, label: item.label }),
+    (item) => ({ value: item.value, label: item.label })
   );
 
   entityRows = signal<EntityRow[]>([this.createEntityRow()]);
@@ -244,8 +244,8 @@ export default class SinglePredictionComponent {
   jobNameTouched = signal(false);
   readonly jobNameError = computed<string>(() =>
     jobNameErrorMessage(
-      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors,
-    ),
+      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
+    )
   );
 
   alphafold2RandomSeed = signal("42");
@@ -281,7 +281,7 @@ export default class SinglePredictionComponent {
   isStepVisited = (id: number) => this.visitedSteps().includes(id);
 
   readonly entityValidationResults = computed(() =>
-    this.entityRows().map((row) => this.validateEntityRow(row)),
+    this.entityRows().map((row) => this.validateEntityRow(row))
   );
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
   readonly isStep1Valid = computed(
@@ -289,14 +289,14 @@ export default class SinglePredictionComponent {
       !this.jobNameError() &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
-        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool,
-      ),
+        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
+      )
   );
   readonly isStep2Valid = computed(
-    () => Object.keys(this.toolSettingErrors()).length === 0,
+    () => Object.keys(this.toolSettingErrors()).length === 0
   );
   readonly isFormValid = computed(
-    () => this.isStep1Valid() && this.isStep2Valid(),
+    () => this.isStep1Valid() && this.isStep2Valid()
   );
 
   canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
@@ -311,16 +311,16 @@ export default class SinglePredictionComponent {
   });
 
   readonly canSubmit = computed(
-    () => this.isFormValid() && this.isToolAvailable(),
+    () => this.isFormValid() && this.isToolAvailable()
   );
 
   readonly formSummary = computed(() => {
     const entityItems = this.entityRows().map((row, index) => ({
       label: `Entity ${index + 1}`,
       value: `${this.getMoleculeTypeLabel(
-        row.moleculeType,
+        row.moleculeType
       )} x${this.getParsedCopyNumber(
-        row.copyNumber,
+        row.copyNumber
       )} • ${this.getNormalizedSequence(row)}`,
       fieldName: `entity_${row.id}`,
     }));
@@ -347,7 +347,7 @@ export default class SinglePredictionComponent {
           [
             `>${this.getFastaSequenceId(row.moleculeType, sequenceNumber)}`,
             sequence,
-          ].join("\n"),
+          ].join("\n")
         );
         sequenceNumber += 1;
       }
@@ -474,8 +474,8 @@ export default class SinglePredictionComponent {
       rows.map((row) =>
         row.id === id
           ? { ...row, touched: { ...row.touched, [field]: true } }
-          : row,
-      ),
+          : row
+      )
     );
   }
 
@@ -485,7 +485,7 @@ export default class SinglePredictionComponent {
 
   shouldShowRowFieldError(
     row: EntityRow,
-    field: keyof EntityRow["touched"],
+    field: keyof EntityRow["touched"]
   ): boolean {
     if (field === "sequence" && row.sequence.trim().length > 0) {
       return true;
@@ -551,10 +551,10 @@ export default class SinglePredictionComponent {
       (count, rowErrors) =>
         count +
         Object.values(rowErrors).filter((value) => Boolean(value)).length,
-      0,
+      0
     );
     const toolErrorCount = Object.values(this.toolSettingErrors()).filter(
-      (value) => Boolean(value),
+      (value) => Boolean(value)
     ).length;
 
     return {
@@ -594,7 +594,7 @@ export default class SinglePredictionComponent {
     if (step >= 1 && step <= this.steps.length) {
       this.currentStep.set(step);
       this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step],
+        arr.includes(step) ? arr : [...arr, step]
       );
     }
   }
@@ -618,7 +618,7 @@ export default class SinglePredictionComponent {
   submitWorkflow() {
     if (!this.isToolAvailable()) {
       this.showError(
-        "Tools are currently not available. Submission is disabled.",
+        "Tools are currently not available. Submission is disabled."
       );
       return;
     }
@@ -678,7 +678,7 @@ export default class SinglePredictionComponent {
 
   private patchRow(id: number, patch: Partial<EntityRow>): void {
     this.entityRows.update((rows) =>
-      rows.map((row) => (row.id === id ? { ...row, ...patch } : row)),
+      rows.map((row) => (row.id === id ? { ...row, ...patch } : row))
     );
   }
 
@@ -735,7 +735,7 @@ export default class SinglePredictionComponent {
           copyNumber: true,
           moleculeType: true,
         },
-      })),
+      }))
     );
   }
 
@@ -754,7 +754,7 @@ export default class SinglePredictionComponent {
     } else {
       const sequenceValidation = this.validateSequenceByMoleculeType(
         normalizedSequence,
-        row.moleculeType,
+        row.moleculeType
       );
       if (!sequenceValidation.valid) {
         errors.sequence = sequenceValidation.errorMessage;
@@ -814,7 +814,7 @@ export default class SinglePredictionComponent {
         return {
           alphafold2_random_seed: Number.parseInt(
             this.alphafold2RandomSeed(),
-            10,
+            10
           ),
           alphafold2_full_dbs: this.alphafold2FullDbs(),
         };
@@ -822,7 +822,7 @@ export default class SinglePredictionComponent {
         return {
           colabfold_num_recycles: Number.parseInt(
             this.colabfoldNumRecycles(),
-            10,
+            10
           ),
           colabfold_use_templates: this.colabfoldUseTemplates(),
         };
@@ -855,7 +855,7 @@ export default class SinglePredictionComponent {
     const current = this.currentStep();
     if (current < this.steps.length) {
       this.completedSteps.update((steps) =>
-        steps.includes(current) ? steps : [...steps, current],
+        steps.includes(current) ? steps : [...steps, current]
       );
       this.currentStep.update((value) => value + 1);
       this.visitedSteps.update((arr) => {
@@ -866,7 +866,7 @@ export default class SinglePredictionComponent {
   }
 
   private prepareSinglePredictionInput(
-    onPrepared: (fastaUrl: string, datasetId: string) => void,
+    onPrepared: (fastaUrl: string, datasetId: string) => void
   ): void {
     const fastaContent = this.generatedFastaContent();
     const cachedDatasetId = this.preparedSamplesheetDatasetId();
@@ -893,7 +893,7 @@ export default class SinglePredictionComponent {
         switchMap((response) => {
           if (!response.s3Uri) {
             throw new Error(
-              "FASTA upload succeeded but no S3 URI was returned.",
+              "FASTA upload succeeded but no S3 URI was returned."
             );
           }
           return this.datasetUploadService
@@ -904,9 +904,9 @@ export default class SinglePredictionComponent {
               map((datasetResponse) => ({
                 fastaUrl: response.s3Uri,
                 datasetResponse,
-              })),
+              }))
             );
-        }),
+        })
       )
       .subscribe({
         next: ({ fastaUrl, datasetResponse }) => {
@@ -914,7 +914,7 @@ export default class SinglePredictionComponent {
           if (!datasetId) {
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned.",
+              "Dataset upload succeeded but no dataset ID was returned."
             );
             return;
           }
@@ -941,9 +941,9 @@ export default class SinglePredictionComponent {
       (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(
-          `Workflow launch failed: ${error.message || "Unknown error"}`,
+          `Workflow launch failed: ${error.message || "Unknown error"}`
         );
-      },
+      }
     );
   }
 
@@ -975,7 +975,7 @@ export default class SinglePredictionComponent {
 
   private getFastaSequenceId(
     type: MoleculeType,
-    sequenceNumber: number,
+    sequenceNumber: number
   ): string {
     const prefixes: Record<MoleculeType, string> = {
       protein: "pro",
@@ -989,7 +989,7 @@ export default class SinglePredictionComponent {
 
   private validateSequenceByMoleculeType(
     value: string,
-    moleculeType: MoleculeType,
+    moleculeType: MoleculeType
   ): { valid: boolean; errorMessage?: string } {
     switch (moleculeType) {
       case "protein":

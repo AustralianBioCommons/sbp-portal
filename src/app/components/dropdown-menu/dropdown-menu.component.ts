@@ -1,29 +1,31 @@
 import {
   Component,
   TemplateRef,
+  input,
   model,
   contentChild,
   effect,
   ElementRef,
   Renderer2,
   inject,
-} from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
+} from "@angular/core";
+import { NgTemplateOutlet } from "@angular/common";
 
 @Component({
-  selector: 'app-dropdown-menu',
+  selector: "app-dropdown-menu",
   imports: [NgTemplateOutlet],
-  templateUrl: './dropdown-menu.component.html',
-  styleUrl: './dropdown-menu.component.css',
+  templateUrl: "./dropdown-menu.component.html",
+  styleUrl: "./dropdown-menu.component.css",
   host: {
-    '(keydown.escape)': 'close()',
+    "(keydown.escape)": "close()",
   },
 })
 export class DropdownMenuComponent {
   readonly isOpen = model<boolean>(false);
+  readonly widthClass = input<string>("w-60");
 
-  readonly triggerTemplate = contentChild<TemplateRef<unknown>>('trigger');
-  readonly menuTemplate = contentChild<TemplateRef<unknown>>('menu');
+  readonly triggerTemplate = contentChild<TemplateRef<unknown>>("trigger");
+  readonly menuTemplate = contentChild<TemplateRef<unknown>>("menu");
 
   private readonly elementRef = inject(ElementRef<HTMLElement>);
   private readonly renderer = inject(Renderer2);
@@ -33,15 +35,15 @@ export class DropdownMenuComponent {
       if (!this.isOpen()) return;
 
       const remove = this.renderer.listen(
-        'document',
-        'pointerdown',
+        "document",
+        "pointerdown",
         (event: Event) => {
           const target = event.target as HTMLElement | null;
           if (target && !this.elementRef.nativeElement.contains(target)) {
             this.close();
           }
         },
-        { capture: true },
+        { capture: true }
       );
 
       onCleanup(remove);
