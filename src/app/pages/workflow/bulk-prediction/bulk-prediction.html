@@ -218,11 +218,13 @@
               }
             </div>
 
+            @if (creditsEnabled) {
             <!-- Credit cost summary -->
             <app-credit-summary
               [total]="creditCost()"
               [remaining]="creditsRemaining()"
             ></app-credit-summary>
+            }
           </div>
         </app-step-content>
         }
@@ -302,7 +304,7 @@
               variant="primary"
               [disabled]="
                 !canGoNext() ||
-                creditsInsufficient() ||
+                (creditsEnabled && creditsInsufficient()) ||
                 (auth.canExecuteWorkflows$ | async) === false
               "
               (click)="nextStep()"
@@ -316,7 +318,7 @@
               [disabled]="
                 !isFormValid() ||
                 workflowSubmission.isSubmitting() ||
-                creditsInsufficient() ||
+                (creditsEnabled && creditsInsufficient()) ||
                 (auth.canExecuteWorkflows$ | async) === false
               "
               (click)="submitWorkflow()"

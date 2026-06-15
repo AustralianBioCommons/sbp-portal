@@ -31,6 +31,7 @@ import { AuthService } from "../../cores/auth.service";
 import {
   CreditsService,
   TOTAL_CREDITS,
+  USER_CREDITS_ENABLED,
 } from "../../cores/services/credits.service";
 import { THEMES } from "../../cores/config/themes.config";
 
@@ -93,6 +94,7 @@ export class Navbar implements AfterViewInit {
   // Remaining credit balance fetched from GET /api/users/me/credit.
   // null while loading or when the balance is unavailable.
   creditsRemaining = signal<number | null>(null);
+  readonly creditsEnabled = USER_CREDITS_ENABLED;
   readonly creditsTotal = TOTAL_CREDITS;
   creditsPercent = computed(() => {
     const remaining = this.creditsRemaining();
@@ -214,26 +216,28 @@ export class Navbar implements AfterViewInit {
         this.updateRouteState();
       });
 
-    // Load the remaining credit balance whenever the user is authenticated.
-    this.isAuthenticated$
-      .pipe(
-        distinctUntilChanged(),
-        switchMap((isAuthenticated) => {
-          if (!isAuthenticated) {
-            this.creditsRemaining.set(null);
-            return of(null);
-          }
-          return this.credits.getMyCredit().pipe(
-            catchError((error) => {
-              console.warn("Failed to load credit balance", error);
+    if (this.creditsEnabled) {
+      // Load the remaining credit balance whenever the user is authenticated.
+      this.isAuthenticated$
+        .pipe(
+          distinctUntilChanged(),
+          switchMap((isAuthenticated) => {
+            if (!isAuthenticated) {
+              this.creditsRemaining.set(null);
               return of(null);
-            })
-          );
-        })
-      )
-      .subscribe((response) => {
-        this.creditsRemaining.set(response?.credit ?? null);
-      });
+            }
+            return this.credits.getMyCredit().pipe(
+              catchError((error) => {
+                console.warn("Failed to load credit balance", error);
+                return of(null);
+              })
+            );
+          })
+        )
+        .subscribe((response) => {
+          this.creditsRemaining.set(response?.credit ?? null);
+        });
+    }
 
     document.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;

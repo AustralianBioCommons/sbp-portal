@@ -36,7 +36,10 @@ import {
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
-import { CreditsService } from "../../../cores/services/credits.service";
+import {
+  CreditsService,
+  USER_CREDITS_ENABLED,
+} from "../../../cores/services/credits.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
@@ -102,6 +105,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   private pdbUploadService = inject(PdbUploadService);
   // Credits service (per-tool credit multipliers)
   private creditsService = inject(CreditsService);
+  readonly creditsEnabled = USER_CREDITS_ENABLED;
 
   // Alert state
   showAlert = signal(false);
@@ -547,7 +551,9 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       }
     }, 5000);
 
-    this.loadToolCredits();
+    if (this.creditsEnabled) {
+      this.loadToolCredits();
+    }
   }
 
   /** Per-tool credit multipliers for this workflow (from the backend). */

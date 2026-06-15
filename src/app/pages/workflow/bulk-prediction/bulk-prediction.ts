@@ -41,7 +41,10 @@ import {
 } from "../../../cores/utils/fasta.utils";
 import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
-import { CreditsService } from "../../../cores/services/credits.service";
+import {
+  CreditsService,
+  USER_CREDITS_ENABLED,
+} from "../../../cores/services/credits.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
@@ -99,13 +102,16 @@ export default class BulkPredictionComponent {
   private datasetUploadService = inject(DatasetUploadService);
   // Credits service (per-tool credit multipliers)
   private creditsService = inject(CreditsService);
+  readonly creditsEnabled = USER_CREDITS_ENABLED;
   // OnPush component — credits arrive async, so mark for check when they do.
   private cdr = inject(ChangeDetectorRef);
   // Form
   private fb = inject(NonNullableFormBuilder);
 
   constructor() {
-    this.loadToolCredits();
+    if (this.creditsEnabled) {
+      this.loadToolCredits();
+    }
   }
 
   /** Per-tool credit multipliers for this workflow (from the backend). */

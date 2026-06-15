@@ -452,8 +452,7 @@
             [isValid]="isFormValid()"
           ></app-configuration-summary>
         </app-step-content>
-        }
-
+        } @if (creditsEnabled) {
         <!-- Credit cost summary -->
         <div class="mt-6">
           <app-credit-summary
@@ -461,6 +460,7 @@
             [remaining]="creditsRemaining()"
           ></app-credit-summary>
         </div>
+        }
 
         <div class="mt-6 flex items-center justify-between">
           <app-button
@@ -478,7 +478,7 @@
               variant="primary"
               [disabled]="
                 !canGoNext() ||
-                creditsInsufficient() ||
+                (creditsEnabled && creditsInsufficient()) ||
                 (auth.canExecuteWorkflows$ | async) === false
               "
               (click)="nextStep()"
@@ -492,7 +492,7 @@
               [disabled]="
                 !canSubmit() ||
                 !isToolAvailable() ||
-                creditsInsufficient() ||
+                (creditsEnabled && creditsInsufficient()) ||
                 (auth.canExecuteWorkflows$ | async) === false
               "
               (click)="submitWorkflow()"
