@@ -7,8 +7,8 @@
 @let color = colorClasses()?.trim();
 
 @let variantClasses = variant() === "primary"
-  ? "text-white " + (color || "bg-biocommons-primary hover:bg-sky-900")
-  : "border border-gray-300 bg-white hover:bg-gray-100 " + (color || "text-biocommons-primary");
+  ? "text-white " + (color || "bg-biocommons-primary enabled:hover:bg-sky-900")
+  : "border border-gray-300 bg-white enabled:hover:bg-gray-100 " + (color || "text-biocommons-primary");
 
 <button
   [type]="type()"
