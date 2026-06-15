@@ -30,7 +30,7 @@ export async function getAppConfig(): Promise<ApplicationConfig> {
       provideBrowserGlobalErrorListeners(),
       provideRouter(
         routes,
-        withInMemoryScrolling({ scrollPositionRestoration: "top" }),
+        withInMemoryScrolling({ scrollPositionRestoration: "top" })
       ),
       provideZoneChangeDetection({ eventCoalescing: true }),
       provideAuth0({
