@@ -394,14 +394,6 @@
   </div>
 </div>
 
-<!-- Job Details Dialog -->
-<app-job-results
-  [isOpen]="showJobDetailsDialog()"
-  [job]="selectedJobDetails()"
-  (closeRequested)="closeJobDetailsDialog()"
-  (deleteRequested)="deleteSelectedJobFromDetails()"
-></app-job-results>
-
 <!-- Delete Confirmation Dialog -->
 @if (showDeleteDialog()) {
 <div

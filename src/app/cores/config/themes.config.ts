@@ -49,9 +49,9 @@ export const THEMES: ThemeConfig[] = [
     label: "Structure Prediction",
     workflows: [
       {
-        id: "single-structure-prediction",
+        id: "single-prediction",
         label: "Single Prediction",
-        href: "/structure-prediction/single-structure-prediction",
+        href: "/structure-prediction/single-prediction",
       },
       {
         id: "bulk-prediction",
@@ -68,17 +68,17 @@ export const THEMES: ThemeConfig[] = [
       {
         id: "boltz",
         label: "Boltz",
-        href: "/structure-prediction/single-structure-prediction",
+        href: "/structure-prediction/single-prediction",
       },
       {
         id: "colabfold",
         label: "ColabFold",
-        href: "/structure-prediction/single-structure-prediction",
+        href: "/structure-prediction/single-prediction",
       },
       {
         id: "alphafold2",
         label: "AlphaFold2",
-        href: "/structure-prediction/single-structure-prediction",
+        href: "/structure-prediction/single-prediction",
       },
     ],
   },

@@ -4,7 +4,6 @@ import { Component, signal } from "@angular/core";
 
 @Component({
   selector: "app-test-host",
-  standalone: true,
   imports: [DropdownMenuComponent],
   template: `
     <app-dropdown-menu [isOpen]="isOpen()" (isOpenChange)="isOpen.set($event)">

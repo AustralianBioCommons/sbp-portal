@@ -261,10 +261,8 @@ describe("Navbar", () => {
       });
     });
 
-    it("should show correct breadcrumb for single-structure-prediction route", () => {
-      component["checkRoute"](
-        "/structure-prediction/single-structure-prediction"
-      );
+    it("should show correct breadcrumb for single-prediction route", () => {
+      component["checkRoute"]("/structure-prediction/single-prediction");
 
       expect(component.showBreadcrumb()).toBe(true);
       expect(component.breadcrumb()).toEqual({

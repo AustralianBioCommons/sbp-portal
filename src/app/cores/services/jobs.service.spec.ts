@@ -5,7 +5,7 @@ import {
   provideHttpClientTesting,
 } from "@angular/common/http/testing";
 import { environment } from "../../../environments/environment";
-import { JobsService } from "./jobs.service";
+import { JobListItem, JobsService } from "./jobs.service";
 
 describe("JobsService", () => {
   let service: JobsService;
@@ -67,6 +67,78 @@ describe("JobsService", () => {
     const req = httpMock.expectOne(`${environment.apiBaseUrl}/api/jobs`);
     expect(req.request.params.has("status")).toBeFalse();
     req.flush({ jobs: [], total: 0, limit: 50, offset: 0 });
+  });
+
+  it("should resolve a job by run id from the listing and normalize it", () => {
+    let result: JobListItem | null | undefined;
+    service.getJob("run-2").subscribe((job) => (result = job));
+
+    const req = httpMock.expectOne(
+      (request) => request.url === `${environment.apiBaseUrl}/api/jobs`
+    );
+    expect(req.request.params.get("limit")).toBe("1000");
+    expect(req.request.params.get("offset")).toBe("0");
+    req.flush({
+      jobs: [
+        {
+          id: "run-1",
+          jobName: "A",
+          workflow: "wf-a",
+          tool: "t",
+          status: "Completed",
+          submittedAt: "2026-01-01",
+          score: 1,
+        },
+        {
+          id: "run-2",
+          jobName: "B",
+          workflow_name: "wf-b",
+          tool: "t",
+          status: "Completed",
+          submittedAt: "2026-01-02",
+          score: 2,
+          final_design_count: 5,
+        },
+      ],
+      total: 2,
+      limit: 1000,
+      offset: 0,
+    });
+
+    expect(result).toEqual(
+      jasmine.objectContaining({
+        id: "run-2",
+        workflow: "wf-b",
+        finalDesignCount: 5,
+      })
+    );
+  });
+
+  it("should return null from getJob when no job matches the run id", () => {
+    let result: JobListItem | null | undefined;
+    service.getJob("missing").subscribe((job) => (result = job));
+
+    const req = httpMock.expectOne(
+      (request) => request.url === `${environment.apiBaseUrl}/api/jobs`
+    );
+    req.flush({ jobs: [], total: 0, limit: 1000, offset: 0 });
+
+    expect(result).toBeNull();
+  });
+
+  it("should fall back to defaults when normalizing a job without aliases", () => {
+    const normalized = service.normalizeJob({
+      id: "run-3",
+      jobName: "C",
+      workflow: "",
+      tool: "t",
+      status: "Running",
+      submittedAt: "2026-01-03",
+      score: null,
+    });
+
+    expect(normalized.finalDesignCount).toBeNull();
+    expect(normalized.workflow).toBe("");
   });
 
   it("should cancel a job by encoded id", () => {

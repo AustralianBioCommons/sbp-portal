@@ -34,7 +34,6 @@ type SocialLink = {
 
 @Component({
   selector: "app-footer",
-  standalone: true,
   imports: [FormsModule, NgIconComponent],
   providers: [
     provideIcons({
@@ -46,7 +45,7 @@ type SocialLink = {
     }),
   ],
   templateUrl: "./footer.component.html",
-  styleUrls: ["./footer.component.scss"],
+  styleUrl: "./footer.component.scss",
 })
 export class FooterSectionsComponent {
   readonly logos: LogoLink[] = [
@@ -80,22 +79,30 @@ export class FooterSectionsComponent {
       links: [
         { label: "De novo design", href: "/binder-design/de-novo-design" },
         {
+          label: "Single prediction",
+          href: "/structure-prediction/single-prediction",
+        },
+        {
+          label: "Bulk prediction",
+          href: "/structure-prediction/bulk-prediction",
+        },
+        {
           label: "Interaction screening",
           href: "/structure-prediction/interaction-screening",
         },
       ],
     },
     {
-      heading: "Others",
+      heading: "Other",
       links: [
-        { label: "Tools", href: "/tools" },
         { label: "Jobs", href: "/jobs" },
-        { label: "Support", href: "/support" },
         {
           label: "About",
           href: "https://www.biocommons.org.au/about",
           external: true,
         },
+        { label: "Workshops & events", href: "/events" },
+        { label: "Support", href: "/support" },
       ],
     },
   ];

@@ -19,7 +19,7 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { map, startWith, switchMap } from "rxjs/operators";
+import { filter, map, startWith, switchMap, take } from "rxjs/operators";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
@@ -88,7 +88,7 @@ type StepItem = Step;
     class: "block w-full bulk-prediction-bg",
   },
   templateUrl: "./bulk-prediction.html",
-  styleUrls: ["./bulk-prediction.scss"],
+  styleUrl: "./bulk-prediction.scss",
 })
 export default class BulkPredictionComponent {
   // Auth
@@ -110,7 +110,12 @@ export default class BulkPredictionComponent {
 
   constructor() {
     if (this.creditsEnabled) {
-      this.loadToolCredits();
+      // Only call the credit service once the user is authenticated; the
+      // /api/* requests require a bearer token and otherwise fail, blocking
+      // the page from rendering.
+      this.auth.isAuthenticated$
+        .pipe(filter(Boolean), take(1))
+        .subscribe(() => this.loadToolCredits());
     }
   }
 

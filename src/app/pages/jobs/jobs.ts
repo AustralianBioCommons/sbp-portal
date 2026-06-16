@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
+import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
-import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { LoadingComponent } from "../../components/loading/loading.component";
 import { DropdownMenuComponent } from "../../components/dropdown-menu/dropdown-menu.component";
 import {
@@ -26,11 +26,9 @@ import {
 
 @Component({
   selector: "app-jobs",
-  standalone: true,
   imports: [
     DatePipe,
     FormsModule,
-    JobResultsComponent,
     LoadingComponent,
     NgIconComponent,
     DropdownMenuComponent,
@@ -49,9 +47,11 @@ import {
     }),
   ],
   templateUrl: "./jobs.html",
+  styleUrl: "./jobs.scss",
 })
 export default class JobsComponent implements OnInit {
   private jobsService = inject(JobsService);
+  private router = inject(Router);
 
   // Expose Math to template
   Math = Math;
@@ -63,10 +63,8 @@ export default class JobsComponent implements OnInit {
   error = signal<string | null>(null);
   selectedJobs = signal<string[]>([]);
   showDeleteDialog = signal(false);
-  showJobDetailsDialog = signal(false);
   showStatusDropdown = signal(false);
   bulkDeleting = signal(false);
-  selectedJobDetails = signal<JobListItem | null>(null);
 
   // Filter and pagination state
   searchQuery = signal<string>("");
@@ -361,11 +359,6 @@ export default class JobsComponent implements OnInit {
     this.showDeleteDialog.set(false);
   }
 
-  closeJobDetailsDialog(): void {
-    this.showJobDetailsDialog.set(false);
-    this.selectedJobDetails.set(null);
-  }
-
   /**
    * Toggle status dropdown visibility
    */
@@ -407,17 +400,6 @@ export default class JobsComponent implements OnInit {
   }
 
   viewJobDetails(job: JobListItem): void {
-    this.selectedJobDetails.set(job);
-    this.showJobDetailsDialog.set(true);
-  }
-
-  deleteSelectedJobFromDetails(): void {
-    const job = this.selectedJobDetails();
-    if (!job) {
-      return;
-    }
-
-    this.openDeleteDialogFor(job.id);
-    this.closeJobDetailsDialog();
+    this.router.navigate(["/jobs", job.id], { state: { job } });
   }
 }

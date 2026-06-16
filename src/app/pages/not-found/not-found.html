@@ -1,144 +1,16 @@
 <div
-  class="min-h-screen flex items-center justify-center bg-linear-to-br from-teal-500/5 to-pink-500/5 px-4 py-8"
+  class="flex bg-gray-50 flex-1 flex-col items-center justify-center gap-12 overflow-hidden px-6 py-24"
 >
-  <div class="max-w-300 w-full text-center">
-    <!-- 404 Visual -->
-    <div class="mb-12">
-      <div
-        class="text-8xl md:text-9xl font-black bg-linear-to-tr from-pink-500 to-teal-500 bg-clip-text text-transparent leading-none mb-4"
-      >
-        404
-      </div>
-      <div class="text-2xl text-sky-900 font-semibold mb-8">Page Not Found</div>
-    </div>
-
-    <!-- Australian BioCommons Branding -->
-    <div class="mb-16">
-      <h1 class="text-3xl md:text-4xl text-sky-600 font-bold mb-4">
-        Australian BioCommons Portal
-      </h1>
-      <p class="text-lg text-gray-600 max-w-150 mx-auto leading-relaxed">
-        Oops! The page you're looking for doesn't exist or has been moved.
-      </p>
-    </div>
-
-    <!-- Helpful Suggestions -->
-    <div class="mb-16">
-      <h2 class="text-3xl text-sky-600 font-semibold mb-8">What can you do?</h2>
-      <div
-        class="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-8 mb-12"
-      >
-        <div
-          class="flex flex-col h-full bg-white rounded-2xl p-8 shadow-md border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-        >
-          <div class="grow">
-            <ng-icon
-              name="heroHome"
-              class="w-12 h-12 text-teal-500 mb-4"
-            ></ng-icon>
-            <h3 class="text-xl font-semibold text-sky-600 mb-2">Go Home</h3>
-            <p class="text-gray-600 mb-6 leading-normal">
-              Explore our protein binder design tools and workflows
-            </p>
-          </div>
-          <div class="mt-auto">
-            <a
-              routerLink="/binder-design"
-              class="flex items-center justify-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-white bg-pink-600 hover:bg-pink-500 rounded-md transition-all no-underline"
-            >
-              Take me home
-            </a>
-          </div>
-        </div>
-
-        <div
-          class="flex flex-col h-full bg-white rounded-2xl p-8 shadow-md border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-        >
-          <div class="grow">
-            <ng-icon
-              name="heroArrowLeft"
-              class="w-12 h-12 text-teal-500 mb-4"
-            ></ng-icon>
-            <h3 class="text-xl font-semibold text-sky-600 mb-2">Go Back</h3>
-            <p class="text-gray-600 mb-6 leading-normal">
-              Return to the previous page you were viewing
-            </p>
-          </div>
-          <div class="mt-auto">
-            <app-button
-              variant="primary"
-              widthClass="w-full"
-              (click)="goBack()"
-            >
-              Go back
-            </app-button>
-          </div>
-        </div>
-
-        <div
-          class="flex flex-col h-full bg-white rounded-2xl p-8 shadow-md border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-        >
-          <div class="grow">
-            <ng-icon
-              name="heroMagnifyingGlass"
-              class="w-12 h-12 text-teal-500 mb-4"
-            ></ng-icon>
-            <h3 class="text-xl font-semibold text-sky-600 mb-2">
-              Search Resources
-            </h3>
-            <p class="text-gray-600 mb-6 leading-normal">
-              Find tools, workflows, and documentation
-            </p>
-          </div>
-          <div class="mt-auto">
-            <a
-              routerLink="/binder-design"
-              class="flex items-center justify-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-white bg-teal-600 hover:bg-teal-500 rounded-md transition-all no-underline"
-            >
-              Search portal
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Popular Links -->
-    <div class="mb-12">
-      <h3 class="text-xl text-sky-900 font-semibold mb-6">
-        Popular Destinations
-      </h3>
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-100 sm:max-w-150 mx-auto"
-      >
-        <a
-          routerLink="/binder-design"
-          class="flex items-center justify-center w-full h-full px-3 py-2.5 text-sm font-medium rounded-md border bg-transparent hover:bg-white text-sky-900 shadow-md transition-all no-underline"
-        >
-          Binder Design
-        </a>
-        <a
-          routerLink="/structure-prediction"
-          class="flex items-center justify-center w-full h-full px-3 py-2.5 text-sm font-medium rounded-md border bg-transparent hover:bg-white text-sky-900 shadow-md transition-all no-underline"
-        >
-          Structure Prediction
-        </a>
-        <a
-          routerLink="/structure-prediction/single-structure-prediction"
-          class="flex items-center justify-center w-full h-full px-3 py-2.5 text-sm font-medium rounded-md border bg-transparent hover:bg-white text-sky-900 shadow-md transition-all no-underline"
-        >
-          Single Structure Prediction
-        </a>
-      </div>
-    </div>
-
-    <!-- Contact Support -->
-    <div class="pt-8 border-t border-gray-200">
-      <p class="text-gray-600">
-        Still can't find what you're looking for?
-        <a href="mailto:support@biocommons.org.au">
-          Contact our support team
-        </a>
-      </p>
-    </div>
+  <div class="text-center">
+    <p class="font-semibold text-sky-500">404</p>
+    <h1 class="text-4xl font-semibold text-gray-900 sm:text-5xl lg:text-6xl">
+      Page not found
+    </h1>
   </div>
+  <p class="text-gray-600">
+    Sorry, we couldn't find the page you're looking for.
+  </p>
+  <app-button type="button" variant="primary" routerLink="/">
+    Go back
+  </app-button>
 </div>

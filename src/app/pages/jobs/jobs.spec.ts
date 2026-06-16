@@ -1,8 +1,7 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { DomSanitizer } from "@angular/platform-browser";
-import { By } from "@angular/platform-browser";
+import { provideRouter, Router } from "@angular/router";
 import { of, throwError } from "rxjs";
-import { JobResultsComponent } from "../../components/job-results/job-results.component";
 import { ResultsService } from "../../cores/services/results.service";
 import JobsComponent from "./jobs";
 import {
@@ -77,6 +76,7 @@ describe("JobsComponent", () => {
       providers: [
         { provide: JobsService, useValue: mockJobsService },
         { provide: ResultsService, useValue: mockResultsService },
+        provideRouter([]),
       ],
     }).compileComponents();
 
@@ -353,15 +353,15 @@ describe("JobsComponent", () => {
     expect(component.showDeleteDialog()).toBeTrue();
   });
 
-  it("should manage job details dialog visibility and tab state", () => {
+  it("should navigate to the job detail page when viewing job details", () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = spyOn(router, "navigate");
+
     component.viewJobDetails(mockJob);
 
-    expect(component.showJobDetailsDialog()).toBeTrue();
-    expect(component.selectedJobDetails()).toEqual(mockJob);
-
-    component.closeJobDetailsDialog();
-    expect(component.showJobDetailsDialog()).toBeFalse();
-    expect(component.selectedJobDetails()).toBeNull();
+    expect(navigateSpy).toHaveBeenCalledWith(["/jobs", mockJob.id], {
+      state: { job: mockJob },
+    });
   });
 
   it("should toggle the status dropdown", () => {
@@ -370,37 +370,6 @@ describe("JobsComponent", () => {
 
     component.toggleStatusDropdown();
     expect(component.showStatusDropdown()).toBeFalse();
-  });
-
-  it("should render the job details dialog when viewing job details", async () => {
-    component.viewJobDetails(mockJob);
-    await detectComponentChanges();
-
-    expect(
-      fixture.debugElement.query(By.directive(JobResultsComponent))
-    ).toBeTruthy();
-  });
-
-  it("should open delete confirmation from the job details dialog", () => {
-    component.viewJobDetails(mockJob);
-
-    component.deleteSelectedJobFromDetails();
-
-    expect(component.selectedJobs()).toEqual([mockJob.id]);
-    expect(component.showDeleteDialog()).toBeTrue();
-    expect(component.showJobDetailsDialog()).toBeFalse();
-  });
-
-  it("should ignore delete request when no job details are selected", () => {
-    component.deleteSelectedJobFromDetails();
-
-    expect(component.showDeleteDialog()).toBeFalse();
-  });
-
-  it("should provide fallback values for job detail helpers", () => {
-    component.viewJobDetails(secondJob);
-
-    expect(component.selectedJobDetails()).toEqual(secondJob);
   });
 
   it("should clear selection and close the delete dialog when no jobs are selected", () => {

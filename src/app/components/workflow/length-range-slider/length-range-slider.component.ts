@@ -14,9 +14,9 @@ export interface LengthRange {
 
 @Component({
   selector: "app-length-range-slider",
-  standalone: true,
   imports: [],
   templateUrl: "./length-range-slider.component.html",
+  styleUrl: "./length-range-slider.component.scss",
 })
 export class LengthRangeSliderComponent {
   readonly min = input(0);

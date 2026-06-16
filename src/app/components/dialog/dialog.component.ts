@@ -4,10 +4,9 @@ import { ButtonComponent } from "../button/button.component";
 
 @Component({
   selector: "app-dialog",
-  standalone: true,
   imports: [ButtonComponent],
   templateUrl: "./dialog.component.html",
-  styleUrls: ["./dialog.component.scss"],
+  styleUrl: "./dialog.component.scss",
 })
 export class DialogComponent {
   isOpen = input(false);

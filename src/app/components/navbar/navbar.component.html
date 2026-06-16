@@ -14,7 +14,7 @@
       </button>
       <a routerLink="/binder-design" aria-label="Navigate to home page">
         <img
-          class="lg:w-48 lg:min-w-48 w-36 min-w-36 h-auto"
+          class="md:w-48 md:min-w-48 w-36 min-w-36 h-auto"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />
@@ -22,13 +22,13 @@
 
       <!-- Divider -->
       <span
-        class="hidden md:block h-8 w-px bg-gray-300 mr-2 lg:mr-4"
+        class="hidden lg:block h-8 w-px bg-gray-300 mr-2 lg:mr-4"
         aria-hidden="true"
       ></span>
 
       <!-- Nav Links -->
       <nav
-        class="hidden md:flex items-center gap-4 lg:gap-6 font-semibold text-sky-900 transition-all text-sm"
+        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-sky-900 transition-all text-sm"
         aria-label="Main navigation"
       >
         <a
@@ -73,7 +73,7 @@
       (creditsEnabled) {
       <!-- Credits remaining -->
       <div
-        class="flex items-center gap-2 rounded-xl border bg-white px-2 h-10"
+        class="flex items-center gap-2 rounded-xl border border-gray-300 hover:bg-gray-50 hover:cursor-pointer bg-white px-2 h-10"
         aria-label="Credits remaining"
       >
         <div class="flex flex-col justify-center gap-1">
@@ -82,14 +82,14 @@
           </span>
           <div class="flex items-center gap-2">
             <div
-              class="h-1.5 w-12 rounded-full bg-gray-200"
+              class="h-1.5 w-24 rounded-full bg-gray-200"
               role="progressbar"
               [attr.aria-valuenow]="creditsRemaining()"
               aria-valuemin="0"
               [attr.aria-valuemax]="creditsTotal"
             >
               <div
-                class="h-1.5 rounded-full bg-biocommons-primary transition-all"
+                class="h-1.5 rounded-full bg-biocommons-secondary transition-all"
                 [style.width.%]="creditsPercent()"
               ></div>
             </div>
@@ -108,6 +108,7 @@
       <app-dropdown-menu
         [isOpen]="userMenuOpen()"
         (isOpenChange)="userMenuOpen.set($event)"
+        widthClass="w-auto"
       >
         <ng-template #trigger>
           <button
@@ -163,13 +164,9 @@
         </ng-template>
       </app-dropdown-menu>
       } @else {
-      <button
-        type="button"
-        class="px-6 py-2 text-sm font-mono text-sky-950 bg-biocommons-secondary hover:bg-teal-500 rounded-full"
-        (click)="login()"
-      >
-        <span>Login</span>
-      </button>
+      <app-button variant="primary" widthClass="w-auto" (click)="login()">
+        Login
+      </app-button>
       }
     </div>
   </div>
@@ -204,7 +201,7 @@
         aria-label="Navigate to home page"
       >
         <img
-          class="lg:w-48 lg:min-w-48 w-36 min-w-36 h-auto"
+          class="md:w-48 md:min-w-48 w-36 min-w-36 h-auto"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />

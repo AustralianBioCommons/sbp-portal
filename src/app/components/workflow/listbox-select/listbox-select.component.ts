@@ -7,9 +7,9 @@ export interface ListboxSelectOption {
 
 @Component({
   selector: "app-listbox-select",
-  standalone: true,
   imports: [],
   templateUrl: "./listbox-select.component.html",
+  styleUrl: "./listbox-select.component.scss",
 })
 export class ListboxSelectComponent {
   readonly inputId = input.required<string>();

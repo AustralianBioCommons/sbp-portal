@@ -15,7 +15,7 @@ import { NgTemplateOutlet } from "@angular/common";
   selector: "app-dropdown-menu",
   imports: [NgTemplateOutlet],
   templateUrl: "./dropdown-menu.component.html",
-  styleUrl: "./dropdown-menu.component.css",
+  styleUrl: "./dropdown-menu.component.scss",
   host: {
     "(keydown.escape)": "close()",
   },
