@@ -25,7 +25,7 @@ import {
   heroUserCircle,
   heroXMark,
 } from "@ng-icons/heroicons/outline";
-import { catchError, distinctUntilChanged, filter, of, switchMap } from "rxjs";
+import { distinctUntilChanged, filter } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../cores/auth.service";
 import {
@@ -92,9 +92,9 @@ export class Navbar implements AfterViewInit {
   isAuthenticated$ = this.auth.isAuthenticated$;
   user$ = this.auth.user$;
 
-  // Remaining credit balance fetched from GET /api/users/me/credit.
-  // null while loading or when the balance is unavailable.
-  creditsRemaining = signal<number | null>(null);
+  // Shared remaining credit balance (kept current by the CreditsService via
+  // getMyCredit()/refreshBalance()). null while loading or unavailable.
+  readonly creditsRemaining = this.credits.balance;
   readonly creditsEnabled = USER_CREDITS_ENABLED;
   readonly creditsTotal = TOTAL_CREDITS;
   creditsPercent = computed(() => {
@@ -221,27 +221,17 @@ export class Navbar implements AfterViewInit {
         this.updateRouteState();
       });
 
-    /* istanbul ignore next: temporary feature flag branch is disabled in CI. */
     if (this.creditsEnabled) {
-      // Load the remaining credit balance whenever the user is authenticated.
+      // Keep the shared balance current with the auth state: refresh it on
+      // login, clear it on logout.
       this.isAuthenticated$
-        .pipe(
-          distinctUntilChanged(),
-          switchMap((isAuthenticated) => {
-            if (!isAuthenticated) {
-              this.creditsRemaining.set(null);
-              return of(null);
-            }
-            return this.credits.getMyCredit().pipe(
-              catchError((error) => {
-                console.warn("Failed to load credit balance", error);
-                return of(null);
-              })
-            );
-          })
-        )
-        .subscribe((response) => {
-          this.creditsRemaining.set(response?.credit ?? null);
+        .pipe(distinctUntilChanged())
+        .subscribe((isAuthenticated) => {
+          if (isAuthenticated) {
+            this.credits.refreshBalance();
+          } else {
+            this.credits.clearBalance();
+          }
         });
     }
 

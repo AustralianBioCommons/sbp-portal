@@ -1,13 +1,24 @@
 import { HttpClient } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
-import { catchError, Observable, of } from "rxjs";
+import { inject, Injectable, signal } from "@angular/core";
+import { Observable, tap } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { WorkflowName, WorkflowTool } from "../interfaces/workflow.interfaces";
 
 /** Total credit allowance per user (no per-user total is stored server-side). */
 export const TOTAL_CREDITS = 1000;
-/** Temporary switch to keep credit UI/API work disabled while submissions run without credits. */
-export const USER_CREDITS_ENABLED = false;
+/**
+ * Switch for the user-facing credit UI/API work. Credit deduction is enforced
+ * server-side at launch (gated independently by the backend's ENABLE_CREDITS);
+ * this flag controls whether the portal shows balances, cost summaries, and the
+ * insufficient-credit handling.
+ */
+export const USER_CREDITS_ENABLED = true;
+
+/** Shown when the backend rejects a launch for insufficient credit (HTTP 402). */
+export const INSUFFICIENT_CREDITS_MESSAGE =
+  "You have insufficient SBP credits to execute this workflow. Please reduce " +
+  "resource requirements or come back next month when your credit allocation " +
+  "is reset.";
 
 /** Response shape of GET /api/users/me/credit. */
 export interface UserCreditResponse {
@@ -30,45 +41,16 @@ export interface WorkflowCreditsResponse {
 }
 
 /**
- * Dev-only dummy data so `npm start` shows the credits UI even when the
- * backend is unreachable or hasn't deployed these endpoints yet. Mirrors the
- * multipliers in sbp-backend/app/services/credits.py. Never used in production
- * builds — real failures there propagate so callers can degrade gracefully.
- */
-const DEV_USER_CREDIT: UserCreditResponse = { userId: "dev-user", credit: 250 };
-const DEV_WORKFLOW_CREDITS: WorkflowCreditsResponse = {
-  workflows: [
-    {
-      category: "de-novo-design",
-      displayName: "De novo Design",
-      basis: "final_design_count",
-      toolMultipliers: { bindcraft: 20, rfdiffusion: 10 },
-    },
-    {
-      category: "single-prediction",
-      displayName: "Single Prediction",
-      basis: "constant",
-      toolMultipliers: { boltz: 1, colabfold: 5, alphafold2: 5 },
-    },
-    {
-      category: "bulk-prediction",
-      displayName: "Bulk Prediction",
-      basis: "fasta_entry_count",
-      toolMultipliers: { boltz: 1, colabfold: 1 },
-    },
-    {
-      category: "interaction-screening",
-      displayName: "Interaction Screening",
-      basis: "fasta_pair_product",
-      toolMultipliers: { boltz: 1, colabfold: 1 },
-    },
-  ],
-};
-
-/**
  * Fetches the authenticated user's remaining credit balance and the per-tool
- * credit multipliers. The Auth0 HTTP interceptor attaches the bearer token for
- * /api/* requests.
+ * credit multipliers. The forms compute the run's display cost locally from
+ * these multipliers; the backend remains the single source of truth for the
+ * authoritative deduction at launch. The Auth0 HTTP interceptor attaches the
+ * bearer token for /api/* requests. Request errors propagate to callers — there
+ * is no dummy fallback, so an unavailable backend surfaces as a failed request.
+ *
+ * The remaining balance is held in a shared signal so the navbar and the
+ * workflow forms stay in sync; call refreshBalance() after a launch (the backend
+ * deducts credits server-side) to reflect the new balance everywhere.
  */
 @Injectable({
   providedIn: "root",
@@ -77,31 +59,42 @@ export class CreditsService {
   private http = inject(HttpClient);
   private readonly baseUrl = environment.apiBaseUrl || window.location.origin;
 
-  /** Return the current user's remaining credit balance. */
+  private readonly balanceSignal = signal<number | null>(null);
+  /**
+   * Shared, reactive remaining-credit balance. Kept current by getMyCredit() /
+   * refreshBalance() so the navbar and forms reflect the latest value.
+   */
+  readonly balance = this.balanceSignal.asReadonly();
+
+  /** Clear the cached balance (e.g. on logout). */
+  clearBalance(): void {
+    this.balanceSignal.set(null);
+  }
+
+  /**
+   * Re-fetch the remaining balance and update the shared signal. Errors are
+   * swallowed (logged) so a refresh failure never breaks the calling flow.
+   */
+  refreshBalance(): void {
+    this.getMyCredit().subscribe({
+      error: (error) => console.warn("Failed to refresh credit balance", error),
+    });
+  }
+
+  /**
+   * Return the current user's remaining credit balance, updating the shared
+   * balance signal as a side effect.
+   */
   getMyCredit(): Observable<UserCreditResponse> {
     return this.http
       .get<UserCreditResponse>(`${this.baseUrl}/api/users/me/credit`)
-      .pipe(this.devFallback(DEV_USER_CREDIT));
+      .pipe(tap((res) => this.balanceSignal.set(res.credit)));
   }
 
   /** Return the per-tool credit multipliers for each workflow category. */
   getWorkflowCredits(): Observable<WorkflowCreditsResponse> {
-    return this.http
-      .get<WorkflowCreditsResponse>(`${this.baseUrl}/api/workflows/credits`)
-      .pipe(this.devFallback(DEV_WORKFLOW_CREDITS));
-  }
-
-  /**
-   * In non-production builds, swallow request errors and emit dummy data so the
-   * UI is previewable without a backend. In production the error propagates.
-   */
-  private devFallback<T>(fallback: T) {
-    return catchError<T, Observable<T>>((error) => {
-      if (environment.production) {
-        throw error;
-      }
-      console.warn("Credits request failed; using dev dummy data", error);
-      return of(fallback);
-    });
+    return this.http.get<WorkflowCreditsResponse>(
+      `${this.baseUrl}/api/workflows/credits`
+    );
   }
 }
