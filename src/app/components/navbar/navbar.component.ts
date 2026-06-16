@@ -13,7 +13,6 @@ import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowRightEndOnRectangle,
   heroArrowRightStartOnRectangle,
-  heroArrowTopRightOnSquare,
   heroBars3,
   heroCalendarDays,
   heroChevronRight,
@@ -22,6 +21,7 @@ import {
   heroInformationCircle,
   heroQuestionMarkCircle,
   heroRectangleGroup,
+  heroUser,
   heroUserCircle,
   heroXMark,
 } from "@ng-icons/heroicons/outline";
@@ -34,6 +34,7 @@ import {
   USER_CREDITS_ENABLED,
 } from "../../cores/services/credits.service";
 import { THEMES } from "../../cores/config/themes.config";
+import { DropdownMenuComponent } from "../dropdown-menu/dropdown-menu.component";
 
 export interface NavItem {
   label: string;
@@ -60,12 +61,11 @@ export interface BreadcrumbInfo {
 
 @Component({
   selector: "app-navbar",
-  imports: [CommonModule, NgIconComponent, RouterLink],
+  imports: [CommonModule, NgIconComponent, RouterLink, DropdownMenuComponent],
   providers: [
     provideIcons({
       heroArrowRightEndOnRectangle,
       heroArrowRightStartOnRectangle,
-      heroArrowTopRightOnSquare,
       heroBars3,
       heroCalendarDays,
       heroChevronRight,
@@ -74,6 +74,7 @@ export interface BreadcrumbInfo {
       heroInformationCircle,
       heroQuestionMarkCircle,
       heroRectangleGroup,
+      heroUser,
       heroUserCircle,
       heroXMark,
     }),
@@ -105,6 +106,10 @@ export class Navbar implements AfterViewInit {
   // Navbar state
   isMobileMenuOpen = signal(false);
   currentRoute = signal("");
+
+  // User menu state
+  userMenuOpen = signal(false);
+  profileImageLoaded = signal(false);
 
   // Header/tabs state
   activeTab = signal("binder-design");

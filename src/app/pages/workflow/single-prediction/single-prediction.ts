@@ -7,6 +7,9 @@ import {
 } from "@angular/cdk/drag-drop";
 import { Component, computed, inject, Signal, signal } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { bootstrapGripVertical } from "@ng-icons/bootstrap-icons";
+import { heroTrash } from "@ng-icons/heroicons/outline";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
@@ -109,13 +112,15 @@ interface ToolSettingErrors {
     StepNavigationComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
+    NgIconComponent,
     CreditSummaryComponent,
   ],
+  providers: [provideIcons({ bootstrapGripVertical, heroTrash })],
   host: {
     class: "block w-full single-prediction-bg",
   },
   templateUrl: "./single-prediction.html",
-  styleUrls: ["./single-prediction.scss"],
+  styleUrl: "./single-prediction.scss",
 })
 export default class SinglePredictionComponent {
   public auth = inject(AuthService);

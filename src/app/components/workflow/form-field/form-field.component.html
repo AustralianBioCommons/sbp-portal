@@ -1,3 +1,5 @@
+@let f = field(); @let fieldValue = value();
+
 <div class="space-y-1">
   <!-- Alert (Error) -->
   @if (showAlert()) {
@@ -12,9 +14,9 @@
   <!-- Field Label -->
   <label [for]="fieldId" class="block text-sm font-medium text-gray-700">
     {{ getDisplayFieldLabel() }}
-    @if (field.required) {
+    @if (f.required) {
     <span class="text-red-500 ml-1">*</span>
-    } @if (field.description) {
+    } @if (f.description) {
     <div class="group relative inline-block ml-1">
       <svg
         class="w-4 h-4 text-gray-400 cursor-help"
@@ -34,23 +36,15 @@
         class="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-lg px-3 py-2 mt-1 left-0 min-w-50 max-w-75 shadow-lg"
       >
         <div class="font-medium">{{ getDisplayFieldLabel() }}</div>
-        <div class="text-gray-300 mt-1">{{ field.description }}</div>
+        <div class="text-gray-300 mt-1">{{ f.description }}</div>
         <div class="text-gray-400 text-xs mt-2">
-          Type: {{ field.type }}
-          @if (field.required) {
+          Type: {{ f.type }}
+          @if (f.required) {
           <span class="text-red-400"> • Required</span>
           }
         </div>
-        @if (field.validation?.min !== undefined || field.validation?.max !==
-        undefined) {
-        <div class="text-gray-400 text-xs mt-1">
-          @if (field.validation.min !== undefined && field.validation.max !==
-          undefined) { Range: {{ field.validation.min }} -
-          {{ field.validation.max }} } @else if (field.validation.min !==
-          undefined) { Min: {{ field.validation.min }} } @else if
-          (field.validation.max !== undefined) { Max: {{ field.validation.max }}
-          }
-        </div>
+        @if (hasRange) {
+        <div class="text-gray-400 text-xs mt-1">{{ getRangeText() }}</div>
         }
       </div>
     </div>
@@ -60,53 +54,52 @@
   <!-- Field Input -->
   <div class="relative">
     <!-- String Input -->
-    @if (field.type === 'string' && !field.options) {
+    @if (f.type === 'string' && !f.options) {
     <input
       [id]="fieldId"
       type="text"
       [class]="getInputClasses()"
       [placeholder]="
-        field.placeholder ||
-        'Enter ' + (field.label || field.name).toLowerCase()
+        f.placeholder || 'Enter ' + (f.label || f.name).toLowerCase()
       "
-      [value]="value"
-      [required]="field.required"
-      [minlength]="field.validation?.minLength"
-      [maxlength]="field.validation?.maxLength"
-      [pattern]="field.validation?.pattern"
+      [value]="fieldValue"
+      [required]="f.required"
+      [minlength]="f.validation?.minLength"
+      [maxlength]="f.validation?.maxLength"
+      [pattern]="f.validation?.pattern"
       (input)="onValueChange($any($event.target).value)"
       (blur)="onBlur()"
     />
     }
 
     <!-- Number Input -->
-    @if (field.type === 'number') {
+    @if (f.type === 'number') {
     <input
       [id]="fieldId"
       type="number"
       [class]="getInputClasses()"
-      [placeholder]="field.placeholder || 'Enter number'"
-      [min]="field.validation?.min"
-      [max]="field.validation?.max"
-      [step]="field.validation?.step || 'any'"
-      [value]="value"
-      [required]="field.required"
+      [placeholder]="f.placeholder || 'Enter number'"
+      [min]="f.validation?.min"
+      [max]="f.validation?.max"
+      [step]="f.validation?.step || 'any'"
+      [value]="fieldValue"
+      [required]="f.required"
       (input)="onValueChange(+$any($event.target).value)"
       (blur)="onBlur()"
     />
     }
 
     <!-- Boolean Input -->
-    @if (field.type === 'boolean') {
+    @if (f.type === 'boolean') {
     <div class="flex items-center">
       <input
         [id]="fieldId"
         type="checkbox"
         [class]="
           'h-4 w-4 text-sky-600 rounded border-gray-300 focus:ring-sky-500 ' +
-          (hasError ? 'border-red-300' : '')
+          (hasError() ? 'border-red-300' : '')
         "
-        [checked]="value === true"
+        [checked]="fieldValue === true"
         (change)="onValueChange($any($event.target).checked)"
         (blur)="onBlur()"
       />
@@ -115,17 +108,17 @@
     }
 
     <!-- Select/Options Input -->
-    @if (field.options && field.options.length > 0) {
+    @if (f.options && f.options.length > 0) {
     <select
       [id]="fieldId"
       [class]="getSelectClasses()"
-      [value]="value"
-      [required]="field.required"
+      [value]="fieldValue"
+      [required]="f.required"
       (change)="onValueChange($any($event.target).value)"
       (blur)="onBlur()"
     >
       <option value="">Select {{ getDisplayFieldLabel() }}</option>
-      @for (option of field.options; track option) { @if (typeof option ===
+      @for (option of f.options; track option) { @if (typeof option ===
       'string') {
       <option [value]="option">{{ option }}</option>
       } @else {
@@ -135,33 +128,25 @@
     }
 
     <!-- File Input -->
-    @if (field.type === 'file') {
+    @if (f.type === 'file') {
     <input
       type="file"
       [class]="getFileClasses()"
-      [required]="field.required"
-      [accept]="field.validation?.accept"
+      [required]="f.required"
+      [accept]="f.validation?.accept"
       (change)="onFileChange($event)"
       (blur)="onBlur()"
     />
     }
 
     <!-- Field Error -->
-    @if (hasError && errorMessage) {
-    <div class="mt-1 text-xs text-red-600">{{ errorMessage }}</div>
+    @if (hasError() && errorMessage()) {
+    <div class="mt-1 text-xs text-red-600">{{ errorMessage() }}</div>
     }
   </div>
 
   <!-- Field Help Text -->
-  @if (field.validation?.min !== undefined || field.validation?.max !==
-  undefined) {
-  <div class="text-xs text-gray-500">
-    @if (field.validation.min !== undefined && field.validation.max !==
-    undefined) { Range: {{ field.validation.min }} -
-    {{ field.validation.max }} } @else if (field.validation.min !== undefined) {
-    Minimum: {{ field.validation.min }} } @else if (field.validation.max !==
-    undefined) { Maximum: {{ field.validation.max }}
-    }
-  </div>
+  @if (hasRange) {
+  <div class="text-xs text-gray-500">{{ getRangeText(true) }}</div>
   }
 </div>

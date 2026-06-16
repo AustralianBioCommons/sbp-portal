@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { Component, input, output, signal } from "@angular/core";
 
 export interface ListboxSelectOption {
   value: string;
@@ -9,90 +9,37 @@ export interface ListboxSelectOption {
   selector: "app-listbox-select",
   standalone: true,
   imports: [],
-  template: `
-    <div class="relative" (focusout)="handleFocusOut($event)">
-      <button
-        [id]="inputId"
-        type="button"
-        [attr.aria-expanded]="isOpen"
-        aria-haspopup="listbox"
-        [attr.aria-controls]="menuId"
-        (click)="toggleMenu()"
-        class="flex h-10 w-full items-center justify-between rounded-md border bg-white px-4 text-left text-sm text-gray-900 transition-colors focus:outline-none focus:ring-2"
-        [class.border-red-500]="invalid"
-        [class.focus:ring-red-100]="invalid"
-        [class.focus:ring-sky-100]="!invalid"
-      >
-        <span class="block min-w-0 truncate">{{ selectedLabel }}</span>
-        <svg
-          class="ml-3 h-4 w-4 shrink-0 text-slate-500"
-          fill="none"
-          viewBox="0 0 20 20"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.5"
-            d="m6 8 4 4 4-4"
-          />
-        </svg>
-      </button>
-
-      @if (isOpen) {
-      <div
-        [id]="menuId"
-        role="listbox"
-        tabindex="-1"
-        class="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-59.5 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
-      >
-        @for (option of options; track option.value) {
-        <button
-          type="button"
-          role="option"
-          [attr.aria-selected]="value === option.value"
-          (click)="selectOption(option.value)"
-          class="flex min-h-8 w-full items-center rounded-lg px-2 py-1.5 text-left text-xs leading-tight text-slate-900 transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-          [class.bg-slate-100]="value === option.value"
-        >
-          {{ option.label }}
-        </button>
-        }
-      </div>
-      }
-    </div>
-  `,
+  templateUrl: "./listbox-select.component.html",
 })
 export class ListboxSelectComponent {
-  @Input({ required: true }) inputId!: string;
-  @Input({ required: true }) options: ListboxSelectOption[] = [];
-  @Input() value = "";
-  @Input() placeholder = "Select an option";
-  @Input() invalid = false;
+  readonly inputId = input.required<string>();
+  readonly options = input.required<ListboxSelectOption[]>();
+  readonly value = input("");
+  readonly placeholder = input("Select an option");
+  readonly invalid = input(false);
 
-  @Output() valueChange = new EventEmitter<string>();
-  @Output() blurred = new EventEmitter<void>();
+  readonly valueChange = output<string>();
+  readonly blurred = output<void>();
 
-  isOpen = false;
+  readonly isOpen = signal(false);
 
   get menuId(): string {
-    return `${this.inputId}-menu`;
+    return `${this.inputId()}-menu`;
   }
 
   get selectedLabel(): string {
     return (
-      this.options.find((option) => option.value === this.value)?.label ??
-      this.placeholder
+      this.options().find((option) => option.value === this.value())?.label ??
+      this.placeholder()
     );
   }
 
   toggleMenu(): void {
-    this.isOpen = !this.isOpen;
+    this.isOpen.update((open) => !open);
   }
 
   closeMenu(): void {
-    this.isOpen = false;
+    this.isOpen.set(false);
   }
 
   selectOption(value: string): void {

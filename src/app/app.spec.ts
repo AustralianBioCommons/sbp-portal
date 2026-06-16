@@ -103,7 +103,7 @@ describe("App", () => {
   // Authentication errors now automatically trigger logout and redirect to home page
   // The component now handles all authentication errors generically
 
-  it("shows logout button when logged in", async () => {
+  it("shows the user menu when logged in", async () => {
     // Create a new mock with isAuthenticated$ = true
     const mockAuthServiceLoggedIn = {
       ...mockAuthService,
@@ -132,7 +132,7 @@ describe("App", () => {
     const fixture2 = TestBed.createComponent(App);
     fixture2.detectChanges();
     const compiled = fixture2.nativeElement as HTMLElement;
-    const button = compiled.querySelector("[aria-label='Open profile']");
+    const button = compiled.querySelector("#user-menu-button");
     expect(button).toBeTruthy();
   });
 

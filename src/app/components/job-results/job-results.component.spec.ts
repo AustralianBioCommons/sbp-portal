@@ -53,6 +53,18 @@ describe("JobResultsComponent", () => {
     finalDesignCount: null,
   };
 
+  /**
+   * Recreate the fixture and apply the signal inputs. `detectChanges` flushes
+   * the reactive effect that loads report/downloads/settings and resets state.
+   */
+  function createWith(open: boolean, job: JobListItem | null): void {
+    fixture = TestBed.createComponent(JobResultsComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput("isOpen", open);
+    fixture.componentRef.setInput("job", job);
+    fixture.detectChanges();
+  }
+
   beforeEach(async () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getJobReport",
@@ -125,25 +137,7 @@ describe("JobResultsComponent", () => {
       })
     );
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
-    fixture.detectChanges();
+    createWith(true, mockJob);
   });
 
   it("should create", () => {
@@ -175,16 +169,9 @@ describe("JobResultsComponent", () => {
     component.setActiveTab("logs");
     expect(component.activeTab()).toBe("logs");
     expect(resultsService.getJobLogs).toHaveBeenCalledWith(mockJob.id);
-    component.job = fallbackJob;
 
-    component.ngOnChanges({
-      job: {
-        currentValue: fallbackJob,
-        previousValue: mockJob,
-        firstChange: false,
-        isFirstChange: () => false,
-      },
-    });
+    fixture.componentRef.setInput("job", fallbackJob);
+    fixture.detectChanges();
 
     expect(component.activeTab()).toBe("results");
     expect(resultsService.getJobReport.calls.mostRecent().args).toEqual([
@@ -195,32 +182,11 @@ describe("JobResultsComponent", () => {
     ]);
   });
 
-  it("should not reset the active tab for unrelated input changes", () => {
-    component.setActiveTab("files");
-
-    component.ngOnChanges({
-      tabs: {
-        currentValue: [],
-        previousValue: [],
-        firstChange: false,
-        isFirstChange: () => false,
-      },
-    } as never);
-
-    expect(component.activeTab()).toBe("files");
-  });
-
   it("should reset the active tab when the open state changes", () => {
     component.setActiveTab("citations");
 
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: false,
-        previousValue: true,
-        firstChange: false,
-        isFirstChange: () => false,
-      },
-    });
+    fixture.componentRef.setInput("isOpen", false);
+    fixture.detectChanges();
 
     expect(component.activeTab()).toBe("results");
   });
@@ -233,15 +199,8 @@ describe("JobResultsComponent", () => {
     );
     component.reportError.set("error");
 
-    component.isOpen = false;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: false,
-        previousValue: true,
-        firstChange: false,
-        isFirstChange: () => false,
-      },
-    });
+    fixture.componentRef.setInput("isOpen", false);
+    fixture.detectChanges();
 
     expect(component.reportUrl()).toBeNull();
     expect(component.reportError()).toBeNull();
@@ -274,24 +233,7 @@ describe("JobResultsComponent", () => {
       throwError(() => new Error("logs failed"))
     );
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
+    createWith(true, mockJob);
 
     component.setActiveTab("logs");
     fixture.detectChanges();
@@ -332,25 +274,7 @@ describe("JobResultsComponent", () => {
       throwError(() => new Error("report failed"))
     );
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
-    fixture.detectChanges();
+    createWith(true, mockJob);
 
     expect(component.reportUrl()).toBeNull();
     expect(component.reportError()).toBe("Failed to load report.");
@@ -385,25 +309,7 @@ describe("JobResultsComponent", () => {
       throwError(() => new Error("settings failed"))
     );
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
-    fixture.detectChanges();
+    createWith(true, mockJob);
 
     expect(component.settingsItems()).toEqual([]);
     expect(component.settingsError()).toBe("Failed to load settings.");
@@ -529,10 +435,12 @@ describe("JobResultsComponent", () => {
   });
 
   it("should reset logs without loading when opening logs tab without a selected job", () => {
-    component.isOpen = true;
-    component.job = null;
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("job", null);
+    fixture.detectChanges();
     component.logsItems.set(["existing"]);
     component.logsError.set("error");
+    resultsService.getJobLogs.calls.reset();
 
     component.setActiveTab("logs");
 
@@ -545,25 +453,7 @@ describe("JobResultsComponent", () => {
   it("should set reportError when getJobReport returns null", () => {
     resultsService.getJobReport.and.returnValue(of(null));
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
-    fixture.detectChanges();
+    createWith(true, mockJob);
 
     expect(component.reportUrl()).toBeNull();
     expect(component.reportError()).toBe("No report available for this job.");
@@ -591,25 +481,7 @@ describe("JobResultsComponent", () => {
       })
     );
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
-    fixture.detectChanges();
+    createWith(true, mockJob);
 
     expect(component.filesItems().length).toBe(2);
     expect(component.filesItems()[0].label).toBe("Results CSV");
@@ -633,25 +505,7 @@ describe("JobResultsComponent", () => {
       })
     );
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
-    fixture.detectChanges();
+    createWith(true, mockJob);
 
     expect(component.filesItems()[0].url).toBe(
       `${environment.apiBaseUrl}/api/results/job-1/downloads/results.csv`
@@ -663,25 +517,7 @@ describe("JobResultsComponent", () => {
       throwError(() => new Error("downloads failed"))
     );
 
-    fixture = TestBed.createComponent(JobResultsComponent);
-    component = fixture.componentInstance;
-    component.isOpen = true;
-    component.job = mockJob;
-    component.ngOnChanges({
-      isOpen: {
-        currentValue: true,
-        previousValue: false,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-      job: {
-        currentValue: mockJob,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
-    fixture.detectChanges();
+    createWith(true, mockJob);
 
     expect(component.filesItems()).toEqual([]);
     expect(component.filesError()).toBe("Failed to load files.");
@@ -853,7 +689,7 @@ describe("JobResultsComponent", () => {
       expect(items[0].url).toBeUndefined();
     });
 
-    it("should render a download link in the settings tab for an HTTP PDB value", async () => {
+    it("should render a download link in the settings tab for an HTTP PDB value", () => {
       resultsService.getJobSettingParams.and.returnValue(
         of({
           runId: mockJob.id,
@@ -863,24 +699,7 @@ describe("JobResultsComponent", () => {
         })
       );
 
-      fixture = TestBed.createComponent(JobResultsComponent);
-      component = fixture.componentInstance;
-      component.isOpen = true;
-      component.job = mockJob;
-      component.ngOnChanges({
-        isOpen: {
-          currentValue: true,
-          previousValue: false,
-          firstChange: true,
-          isFirstChange: () => true,
-        },
-        job: {
-          currentValue: mockJob,
-          previousValue: null,
-          firstChange: true,
-          isFirstChange: () => true,
-        },
-      });
+      createWith(true, mockJob);
       component.setActiveTab("settings");
       fixture.detectChanges();
 

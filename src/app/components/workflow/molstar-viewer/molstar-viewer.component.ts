@@ -70,7 +70,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
 
   constructor() {
-    // Replaces ngOnChanges: react to pdbFile changes after view is ready.
+    // React to pdbFile changes after view is ready.
     effect(() => {
       const file = this.pdbFile();
       untracked(() => {

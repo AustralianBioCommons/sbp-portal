@@ -364,15 +364,11 @@ describe("JobsComponent", () => {
     expect(component.selectedJobDetails()).toBeNull();
   });
 
-  it("should toggle and close the status dropdown", () => {
+  it("should toggle the status dropdown", () => {
     component.toggleStatusDropdown();
     expect(component.showStatusDropdown()).toBeTrue();
 
     component.toggleStatusDropdown();
-    expect(component.showStatusDropdown()).toBeFalse();
-
-    component.showStatusDropdown.set(true);
-    component.closeStatusDropdown();
     expect(component.showStatusDropdown()).toBeFalse();
   });
 

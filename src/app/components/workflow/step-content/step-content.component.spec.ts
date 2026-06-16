@@ -19,42 +19,42 @@ describe("StepContentComponent", () => {
   });
 
   it("should display title when provided", () => {
-    component.title = "Test Step Title";
+    fixture.componentRef.setInput("title", "Test Step Title");
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Test Step Title");
   });
 
   it("should display description when provided", () => {
-    component.description = "This is a test description";
+    fixture.componentRef.setInput("description", "This is a test description");
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("This is a test description");
   });
 
   it("should not display title when not provided", () => {
-    component.title = "";
+    fixture.componentRef.setInput("title", "");
     fixture.detectChanges();
     const titleElement = fixture.nativeElement.querySelector("h5");
     expect(titleElement).toBeFalsy();
   });
 
   it("should not display description when not provided", () => {
-    component.description = "";
+    fixture.componentRef.setInput("description", "");
     fixture.detectChanges();
     const descriptionElement = fixture.nativeElement.querySelector("p");
     expect(descriptionElement).toBeFalsy();
   });
 
   it("should apply custom content class when provided", () => {
-    component.contentClass = "custom-class";
+    fixture.componentRef.setInput("contentClass", "custom-class");
     fixture.detectChanges();
     const contentDiv = fixture.nativeElement.querySelector(".custom-class");
     expect(contentDiv).toBeTruthy();
   });
 
   it("should have empty content class by default", () => {
-    expect(component.contentClass).toBe("");
+    expect(component.contentClass()).toBe("");
   });
 
   it("should have proper container structure", () => {
@@ -66,8 +66,8 @@ describe("StepContentComponent", () => {
   });
 
   it("should handle both title and description together", () => {
-    component.title = "Test Title";
-    component.description = "Test Description";
+    fixture.componentRef.setInput("title", "Test Title");
+    fixture.componentRef.setInput("description", "Test Description");
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;

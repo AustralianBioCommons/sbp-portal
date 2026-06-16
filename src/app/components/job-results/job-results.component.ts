@@ -1,11 +1,9 @@
 import {
   Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
+  effect,
   inject,
+  input,
+  output,
   signal,
 } from "@angular/core";
 import { SafeResourceUrl } from "@angular/platform-browser";
@@ -58,15 +56,28 @@ type JobSettingItem = {
     DatePipe,
   ],
 })
-export class JobResultsComponent implements OnChanges {
+export class JobResultsComponent {
   private resultsService = inject(ResultsService);
   private datePipe = inject(DatePipe);
 
-  @Input() isOpen = false;
-  @Input() job: JobListItem | null = null;
+  readonly isOpen = input(false);
+  readonly job = input<JobListItem | null>(null);
 
-  @Output() closeRequested = new EventEmitter<void>();
-  @Output() deleteRequested = new EventEmitter<void>();
+  readonly closeRequested = output<void>();
+  readonly deleteRequested = output<void>();
+
+  constructor() {
+    // Reset and reload whenever the selected job or open state changes.
+    effect(() => {
+      this.job();
+      this.isOpen();
+      this.activeTab.set("results");
+      this.loadReport();
+      this.loadDownloads();
+      this.loadSettings();
+      this.resetLogsState();
+    });
+  }
 
   activeTab = signal<JobResultsTab>("results");
   reportUrl = signal<SafeResourceUrl | null>(null);
@@ -91,16 +102,6 @@ export class JobResultsComponent implements OnChanges {
     { id: "logs", label: "Logs", icon: "heroCommandLine" },
     { id: "citations", label: "Citations", icon: "heroBookOpen" },
   ];
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes["job"] || changes["isOpen"]) {
-      this.activeTab.set("results");
-      this.loadReport();
-      this.loadDownloads();
-      this.loadSettings();
-      this.resetLogsState();
-    }
-  }
 
   setActiveTab(tab: JobResultsTab): void {
     this.activeTab.set(tab);
@@ -200,7 +201,8 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private loadReport(): void {
-    if (!this.isOpen || !this.job) {
+    const job = this.job();
+    if (!this.isOpen() || !job) {
       this.reportUrl.set(null);
       this.reportError.set(null);
       this.reportLoading.set(false);
@@ -210,7 +212,7 @@ export class JobResultsComponent implements OnChanges {
     this.reportLoading.set(true);
     this.reportError.set(null);
     this.resultsService
-      .getJobReport(this.job.id)
+      .getJobReport(job.id)
       .pipe(
         catchError((err) => {
           console.error("Error loading job report:", err);
@@ -234,7 +236,8 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private loadSettings(): void {
-    if (!this.isOpen || !this.job) {
+    const job = this.job();
+    if (!this.isOpen() || !job) {
       this.settingsItems.set([]);
       this.settingsError.set(null);
       this.settingsLoading.set(false);
@@ -244,7 +247,7 @@ export class JobResultsComponent implements OnChanges {
     this.settingsLoading.set(true);
     this.settingsError.set(null);
     this.resultsService
-      .getJobSettingParams(this.job.id)
+      .getJobSettingParams(job.id)
       .pipe(
         catchError((err) => {
           console.error("Error loading job settings:", err);
@@ -261,7 +264,8 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private loadDownloads(): void {
-    if (!this.isOpen || !this.job) {
+    const job = this.job();
+    if (!this.isOpen() || !job) {
       this.filesItems.set([]);
       this.filesError.set(null);
       this.filesLoading.set(false);
@@ -271,7 +275,7 @@ export class JobResultsComponent implements OnChanges {
     this.filesLoading.set(true);
     this.filesError.set(null);
     this.resultsService
-      .getJobDownloads(this.job.id)
+      .getJobDownloads(job.id)
       .pipe(
         catchError((err) => {
           console.error("Error loading job downloads:", err);
@@ -294,7 +298,8 @@ export class JobResultsComponent implements OnChanges {
   }
 
   private loadLogs(): void {
-    if (!this.isOpen || !this.job) {
+    const job = this.job();
+    if (!this.isOpen() || !job) {
       this.resetLogsState();
       return;
     }
@@ -302,7 +307,7 @@ export class JobResultsComponent implements OnChanges {
     this.logsLoading.set(true);
     this.logsError.set(null);
     this.resultsService
-      .getJobLogs(this.job.id)
+      .getJobLogs(job.id)
       .pipe(
         catchError((err) => {
           console.error("Error loading job logs:", err);
