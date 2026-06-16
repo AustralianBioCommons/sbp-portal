@@ -35,6 +35,7 @@ import {
 } from "../../cores/services/credits.service";
 import { THEMES } from "../../cores/config/themes.config";
 import { DropdownMenuComponent } from "../dropdown-menu/dropdown-menu.component";
+import { ButtonComponent } from "../button/button.component";
 
 export interface NavItem {
   label: string;
@@ -61,7 +62,13 @@ export interface BreadcrumbInfo {
 
 @Component({
   selector: "app-navbar",
-  imports: [CommonModule, NgIconComponent, RouterLink, DropdownMenuComponent],
+  imports: [
+    CommonModule,
+    NgIconComponent,
+    RouterLink,
+    DropdownMenuComponent,
+    ButtonComponent,
+  ],
   providers: [
     provideIcons({
       heroArrowRightEndOnRectangle,
@@ -174,7 +181,7 @@ export class Navbar implements AfterViewInit {
         },
         {
           label: "Single Prediction",
-          path: "/structure-prediction/single-structure-prediction",
+          path: "/structure-prediction/single-prediction",
         },
         {
           label: "Bulk Prediction",

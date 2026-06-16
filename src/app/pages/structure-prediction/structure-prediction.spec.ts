@@ -25,9 +25,9 @@ describe("StructurePredictionComponent", () => {
   it("should define workflows", () => {
     expect(component.workflows.length).toBe(3);
     expect(component.workflows[0]).toEqual({
-      id: "single-structure-prediction",
+      id: "single-prediction",
       label: "Single Prediction",
-      href: "/structure-prediction/single-structure-prediction",
+      href: "/structure-prediction/single-prediction",
     });
     expect(component.workflows[1]).toEqual({
       id: "bulk-prediction",
@@ -46,17 +46,17 @@ describe("StructurePredictionComponent", () => {
     expect(component.tools[0]).toEqual({
       id: "boltz",
       label: "Boltz",
-      href: "/structure-prediction/single-structure-prediction",
+      href: "/structure-prediction/single-prediction",
     });
     expect(component.tools[1]).toEqual({
       id: "colabfold",
       label: "ColabFold",
-      href: "/structure-prediction/single-structure-prediction",
+      href: "/structure-prediction/single-prediction",
     });
     expect(component.tools[2]).toEqual({
       id: "alphafold2",
       label: "AlphaFold2",
-      href: "/structure-prediction/single-structure-prediction",
+      href: "/structure-prediction/single-prediction",
     });
   });
 

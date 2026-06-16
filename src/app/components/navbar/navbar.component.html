@@ -89,7 +89,7 @@
               [attr.aria-valuemax]="creditsTotal"
             >
               <div
-                class="h-1.5 rounded-full bg-biocommons-primary transition-all"
+                class="h-1.5 rounded-full bg-biocommons-secondary transition-all"
                 [style.width.%]="creditsPercent()"
               ></div>
             </div>
@@ -163,13 +163,9 @@
         </ng-template>
       </app-dropdown-menu>
       } @else {
-      <button
-        type="button"
-        class="px-6 py-2 text-sm font-mono text-sky-950 bg-biocommons-secondary hover:bg-teal-500 rounded-full"
-        (click)="login()"
-      >
-        <span>Login</span>
-      </button>
+      <app-button variant="primary" widthClass="w-auto" (click)="login()">
+        Login
+      </app-button>
       }
     </div>
   </div>

@@ -1,32 +1,29 @@
-import {
-  Component,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from "@angular/core";
+import { Component, effect, inject, OnInit, signal } from "@angular/core";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { SafeResourceUrl } from "@angular/platform-browser";
+import { DatePipe } from "@angular/common";
+import { EMPTY } from "rxjs";
+import { catchError } from "rxjs/operators";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDownTray,
+  heroArrowLeft,
   heroBookOpen,
   heroChartBarSquare,
   heroCommandLine,
   heroCog6Tooth,
+  heroExclamationTriangle,
   heroFolder,
   heroTrash,
-  heroXMark,
 } from "@ng-icons/heroicons/outline";
-import { LoadingComponent } from "../loading/loading.component";
-import { JobListItem } from "../../cores/services/jobs.service";
+import { LoadingComponent } from "../../components/loading/loading.component";
+import { DialogComponent } from "../../components/dialog/dialog.component";
+import { ButtonComponent } from "../../components/button/button.component";
+import { JobListItem, JobsService } from "../../cores/services/jobs.service";
 import {
   ResultLogsResponse,
   ResultsService,
 } from "../../cores/services/results.service";
-import { DatePipe } from "@angular/common";
-import { EMPTY } from "rxjs";
-import { catchError } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -38,47 +35,46 @@ type JobSettingItem = {
 };
 
 @Component({
-  selector: "app-job-results",
+  selector: "app-job-details",
   standalone: true,
-  imports: [NgIconComponent, LoadingComponent],
-  templateUrl: "./job-results.component.html",
+  imports: [
+    RouterLink,
+    NgIconComponent,
+    LoadingComponent,
+    DialogComponent,
+    ButtonComponent,
+  ],
   providers: [
     provideIcons({
       heroArrowDownTray,
+      heroArrowLeft,
       heroBookOpen,
       heroChartBarSquare,
       heroCommandLine,
       heroCog6Tooth,
+      heroExclamationTriangle,
       heroFolder,
       heroTrash,
-      heroXMark,
     }),
     DatePipe,
   ],
+  templateUrl: "./job-details.html",
 })
-export class JobResultsComponent {
+export default class JobDetailsComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private jobsService = inject(JobsService);
   private resultsService = inject(ResultsService);
   private datePipe = inject(DatePipe);
 
-  readonly isOpen = input(false);
-  readonly job = input<JobListItem | null>(null);
+  // Page state
+  job = signal<JobListItem | null>(null);
+  loading = signal<boolean>(false);
+  error = signal<string | null>(null);
+  showDeleteDialog = signal<boolean>(false);
+  deleting = signal<boolean>(false);
 
-  readonly closeRequested = output<void>();
-  readonly deleteRequested = output<void>();
-
-  constructor() {
-    // Reset and reload whenever the selected job or open state changes.
-    effect(() => {
-      this.job();
-      this.isOpen();
-      this.activeTab.set("results");
-      this.loadReport();
-      this.loadDownloads();
-      this.loadSettings();
-      this.resetLogsState();
-    });
-  }
-
+  // Results state
   activeTab = signal<JobResultsTab>("results");
   reportUrl = signal<SafeResourceUrl | null>(null);
   reportLoading = signal(false);
@@ -102,6 +98,99 @@ export class JobResultsComponent {
     { id: "logs", label: "Logs", icon: "heroCommandLine" },
     { id: "citations", label: "Citations", icon: "heroBookOpen" },
   ];
+
+  constructor() {
+    // A job passed through router navigation state lets us render immediately
+    // without an extra round-trip when arriving from the jobs list.
+    const navigatedJob = this.router.getCurrentNavigation()?.extras.state?.[
+      "job"
+    ] as JobListItem | undefined;
+    if (navigatedJob) {
+      this.job.set(this.jobsService.normalizeJob(navigatedJob));
+    }
+
+    // Reset and reload the results whenever the selected job changes.
+    effect(() => {
+      this.job();
+      this.activeTab.set("results");
+      this.loadReport();
+      this.loadDownloads();
+      this.loadSettings();
+      this.resetLogsState();
+    });
+  }
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get("id");
+    if (!id) {
+      this.error.set("Job not found.");
+      return;
+    }
+
+    // Already have the job from navigation state and it matches the route.
+    if (this.job()?.id === id) {
+      return;
+    }
+
+    this.loadJob(id);
+  }
+
+  private loadJob(id: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.jobsService
+      .getJob(id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error loading job:", err);
+          this.error.set("Failed to load job. Please try again.");
+          this.loading.set(false);
+          return EMPTY;
+        })
+      )
+      .subscribe((job) => {
+        if (!job) {
+          this.error.set("Job not found.");
+        } else {
+          this.job.set(job);
+        }
+        this.loading.set(false);
+      });
+  }
+
+  openDeleteDialog(): void {
+    this.showDeleteDialog.set(true);
+  }
+
+  closeDeleteDialog(): void {
+    this.showDeleteDialog.set(false);
+  }
+
+  confirmDelete(): void {
+    const job = this.job();
+    if (!job) {
+      this.closeDeleteDialog();
+      return;
+    }
+
+    this.deleting.set(true);
+    this.jobsService
+      .deleteJob(job.id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error deleting job:", err);
+          this.error.set("Failed to delete job. Please try again.");
+          this.deleting.set(false);
+          this.closeDeleteDialog();
+          return EMPTY;
+        })
+      )
+      .subscribe(() => {
+        this.deleting.set(false);
+        this.closeDeleteDialog();
+        this.router.navigate(["/jobs"]);
+      });
+  }
 
   setActiveTab(tab: JobResultsTab): void {
     this.activeTab.set(tab);
@@ -202,7 +291,7 @@ export class JobResultsComponent {
 
   private loadReport(): void {
     const job = this.job();
-    if (!this.isOpen() || !job) {
+    if (!job) {
       this.reportUrl.set(null);
       this.reportError.set(null);
       this.reportLoading.set(false);
@@ -237,7 +326,7 @@ export class JobResultsComponent {
 
   private loadSettings(): void {
     const job = this.job();
-    if (!this.isOpen() || !job) {
+    if (!job) {
       this.settingsItems.set([]);
       this.settingsError.set(null);
       this.settingsLoading.set(false);
@@ -265,7 +354,7 @@ export class JobResultsComponent {
 
   private loadDownloads(): void {
     const job = this.job();
-    if (!this.isOpen() || !job) {
+    if (!job) {
       this.filesItems.set([]);
       this.filesError.set(null);
       this.filesLoading.set(false);
@@ -299,7 +388,7 @@ export class JobResultsComponent {
 
   private loadLogs(): void {
     const job = this.job();
-    if (!this.isOpen() || !job) {
+    if (!job) {
       this.resetLogsState();
       return;
     }
@@ -387,7 +476,7 @@ export class JobResultsComponent {
   ]);
 
   private shouldHideSettingKey(key: string): boolean {
-    return JobResultsComponent.HIDDEN_SETTING_KEYS.has(key.toLowerCase());
+    return JobDetailsComponent.HIDDEN_SETTING_KEYS.has(key.toLowerCase());
   }
 
   private normalizeSettingItem(key: string, value: unknown): JobSettingItem {

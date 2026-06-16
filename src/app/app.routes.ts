@@ -26,7 +26,7 @@ export const routes: Routes = [
         data: { tab: "structure-prediction" },
       },
       {
-        path: "single-structure-prediction",
+        path: "single-prediction",
         loadComponent: () =>
           import("./pages/workflow/single-prediction/single-prediction"),
       },
@@ -46,7 +46,16 @@ export const routes: Routes = [
   },
   {
     path: "jobs",
-    loadComponent: () => import("./pages/jobs/jobs"),
+    children: [
+      {
+        path: "",
+        loadComponent: () => import("./pages/jobs/jobs"),
+      },
+      {
+        path: ":id",
+        loadComponent: () => import("./pages/job-details/job-details"),
+      },
+    ],
   },
   {
     path: "**",

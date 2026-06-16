@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable } from "rxjs";
+import { map, Observable } from "rxjs";
 import { environment } from "../../../environments/environment";
 
 /**
@@ -91,6 +91,40 @@ export class JobsService {
     }
 
     return this.http.get<JobListResponse>(this.jobsUrl, { params: httpParams });
+  }
+
+  /**
+   * Fetch a single job by its run id.
+   *
+   * There is no dedicated single-job endpoint, so this resolves the job from
+   * the job listing. Used when the job detail page is reached directly via URL
+   * (e.g. on refresh) and no job was passed through router navigation state.
+   * @param runId The job run id
+   * @returns Observable of the matching JobListItem, or null if not found
+   */
+  getJob(runId: string): Observable<JobListItem | null> {
+    return this.listJobs({ limit: 1000, offset: 0 }).pipe(
+      map((response) => {
+        const job = response.jobs.find((item) => item.id === runId);
+        return job ? this.normalizeJob(job) : null;
+      })
+    );
+  }
+
+  /**
+   * Normalize a raw job payload, accounting for snake_case API field aliases.
+   */
+  normalizeJob(job: JobListItem): JobListItem {
+    const rawJob = job as JobListItem & {
+      final_design_count?: number | null;
+      workflow_name?: string | null;
+    };
+    return {
+      ...job,
+      finalDesignCount:
+        rawJob.finalDesignCount ?? rawJob.final_design_count ?? null,
+      workflow: rawJob.workflow ?? rawJob.workflow_name ?? "",
+    };
   }
 
   cancelJob(runId: string): Observable<CancelJobResponse> {

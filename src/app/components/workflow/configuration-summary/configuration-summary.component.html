@@ -1,7 +1,7 @@
 <div class="mt-4 space-y-4">
   <!-- Selected Tool -->
   <div class="bg-sky-50 border border-sky-200 rounded-lg p-4">
-    <h6 class="text-sm font-semibold text-sky-900 mb-2">Selected Tool</h6>
+    <div class="text-sm font-semibold text-sky-900 mb-2">Selected Tool</div>
     <p class="text-sm text-sky-800">
       <span class="font-medium">{{ selectedTool() }}</span>
       @if (hasParameters()) {
@@ -20,9 +20,9 @@
 
   <!-- Input Configuration Summary -->
   <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-    <h6 class="text-sm font-semibold text-gray-900 mb-3">
+    <div class="text-sm font-semibold text-gray-900 mb-3">
       Input Configuration
-    </h6>
+    </div>
     @if (summaryItems().length > 0) {
     <div class="space-y-3">
       @for (item of summaryItems(); track item.fieldName) {
@@ -43,7 +43,7 @@
           {{ item.value }}
         </a>
         } @else {
-        <span class="text-sm text-gray-600 sm:w-2/3 break-words">{{
+        <span class="text-sm text-gray-600 sm:w-2/3 wrap-break-word">{{
           item.value
         }}</span>
         }
