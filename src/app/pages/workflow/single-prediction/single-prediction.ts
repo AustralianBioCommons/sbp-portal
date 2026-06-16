@@ -1,4 +1,4 @@
-import { switchMap, map } from "rxjs";
+import { switchMap, map, filter, take } from "rxjs";
 import { CommonModule } from "@angular/common";
 import {
   CdkDragDrop,
@@ -132,7 +132,12 @@ export default class SinglePredictionComponent {
 
   constructor() {
     if (this.creditsEnabled) {
-      this.loadToolCredits();
+      // Only call the credit service once the user is authenticated; the
+      // /api/* requests require a bearer token and otherwise fail, blocking
+      // the page from rendering.
+      this.auth.isAuthenticated$
+        .pipe(filter(Boolean), take(1))
+        .subscribe(() => this.loadToolCredits());
     }
   }
 
