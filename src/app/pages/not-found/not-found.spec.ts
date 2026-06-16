@@ -35,7 +35,7 @@ describe("NotFoundComponent", () => {
   });
 
   it("should display error message", () => {
-    const message = fixture.debugElement.query(By.css("p.text-gray-500"));
+    const message = fixture.debugElement.query(By.css("p.text-gray-600"));
     expect(message.nativeElement.textContent.trim()).toBe(
       "Sorry, we couldn't find the page you're looking for."
     );

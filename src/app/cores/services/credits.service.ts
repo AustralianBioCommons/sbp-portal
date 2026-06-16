@@ -94,7 +94,7 @@ export class CreditsService {
   /** Return the per-tool credit multipliers for each workflow category. */
   getWorkflowCredits(): Observable<WorkflowCreditsResponse> {
     return this.http.get<WorkflowCreditsResponse>(
-      `${this.baseUrl}/api/workflows/credits`,
+      `${this.baseUrl}/api/workflows/credits`
     );
   }
 }
