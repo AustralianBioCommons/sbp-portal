@@ -26,7 +26,6 @@ import {
 
 @Component({
   selector: "app-jobs",
-  standalone: true,
   imports: [
     DatePipe,
     FormsModule,
@@ -48,6 +47,7 @@ import {
     }),
   ],
   templateUrl: "./jobs.html",
+  styleUrl: "./jobs.scss",
 })
 export default class JobsComponent implements OnInit {
   private jobsService = inject(JobsService);

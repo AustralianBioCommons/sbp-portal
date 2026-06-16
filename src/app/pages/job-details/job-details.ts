@@ -36,7 +36,6 @@ type JobSettingItem = {
 
 @Component({
   selector: "app-job-details",
-  standalone: true,
   imports: [
     RouterLink,
     NgIconComponent,
@@ -59,6 +58,7 @@ type JobSettingItem = {
     DatePipe,
   ],
   templateUrl: "./job-details.html",
+  styleUrl: "./job-details.scss",
 })
 export default class JobDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);

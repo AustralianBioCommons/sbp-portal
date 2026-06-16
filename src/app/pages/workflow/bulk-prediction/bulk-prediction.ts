@@ -88,7 +88,7 @@ type StepItem = Step;
     class: "block w-full bulk-prediction-bg",
   },
   templateUrl: "./bulk-prediction.html",
-  styleUrls: ["./bulk-prediction.scss"],
+  styleUrl: "./bulk-prediction.scss",
 })
 export default class BulkPredictionComponent {
   // Auth

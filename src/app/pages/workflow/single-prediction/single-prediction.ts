@@ -99,7 +99,6 @@ interface ToolSettingErrors {
 
 @Component({
   selector: "app-single-prediction",
-  standalone: true,
   imports: [
     CommonModule,
     DragDropModule,

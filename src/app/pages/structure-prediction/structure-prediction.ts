@@ -4,9 +4,9 @@ import { THEMES } from "../../cores/config/themes.config";
 
 @Component({
   selector: "app-structure-prediction",
-  standalone: true,
   imports: [RouterLink],
   templateUrl: "./structure-prediction.html",
+  styleUrl: "./structure-prediction.scss",
 })
 export class StructurePredictionComponent {
   private readonly theme = THEMES.find((t) => t.id === "structure-prediction")!;

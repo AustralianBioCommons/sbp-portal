@@ -12,6 +12,7 @@ export type AlertPosition = "fixed" | "static";
 @Component({
   selector: "app-alert",
   templateUrl: "./alert.component.html",
+  styleUrl: "./alert.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlertComponent {

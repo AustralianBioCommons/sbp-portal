@@ -95,7 +95,6 @@ type StepItem = Step;
 
 @Component({
   selector: "app-interaction-screening",
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -113,7 +112,7 @@ type StepItem = Step;
     class: "block w-full interaction-screening-bg",
   },
   templateUrl: "./interaction-screening.html",
-  styleUrls: ["./interaction-screening.scss"],
+  styleUrl: "./interaction-screening.scss",
 })
 export default class InteractionScreeningComponent {
   // Auth

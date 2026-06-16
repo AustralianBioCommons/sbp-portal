@@ -64,7 +64,6 @@ type StepItem = Step;
 
 @Component({
   selector: "app-de-novo-design",
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -82,7 +81,7 @@ type StepItem = Step;
     CreditSummaryComponent,
   ],
   templateUrl: "./de-novo-design.html",
-  styleUrls: ["./de-novo-design.scss"],
+  styleUrl: "./de-novo-design.scss",
 })
 export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   private readonly availableToolId: ToolChip["id"] = "bindcraft";

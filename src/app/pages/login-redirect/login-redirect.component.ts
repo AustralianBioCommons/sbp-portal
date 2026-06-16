@@ -3,21 +3,8 @@ import { AuthService } from "../../cores/auth.service";
 
 @Component({
   selector: "app-login-redirect",
-  standalone: true,
-  template: `
-    <div
-      class="flex min-h-screen items-center justify-center bg-white p-8 text-center"
-    >
-      <div>
-        <p class="text-lg font-semibold">
-          Redirecting you to the Structural Biology Platform login…
-        </p>
-        <p class="mt-2 text-sm text-gray-500">
-          If this page stays here, please refresh to try again.
-        </p>
-      </div>
-    </div>
-  `,
+  templateUrl: "./login-redirect.component.html",
+  styleUrl: "./login-redirect.component.scss",
 })
 export class LoginRedirectComponent implements OnInit {
   private readonly auth = inject(AuthService);

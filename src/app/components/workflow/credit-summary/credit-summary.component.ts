@@ -8,9 +8,9 @@ import { Component, computed, input } from "@angular/core";
  */
 @Component({
   selector: "app-credit-summary",
-  standalone: true,
   imports: [],
   templateUrl: "./credit-summary.component.html",
+  styleUrl: "./credit-summary.component.scss",
 })
 export class CreditSummaryComponent {
   /** Total credits the run will cost. Null while the cost can't be computed. */

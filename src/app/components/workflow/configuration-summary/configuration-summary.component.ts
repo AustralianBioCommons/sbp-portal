@@ -10,9 +10,9 @@ export interface SummaryItem {
 
 @Component({
   selector: "app-configuration-summary",
-  standalone: true,
   imports: [],
   templateUrl: "./configuration-summary.component.html",
+  styleUrl: "./configuration-summary.component.scss",
 })
 export class ConfigurationSummaryComponent {
   readonly selectedTool = input.required<string>();

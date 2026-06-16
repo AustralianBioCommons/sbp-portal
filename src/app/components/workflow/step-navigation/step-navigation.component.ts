@@ -15,6 +15,7 @@ export interface Step {
   selector: "app-step-navigation",
   imports: [],
   templateUrl: "./step-navigation.component.html",
+  styleUrl: "./step-navigation.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StepNavigationComponent {

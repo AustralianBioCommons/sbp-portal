@@ -28,10 +28,10 @@ import { OrderedSet } from "molstar/lib/mol-data/int";
 
 @Component({
   selector: "app-molstar-viewer",
-  standalone: true,
   imports: [CommonModule],
   encapsulation: ViewEncapsulation.None,
   templateUrl: "./molstar-viewer.component.html",
+  styleUrl: "./molstar-viewer.component.scss",
   host: { class: "block" },
 })
 export class MolstarViewerComponent implements AfterViewInit, OnDestroy {

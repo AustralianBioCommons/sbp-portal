@@ -5,9 +5,9 @@ import { AlertComponent } from "../../alert/alert.component";
 
 @Component({
   selector: "app-form-field",
-  standalone: true,
   imports: [AlertComponent],
   templateUrl: "./form-field.component.html",
+  styleUrl: "./form-field.component.scss",
 })
 export class FormFieldComponent {
   private pdbUploadService = inject(PdbUploadService);

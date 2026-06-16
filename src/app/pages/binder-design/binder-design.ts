@@ -4,9 +4,9 @@ import { THEMES } from "../../cores/config/themes.config";
 
 @Component({
   selector: "app-binder-design",
-  standalone: true,
   imports: [RouterLink],
   templateUrl: "./binder-design.html",
+  styleUrl: "./binder-design.scss",
 })
 export class BinderDesignComponent {
   private readonly theme = THEMES.find((t) => t.id === "binder-design")!;

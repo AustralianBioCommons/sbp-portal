@@ -12,6 +12,7 @@ export interface ToolOption<ToolId extends string = string> {
   selector: "app-tool-selection",
   imports: [],
   templateUrl: "./tool-selection.component.html",
+  styleUrl: "./tool-selection.component.scss",
 })
 export class ToolSelectionComponent<ToolId extends string = string> {
   readonly tools = input.required<ToolOption<ToolId>[]>();

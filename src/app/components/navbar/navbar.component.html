@@ -14,7 +14,7 @@
       </button>
       <a routerLink="/binder-design" aria-label="Navigate to home page">
         <img
-          class="lg:w-48 lg:min-w-48 w-36 min-w-36 h-auto"
+          class="md:w-48 md:min-w-48 w-36 min-w-36 h-auto"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />
@@ -22,13 +22,13 @@
 
       <!-- Divider -->
       <span
-        class="hidden md:block h-8 w-px bg-gray-300 mr-2 lg:mr-4"
+        class="hidden lg:block h-8 w-px bg-gray-300 mr-2 lg:mr-4"
         aria-hidden="true"
       ></span>
 
       <!-- Nav Links -->
       <nav
-        class="hidden md:flex items-center gap-4 lg:gap-6 font-semibold text-sky-900 transition-all text-sm"
+        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-sky-900 transition-all text-sm"
         aria-label="Main navigation"
       >
         <a
@@ -82,7 +82,7 @@
           </span>
           <div class="flex items-center gap-2">
             <div
-              class="h-1.5 w-12 rounded-full bg-gray-200"
+              class="h-1.5 w-24 rounded-full bg-gray-200"
               role="progressbar"
               [attr.aria-valuenow]="creditsRemaining()"
               aria-valuemin="0"
@@ -108,6 +108,7 @@
       <app-dropdown-menu
         [isOpen]="userMenuOpen()"
         (isOpenChange)="userMenuOpen.set($event)"
+        widthClass="w-auto"
       >
         <ng-template #trigger>
           <button
@@ -200,7 +201,7 @@
         aria-label="Navigate to home page"
       >
         <img
-          class="lg:w-48 lg:min-w-48 w-36 min-w-36 h-auto"
+          class="md:w-48 md:min-w-48 w-36 min-w-36 h-auto"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />

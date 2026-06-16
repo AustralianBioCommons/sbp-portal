@@ -34,7 +34,6 @@ type SocialLink = {
 
 @Component({
   selector: "app-footer",
-  standalone: true,
   imports: [FormsModule, NgIconComponent],
   providers: [
     provideIcons({
@@ -46,7 +45,7 @@ type SocialLink = {
     }),
   ],
   templateUrl: "./footer.component.html",
-  styleUrls: ["./footer.component.scss"],
+  styleUrl: "./footer.component.scss",
 })
 export class FooterSectionsComponent {
   readonly logos: LogoLink[] = [
