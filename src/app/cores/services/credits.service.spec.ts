@@ -41,7 +41,12 @@ describe("CreditsService", () => {
     expect(TOTAL_CREDITS).toBe(1000);
   });
 
-  it("getMyCredit GETs the user credit endpoint and returns the body", () => {
+  it("starts with a null shared balance", () => {
+    const service = setup();
+    expect(service.balance()).toBeNull();
+  });
+
+  it("getMyCredit GETs the user credit endpoint, returns the body, and updates the shared balance", () => {
     const service = setup();
     let result: UserCreditResponse | undefined;
     service.getMyCredit().subscribe((r) => (result = r));
@@ -53,6 +58,41 @@ describe("CreditsService", () => {
     req.flush({ userId: "u1", credit: 42 });
 
     expect(result).toEqual({ userId: "u1", credit: 42 });
+    expect(service.balance()).toBe(42);
+  });
+
+  it("refreshBalance re-fetches and updates the shared balance", () => {
+    const service = setup();
+    service.refreshBalance();
+
+    httpMock
+      .expectOne(`${environment.apiBaseUrl}/api/users/me/credit`)
+      .flush({ userId: "u1", credit: 75 });
+
+    expect(service.balance()).toBe(75);
+  });
+
+  it("refreshBalance swallows errors and leaves the balance unchanged", () => {
+    const service = setup();
+    service.refreshBalance();
+
+    httpMock
+      .expectOne(`${environment.apiBaseUrl}/api/users/me/credit`)
+      .error(new ProgressEvent("error"));
+
+    expect(service.balance()).toBeNull();
+  });
+
+  it("clearBalance resets the shared balance", () => {
+    const service = setup();
+    service.getMyCredit().subscribe();
+    httpMock
+      .expectOne(`${environment.apiBaseUrl}/api/users/me/credit`)
+      .flush({ userId: "u1", credit: 10 });
+    expect(service.balance()).toBe(10);
+
+    service.clearBalance();
+    expect(service.balance()).toBeNull();
   });
 
   it("getWorkflowCredits GETs the workflow credits endpoint and returns the body", () => {
@@ -69,38 +109,7 @@ describe("CreditsService", () => {
     expect(result).toEqual({ workflows: [] });
   });
 
-  it("falls back to dummy user credit on error in non-production builds", () => {
-    environment.production = false;
-    const service = setup();
-    let result: UserCreditResponse | undefined;
-    service.getMyCredit().subscribe((r) => (result = r));
-
-    httpMock
-      .expectOne(`${environment.apiBaseUrl}/api/users/me/credit`)
-      .error(new ProgressEvent("error"));
-
-    expect(result?.credit).toBe(250);
-  });
-
-  it("falls back to dummy workflow credits on error in non-production builds", () => {
-    environment.production = false;
-    const service = setup();
-    let result: WorkflowCreditsResponse | undefined;
-    service.getWorkflowCredits().subscribe((r) => (result = r));
-
-    httpMock
-      .expectOne(`${environment.apiBaseUrl}/api/workflows/credits`)
-      .error(new ProgressEvent("error"));
-
-    expect(result?.workflows.length).toBeGreaterThan(0);
-    expect(
-      result?.workflows.find((w) => w.category === "de-novo-design")
-        ?.toolMultipliers
-    ).toEqual({ bindcraft: 20, rfdiffusion: 10 });
-  });
-
-  it("propagates the error in production builds", () => {
-    environment.production = true;
+  it("propagates request errors to the caller", () => {
     const service = setup();
     let errored = false;
     service.getMyCredit().subscribe({

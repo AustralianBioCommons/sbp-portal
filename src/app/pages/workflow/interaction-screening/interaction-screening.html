@@ -324,6 +324,14 @@
             [requiredFieldCount]="3"
             [isValid]="isFormValid()"
           ></app-configuration-summary>
+          @if (creditsEnabled) {
+          <!-- Credit cost summary -->
+          <app-credit-summary
+            class="mt-6 block"
+            [total]="creditCost()"
+            [remaining]="creditsRemaining()"
+          ></app-credit-summary>
+          }
         </app-step-content>
         }
 

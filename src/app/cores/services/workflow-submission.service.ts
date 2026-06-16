@@ -3,6 +3,11 @@ import { Router } from "@angular/router";
 import { getErrorMessage } from "../utils/error.utils";
 import { WorkflowApiService } from "./workflow-api.service";
 import {
+  CreditsService,
+  INSUFFICIENT_CREDITS_MESSAGE,
+  USER_CREDITS_ENABLED,
+} from "./credits.service";
+import {
   WorkflowFormData,
   WorkflowLaunchForm,
 } from "../interfaces/workflow.interfaces";
@@ -13,6 +18,7 @@ import {
 export class WorkflowSubmissionService {
   private workflowApiService = inject(WorkflowApiService);
   private router = inject(Router);
+  private creditsService = inject(CreditsService);
 
   // Success dialog state
   showSuccessDialog = signal<boolean>(false);
@@ -76,6 +82,11 @@ export class WorkflowSubmissionService {
           console.log("Workflow launched successfully:", response);
           // Hide loading state
           this.isSubmitting.set(false);
+          // The backend deducts credits server-side on launch; refresh the
+          // shared balance so the navbar/forms reflect the new amount.
+          if (USER_CREDITS_ENABLED) {
+            this.creditsService.refreshBalance();
+          }
           // Show success dialog instead of alert
           this.successDialogData.set({
             runId: response.runId,
@@ -87,7 +98,17 @@ export class WorkflowSubmissionService {
           console.error("Error launching workflow:", error);
           this.isSubmitting.set(false);
 
-          const message = getErrorMessage(error);
+          // A 402 means the backend's authoritative balance check rejected the
+          // launch (e.g. the balance changed since the form was filled). Show
+          // the friendly insufficient-credit message and re-sync the balance.
+          const status = (error as { status?: number })?.status;
+          const isInsufficientCredit = status === 402;
+          const message = isInsufficientCredit
+            ? INSUFFICIENT_CREDITS_MESSAGE
+            : getErrorMessage(error);
+          if (USER_CREDITS_ENABLED) {
+            this.creditsService.refreshBalance();
+          }
 
           if (onError) {
             onError(new Error(message));
