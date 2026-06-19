@@ -5,6 +5,9 @@ describe("DialogComponent", () => {
   let component: DialogComponent;
   let fixture: ComponentFixture<DialogComponent>;
 
+  const getDialog = (): HTMLDialogElement =>
+    fixture.nativeElement.querySelector("dialog");
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DialogComponent],
@@ -15,25 +18,33 @@ describe("DialogComponent", () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    // Closing restores the body scroll lock the effect applied while open.
+    fixture.componentRef.setInput("isOpen", false);
+    fixture.detectChanges();
+    fixture.destroy();
+  });
+
   it("should create", () => {
     expect(component).toBeTruthy();
   });
 
-  it("should not display dialog when isOpen is false", () => {
+  it("should not open the dialog when isOpen is false", () => {
     fixture.componentRef.setInput("isOpen", false);
     fixture.detectChanges();
-    const dialogElement = fixture.nativeElement.querySelector(".fixed.inset-0");
-    expect(dialogElement).toBeFalsy();
+
+    expect(getDialog().open).toBe(false);
+    expect(document.body.style.overflow).not.toBe("hidden");
   });
 
-  it("should display dialog when isOpen is true", () => {
+  it("should open the dialog and lock body scroll when isOpen is true", () => {
     fixture.componentRef.setInput("isOpen", true);
     fixture.componentRef.setInput("title", "Test Title");
     fixture.componentRef.setInput("message", "Test Message");
     fixture.detectChanges();
 
-    const dialogElement = fixture.nativeElement.querySelector(".fixed.inset-0");
-    expect(dialogElement).toBeTruthy();
+    expect(getDialog().open).toBe(true);
+    expect(document.body.style.overflow).toBe("hidden");
 
     const titleElement = fixture.nativeElement.querySelector("#dialog-title");
     expect(titleElement?.textContent?.trim()).toBe("Test Title");
@@ -42,7 +53,7 @@ describe("DialogComponent", () => {
     expect(messageElement?.textContent?.trim()).toBe("Test Message");
   });
 
-  it("should emit confirmed event when confirm button is clicked", () => {
+  it("should emit confirmed and closed when onConfirm is called", () => {
     spyOn(component.confirmed, "emit");
     spyOn(component.closed, "emit");
 
@@ -52,7 +63,7 @@ describe("DialogComponent", () => {
     expect(component.closed.emit).toHaveBeenCalled();
   });
 
-  it("should emit cancelled event when cancel button is clicked", () => {
+  it("should emit cancelled and closed when onCancel is called", () => {
     spyOn(component.cancelled, "emit");
     spyOn(component.closed, "emit");
 
@@ -62,50 +73,60 @@ describe("DialogComponent", () => {
     expect(component.closed.emit).toHaveBeenCalled();
   });
 
-  it("should call onCancel when backdrop is clicked", () => {
+  it("should call onCancel when the backdrop (dialog element) is clicked", () => {
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.detectChanges();
     spyOn(component, "onCancel");
 
-    const element = document.createElement("div");
-    const mockEvent = {
-      target: element,
-      currentTarget: element,
-    } as unknown as MouseEvent;
-
-    component.onBackdropClick(mockEvent);
+    const dialog = getDialog();
+    dialog.dispatchEvent(new MouseEvent("click"));
 
     expect(component.onCancel).toHaveBeenCalled();
   });
 
   it("should not call onCancel when dialog content is clicked", () => {
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.detectChanges();
     spyOn(component, "onCancel");
 
-    const mockEvent = {
-      target: document.createElement("div"),
-      currentTarget: document.createElement("span"), // Different elements
-    } as unknown as MouseEvent;
-
-    component.onBackdropClick(mockEvent);
+    const content = fixture.nativeElement.querySelector("p");
+    content.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     expect(component.onCancel).not.toHaveBeenCalled();
   });
 
-  it("should display title when title is provided", () => {
+  it("should not dismiss on backdrop click while loading", () => {
     fixture.componentRef.setInput("isOpen", true);
-    fixture.componentRef.setInput("title", "Custom Title");
+    fixture.componentRef.setInput("loading", true);
     fixture.detectChanges();
+    spyOn(component, "onCancel");
 
-    const titleElement = fixture.nativeElement.querySelector("#dialog-title");
-    expect(titleElement).toBeTruthy();
-    expect(titleElement?.textContent?.trim()).toBe("Custom Title");
+    getDialog().dispatchEvent(new MouseEvent("click"));
+
+    expect(component.onCancel).not.toHaveBeenCalled();
   });
 
-  it("should not display title section when title is empty", () => {
+  it("should cancel and prevent default on the native cancel (Escape) event", () => {
     fixture.componentRef.setInput("isOpen", true);
-    fixture.componentRef.setInput("title", "");
     fixture.detectChanges();
+    spyOn(component, "onCancel");
 
-    const titleElement = fixture.nativeElement.querySelector("#dialog-title");
-    expect(titleElement).toBeFalsy();
+    const event = new Event("cancel", { cancelable: true });
+    getDialog().dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(component.onCancel).toHaveBeenCalled();
+  });
+
+  it("should not dismiss on the native cancel event while loading", () => {
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("loading", true);
+    fixture.detectChanges();
+    spyOn(component, "onCancel");
+
+    getDialog().dispatchEvent(new Event("cancel", { cancelable: true }));
+
+    expect(component.onCancel).not.toHaveBeenCalled();
   });
 
   it("should display custom button texts", () => {
@@ -118,42 +139,29 @@ describe("DialogComponent", () => {
     expect(buttons.length).toBe(2);
   });
 
-  it("should handle keyboard events on backdrop", () => {
+  it("should show the warning icon only for the danger variant", () => {
     fixture.componentRef.setInput("isOpen", true);
     fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector("ng-icon")).toBeFalsy();
 
-    spyOn(component, "onCancel");
-
-    const backdrop = fixture.nativeElement.querySelector('[role="button"]');
-
-    // Simulate ESC key press
-    const event = new KeyboardEvent("keydown", { key: "Escape" });
-    backdrop?.dispatchEvent(event);
-
-    expect(component.onCancel).toHaveBeenCalled();
+    fixture.componentRef.setInput("variant", "danger");
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector("ng-icon")).toBeTruthy();
   });
 
-  it("should have proper accessibility attributes", () => {
+  it("should set aria-labelledby on the dialog when a title is provided", () => {
     fixture.componentRef.setInput("isOpen", true);
     fixture.componentRef.setInput("title", "Test Title");
     fixture.detectChanges();
 
-    const backdrop = fixture.nativeElement.querySelector(".fixed.inset-0");
-    expect(backdrop.getAttribute("role")).toBe("button");
-    expect(backdrop.getAttribute("aria-label")).toBe("Close dialog");
-    expect(backdrop.getAttribute("tabindex")).toBe("0");
-
-    const dialog = fixture.nativeElement.querySelector('[role="dialog"]');
-    expect(dialog.getAttribute("aria-modal")).toBe("true");
-    expect(dialog.getAttribute("aria-labelledby")).toBe("dialog-title");
+    expect(getDialog().getAttribute("aria-labelledby")).toBe("dialog-title");
   });
 
-  it("should not have aria-labelledby when title is empty", () => {
+  it("should not set aria-labelledby when title is empty", () => {
     fixture.componentRef.setInput("isOpen", true);
     fixture.componentRef.setInput("title", "");
     fixture.detectChanges();
 
-    const dialog = fixture.nativeElement.querySelector('[role="dialog"]');
-    expect(dialog.getAttribute("aria-labelledby")).toBeNull();
+    expect(getDialog().getAttribute("aria-labelledby")).toBeNull();
   });
 });

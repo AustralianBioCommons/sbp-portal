@@ -183,10 +183,9 @@
                 class="grid gap-3 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
               >
                 <div class="flex shrink-0 cursor-grab flex-col items-center">
-                  <span
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
-                    >#{{ i + 1 }}</span
-                  >
+                  <span class="mb-1 block text-xs font-semibold text-gray-500">
+                    #{{ i + 1 }}
+                  </span>
                   <div
                     class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
                     cdkDragHandle
@@ -204,7 +203,7 @@
                 <div>
                   <label
                     [for]="'molecule-type-' + row.id"
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
+                    class="mb-1 block text-xs font-semibold text-gray-500"
                   >
                     Type
                   </label>
@@ -220,7 +219,7 @@
                 <div>
                   <label
                     [for]="'copy-number-' + row.id"
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
+                    class="mb-1 block text-xs font-semibold text-gray-500"
                   >
                     Copies
                   </label>
@@ -250,7 +249,7 @@
                 <div class="min-w-0">
                   <label
                     [for]="'sequence-' + row.id"
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
+                    class="mb-1 block text-xs font-semibold text-gray-500"
                   >
                     Sequence
                   </label>

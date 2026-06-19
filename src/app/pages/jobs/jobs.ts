@@ -3,6 +3,7 @@ import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { LoadingComponent } from "../../components/loading/loading.component";
 import { DropdownMenuComponent } from "../../components/dropdown-menu/dropdown-menu.component";
+import { DialogComponent } from "../../components/dialog/dialog.component";
 import {
   JobListItem,
   JobListQueryParams,
@@ -32,6 +33,7 @@ import {
     LoadingComponent,
     NgIconComponent,
     DropdownMenuComponent,
+    DialogComponent,
   ],
   providers: [
     provideIcons({
