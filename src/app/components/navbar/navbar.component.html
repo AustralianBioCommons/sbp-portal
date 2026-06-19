@@ -72,38 +72,47 @@
       @if (isAuthenticated$ | async) { @let user = (user$ | async); @if
       (creditsEnabled) {
       <!-- Credits remaining -->
-      <div
-        class="flex items-center gap-2 rounded-xl border border-gray-300 hover:bg-gray-50 hover:cursor-pointer bg-white px-2 h-10"
-        aria-label="Credits remaining"
+      <app-tooltip
+        #creditsTooltip
+        message="Credits are required to execute workflows and will be consumed upon workflow submission. Credit balance will refresh on the 1st of each month."
       >
-        <div class="flex flex-col justify-center gap-1">
-          <span class="text-xs font-medium leading-none text-gray-700">
-            Credits remaining
-          </span>
-          <div class="flex items-center gap-2">
-            <div
-              class="h-1.5 w-24 rounded-full bg-gray-200"
-              role="progressbar"
-              [attr.aria-valuenow]="creditsRemaining()"
-              aria-valuemin="0"
-              [attr.aria-valuemax]="creditsTotal"
-            >
-              <div
-                class="h-1.5 rounded-full bg-biocommons-secondary transition-all"
-                [style.width.%]="creditsPercent()"
-              ></div>
-            </div>
-            <span class="text-xs font-mono leading-none text-gray-400 shrink-0">
-              {{ creditsRemaining() ?? "—" }}/{{ creditsTotal }}
+        <div
+          class="flex items-center gap-2 rounded-xl border border-gray-300 hover:bg-gray-50 hover:cursor-pointer bg-white px-2 h-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500"
+          tabindex="0"
+          aria-label="Credits remaining"
+          [attr.aria-describedby]="creditsTooltip.tooltipId"
+        >
+          <div class="flex flex-col justify-center gap-1">
+            <span class="text-xs font-medium leading-none text-gray-700">
+              Credits remaining
             </span>
+            <div class="flex items-center gap-2">
+              <div
+                class="h-1.5 w-24 rounded-full bg-gray-200"
+                role="progressbar"
+                [attr.aria-valuenow]="creditsRemaining()"
+                aria-valuemin="0"
+                [attr.aria-valuemax]="creditsTotal"
+              >
+                <div
+                  class="h-1.5 rounded-full bg-biocommons-secondary transition-all"
+                  [style.width.%]="creditsPercent()"
+                ></div>
+              </div>
+              <span
+                class="text-xs font-mono leading-none text-gray-400 shrink-0"
+              >
+                {{ creditsRemaining() ?? "—" }}/{{ creditsTotal }}
+              </span>
+            </div>
           </div>
+          <ng-icon
+            name="heroInformationCircle"
+            size="18"
+            class="text-gray-400"
+          ></ng-icon>
         </div>
-        <ng-icon
-          name="heroInformationCircle"
-          size="18"
-          class="text-gray-400"
-        ></ng-icon>
-      </div>
+      </app-tooltip>
       }
       <app-dropdown-menu
         [isOpen]="userMenuOpen()"
@@ -138,7 +147,7 @@
           </button>
         </ng-template>
         <ng-template #menu>
-          <div class="truncate px-4 pt-2 pb-3 text-sm text-sky-900 border-b">
+          <div class="truncate px-4 py-3 text-sm text-sky-900 border-b">
             {{ user?.email || "" }}
           </div>
           <button

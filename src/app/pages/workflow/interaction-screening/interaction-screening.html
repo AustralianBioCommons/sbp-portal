@@ -21,10 +21,10 @@
             (click)="switchTab(tab.id)"
             [class]="
               isActiveTab(tab.id)
-                ? 'bg-white border-t border-l border-r border-gray-200 text-gray-900 font-semibold relative z-10'
+                ? 'bg-white border-t border-l border-r  text-gray-900 font-semibold relative z-10'
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
-            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
+            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
             type="button"
           >
             {{ tab.label }}
@@ -32,7 +32,7 @@
         </li>
         } @empty {
         <li
-          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg"
+          class="px-4 py-2 text-sm text-gray-500 bg-white border rounded-t-lg"
         >
           No tabs available
         </li>
@@ -40,9 +40,7 @@
       </ul>
     </nav>
 
-    <div
-      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
-    >
+    <div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
       <div>
         <h1 class="text-3xl font-semibold text-gray-900">
           Interaction Screening
@@ -80,7 +78,7 @@
         <!-- Lock overlay if user cannot execute workflows -->
         @if ((auth.canExecuteWorkflows$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-lg border border-gray-200 flex items-center justify-center"
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-lg border flex items-center justify-center"
         >
           <div class="text-center p-4">
             <p class="text-base font-semibold text-gray-900 mb-2">

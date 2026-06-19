@@ -36,6 +36,8 @@ export async function getAppConfig(): Promise<ApplicationConfig> {
       provideAuth0({
         domain: environment.auth.domain,
         clientId: environment.auth.clientId,
+        cacheLocation: "localstorage",
+        useRefreshTokens: true,
         authorizationParams: {
           audience: environment.auth.audience,
           redirect_uri: window.location.origin,
