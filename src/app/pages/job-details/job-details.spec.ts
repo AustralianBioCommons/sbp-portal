@@ -22,7 +22,7 @@ type JobDetailsPrivateApi = {
   formatValidationDetails: (
     validation: Record<string, unknown> | undefined
   ) => string[];
-  isPdbSettingKey: (key: string) => boolean;
+  isFileDownloadKey: (key: string) => boolean;
   extractFilename: (path: string) => string;
 };
 
@@ -643,19 +643,26 @@ describe("JobDetailsComponent", () => {
     expect(privateApi().formatValidationDetails(undefined)).toEqual([]);
   });
 
-  describe("isPdbSettingKey", () => {
+  describe("isFileDownloadKey", () => {
     it("should return true for keys containing 'pdb'", () => {
       const api = privateApi();
-      expect(api.isPdbSettingKey("starting_pdb")).toBeTrue();
-      expect(api.isPdbSettingKey("PDB_input")).toBeTrue();
-      expect(api.isPdbSettingKey("my_pdb_file")).toBeTrue();
+      expect(api.isFileDownloadKey("starting_pdb")).toBeTrue();
+      expect(api.isFileDownloadKey("PDB_input")).toBeTrue();
+      expect(api.isFileDownloadKey("my_pdb_file")).toBeTrue();
     });
 
-    it("should return false for keys that do not contain 'pdb'", () => {
+    it("should return true for keys containing 'fasta'", () => {
       const api = privateApi();
-      expect(api.isPdbSettingKey("binder_name")).toBeFalse();
-      expect(api.isPdbSettingKey("min_length")).toBeFalse();
-      expect(api.isPdbSettingKey("chains")).toBeFalse();
+      expect(api.isFileDownloadKey("fastaS3Uri")).toBeTrue();
+      expect(api.isFileDownloadKey("fastaFileUrl")).toBeTrue();
+      expect(api.isFileDownloadKey("FASTA_input")).toBeTrue();
+    });
+
+    it("should return false for keys that do not contain 'pdb' or 'fasta'", () => {
+      const api = privateApi();
+      expect(api.isFileDownloadKey("binder_name")).toBeFalse();
+      expect(api.isFileDownloadKey("min_length")).toBeFalse();
+      expect(api.isFileDownloadKey("chains")).toBeFalse();
     });
   });
 
