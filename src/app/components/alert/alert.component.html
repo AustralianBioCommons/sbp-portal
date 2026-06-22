@@ -47,7 +47,13 @@
   <!-- Content -->
   <div
     class="text-md flex-1"
-    [class]="type() === 'success' ? 'text-emerald-500' : type() === 'warning' ? 'text-yellow-800' : 'text-red-500'"
+    [class]="
+      type() === 'success'
+        ? 'text-emerald-500'
+        : type() === 'warning'
+        ? 'text-yellow-800'
+        : 'text-red-500'
+    "
   >
     {{ message() }}
   </div>
@@ -62,8 +68,8 @@
       type() === 'success'
         ? 'text-emerald-500 hover:bg-green-100'
         : type() === 'warning'
-          ? 'text-yellow-700 hover:bg-yellow-100'
-          : 'text-red-500 hover:bg-red-100'
+        ? 'text-yellow-700 hover:bg-yellow-100'
+        : 'text-red-500 hover:bg-red-100'
     "
   >
     <svg

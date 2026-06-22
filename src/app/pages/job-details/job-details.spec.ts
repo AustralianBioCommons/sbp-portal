@@ -68,7 +68,9 @@ describe("JobDetailsComponent", () => {
       "listJobs",
     ]);
     mockJobsService.normalizeJob.and.callFake((job) => job);
-    mockJobsService.getJob.and.returnValue(of(mockJob));
+    mockJobsService.getJob.and.returnValue(
+      of({ job: mockJob, seqeraUnavailable: false })
+    );
     mockJobsService.deleteJob.and.returnValue(
       of({
         runId: mockJob.id,
@@ -183,7 +185,9 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should show an error when the job cannot be found", () => {
-    mockJobsService.getJob.and.returnValue(of(null));
+    mockJobsService.getJob.and.returnValue(
+      of({ job: null, seqeraUnavailable: false })
+    );
     render();
 
     expect(component.error()).toBe("Job not found.");

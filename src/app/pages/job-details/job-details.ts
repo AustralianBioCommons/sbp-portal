@@ -109,7 +109,9 @@ export default class JobDetailsComponent implements OnInit {
     const navigatedJob = navState?.["job"] as JobListItem | undefined;
     if (navigatedJob) {
       this.job.set(this.jobsService.normalizeJob(navigatedJob));
-      this.seqeraUnavailable.set((navState?.["seqeraUnavailable"] as boolean) ?? false);
+      this.seqeraUnavailable.set(
+        (navState?.["seqeraUnavailable"] as boolean) ?? false
+      );
     }
 
     // Reset and reload the results whenever the selected job changes.
