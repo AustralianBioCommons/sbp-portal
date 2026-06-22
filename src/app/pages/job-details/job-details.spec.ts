@@ -298,6 +298,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle logs fetch errors", () => {
+    spyOn(console, "error");
     render();
     resultsService.getJobLogs.and.returnValue(
       throwError(() => new Error("logs failed"))
