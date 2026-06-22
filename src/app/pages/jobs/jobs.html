@@ -116,7 +116,18 @@
       <ng-icon name="heroExclamationTriangle" size="24"></ng-icon>
       <p class="text-sm">{{ error() }}</p>
     </div>
-    } @if (loading()) {
+    }
+
+    <!-- Seqera Unavailable Warning -->
+    @if (seqeraUnavailable()) {
+    <app-alert
+      type="warning"
+      position="fixed"
+      message="Seqera services are currently unavailable. Job statuses may not be up to date and logs cannot be retrieved until the service is restored."
+    ></app-alert>
+    }
+
+    @if (loading()) {
     <!-- Loading State -->
     <div class="bg-white shadow-sm rounded-lg border border-gray-200">
       <div class="px-6 py-12 text-center">

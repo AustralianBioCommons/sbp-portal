@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
+import { AlertComponent } from "../../components/alert/alert.component";
 import { LoadingComponent } from "../../components/loading/loading.component";
 import { DropdownMenuComponent } from "../../components/dropdown-menu/dropdown-menu.component";
 import {
@@ -27,6 +28,7 @@ import {
 @Component({
   selector: "app-jobs",
   imports: [
+    AlertComponent,
     DatePipe,
     FormsModule,
     LoadingComponent,
@@ -61,6 +63,7 @@ export default class JobsComponent implements OnInit {
   total = signal<number>(0);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
+  seqeraUnavailable = signal<boolean>(false);
   selectedJobs = signal<string[]>([]);
   showDeleteDialog = signal(false);
   showStatusDropdown = signal(false);
@@ -87,6 +90,7 @@ export default class JobsComponent implements OnInit {
   loadJobs(): void {
     this.loading.set(true);
     this.error.set(null);
+    this.seqeraUnavailable.set(false);
     this.selectedJobs.set([]); // Clear selection when reloading
 
     const params: JobListQueryParams = {
@@ -127,6 +131,7 @@ export default class JobsComponent implements OnInit {
         });
         this.jobs.set(this.sortJobs(normalizedJobs));
         this.total.set(response.total);
+        this.seqeraUnavailable.set(response.seqeraUnavailable ?? false);
         this.loading.set(false);
       });
   }
@@ -400,6 +405,8 @@ export default class JobsComponent implements OnInit {
   }
 
   viewJobDetails(job: JobListItem): void {
-    this.router.navigate(["/jobs", job.id], { state: { job } });
+    this.router.navigate(["/jobs", job.id], {
+      state: { job, seqeraUnavailable: this.seqeraUnavailable() },
+    });
   }
 }

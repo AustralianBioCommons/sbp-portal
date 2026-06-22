@@ -1,3 +1,12 @@
+<!-- Seqera Unavailable Warning -->
+@if (seqeraUnavailable()) {
+<app-alert
+  type="warning"
+  position="fixed"
+  message="Seqera services are currently unavailable. Job status and logs may not be up to date."
+></app-alert>
+}
+
 <!-- Delete Confirmation Dialog -->
 <app-dialog
   [isOpen]="showDeleteDialog()"

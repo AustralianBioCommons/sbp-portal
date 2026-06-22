@@ -6,7 +6,7 @@ import {
   output,
 } from "@angular/core";
 
-export type AlertType = "success" | "error";
+export type AlertType = "success" | "error" | "warning";
 export type AlertPosition = "fixed" | "static";
 
 @Component({
@@ -29,7 +29,9 @@ export class AlertComponent {
     const colorClasses =
       this.type() === "success"
         ? "bg-green-50 border-success"
-        : "bg-red-50 border-error";
+        : this.type() === "warning"
+          ? "bg-yellow-50 border-yellow-300"
+          : "bg-red-50 border-error";
     return `${posClasses} flex max-w-md items-center gap-2 rounded-md p-4 shadow ${colorClasses}`;
   });
 

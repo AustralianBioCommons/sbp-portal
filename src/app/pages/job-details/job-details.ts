@@ -16,6 +16,7 @@ import {
   heroFolder,
   heroTrash,
 } from "@ng-icons/heroicons/outline";
+import { AlertComponent } from "../../components/alert/alert.component";
 import { LoadingComponent } from "../../components/loading/loading.component";
 import { DialogComponent } from "../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../components/button/button.component";
@@ -37,6 +38,7 @@ type JobSettingItem = {
 @Component({
   selector: "app-job-details",
   imports: [
+    AlertComponent,
     RouterLink,
     NgIconComponent,
     LoadingComponent,
@@ -71,6 +73,7 @@ export default class JobDetailsComponent implements OnInit {
   job = signal<JobListItem | null>(null);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
+  seqeraUnavailable = signal<boolean>(false);
   showDeleteDialog = signal<boolean>(false);
   deleting = signal<boolean>(false);
 
@@ -102,11 +105,11 @@ export default class JobDetailsComponent implements OnInit {
   constructor() {
     // A job passed through router navigation state lets us render immediately
     // without an extra round-trip when arriving from the jobs list.
-    const navigatedJob = this.router.getCurrentNavigation()?.extras.state?.[
-      "job"
-    ] as JobListItem | undefined;
+    const navState = this.router.getCurrentNavigation()?.extras.state;
+    const navigatedJob = navState?.["job"] as JobListItem | undefined;
     if (navigatedJob) {
       this.job.set(this.jobsService.normalizeJob(navigatedJob));
+      this.seqeraUnavailable.set((navState?.["seqeraUnavailable"] as boolean) ?? false);
     }
 
     // Reset and reload the results whenever the selected job changes.
@@ -148,12 +151,13 @@ export default class JobDetailsComponent implements OnInit {
           return EMPTY;
         })
       )
-      .subscribe((job) => {
+      .subscribe(({ job, seqeraUnavailable }) => {
         if (!job) {
           this.error.set("Job not found.");
         } else {
           this.job.set(job);
         }
+        this.seqeraUnavailable.set(seqeraUnavailable);
         this.loading.set(false);
       });
   }
