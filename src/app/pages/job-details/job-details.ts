@@ -496,27 +496,28 @@ export default class JobDetailsComponent implements OnInit {
       }
       details.push(...this.formatValidationDetails(value.validation));
       const rawValue = this.formatSettingValue(value.value);
-      const isPdb = this.isPdbSettingKey(key);
+      const isFileDownload = this.isFileDownloadKey(key);
       return {
         label: value.label || this.formatSettingLabel(key),
-        value: isPdb ? this.extractFilename(rawValue) : rawValue,
+        value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
         details,
-        ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {}),
+        ...(isFileDownload && rawValue.startsWith("http") ? { url: rawValue } : {}),
       };
     }
 
     const rawValue = this.formatSettingValue(value);
-    const isPdb = this.isPdbSettingKey(key);
+    const isFileDownload = this.isFileDownloadKey(key);
     return {
       label: this.formatSettingLabel(key),
-      value: isPdb ? this.extractFilename(rawValue) : rawValue,
+      value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
       details: [],
-      ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {}),
+      ...(isFileDownload && rawValue.startsWith("http") ? { url: rawValue } : {}),
     };
   }
 
-  private isPdbSettingKey(key: string): boolean {
-    return key.toLowerCase().includes("pdb");
+  private isFileDownloadKey(key: string): boolean {
+    const lower = key.toLowerCase();
+    return lower.includes("pdb") || lower.includes("fasta");
   }
 
   private extractFilename(path: string): string {
