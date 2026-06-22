@@ -194,6 +194,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should surface an error when fetching the job fails", () => {
+    spyOn(console, "error");
     mockJobsService.getJob.and.returnValue(throwError(() => new Error("boom")));
     render();
 
@@ -341,6 +342,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle report fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobReport.and.returnValue(
       throwError(() => new Error("report failed"))
     );
@@ -385,6 +387,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle settings fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobSettingParams.and.returnValue(
       throwError(() => new Error("settings failed"))
     );
@@ -446,6 +449,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle downloads fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobDownloads.and.returnValue(
       throwError(() => new Error("downloads failed"))
     );
