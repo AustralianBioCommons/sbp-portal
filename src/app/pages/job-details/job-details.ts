@@ -501,7 +501,9 @@ export default class JobDetailsComponent implements OnInit {
         label: value.label || this.formatSettingLabel(key),
         value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
         details,
-        ...(isFileDownload && rawValue.startsWith("http") ? { url: rawValue } : {}),
+        ...(isFileDownload && rawValue.startsWith("http")
+          ? { url: rawValue }
+          : {}),
       };
     }
 
@@ -511,7 +513,9 @@ export default class JobDetailsComponent implements OnInit {
       label: this.formatSettingLabel(key),
       value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
       details: [],
-      ...(isFileDownload && rawValue.startsWith("http") ? { url: rawValue } : {}),
+      ...(isFileDownload && rawValue.startsWith("http")
+        ? { url: rawValue }
+        : {}),
     };
   }
 
