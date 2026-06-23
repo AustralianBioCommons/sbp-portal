@@ -19,10 +19,10 @@
             (click)="switchTab(tab.id)"
             [class]="
               isActiveTab(tab.id)
-                ? 'bg-white border-t border-l border-r border-gray-200 text-gray-900 font-semibold relative z-10'
+                ? 'bg-white border-t border-l border-r  text-gray-900 font-semibold relative z-10'
                 : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
-            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all duration-200 rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
+            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
             type="button"
           >
             {{ tab.label }}
@@ -30,7 +30,7 @@
         </li>
         } @empty {
         <li
-          class="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-t-lg"
+          class="px-4 py-2 text-sm text-gray-500 bg-white border rounded-t-lg"
         >
           No tabs available
         </li>
@@ -38,9 +38,7 @@
       </ul>
     </nav>
 
-    <div
-      class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 space-y-12"
-    >
+    <div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
       <div>
         <h1 class="text-3xl font-semibold text-gray-900">Single Prediction</h1>
         <p class="mt-2 text-sm text-gray-600">
@@ -73,7 +71,7 @@
       <div class="relative">
         @if ((auth.canExecuteWorkflows$ | async) === false) {
         <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-xs rounded-lg border border-gray-200 flex items-center justify-center"
+          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-xs rounded-lg border flex items-center justify-center"
         >
           <div class="text-center p-4">
             <p class="text-base font-semibold text-gray-900 mb-2">
@@ -131,7 +129,7 @@
           title="Input Configuration"
           description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
         >
-          <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <div class="mt-6 rounded-lg border bg-gray-50 p-4">
             <label
               for="job-name"
               class="block text-sm font-medium text-gray-700"
@@ -175,7 +173,7 @@
           >
             @for (row of entityRows(); track row.id; let i = $index) {
             <div
-              class="entity-row rounded-lg border border-gray-200 bg-white px-4 py-3 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:duration-200"
+              class="entity-row rounded-lg border bg-white px-4 py-3 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
               cdkDrag
               cdkDragLockAxis="y"
               cdkDragBoundary=".sequence-list"
@@ -185,10 +183,9 @@
                 class="grid gap-3 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
               >
                 <div class="flex shrink-0 cursor-grab flex-col items-center">
-                  <span
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
-                    >#{{ i + 1 }}</span
-                  >
+                  <span class="mb-1 block text-xs font-semibold text-gray-500">
+                    #{{ i + 1 }}
+                  </span>
                   <div
                     class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
                     cdkDragHandle
@@ -206,7 +203,7 @@
                 <div>
                   <label
                     [for]="'molecule-type-' + row.id"
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
+                    class="mb-1 block text-xs font-semibold text-gray-500"
                   >
                     Type
                   </label>
@@ -222,7 +219,7 @@
                 <div>
                   <label
                     [for]="'copy-number-' + row.id"
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
+                    class="mb-1 block text-xs font-semibold text-gray-500"
                   >
                     Copies
                   </label>
@@ -252,7 +249,7 @@
                 <div class="min-w-0">
                   <label
                     [for]="'sequence-' + row.id"
-                    class="mb-1 block text-xs font-semibold tracking-widest text-gray-500"
+                    class="mb-1 block text-xs font-semibold text-gray-500"
                   >
                     Sequence
                   </label>
@@ -354,7 +351,7 @@
         >
           <div class="mt-6 space-y-4">
             @if (selectedTool() === 'alphafold2') {
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div class="rounded-lg border bg-gray-50 p-4">
               <label
                 for="alphafold2-random-seed"
                 class="block text-sm font-medium text-gray-700"
@@ -394,7 +391,7 @@
               </label>
             </div>
             } @if (selectedTool() === 'colabfold') {
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div class="rounded-lg border bg-gray-50 p-4">
               <label
                 for="colabfold-num-recycles"
                 class="block text-sm font-medium text-gray-700"
@@ -424,7 +421,7 @@
               }
             </div>
             } @if (selectedTool() === 'boltz') {
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div class="rounded-lg border bg-gray-50 p-4">
               <label class="flex items-center gap-3 text-sm text-gray-700">
                 <input
                   type="checkbox"

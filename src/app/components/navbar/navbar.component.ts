@@ -36,6 +36,7 @@ import {
 import { THEMES } from "../../cores/config/themes.config";
 import { DropdownMenuComponent } from "../dropdown-menu/dropdown-menu.component";
 import { ButtonComponent } from "../button/button.component";
+import { TooltipComponent } from "../tooltip/tooltip.component";
 
 export interface NavItem {
   label: string;
@@ -68,6 +69,7 @@ export interface BreadcrumbInfo {
     RouterLink,
     DropdownMenuComponent,
     ButtonComponent,
+    TooltipComponent,
   ],
   providers: [
     provideIcons({

@@ -1,26 +1,29 @@
 <div class="group relative flex items-center">
-  <button
-    type="button"
-    class="flex items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
-    aria-label="More information"
-    [attr.aria-describedby]="tooltipId"
-  >
-    <ng-icon
-      name="heroInformationCircleSolid"
-      size="24"
-      [class]="iconColor() + ' transition-all hover:cursor-pointer'"
-    ></ng-icon>
-  </button>
+  <!-- Trigger: projected content, or the default info icon button -->
+  <ng-content>
+    <button
+      type="button"
+      class="flex items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+      aria-label="More information"
+      [attr.aria-describedby]="tooltipId"
+    >
+      <ng-icon
+        name="heroInformationCircleSolid"
+        size="24"
+        [class]="iconColor() + ' transition-all hover:cursor-pointer'"
+      ></ng-icon>
+    </button>
+  </ng-content>
 
   <!-- Tooltip -->
   <div
     [id]="tooltipId"
     role="tooltip"
-    class="absolute left-1/2 top-full z-50 hidden w-max max-w-40 -translate-x-1/2 translate-y-1 whitespace-pre-line rounded-md bg-gray-900 px-3 py-2 text-sm text-white opacity-0 shadow-lg transition-all group-hover:block group-hover:opacity-90 group-focus-within:block group-focus-within:opacity-90 sm:max-w-48 md:max-w-64 lg:max-w-72 xl:max-w-96"
+    class="absolute left-1/2 top-full z-50 hidden w-max max-w-48 -translate-x-1/2 translate-y-1.5 whitespace-pre-line rounded-md bg-gray-900 px-3 py-2 text-sm text-white opacity-0 shadow-lg transition-all group-hover:block group-hover:opacity-90 group-focus-within:block group-focus-within:opacity-90 sm:max-w-56 md:max-w-64 lg:max-w-72"
   >
     <span class="wrap-break-word">{{ message() }}</span>
     <div
-      class="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-gray-900 opacity-90"
+      class="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-gray-900"
     ></div>
   </div>
 </div>
