@@ -68,7 +68,9 @@ describe("JobDetailsComponent", () => {
       "listJobs",
     ]);
     mockJobsService.normalizeJob.and.callFake((job) => job);
-    mockJobsService.getJob.and.returnValue(of(mockJob));
+    mockJobsService.getJob.and.returnValue(
+      of({ job: mockJob, seqeraUnavailable: false })
+    );
     mockJobsService.deleteJob.and.returnValue(
       of({
         runId: mockJob.id,
@@ -183,13 +185,16 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should show an error when the job cannot be found", () => {
-    mockJobsService.getJob.and.returnValue(of(null));
+    mockJobsService.getJob.and.returnValue(
+      of({ job: null, seqeraUnavailable: false })
+    );
     render();
 
     expect(component.error()).toBe("Job not found.");
   });
 
   it("should surface an error when fetching the job fails", () => {
+    spyOn(console, "error");
     mockJobsService.getJob.and.returnValue(throwError(() => new Error("boom")));
     render();
 
@@ -294,6 +299,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle logs fetch errors", () => {
+    spyOn(console, "error");
     render();
     resultsService.getJobLogs.and.returnValue(
       throwError(() => new Error("logs failed"))
@@ -336,6 +342,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle report fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobReport.and.returnValue(
       throwError(() => new Error("report failed"))
     );
@@ -380,6 +387,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle settings fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobSettingParams.and.returnValue(
       throwError(() => new Error("settings failed"))
     );
@@ -441,6 +449,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle downloads fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobDownloads.and.returnValue(
       throwError(() => new Error("downloads failed"))
     );

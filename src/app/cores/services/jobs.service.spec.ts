@@ -70,8 +70,10 @@ describe("JobsService", () => {
   });
 
   it("should resolve a job by run id from the listing and normalize it", () => {
-    let result: JobListItem | null | undefined;
-    service.getJob("run-2").subscribe((job) => (result = job));
+    let result:
+      | { job: JobListItem | null; seqeraUnavailable: boolean }
+      | undefined;
+    service.getJob("run-2").subscribe((r) => (result = r));
 
     const req = httpMock.expectOne(
       (request) => request.url === `${environment.apiBaseUrl}/api/jobs`
@@ -105,25 +107,28 @@ describe("JobsService", () => {
       offset: 0,
     });
 
-    expect(result).toEqual(
+    expect(result?.job).toEqual(
       jasmine.objectContaining({
         id: "run-2",
         workflow: "wf-b",
         finalDesignCount: 5,
       })
     );
+    expect(result?.seqeraUnavailable).toBeFalse();
   });
 
   it("should return null from getJob when no job matches the run id", () => {
-    let result: JobListItem | null | undefined;
-    service.getJob("missing").subscribe((job) => (result = job));
+    let result:
+      | { job: JobListItem | null; seqeraUnavailable: boolean }
+      | undefined;
+    service.getJob("missing").subscribe((r) => (result = r));
 
     const req = httpMock.expectOne(
       (request) => request.url === `${environment.apiBaseUrl}/api/jobs`
     );
     req.flush({ jobs: [], total: 0, limit: 1000, offset: 0 });
 
-    expect(result).toBeNull();
+    expect(result?.job).toBeNull();
   });
 
   it("should fall back to defaults when normalizing a job without aliases", () => {
