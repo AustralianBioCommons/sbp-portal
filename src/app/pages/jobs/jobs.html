@@ -1,11 +1,9 @@
 <div class="bg-gray-50 py-12">
   <div class="max-w-7xl px-6 mx-auto">
     <!-- Page Header -->
-    <div class="text-center space-y-2">
-      <h1 class="text-3xl font-semibold text-gray-900">My Jobs</h1>
-      <p class="text-sm text-gray-600">
-        View and manage my submitted workflow runs
-      </p>
+    <div class="text-center space-y-6">
+      <h1 class="text-4xl font-semibold text-gray-900">My Jobs</h1>
+      <p class="text-gray-600">View and manage my submitted workflow runs</p>
     </div>
 
     <!-- Search and Filter Bar -->
@@ -127,7 +125,7 @@
     ></app-alert>
     } @if (loading()) {
     <!-- Loading State -->
-    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div class="bg-white shadow-sm rounded-lg border">
       <div class="px-6 py-12 text-center">
         <app-loading message="Loading jobs..." [inline]="true"></app-loading>
       </div>
@@ -135,9 +133,9 @@
     } @else {
     <!-- Jobs Table -->
     <div class="bg-white shadow-sm rounded-lg border overflow-hidden">
-      <div class="px-6 py-4 border-b flex items-center justify-between">
+      <div class="p-4 flex items-center justify-between">
         <div>
-          <h2 class="text-xl font-semibold text-gray-900">All jobs</h2>
+          <h2 class="text-2xl font-semibold text-gray-900">All jobs</h2>
           <p class="text-sm mt-2 text-gray-500">
             Total {{ total() }} jobs • {{ totalFinalDesigns }} final designs
           </p>
@@ -162,48 +160,33 @@
       </div>
       <div class="overflow-x-auto overflow-y-visible">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-100">
+          <thead class="bg-sky-900 text-white">
             <tr>
-              <th scope="col" class="relative px-6 py-3">
+              <th scope="col" class="px-6 py-2 align-middle text-center">
                 <input
                   type="checkbox"
                   [checked]="isAllSelected()"
                   (change)="toggleAllJobs()"
-                  class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer"
+                  class="block mx-auto h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer"
                 />
               </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-sm font-semibold text-gray-800"
-              >
+              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
                 Job Name
               </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-sm font-semibold text-gray-800"
-              >
+              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
                 Workflow Type
               </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-sm font-semibold text-gray-800"
-              >
+              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
                 Tool
               </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-sm font-semibold text-gray-800"
-              >
+              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
                 Status
               </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-sm font-semibold text-gray-800"
-              >
+              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
                 <button
                   type="button"
                   (click)="toggleSubmittedSort()"
-                  class="inline-flex items-center gap-1 text-sm font-semibold text-gray-800 hover:text-sky-600 rounded transition-all"
+                  class="inline-flex items-center gap-1 text-sm font-medium hover:text-sky-400 rounded transition-all"
                 >
                   Submitted @if (submittedSortDirection() === "asc") {
                   <ng-icon name="heroArrowUp" size="12"></ng-icon>
@@ -214,22 +197,30 @@
               </th>
               <th
                 scope="col"
-                class="px-6 py-3 text-left text-sm font-semibold text-gray-800"
+                class="px-6 py-2 text-left text-sm font-medium whitespace-nowrap"
               >
                 <button
                   type="button"
                   (click)="toggleScoreSort()"
-                  class="inline-flex items-center gap-1 text-sm font-semibold text-gray-800 hover:text-sky-600 rounded transition-all"
+                  class="inline-flex items-center gap-1 text-sm font-semibold hover:text-sky-400 rounded transition-all"
                 >
                   Max score @if (scoreSortDirection() === "asc") {
-                  <ng-icon name="heroArrowUp" size="12"></ng-icon>
+                  <ng-icon
+                    name="heroArrowUp"
+                    size="12"
+                    class="shrink-0"
+                  ></ng-icon>
                   } @else if (scoreSortDirection() === "desc") {
-                  <ng-icon name="heroArrowDown" size="12"></ng-icon>
+                  <ng-icon
+                    name="heroArrowDown"
+                    size="12"
+                    class="shrink-0"
+                  ></ng-icon>
                   } @else {
                   <ng-icon
                     name="heroArrowUp"
                     size="12"
-                    class="opacity-40"
+                    class="shrink-0 opacity-40"
                   ></ng-icon>
                   }
                 </button>
@@ -318,9 +309,7 @@
 
       <!-- Pagination -->
       @if (total() > 0) {
-      <div
-        class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
-      >
+      <div class="bg-white p-4 flex items-center justify-between border-t">
         <div class="flex-1 flex justify-between sm:hidden">
           <button
             type="button"
@@ -363,7 +352,7 @@
           </div>
           <div>
             <nav
-              class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+              class="relative z-0 inline-flex rounded-md"
               aria-label="Pagination"
             >
               <button
@@ -372,7 +361,7 @@
                 [disabled]="!hasPreviousPage"
                 [class.opacity-50]="!hasPreviousPage"
                 [class.cursor-not-allowed]="!hasPreviousPage"
-                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-r-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span class="sr-only">Previous</span>
                 <ng-icon name="heroChevronLeft" size="16"></ng-icon>
@@ -388,7 +377,7 @@
                 [disabled]="!hasNextPage"
                 [class.opacity-50]="!hasNextPage"
                 [class.cursor-not-allowed]="!hasNextPage"
-                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-l-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span class="sr-only">Next</span>
                 <ng-icon name="heroChevronRight" size="16"></ng-icon>
@@ -404,77 +393,20 @@
 </div>
 
 <!-- Delete Confirmation Dialog -->
-@if (showDeleteDialog()) {
-<div
-  class="fixed inset-0 z-50 overflow-y-auto"
-  aria-labelledby="modal-title"
-  role="dialog"
-  aria-modal="true"
->
-  <!-- Background overlay -->
-  <div
-    class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
-  >
-    <div
-      class="fixed inset-0 bg-gray-500/75 transition-opacity"
-      role="button"
-      tabindex="0"
-      (click)="closeDeleteDialog()"
-      (keydown.enter)="closeDeleteDialog()"
-      (keydown.space)="closeDeleteDialog()"
-    ></div>
-
-    <!-- Center dialog -->
-    <span
-      class="hidden sm:inline-block sm:align-middle sm:h-screen"
-      aria-hidden="true"
-      >&#8203;
-    </span>
-
-    <div
-      class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-    >
-      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-        <div class="sm:flex sm:items-start">
-          <div
-            class="mx-auto shrink-0 flex items-center text-red-800 justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
-          >
-            <ng-icon name="heroExclamationTriangle" size="24"></ng-icon>
-          </div>
-          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-            <h3 class="text-xl font-semibold text-gray-900" id="modal-title">
-              Delete Jobs
-            </h3>
-            <div class="mt-2">
-              <p class="text-sm text-gray-500">
-                Are you sure you want to delete {{ selectedJobs().length }}
-                job{{ selectedJobs().length > 1 ? 's' : '' }}? This action
-                cannot be undone.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-        <button
-          type="button"
-          (click)="confirmDelete()"
-          [disabled]="bulkDeleting()"
-          [class.opacity-50]="bulkDeleting()"
-          [class.cursor-not-allowed]="bulkDeleting()"
-          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm"
-        >
-          Delete
-        </button>
-        <button
-          type="button"
-          (click)="closeDeleteDialog()"
-          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-}
+<app-dialog
+  [isOpen]="showDeleteDialog()"
+  title="Delete Jobs"
+  [message]="
+    'Are you sure you want to delete ' +
+    selectedJobs().length +
+    ' job' +
+    (selectedJobs().length > 1 ? 's' : '') +
+    '? This action cannot be undone.'
+  "
+  confirmText="Delete"
+  cancelText="Cancel"
+  variant="danger"
+  [loading]="bulkDeleting()"
+  (confirmed)="confirmDelete()"
+  (cancelled)="closeDeleteDialog()"
+></app-dialog>
