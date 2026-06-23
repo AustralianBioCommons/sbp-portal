@@ -5,6 +5,13 @@ import {
   input,
   output,
 } from "@angular/core";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import {
+  heroCheckCircleSolid,
+  heroExclamationTriangleSolid,
+  heroXCircleSolid,
+  heroXMarkSolid,
+} from "@ng-icons/heroicons/solid";
 
 export type AlertType = "success" | "error" | "warning";
 export type AlertPosition = "fixed" | "static";
@@ -14,6 +21,15 @@ export type AlertPosition = "fixed" | "static";
   templateUrl: "./alert.component.html",
   styleUrl: "./alert.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgIconComponent],
+  viewProviders: [
+    provideIcons({
+      heroCheckCircleSolid,
+      heroExclamationTriangleSolid,
+      heroXCircleSolid,
+      heroXMarkSolid,
+    }),
+  ],
 })
 export class AlertComponent {
   type = input<AlertType>("error");
