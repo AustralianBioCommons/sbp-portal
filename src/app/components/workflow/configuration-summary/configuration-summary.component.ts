@@ -12,7 +12,7 @@ export interface SummaryItem {
   selector: "app-configuration-summary",
   imports: [],
   templateUrl: "./configuration-summary.component.html",
-  styleUrl: "./configuration-summary.component.scss",
+  host: { class: "block" },
 })
 export class ConfigurationSummaryComponent {
   readonly selectedTool = input.required<string>();

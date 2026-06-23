@@ -7,6 +7,7 @@ import {
   OnInit,
   Signal,
   signal,
+  viewChild,
 } from "@angular/core";
 import { FormControl, FormsModule } from "@angular/forms";
 import {
@@ -26,9 +27,9 @@ import { ConfigurationSummaryComponent } from "../../../components/workflow/conf
 import { FormFieldComponent } from "../../../components/workflow/form-field/form-field.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
-  Step,
-  StepNavigationComponent,
-} from "../../../components/workflow/step-navigation/step-navigation.component";
+  WorkflowFormComponent,
+  WorkflowSection,
+} from "../../../components/workflow/workflow-form/workflow-form.component";
 import {
   ToolOption,
   ToolSelectionComponent,
@@ -60,8 +61,6 @@ interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
 }
 
-type StepItem = Step;
-
 @Component({
   selector: "app-de-novo-design",
   imports: [
@@ -72,7 +71,7 @@ type StepItem = Step;
     DialogComponent,
     LoadingComponent,
     ToolSelectionComponent,
-    StepNavigationComponent,
+    WorkflowFormComponent,
     StepContentComponent,
     FormFieldComponent,
     ConfigurationSummaryComponent,
@@ -410,112 +409,34 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
-  // Steps marked complete only when user presses Next on that step
-  completedSteps = signal<number[]>([]);
-  visitedSteps = signal<number[]>([1]);
-  isStepVisited = (id: number) => this.visitedSteps().includes(id);
-
-  // Check if a step has validation errors
-  isStepInvalid = (id: number) => {
-    if (id === 1) {
-      // Step 1 is invalid if form is not valid
-      return !this.isFormValid();
-    }
-    return false;
-  };
-
-  // Track if user has attempted to complete step 1
-  private attemptedStep1 = signal<boolean>(false);
-  hasAttemptedStep1 = () => this.attemptedStep1();
-
-  isStepCompleted = (id: number) => {
-    // Step 2 is automatically completed if the selected tool has no parameters
-    if (id === 2 && !this.selectedToolHasParams()) {
-      return true;
-    }
-    return this.completedSteps().includes(id);
-  };
-
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input?.files?.[0];
     this.inputFileName.set(file ? file.name : "");
   }
 
-  // Stepper
-  readonly steps: StepItem[] = [
-    {
-      id: 1,
-      title: "Input Configuration",
-      description: "Provide sequence or structure inputs",
-    },
-    {
-      id: 2,
-      title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool",
-    },
-    {
-      id: 3,
-      title: "Review & Submit",
-      description: "Review all settings and run the job",
-    },
+  // Single-page form sections (rendered + tracked by app-workflow-form)
+  readonly sections: WorkflowSection[] = [
+    { id: "select-tool", label: "Select a Tool", mobileLabel: "Tool" },
+    { id: "input-config", label: "Input Configuration", mobileLabel: "Input" },
+    { id: "tool-settings", label: "Tool Settings", mobileLabel: "Settings" },
+    { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
-  currentStep = signal<number>(1);
-  canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
-  canGoNext: Signal<boolean> = computed(() => {
-    if (this.currentStep() < this.steps.length) {
-      // If on step 1, check if form is valid
-      if (this.currentStep() === 1) {
+
+  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
+  private readonly workflowForm = viewChild(WorkflowFormComponent);
+
+  /** Per-section validity — drives the progress-bar colours. */
+  isSectionValid = (id: string): boolean => {
+    switch (id) {
+      case "input-config":
+      case "review":
         return this.isFormValid();
-      }
-      return true;
+      default:
+        // select-tool (a tool is always selected) and tool-settings (no params).
+        return true;
     }
-    return false;
-  });
-
-  previousStep() {
-    if (this.currentStep() > 1) this.currentStep.update((v) => v - 1);
-  }
-  nextStep() {
-    if (this.currentStep() >= this.steps.length) return;
-    const current = this.currentStep();
-
-    if (current === 1) {
-      this.attemptedStep1.set(true);
-      this.validateAllRequiredFields();
-      // Ensure row-level validation (including PDB-based hotspot checks) runs.
-      for (const row of this.schemaLoader.inputRows()) {
-        this.validateRowField(row.id, "target_hotspot_residues");
-        this.validateRowField(row.id, "chains");
-      }
-      this.validateForm();
-
-      if (!this.isFormValid()) {
-        return;
-      }
-    }
-
-    this.advanceStep(current);
-  }
-
-  private advanceStep(current: number): void {
-    this.completedSteps.update((arr) =>
-      arr.includes(current) ? arr : [...arr, current]
-    );
-    this.currentStep.update((v) => v + 1);
-    this.visitedSteps.update((arr) => {
-      const next = current + 1;
-      return arr.includes(next) ? arr : [...arr, next];
-    });
-  }
-  goToStep(step: number) {
-    if (step >= 1 && step <= this.steps.length) {
-      this.currentStep.set(step);
-      this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
-      );
-    }
-  }
+  };
 
   constructor() {
     console.log("DeNovoDesignComponent constructor called");
@@ -677,8 +598,17 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   }
 
   submitWorkflow() {
+    // Run full validation (previously triggered by Next on the input step).
+    this.jobNameTouched.set(true);
+    this.validateAllRequiredFields();
+    for (const row of this.schemaLoader.inputRows()) {
+      this.validateRowField(row.id, "target_hotspot_residues");
+      this.validateRowField(row.id, "chains");
+    }
+    this.validateForm();
+
     if (!this.isFormValid()) {
-      console.error("Cannot submit: Form validation failed");
+      this.workflowForm()?.scrollToFirstInvalidSection();
       return;
     }
 

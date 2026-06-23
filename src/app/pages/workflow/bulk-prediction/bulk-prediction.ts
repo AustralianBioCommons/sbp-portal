@@ -7,6 +7,7 @@ import {
   inject,
   Signal,
   signal,
+  viewChild,
 } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
@@ -28,9 +29,9 @@ import { ConfigurationSummaryComponent } from "../../../components/workflow/conf
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
-  Step,
-  StepNavigationComponent,
-} from "../../../components/workflow/step-navigation/step-navigation.component";
+  WorkflowFormComponent,
+  WorkflowSection,
+} from "../../../components/workflow/workflow-form/workflow-form.component";
 import {
   ToolOption,
   ToolSelectionComponent,
@@ -66,8 +67,6 @@ interface ToolChip extends ToolOption {
   id: "boltz" | "colabfold";
 }
 
-type StepItem = Step;
-
 @Component({
   selector: "app-bulk-prediction",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,7 +78,7 @@ type StepItem = Step;
     DialogComponent,
     LoadingComponent,
     ToolSelectionComponent,
-    StepNavigationComponent,
+    WorkflowFormComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
     CreditSummaryComponent,
@@ -218,49 +217,29 @@ export default class BulkPredictionComponent {
     () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
   );
 
-  // Steps
-  readonly steps: StepItem[] = [
-    {
-      id: 1,
-      title: "Input Configuration",
-      description:
-        "Provide a job name, select a prediction tool, and enter sequences in FASTA format",
-    },
-    {
-      id: 2,
-      title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool",
-    },
-    {
-      id: 3,
-      title: "Review & Submit",
-      description: "Review all settings and run the job",
-    },
+  // Single-page form sections (rendered + tracked by app-workflow-form)
+  readonly sections: WorkflowSection[] = [
+    { id: "select-tool", label: "Select a Tool", mobileLabel: "Tool" },
+    { id: "input-config", label: "Input Configuration", mobileLabel: "Input" },
+    { id: "tool-settings", label: "Tool Settings", mobileLabel: "Settings" },
+    { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
-  currentStep = signal<number>(1);
-  completedSteps = signal<number[]>([]);
-  visitedSteps = signal<number[]>([1]);
-  isStepVisited = (id: number) => this.visitedSteps().includes(id);
+
+  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
+  private readonly workflowForm = viewChild(WorkflowFormComponent);
+
   isFormValid = computed(() => this.formStatus() === "VALID");
 
-  canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
-  canGoNext: Signal<boolean> = computed(() => {
-    if (this.currentStep() < this.steps.length) {
-      if (this.currentStep() === 1) return this.isFormValid();
-      return true;
+  /** Per-section validity — drives the progress-bar colours. */
+  isSectionValid = (id: string): boolean => {
+    switch (id) {
+      case "input-config":
+      case "review":
+        return this.isFormValid();
+      default:
+        // select-tool (a tool is always selected) and tool-settings (no params).
+        return true;
     }
-    return false;
-  });
-
-  isStepInvalid = (id: number) => {
-    if (id === 1) return !this.isFormValid();
-    return false;
-  };
-
-  // Step 2 auto-completes — no tool parameters for bulk prediction
-  isStepCompleted = (id: number) => {
-    if (id === 2) return true;
-    return this.completedSteps().includes(id);
   };
 
   // Review step summary
@@ -296,37 +275,6 @@ export default class BulkPredictionComponent {
     return items;
   });
 
-  // Step navigation
-  nextStep(): void {
-    if (this.currentStep() === 1 && !this.isFormValid()) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    const next = this.currentStep() + 1;
-    if (next <= this.steps.length) {
-      this.completedSteps.update((arr) =>
-        arr.includes(this.currentStep()) ? arr : [...arr, this.currentStep()]
-      );
-      this.goToStep(next);
-    }
-  }
-
-  previousStep(): void {
-    const prev = this.currentStep() - 1;
-    if (prev >= 1) {
-      this.goToStep(prev);
-    }
-  }
-
-  goToStep(step: number): void {
-    if (step >= 1 && step <= this.steps.length) {
-      this.currentStep.set(step);
-      this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
-      );
-    }
-  }
-
   // Field error helpers
   hasJobNameError(): boolean {
     const ctrl = this.form.controls.jobName;
@@ -355,6 +303,7 @@ export default class BulkPredictionComponent {
   submitWorkflow(): void {
     if (!this.isFormValid()) {
       this.form.markAllAsTouched();
+      this.workflowForm()?.scrollToFirstInvalidSection();
       return;
     }
 

@@ -1,4 +1,7 @@
-<nav class="block sticky top-0 z-50 bg-white shadow shrink-0">
+<nav
+  class="block sticky top-0 z-50 bg-white shrink-0 transition-shadow"
+  [class.shadow]="scrolled()"
+>
   <div
     class="px-6 border-b mx-auto relative flex items-center justify-between min-h-22 gap-4"
   >
@@ -272,23 +275,23 @@
       } }
     </div>
   </div>
-
-  <!-- Breadcrumb (only show on workflow pages) -->
-  @if (showBreadcrumb() && breadcrumb(); as crumb) {
-  <div
-    class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
-    aria-label="Breadcrumb"
-  >
-    <a
-      [routerLink]="'/' + crumb.themeTab"
-      class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
-    >
-      {{ crumb.themeLabel }}
-    </a>
-    <ng-icon name="heroChevronRight" size="16"></ng-icon>
-    <span class="text-gray-600">
-      {{ crumb.workflowLabel }}
-    </span>
-  </div>
-  }
 </nav>
+
+<!-- Breadcrumb (only show on workflow pages) — non-sticky, scrolls with content -->
+@if (showBreadcrumb() && breadcrumb(); as crumb) {
+<div
+  class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
+  aria-label="Breadcrumb"
+>
+  <a
+    [routerLink]="'/' + crumb.themeTab"
+    class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
+  >
+    {{ crumb.themeLabel }}
+  </a>
+  <ng-icon name="heroChevronRight" size="16"></ng-icon>
+  <span class="text-gray-600">
+    {{ crumb.workflowLabel }}
+  </span>
+</div>
+}

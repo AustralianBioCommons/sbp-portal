@@ -287,7 +287,7 @@ export default class JobsComponent implements OnInit {
       case "Failed":
         return "bg-red-600 text-white";
       case "Stopped":
-        return "bg-yellow-100 text-red-700";
+        return "bg-amber-100 text-red-700";
       default:
         return "bg-gray-100 text-gray-800";
     }

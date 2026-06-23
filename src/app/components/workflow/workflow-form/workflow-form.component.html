@@ -1,0 +1,95 @@
+<!-- Sticky scroll-spy progress bar (sits below the global navbar) -->
+<div class="sticky top-22 z-30 w-full bg-white pt-4">
+  <div class="border-biocommons-secondary border rounded-t-lg">
+    <div class="mx-auto max-w-4xl px-6 pb-2 pt-4">
+      <div class="flex items-start justify-between">
+        @for (section of sections(); track section.id; let index = $index) {
+        @let active = isSectionActive(section.id); @let completed =
+        isSectionCompleted(section.id); @let visited =
+        isSectionVisited(section.id); @let valid = sectionValid(section.id);
+        @let last = isLast(section.id);
+
+        <div class="group relative flex flex-1 flex-col items-center">
+          <div class="flex w-full items-center">
+            <!-- Circle indicator -->
+            <div class="flex w-full justify-center">
+              <button
+                type="button"
+                class="cursor-pointer appearance-none border-0 bg-transparent p-0"
+                [attr.aria-label]="'Go to ' + section.label"
+                (click)="scrollToSection($event, section.id)"
+              >
+                <div
+                  class="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all"
+                  [class]="circleClasses(section.id)"
+                >
+                  @if (last && active && !valid) {
+                  <span
+                    class="h-2 w-2 rounded-full bg-biocommons-primary"
+                  ></span>
+                  } @else if (last && active && valid) {
+                  <span class="text-white">✓</span>
+                  } @else if (active) {
+                  <span
+                    class="h-2 w-2 rounded-full bg-biocommons-primary"
+                  ></span>
+                  } @else if (completed && valid) {
+                  <span class="text-white">✓</span>
+                  } @else if (completed && !valid) {
+                  <span class="text-white">!</span>
+                  } @else if (visited && valid) {
+                  <span class="text-biocommons-primary">✓</span>
+                  } @else if (visited && !valid) {
+                  <span class="text-red-600">!</span>
+                  }
+                </div>
+              </button>
+            </div>
+
+            <!-- Connector line -->
+            @if (index < sections().length - 1) {
+            <div
+              class="absolute left-1/2 top-3 h-0.5 w-full transition-all"
+              [class]="connectorClasses(section.id)"
+            ></div>
+            }
+          </div>
+
+          <!-- Label -->
+          <button
+            type="button"
+            class="mt-2 cursor-pointer appearance-none border-0 bg-transparent p-0 text-center text-sm font-medium transition-all"
+            [class]="labelClasses(section.id)"
+            (click)="scrollToSection($event, section.id)"
+          >
+            <span class="hidden sm:inline">{{ section.label }}</span>
+            <span class="inline sm:hidden">
+              {{ section.mobileLabel || section.label }}
+            </span>
+          </button>
+        </div>
+        } @empty {
+        <div class="text-sm text-gray-600">No sections defined</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="border border-t-0 rounded-b-lg space-y-6 border-biocommons-secondary"
+>
+  <ng-content></ng-content>
+
+  <div class="flex items-center justify-end p-4 pt-0">
+    <app-button
+      type="button"
+      variant="primary"
+      [disabled]="disabled() || submitDisabled() || isSubmitting()"
+      [loading]="isSubmitting()"
+      (click)="onSubmit()"
+    >
+      {{ submitLabel() }}
+    </app-button>
+  </div>
+</div>

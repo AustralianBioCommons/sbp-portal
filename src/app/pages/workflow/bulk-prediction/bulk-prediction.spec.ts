@@ -227,28 +227,29 @@ describe("BulkPredictionComponent", () => {
     );
   });
 
-  // ── 9. Step navigation ─────────────────────────────────────────────────
+  // ── 9. Sections / isSectionValid ───────────────────────────────────────
 
-  it("should start on step 1", () => {
-    expect(component.currentStep()).toBe(1);
+  it("should define the four uniform workflow sections", () => {
+    expect(component.sections.map((s) => s.id)).toEqual([
+      "select-tool",
+      "input-config",
+      "tool-settings",
+      "review",
+    ]);
   });
 
-  it("should not advance to step 2 when form is invalid", () => {
-    component.nextStep();
-    expect(component.currentStep()).toBe(1);
+  it("should treat select-tool and tool-settings as always valid", () => {
+    expect(component.isSectionValid("select-tool")).toBe(true);
+    expect(component.isSectionValid("tool-settings")).toBe(true);
   });
 
-  it("should advance to step 2 when form is valid", () => {
+  it("should mark input-config and review invalid until the form is valid", () => {
+    expect(component.isSectionValid("input-config")).toBe(false);
+    expect(component.isSectionValid("review")).toBe(false);
+
     fillValidForm();
-    component.nextStep();
-    expect(component.currentStep()).toBe(2);
-  });
-
-  it("should go back to step 1 from step 2", () => {
-    fillValidForm();
-    component.goToStep(2);
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
+    expect(component.isSectionValid("input-config")).toBe(true);
+    expect(component.isSectionValid("review")).toBe(true);
   });
 
   // ── 10. Submission ─────────────────────────────────────────────────────
@@ -351,28 +352,6 @@ describe("BulkPredictionComponent", () => {
     expect(component.alertMessage()).toContain("no dataset ID");
   });
 
-  // ── 14. isStepCompleted ────────────────────────────────────────────────
-
-  it("should mark step 2 as always completed", () => {
-    expect(component.isStepCompleted(2)).toBe(true);
-  });
-
-  it("should reflect completedSteps for non-step-2 ids", () => {
-    expect(component.isStepCompleted(1)).toBe(false);
-    component.completedSteps.set([1]);
-    expect(component.isStepCompleted(1)).toBe(true);
-  });
-
-  // ── 15. goToStep out-of-range ─────────────────────────────────────────
-
-  it("should not change step when goToStep called with out-of-range value", () => {
-    component.goToStep(0);
-    expect(component.currentStep()).toBe(1);
-
-    component.goToStep(99);
-    expect(component.currentStep()).toBe(1);
-  });
-
   // ── 16. loginWithReturnUrl ────────────────────────────────────────────
 
   it("should call auth.login with current url when loginWithReturnUrl is called", () => {
@@ -431,55 +410,6 @@ describe("BulkPredictionComponent", () => {
     expect(summary.some((item) => item.fieldName === "fasta_entries")).toBe(
       false
     );
-  });
-
-  // ── 19. Step navigation — boundary cases ─────────────────────────────
-
-  it("should not go below step 1 from previousStep", () => {
-    expect(component.currentStep()).toBe(1);
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
-  });
-
-  it("should not advance past the last step", () => {
-    fillValidForm();
-    component.goToStep(3);
-    component.nextStep();
-    expect(component.currentStep()).toBe(3);
-  });
-
-  it("should not add step to completedSteps if already present", () => {
-    fillValidForm();
-    component.completedSteps.set([1]);
-    component.nextStep();
-    expect(component.completedSteps().filter((s) => s === 1).length).toBe(1);
-  });
-
-  it("should not add step to visitedSteps if already visited", () => {
-    fillValidForm();
-    component.visitedSteps.set([1, 2]);
-    component.goToStep(2);
-    expect(component.visitedSteps().filter((s) => s === 2).length).toBe(1);
-  });
-
-  // ── 20. isStepInvalid — non-step-1 ───────────────────────────────────
-
-  it("should return false for isStepInvalid when id is not 1", () => {
-    expect(component.isStepInvalid(2)).toBe(false);
-    expect(component.isStepInvalid(3)).toBe(false);
-  });
-
-  // ── 21. canGoNext ─────────────────────────────────────────────────────
-
-  it("should return true for canGoNext on step 2", () => {
-    fillValidForm();
-    component.goToStep(2);
-    expect(component.canGoNext()).toBe(true);
-  });
-
-  it("should return false for canGoNext on last step", () => {
-    component.goToStep(3);
-    expect(component.canGoNext()).toBe(false);
   });
 
   // ── 22. hasJobNameError / hasFastaError ───────────────────────────────

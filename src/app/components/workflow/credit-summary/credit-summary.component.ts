@@ -10,7 +10,7 @@ import { Component, computed, input } from "@angular/core";
   selector: "app-credit-summary",
   imports: [],
   templateUrl: "./credit-summary.component.html",
-  styleUrl: "./credit-summary.component.scss",
+  host: { class: "block" },
 })
 export class CreditSummaryComponent {
   /** Total credits the run will cost. Null while the cost can't be computed. */

@@ -61,226 +61,245 @@
       </div>
 
       <div>
-        <app-tool-selection
-          [tools]="tools"
-          [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"
-        ></app-tool-selection>
-      </div>
+        <h1 class="text-xl font-semibold text-gray-900">
+          Execute this workflow
+        </h1>
 
-      <div class="relative">
-        @if ((auth.canExecuteWorkflows$ | async) === false) {
-        <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-xs rounded-lg border flex items-center justify-center"
-        >
-          <div class="text-center p-4">
-            <p class="text-base font-semibold text-gray-900 mb-2">
-              Access Restricted
-            </p>
-            @if ((auth.isAuthenticated$ | async) === false) {
-            <p class="text-sm text-gray-600">
-              To use this tool, please log in or register for a BioCommons
-              Access account and add the
-              <strong>SBP Workflow Execution bundle</strong> to your profile.
-            </p>
-            <div class="mt-3 flex justify-center">
-              <app-button
-                type="button"
-                variant="primary"
-                widthClass="w-auto"
-                (click)="loginWithReturnUrl()"
-              >
-                Log in or Register
-              </app-button>
+        <div class="relative">
+          @if ((auth.canExecuteWorkflows$ | async) === false) {
+          <div
+            class="absolute inset-0 z-10 bg-white/60 backdrop-blur-xs rounded-lg border flex items-center justify-center"
+          >
+            <div class="text-center p-4">
+              <p class="text-base font-semibold text-gray-900 mb-2">
+                Access Restricted
+              </p>
+              @if ((auth.isAuthenticated$ | async) === false) {
+              <p class="text-sm text-gray-600">
+                To use this tool, please log in or register for a BioCommons
+                Access account and add the
+                <strong>SBP Workflow Execution bundle</strong> to your profile.
+              </p>
+              <div class="mt-3 flex justify-center">
+                <app-button
+                  type="button"
+                  variant="primary"
+                  widthClass="w-auto"
+                  (click)="loginWithReturnUrl()"
+                >
+                  Log in or Register
+                </app-button>
+              </div>
+              } @else {
+              <p class="text-sm text-gray-600">
+                You currently do not have access to this tool; please go to your
+                profile page to add the
+                <strong>SBP Workflow Execution</strong> bundle.
+              </p>
+              <div class="mt-3 flex justify-center">
+                <a
+                  [href]="profileUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
+                >
+                  Add bundle
+                </a>
+              </div>
+              }
             </div>
-            } @else {
-            <p class="text-sm text-gray-600">
-              You currently do not have access to this tool; please go to your
-              profile page to add the
-              <strong>SBP Workflow Execution</strong> bundle.
-            </p>
-            <div class="mt-3 flex justify-center">
-              <a
-                [href]="profileUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
-              >
-                Add bundle
-              </a>
-            </div>
-            }
           </div>
-        </div>
-        }
+          }
 
-        <app-step-navigation
-          [steps]="steps"
-          [currentStep]="currentStep()"
-          [isDisabled]="(auth.canExecuteWorkflows$ | async) === false"
-          [isStepInvalid]="isStepInvalid"
-          [isStepCompleted]="isStepCompleted"
-          [isStepVisited]="isStepVisited"
-          (stepClick)="goToStep($event)"
-        ></app-step-navigation>
+          <app-workflow-form
+            [sections]="sections"
+            [isSectionValid]="isSectionValid"
+            [disabled]="(auth.canExecuteWorkflows$ | async) === false"
+            [submitDisabled]="
+            !isToolAvailable() || (creditsEnabled && creditsInsufficient())
+          "
+            [isSubmitting]="workflowSubmission.isSubmitting()"
+            (submitted)="submitWorkflow()"
+          >
+            <!-- Section 1: Select a Tool -->
+            <div id="select-tool" class="scroll-mt-44">
+              <app-step-content
+                [step]="1"
+                title="Select a Tool"
+                description="Choose the design tool to run this workflow with."
+              >
+                <app-tool-selection
+                  [tools]="tools"
+                  [selectedToolId]="selectedTool()"
+                  (toolSelect)="selectTool($event)"
+                ></app-tool-selection>
+              </app-step-content>
+            </div>
 
-        @if (currentStep() === 1) {
-        <app-step-content
-          title="Input Configuration"
-          description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
-        >
-          <div class="mt-6 rounded-lg border bg-gray-50 p-4">
-            <label
-              for="job-name"
-              class="block text-sm font-medium text-gray-700"
-            >
-              Job Name
-              <span class="ml-1 text-red-500">*</span>
-            </label>
-            <p class="mt-1 text-xs text-gray-500">
-              Required identifier for this job. Allowed characters: letters,
-              numbers, hyphens, and underscores. Must not start with a number.
-            </p>
-            <input
-              id="job-name"
-              type="text"
-              autocomplete="off"
-              [value]="jobName()"
-              (input)="jobName.set($any($event.target).value)"
-              (blur)="jobNameTouched.set(true)"
-              placeholder="e.g. my-prediction"
-              [class]="
+            <!-- Section 2: Input Configuration -->
+            <div id="input-config" class="scroll-mt-44">
+              <app-step-content
+                [step]="2"
+                title="Input Configuration"
+                description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
+              >
+                <div class="mt-6 rounded-lg border bg-gray-50 p-4">
+                  <label
+                    for="job-name"
+                    class="block text-sm font-medium text-gray-700"
+                  >
+                    Job Name
+                    <span class="ml-1 text-red-500">*</span>
+                  </label>
+                  <p class="mt-1 text-xs text-gray-500">
+                    Required identifier for this job. Allowed characters:
+                    letters, numbers, hyphens, and underscores. Must not start
+                    with a number.
+                  </p>
+                  <input
+                    id="job-name"
+                    type="text"
+                    autocomplete="off"
+                    [value]="jobName()"
+                    (input)="jobName.set($any($event.target).value)"
+                    (blur)="jobNameTouched.set(true)"
+                    placeholder="e.g. my-prediction"
+                    [class]="
                 jobNameTouched() && jobNameError()
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
-              maxlength="60"
-            />
-            @if (jobNameTouched() && jobNameError()) {
-            <p class="mt-1 text-xs text-red-600" role="alert">
-              {{ jobNameError() }}
-            </p>
-            }
-          </div>
-
-          <div
-            class="sequence-list relative mt-6 flex flex-col gap-2"
-            cdkDropList
-            cdkDropListOrientation="vertical"
-            [cdkDropListData]="entityRows()"
-            (cdkDropListDropped)="dropEntityRow($event)"
-          >
-            @for (row of entityRows(); track row.id; let i = $index) {
-            <div
-              class="entity-row rounded-lg border bg-white px-4 py-3 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
-              cdkDrag
-              cdkDragLockAxis="y"
-              cdkDragBoundary=".sequence-list"
-              cdkDragPreviewContainer="parent"
-            >
-              <div
-                class="grid gap-3 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
-              >
-                <div class="flex shrink-0 cursor-grab flex-col items-center">
-                  <span class="mb-1 block text-xs font-semibold text-gray-500">
-                    #{{ i + 1 }}
-                  </span>
-                  <div
-                    class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
-                    cdkDragHandle
-                    title="Drag to reorder"
-                    [attr.aria-label]="'Drag to reorder entity ' + (i + 1)"
-                  >
-                    <ng-icon
-                      name="bootstrapGripVertical"
-                      size="18"
-                      aria-hidden="true"
-                    ></ng-icon>
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    [for]="'molecule-type-' + row.id"
-                    class="mb-1 block text-xs font-semibold text-gray-500"
-                  >
-                    Type
-                  </label>
-                  <app-listbox-select
-                    [inputId]="'molecule-type-' + row.id"
-                    [options]="moleculeTypeOptions"
-                    [value]="row.moleculeType"
-                    (valueChange)="updateRowMoleculeType(row.id, $event)"
-                    (blurred)="touchRowField(row.id, 'moleculeType')"
-                  ></app-listbox-select>
-                </div>
-
-                <div>
-                  <label
-                    [for]="'copy-number-' + row.id"
-                    class="mb-1 block text-xs font-semibold text-gray-500"
-                  >
-                    Copies
-                  </label>
-                  <input
-                    [id]="'copy-number-' + row.id"
-                    type="number"
-                    min="1"
-                    step="1"
-                    [value]="row.copyNumber"
-                    (input)="updateRowCopyNumber(row.id, $any($event.target).value)"
-                    (blur)="touchRowField(row.id, 'copyNumber')"
-                    [class]="
-                      shouldShowRowFieldError(row, 'copyNumber') && getRowErrors(i).copyNumber
-                        ? 'border-red-500 focus:ring-red-100'
-                        : 'focus:ring-sky-100'
-                    "
-                    class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                    class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+                    maxlength="60"
                   />
-                  @if (shouldShowRowFieldError(row, 'copyNumber') &&
-                  getRowErrors(i).copyNumber) {
+                  @if (jobNameTouched() && jobNameError()) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
-                    {{ getRowErrors(i).copyNumber }}
+                    {{ jobNameError() }}
                   </p>
                   }
                 </div>
 
-                <div class="min-w-0">
-                  <label
-                    [for]="'sequence-' + row.id"
-                    class="mb-1 block text-xs font-semibold text-gray-500"
+                <div
+                  class="sequence-list relative mt-6 flex flex-col gap-2"
+                  cdkDropList
+                  cdkDropListOrientation="vertical"
+                  [cdkDropListData]="entityRows()"
+                  (cdkDropListDropped)="dropEntityRow($event)"
+                >
+                  @for (row of entityRows(); track row.id; let i = $index) {
+                  <div
+                    class="entity-row rounded-lg border bg-white px-4 py-3 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
+                    cdkDrag
+                    cdkDragLockAxis="y"
+                    cdkDragBoundary=".sequence-list"
+                    cdkDragPreviewContainer="parent"
                   >
-                    Sequence
-                  </label>
-                  @if (row.moleculeType === 'ccd') {
-                  <app-listbox-select
-                    [inputId]="'sequence-' + row.id"
-                    [options]="ccdOptions"
-                    [value]="row.sequence"
-                    [placeholder]="'Select a ligand...'"
-                    [invalid]="!!(shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence)"
-                    (valueChange)="updateRowSequence(row.id, $event)"
-                    (blurred)="touchRowField(row.id, 'sequence')"
-                  ></app-listbox-select>
-                  } @else {
-                  <input
-                    [id]="'sequence-' + row.id"
-                    type="text"
-                    spellcheck="false"
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="off"
-                    [value]="row.sequence"
-                    (input)="updateRowSequence(row.id, $any($event.target).value)"
-                    (blur)="touchRowField(row.id, 'sequence')"
-                    [class]="
+                    <div
+                      class="grid gap-3 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
+                    >
+                      <div
+                        class="flex shrink-0 cursor-grab flex-col items-center"
+                      >
+                        <span
+                          class="mb-1 block text-xs font-semibold text-gray-500"
+                        >
+                          #{{ i + 1 }}
+                        </span>
+                        <div
+                          class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
+                          cdkDragHandle
+                          title="Drag to reorder"
+                          [attr.aria-label]="'Drag to reorder entity ' + (i + 1)"
+                        >
+                          <ng-icon
+                            name="bootstrapGripVertical"
+                            size="18"
+                            aria-hidden="true"
+                          ></ng-icon>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          [for]="'molecule-type-' + row.id"
+                          class="mb-1 block text-xs font-semibold text-gray-500"
+                        >
+                          Type
+                        </label>
+                        <app-listbox-select
+                          [inputId]="'molecule-type-' + row.id"
+                          [options]="moleculeTypeOptions"
+                          [value]="row.moleculeType"
+                          (valueChange)="updateRowMoleculeType(row.id, $event)"
+                          (blurred)="touchRowField(row.id, 'moleculeType')"
+                        ></app-listbox-select>
+                      </div>
+
+                      <div>
+                        <label
+                          [for]="'copy-number-' + row.id"
+                          class="mb-1 block text-xs font-semibold text-gray-500"
+                        >
+                          Copies
+                        </label>
+                        <input
+                          [id]="'copy-number-' + row.id"
+                          type="number"
+                          min="1"
+                          step="1"
+                          [value]="row.copyNumber"
+                          (input)="updateRowCopyNumber(row.id, $any($event.target).value)"
+                          (blur)="touchRowField(row.id, 'copyNumber')"
+                          [class]="
+                      shouldShowRowFieldError(row, 'copyNumber') && getRowErrors(i).copyNumber
+                        ? 'border-red-500 focus:ring-red-100'
+                        : 'focus:ring-sky-100'
+                    "
+                          class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                        />
+                        @if (shouldShowRowFieldError(row, 'copyNumber') &&
+                        getRowErrors(i).copyNumber) {
+                        <p class="mt-1 text-xs text-red-600" role="alert">
+                          {{ getRowErrors(i).copyNumber }}
+                        </p>
+                        }
+                      </div>
+
+                      <div class="min-w-0">
+                        <label
+                          [for]="'sequence-' + row.id"
+                          class="mb-1 block text-xs font-semibold text-gray-500"
+                        >
+                          Sequence
+                        </label>
+                        @if (row.moleculeType === 'ccd') {
+                        <app-listbox-select
+                          [inputId]="'sequence-' + row.id"
+                          [options]="ccdOptions"
+                          [value]="row.sequence"
+                          [placeholder]="'Select a ligand...'"
+                          [invalid]="!!(shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence)"
+                          (valueChange)="updateRowSequence(row.id, $event)"
+                          (blurred)="touchRowField(row.id, 'sequence')"
+                        ></app-listbox-select>
+                        } @else {
+                        <input
+                          [id]="'sequence-' + row.id"
+                          type="text"
+                          spellcheck="false"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          [value]="row.sequence"
+                          (input)="updateRowSequence(row.id, $any($event.target).value)"
+                          (blur)="touchRowField(row.id, 'sequence')"
+                          [class]="
                       shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence
                         ? 'border-red-500 focus:ring-red-100'
                         : 'focus:ring-sky-100'
                     "
-                    class="block h-10 w-full rounded-md border bg-white px-4 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                    [placeholder]="
+                          class="block h-10 w-full rounded-md border bg-white px-4 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                          [placeholder]="
                       row.moleculeType === 'ligand'
                         ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
                         : row.moleculeType === 'dna'
@@ -289,214 +308,187 @@
                             ? 'AUGCGU'
                             : 'ACDEFGHIKLMNPQRSTVWY'
                     "
-                  />
-                  } @if (shouldShowRowFieldError(row, 'sequence') &&
-                  getRowErrors(i).sequence) {
-                  <p class="mt-1 text-xs text-red-600" role="alert">
-                    {{ getRowErrors(i).sequence }}
-                  </p>
-                  } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
-                  <p class="mt-1 text-xs text-red-600" role="alert">
-                    {{ getRowErrors(i).tool }}
-                  </p>
+                        />
+                        } @if (shouldShowRowFieldError(row, 'sequence') &&
+                        getRowErrors(i).sequence) {
+                        <p class="mt-1 text-xs text-red-600" role="alert">
+                          {{ getRowErrors(i).sequence }}
+                        </p>
+                        } @if (shouldShowRowToolError(row) &&
+                        getRowErrors(i).tool) {
+                        <p class="mt-1 text-xs text-red-600" role="alert">
+                          {{ getRowErrors(i).tool }}
+                        </p>
+                        }
+                      </div>
+
+                      <div class="flex flex-col items-center">
+                        <span
+                          class="mb-1 block text-xs font-semibold opacity-0 select-none"
+                          aria-hidden="true"
+                          >&middot;</span
+                        >
+                        <button
+                          type="button"
+                          class="flex h-10 w-10 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          [disabled]="entityRows().length === 1"
+                          (click)="removeEntityRow(row.id)"
+                          [attr.aria-label]="'Delete entity ' + (i + 1)"
+                          title="Delete row"
+                        >
+                          <ng-icon
+                            name="heroTrash"
+                            size="18"
+                            aria-hidden="true"
+                          ></ng-icon>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                   }
-                </div>
 
-                <div class="flex flex-col items-center">
-                  <span
-                    class="mb-1 block text-xs font-semibold opacity-0 select-none"
-                    aria-hidden="true"
-                    >&middot;</span
+                  <div
+                    class="flex items-center justify-between rounded-lg border border-dashed border-sky-300 bg-sky-50 px-4 py-3"
                   >
-                  <button
-                    type="button"
-                    class="flex h-10 w-10 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    [disabled]="entityRows().length === 1"
-                    (click)="removeEntityRow(row.id)"
-                    [attr.aria-label]="'Delete entity ' + (i + 1)"
-                    title="Delete row"
-                  >
-                    <ng-icon
-                      name="heroTrash"
-                      size="18"
-                      aria-hidden="true"
-                    ></ng-icon>
-                  </button>
+                    <p class="text-sm text-sky-900">
+                      Add another entity row to define a multicomponent
+                      prediction input.
+                    </p>
+                    <app-button
+                      type="button"
+                      variant="primary"
+                      (click)="addEntityRow()"
+                    >
+                      Add Entity
+                    </app-button>
+                  </div>
                 </div>
-              </div>
+              </app-step-content>
             </div>
-            }
 
-            <div
-              class="flex items-center justify-between rounded-lg border border-dashed border-sky-300 bg-sky-50 px-4 py-3"
-            >
-              <p class="text-sm text-sky-900">
-                Add another entity row to define a multicomponent prediction
-                input.
-              </p>
-              <app-button
-                type="button"
-                variant="primary"
-                (click)="addEntityRow()"
+            <!-- Section 3: Tool Settings -->
+            <div id="tool-settings" class="scroll-mt-44">
+              <app-step-content
+                [step]="3"
+                title="Tool Settings"
+                description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}."
               >
-                Add Entity
-              </app-button>
-            </div>
-          </div>
-        </app-step-content>
-        } @if (currentStep() === 2) {
-        <app-step-content
-          title="Tool Settings — {{ selectedToolLabel() }}"
-          description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}."
-        >
-          <div class="mt-6 space-y-4">
-            @if (selectedTool() === 'alphafold2') {
-            <div class="rounded-lg border bg-gray-50 p-4">
-              <label
-                for="alphafold2-random-seed"
-                class="block text-sm font-medium text-gray-700"
-              >
-                alphafold2_random_seed
-              </label>
-              <input
-                id="alphafold2-random-seed"
-                type="number"
-                min="0"
-                step="1"
-                [value]="alphafold2RandomSeed()"
-                (input)="updateAlphafold2RandomSeed($any($event.target).value)"
-                (blur)="setAlphafold2RandomSeedTouched()"
-                [class]="
+                <div class="mt-6 space-y-4">
+                  @if (selectedTool() === 'alphafold2') {
+                  <div class="rounded-lg border bg-gray-50 p-4">
+                    <label
+                      for="alphafold2-random-seed"
+                      class="block text-sm font-medium text-gray-700"
+                    >
+                      alphafold2_random_seed
+                    </label>
+                    <input
+                      id="alphafold2-random-seed"
+                      type="number"
+                      min="0"
+                      step="1"
+                      [value]="alphafold2RandomSeed()"
+                      (input)="updateAlphafold2RandomSeed($any($event.target).value)"
+                      (blur)="setAlphafold2RandomSeedTouched()"
+                      [class]="
                   (stepTwoTouched() || alphafold2RandomSeedTouched()) && toolSettingErrors().alphafold2RandomSeed
                     ? 'border-red-500 focus:ring-red-100'
                     : 'focus:ring-sky-100'
                 "
-                class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-              />
-              @if ((stepTwoTouched() || alphafold2RandomSeedTouched()) &&
-              toolSettingErrors().alphafold2RandomSeed) {
-              <p class="mt-1 text-xs text-red-600" role="alert">
-                {{ toolSettingErrors().alphafold2RandomSeed }}
-              </p>
-              }
+                      class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                    />
+                    @if ((stepTwoTouched() || alphafold2RandomSeedTouched()) &&
+                    toolSettingErrors().alphafold2RandomSeed) {
+                    <p class="mt-1 text-xs text-red-600" role="alert">
+                      {{ toolSettingErrors().alphafold2RandomSeed }}
+                    </p>
+                    }
 
-              <label class="mt-4 flex items-center gap-3 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-                  [checked]="alphafold2FullDbs()"
-                  (change)="alphafold2FullDbs.set($any($event.target).checked)"
-                />
-                <span>alphafold2_full_dbs</span>
-              </label>
-            </div>
-            } @if (selectedTool() === 'colabfold') {
-            <div class="rounded-lg border bg-gray-50 p-4">
-              <label
-                for="colabfold-num-recycles"
-                class="block text-sm font-medium text-gray-700"
-              >
-                colabfold_num_recycles
-              </label>
-              <input
-                id="colabfold-num-recycles"
-                type="number"
-                min="1"
-                step="1"
-                [value]="colabfoldNumRecycles()"
-                (input)="updateColabfoldNumRecycles($any($event.target).value)"
-                (blur)="setColabfoldNumRecyclesTouched()"
-                [class]="
+                    <label
+                      class="mt-4 flex items-center gap-3 text-sm text-gray-700"
+                    >
+                      <input
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                        [checked]="alphafold2FullDbs()"
+                        (change)="alphafold2FullDbs.set($any($event.target).checked)"
+                      />
+                      <span>alphafold2_full_dbs</span>
+                    </label>
+                  </div>
+                  } @if (selectedTool() === 'colabfold') {
+                  <div class="rounded-lg border bg-gray-50 p-4">
+                    <label
+                      for="colabfold-num-recycles"
+                      class="block text-sm font-medium text-gray-700"
+                    >
+                      colabfold_num_recycles
+                    </label>
+                    <input
+                      id="colabfold-num-recycles"
+                      type="number"
+                      min="1"
+                      step="1"
+                      [value]="colabfoldNumRecycles()"
+                      (input)="updateColabfoldNumRecycles($any($event.target).value)"
+                      (blur)="setColabfoldNumRecyclesTouched()"
+                      [class]="
                   (stepTwoTouched() || colabfoldNumRecyclesTouched()) && toolSettingErrors().colabfoldNumRecycles
                     ? 'border-red-500 focus:ring-red-100'
                     : 'focus:ring-sky-100'
                 "
-                class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-              />
-              @if ((stepTwoTouched() || colabfoldNumRecyclesTouched()) &&
-              toolSettingErrors().colabfoldNumRecycles) {
-              <p class="mt-1 text-xs text-red-600" role="alert">
-                {{ toolSettingErrors().colabfoldNumRecycles }}
-              </p>
+                      class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                    />
+                    @if ((stepTwoTouched() || colabfoldNumRecyclesTouched()) &&
+                    toolSettingErrors().colabfoldNumRecycles) {
+                    <p class="mt-1 text-xs text-red-600" role="alert">
+                      {{ toolSettingErrors().colabfoldNumRecycles }}
+                    </p>
+                    }
+                  </div>
+                  } @if (selectedTool() === 'boltz') {
+                  <div class="rounded-lg border bg-gray-50 p-4">
+                    <label
+                      class="flex items-center gap-3 text-sm text-gray-700"
+                    >
+                      <input
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                        [checked]="boltzUsePotentials()"
+                        (change)="boltzUsePotentials.set($any($event.target).checked)"
+                      />
+                      <span>boltz_use_potentials</span>
+                    </label>
+                  </div>
+                  }
+                </div>
+              </app-step-content>
+            </div>
+
+            <!-- Section 4: Review & Submit -->
+            <div id="review" class="scroll-mt-44">
+              <app-step-content
+                [step]="4"
+                title="Review & Submit"
+                description="Confirm the entity rows, selected tool, generated FASTA content, and tool-specific settings."
+                contentClass="space-y-4"
+              >
+                <app-configuration-summary
+                  [selectedTool]="selectedToolLabel()"
+                  [hasParameters]="true"
+                  [summaryItems]="formSummary()"
+                  [requiredFieldCount]="entityRows().length * 3 + getToolSettingsSummaryItems().length"
+                  [isValid]="isFormValid()"
+                ></app-configuration-summary>
+              </app-step-content>
+              @if (creditsEnabled) {
+              <app-credit-summary
+                [total]="creditCost()"
+                [remaining]="creditsRemaining()"
+              ></app-credit-summary>
               }
             </div>
-            } @if (selectedTool() === 'boltz') {
-            <div class="rounded-lg border bg-gray-50 p-4">
-              <label class="flex items-center gap-3 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-                  [checked]="boltzUsePotentials()"
-                  (change)="boltzUsePotentials.set($any($event.target).checked)"
-                />
-                <span>boltz_use_potentials</span>
-              </label>
-            </div>
-            }
-          </div>
-        </app-step-content>
-        } @if (currentStep() === 3) {
-        <app-step-content
-          title="Review & Submit"
-          description="Confirm the entity rows, selected tool, generated FASTA content, and tool-specific settings."
-        >
-          <app-configuration-summary
-            [selectedTool]="selectedToolLabel()"
-            [hasParameters]="true"
-            [summaryItems]="formSummary()"
-            [requiredFieldCount]="entityRows().length * 3 + getToolSettingsSummaryItems().length"
-            [isValid]="isFormValid()"
-          ></app-configuration-summary>
-        </app-step-content>
-        } @if (creditsEnabled) {
-        <!-- Credit cost summary -->
-        <div class="mt-6">
-          <app-credit-summary
-            [total]="creditCost()"
-            [remaining]="creditsRemaining()"
-          ></app-credit-summary>
-        </div>
-        }
-
-        <div class="mt-6 flex items-center justify-between">
-          <app-button
-            type="button"
-            variant="secondary"
-            [disabled]="!canGoPrev() || (auth.canExecuteWorkflows$ | async) === false"
-            (click)="previousStep()"
-          >
-            Previous
-          </app-button>
-          <div class="flex items-center gap-2">
-            @if (currentStep() < steps.length) {
-            <app-button
-              type="button"
-              variant="primary"
-              [disabled]="
-                !canGoNext() ||
-                (creditsEnabled && creditsInsufficient()) ||
-                (auth.canExecuteWorkflows$ | async) === false
-              "
-              (click)="nextStep()"
-            >
-              Next
-            </app-button>
-            } @if (currentStep() === steps.length) {
-            <app-button
-              type="button"
-              variant="primary"
-              [disabled]="
-                !canSubmit() ||
-                !isToolAvailable() ||
-                (creditsEnabled && creditsInsufficient()) ||
-                (auth.canExecuteWorkflows$ | async) === false
-              "
-              (click)="submitWorkflow()"
-            >
-              Submit
-            </app-button>
-            }
-          </div>
+          </app-workflow-form>
         </div>
       </div>
       } @if (isActiveTab('output')) {

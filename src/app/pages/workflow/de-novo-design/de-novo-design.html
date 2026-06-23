@@ -63,384 +63,336 @@
       </div>
 
       <div>
-        <h1 class="mb-6 text-xl font-semibold text-gray-900">
+        <h1 class="text-xl font-semibold text-gray-900">
           Execute this workflow
         </h1>
-        <app-tool-selection
-          [tools]="tools"
-          [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"
-        ></app-tool-selection>
-        <div
-          class="mt-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
-        >
-          <p class="text-sm text-amber-800">
-            Only <strong>BindCraft</strong> is available right now. {{
-            unavailableToolLabels.join(" and ") }} are temporarily unavailable.
-          </p>
-        </div>
-      </div>
 
-      <!-- Stepper -->
-      <div class="relative">
-        <!-- Lock overlay if user cannot execute workflows -->
-        @if ((auth.canExecuteWorkflows$ | async) === false) {
-        <div
-          class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] rounded-lg border flex items-center justify-center"
-        >
-          <div class="text-center p-4">
-            <p class="text-base font-semibold text-gray-900 mb-2">
-              Access Restricted
-            </p>
-            @if ((auth.isAuthenticated$ | async) === false) {
-            <p class="text-sm text-gray-600">
-              To use this tool, please log in or register for a BioCommons
-              Access account and add the
-              <strong>SBP Workflow Execution bundle</strong> to your profile.
-            </p>
-            <div class="mt-4 flex justify-center">
-              <app-button
-                type="button"
-                variant="primary"
-                widthClass="w-auto"
-                (click)="loginWithReturnUrl()"
-              >
-                Log in or Register
-              </app-button>
-            </div>
-            } @else {
-            <p class="text-sm text-gray-600">
-              You currently do not have access to this tool; please go to your
-              profile page to add the
-              <strong>SBP Workflow Execution</strong> bundle.
-            </p>
-            <div class="mt-4 flex justify-center">
-              <a
-                [href]="profileUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
-              >
-                Add bundle
-              </a>
-            </div>
-            }
-          </div>
-        </div>
-        }
-
-        <!-- Step Navigation Component -->
-        <app-step-navigation
-          [steps]="steps"
-          [currentStep]="currentStep()"
-          [isDisabled]="(auth.canExecuteWorkflows$ | async) === false"
-          [isStepInvalid]="isStepInvalid"
-          [isStepCompleted]="isStepCompleted"
-          [isStepVisited]="isStepVisited"
-          (stepClick)="goToStep($event)"
-        ></app-step-navigation>
-
-        <!-- Step 1: Input Configuration -->
-        @if (currentStep() === 1) {
-        <app-step-content
-          title="Input Configuration"
-          description="Configure input parameters based on the workflow schema."
-        >
-          @if (schemaLoader.inputSchemaData() &&
-          schemaLoader.inputSchemaFields().length > 0) {
-          <div class="mt-4">
-            <div class="space-y-4">
-              @for (row of schemaLoader.inputRows(); track row.id; let i =
-              $index) {
-
-              <div class="bg-white border rounded-lg p-4">
-                <div class="mb-4">
-                  <h4 class="text-base font-medium text-gray-900">
-                    Input Parameters
-                  </h4>
-                </div>
-
-                <div class="flex flex-col lg:flex-row gap-4 items-start">
-                  <!-- Left half: PDB viewer -->
-                  <div
-                    class="w-full lg:w-1/2 overflow-hidden rounded-lg border"
-                  >
-                    <!-- Header row -->
-                    <div
-                      class="flex items-center justify-between gap-4 border-b bg-gray-50 px-4 py-3"
-                    >
-                      <div>
-                        <p class="block text-sm font-medium text-gray-700">
-                          Target PDB file
-                          <span class="text-red-500 ml-1">*</span>
-                        </p>
-                        <p class="mt-0.5 text-xs text-gray-500">
-                          Click residues in the preview to set hotspot targets.
-                          The file is uploaded when you click
-                          <strong>Next</strong>.
-                        </p>
-                      </div>
-                      @if (localPdbFile()) {
-                      <div class="flex shrink-0 items-center gap-2">
-                        <span class="max-w-48 truncate text-xs text-gray-500"
-                          >{{ localPdbFile()!.name }}</span
-                        >
-                        <button
-                          type="button"
-                          class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600 rounded-md"
-                          (click)="clearLocalPdb(row.id)"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                      }
-                    </div>
-
-                    @if (hasRowFieldError(row.id, 'starting_pdb')) {
-                    <div
-                      class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
-                    >
-                      <svg
-                        class="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      <p class="text-xs text-red-600">
-                        {{ getRowFieldError(row.id, 'starting_pdb') }}
-                      </p>
-                    </div>
-                    }
-
-                    <div class="p-4">
-                      <app-molstar-viewer
-                        [pdbFile]="localPdbFile()"
-                        [disabled]="isPdbUploading()"
-                        [externalSelection]="programmaticViewerSelection()"
-                        (filePicked)="onPdbFilePicked($event, row.id)"
-                        (residuesSelected)="onResiduesSelected(row.id, $event)"
-                        (structureResiduesDetected)="onStructureResiduesDetected($event)"
-                        (sequenceLengthDetected)="onSequenceLengthDetected($event)"
-                      ></app-molstar-viewer>
-                    </div>
-                  </div>
-
-                  <!-- Right half: all other fields -->
-                  <div class="w-full lg:w-1/2 min-w-0 flex flex-col gap-4">
-                    <!-- Job Name -->
-                    <div>
-                      <label
-                        for="jobNameInput"
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Job Name <span class="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="jobNameInput"
-                        type="text"
-                        class="block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
-                        [class.border-red-500]="jobNameTouched() && jobNameError()"
-                        [value]="jobName()"
-                        (input)="onJobNameChange($any($event.target).value)"
-                        (blur)="jobNameTouched.set(true)"
-                        placeholder="e.g. my-binder-job"
-                        maxlength="60"
-                      />
-                      @if (jobNameTouched() && jobNameError()) {
-                      <p class="mt-1 text-xs text-red-600">
-                        {{ jobNameError() }}
-                      </p>
-                      }
-                    </div>
-
-                    @for (field of schemaLoader.requiredInputFields(); track
-                    field.name) { @if (field.name === 'starting_pdb' ||
-                    field.name === 'max_length' || field.name === 'binder_name'
-                    || field.name === 'id') {
-                    <!-- skip: viewer on left, max_length handled by slider, binder_name/id handled by Job Name above -->
-                    } @else if (field.name === 'min_length') {
-                    <div class="rounded-lg border px-4 py-3">
-                      <p class="block text-sm font-medium text-gray-700 mb-1">
-                        Binder Length Range <span class="text-red-500">*</span>
-                      </p>
-                      <app-length-range-slider
-                        [min]="pdbSequenceMin()"
-                        [max]="pdbSequenceLength()"
-                        [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
-                        [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
-                        [disabled]="isPdbUploading()"
-                        (rangeChange)="onLengthRangeChange(row.id, $event)"
-                      ></app-length-range-slider>
-                    </div>
-                    } @else if (field.name === 'target_hotspot_residues') {
-                    <app-form-field
-                      [field]="field"
-                      [value]="getRowValue(row.id, field.name)"
-                      [hasError]="hasRowFieldError(row.id, field.name)"
-                      [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                      (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
-                      (fieldBlur)="validateRowField(row.id, field.name)"
-                    ></app-form-field>
-                    } @else {
-                    <app-form-field
-                      [field]="field"
-                      [value]="getRowValue(row.id, field.name)"
-                      [hasError]="hasRowFieldError(row.id, field.name)"
-                      [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                      (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                      (fieldBlur)="validateRowField(row.id, field.name)"
-                    ></app-form-field>
-                    } } @if (creditsEnabled) {
-                    <!-- Credit cost summary -->
-                    <app-credit-summary
-                      [total]="creditCost()"
-                      [remaining]="creditsRemaining()"
-                    ></app-credit-summary>
-                    }
-                  </div>
-                </div>
+        <!-- Stepper -->
+        <div class="relative">
+          <!-- Lock overlay if user cannot execute workflows -->
+          @if ((auth.canExecuteWorkflows$ | async) === false) {
+          <div
+            class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] rounded-lg border flex items-center justify-center"
+          >
+            <div class="text-center p-4">
+              <p class="text-base font-semibold text-gray-900 mb-2">
+                Access Restricted
+              </p>
+              @if ((auth.isAuthenticated$ | async) === false) {
+              <p class="text-sm text-gray-600">
+                To use this tool, please log in or register for a BioCommons
+                Access account and add the
+                <strong>SBP Workflow Execution bundle</strong> to your profile.
+              </p>
+              <div class="mt-4 flex justify-center">
+                <app-button
+                  type="button"
+                  variant="primary"
+                  widthClass="w-auto"
+                  (click)="loginWithReturnUrl()"
+                >
+                  Log in or Register
+                </app-button>
+              </div>
+              } @else {
+              <p class="text-sm text-gray-600">
+                You currently do not have access to this tool; please go to your
+                profile page to add the
+                <strong>SBP Workflow Execution</strong> bundle.
+              </p>
+              <div class="mt-4 flex justify-center">
+                <a
+                  [href]="profileUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
+                >
+                  Add bundle
+                </a>
               </div>
               }
             </div>
           </div>
           }
-        </app-step-content>
-        }
 
-        <!-- Step 2: Tool Settings -->
-        @if (currentStep() === 2) {
-        <app-step-content
-          title="Tool Settings — {{ selectedToolLabel() }}"
-          description="Configure parameters specific to {{ selectedToolLabel() }}."
-        >
-          @if (!selectedToolHasParams()) {
-          <div class="mt-4 p-6 bg-sky-50 border border-sky-200 rounded-lg">
-            <div class="flex items-start">
-              <div class="shrink-0">
-                <svg
-                  class="h-5 w-5 text-sky-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+          <app-workflow-form
+            [sections]="sections"
+            [isSectionValid]="isSectionValid"
+            [disabled]="(auth.canExecuteWorkflows$ | async) === false"
+            [submitDisabled]="creditsEnabled && creditsInsufficient()"
+            [isSubmitting]="workflowSubmission.isSubmitting()"
+            (submitted)="submitWorkflow()"
+          >
+            <!-- Section 1: Select a Tool -->
+            <div id="select-tool" class="scroll-mt-44">
+              <app-step-content
+                [step]="1"
+                title="Select a Tool"
+                description="Choose the design tool to run this workflow with."
+                contentClass="space-y-4"
+              >
+                <app-tool-selection
+                  [tools]="tools"
+                  [selectedToolId]="selectedTool()"
+                  (toolSelect)="selectTool($event)"
+                ></app-tool-selection>
+                <div
+                  class="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
                 >
-                  <path
-                    fill-rule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-sky-800">
-                  No Parameters Available
-                </h3>
-                <div class="mt-2 text-sm text-sky-700">
-                  <p>
+                  Only <strong>BindCraft</strong> is available right now. {{
+                  unavailableToolLabels.join(" and ") }} are temporarily
+                  unavailable.
+                </div>
+              </app-step-content>
+            </div>
+
+            <!-- Section 2: Input Configuration -->
+            <div id="input-config" class="scroll-mt-44">
+              <app-step-content
+                [step]="2"
+                title="Input Configuration"
+                description="Configure input parameters based on the workflow schema."
+              >
+                @if (schemaLoader.inputSchemaData() &&
+                schemaLoader.inputSchemaFields().length > 0) {
+                <div class="space-y-4">
+                  @for (row of schemaLoader.inputRows(); track row.id; let i =
+                  $index) {
+                  <div class="bg-white border rounded-lg p-4">
+                    <div class="mb-4">
+                      <h4 class="text-base font-medium text-gray-900">
+                        Input Parameters
+                      </h4>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-4 items-start">
+                      <!-- Left half: PDB viewer -->
+                      <div
+                        class="w-full lg:w-1/2 overflow-hidden rounded-lg border"
+                      >
+                        <!-- Header row -->
+                        <div
+                          class="flex items-center justify-between gap-4 border-b bg-gray-50 px-4 py-3"
+                        >
+                          <div>
+                            <p class="block text-sm font-medium text-gray-700">
+                              Target PDB file
+                              <span class="text-red-500 ml-1">*</span>
+                            </p>
+                            <p class="mt-0.5 text-xs text-gray-500">
+                              Click residues in the preview to set hotspot
+                              targets. The file is uploaded when you click
+                              <strong>Next</strong>.
+                            </p>
+                          </div>
+                          @if (localPdbFile()) {
+                          <div class="flex shrink-0 items-center gap-2">
+                            <span
+                              class="max-w-48 truncate text-xs text-gray-500"
+                              >{{ localPdbFile()!.name }}</span
+                            >
+                            <button
+                              type="button"
+                              class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600 rounded-md"
+                              (click)="clearLocalPdb(row.id)"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                          }
+                        </div>
+
+                        @if (hasRowFieldError(row.id, 'starting_pdb')) {
+                        <div
+                          class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+                        >
+                          <svg
+                            class="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                          <p class="text-xs text-red-600">
+                            {{ getRowFieldError(row.id, 'starting_pdb') }}
+                          </p>
+                        </div>
+                        }
+
+                        <div class="p-4">
+                          <app-molstar-viewer
+                            [pdbFile]="localPdbFile()"
+                            [disabled]="isPdbUploading()"
+                            [externalSelection]="programmaticViewerSelection()"
+                            (filePicked)="onPdbFilePicked($event, row.id)"
+                            (residuesSelected)="onResiduesSelected(row.id, $event)"
+                            (structureResiduesDetected)="onStructureResiduesDetected($event)"
+                            (sequenceLengthDetected)="onSequenceLengthDetected($event)"
+                          ></app-molstar-viewer>
+                        </div>
+                      </div>
+
+                      <!-- Right half: all other fields -->
+                      <div class="w-full lg:w-1/2 min-w-0 flex flex-col gap-4">
+                        <!-- Job Name -->
+                        <div>
+                          <label
+                            for="jobNameInput"
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Job Name <span class="text-red-500">*</span>
+                          </label>
+                          <input
+                            id="jobNameInput"
+                            type="text"
+                            class="block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
+                            [class.border-red-500]="jobNameTouched() && jobNameError()"
+                            [value]="jobName()"
+                            (input)="onJobNameChange($any($event.target).value)"
+                            (blur)="jobNameTouched.set(true)"
+                            placeholder="e.g. my-binder-job"
+                            maxlength="60"
+                          />
+                          @if (jobNameTouched() && jobNameError()) {
+                          <p class="mt-1 text-xs text-red-600">
+                            {{ jobNameError() }}
+                          </p>
+                          }
+                        </div>
+
+                        @for (field of schemaLoader.requiredInputFields(); track
+                        field.name) { @if (field.name === 'starting_pdb' ||
+                        field.name === 'max_length' || field.name ===
+                        'binder_name' || field.name === 'id') {
+                        <!-- skip: viewer on left, max_length handled by slider, binder_name/id handled by Job Name above -->
+                        } @else if (field.name === 'min_length') {
+                        <div class="rounded-lg border px-4 py-3">
+                          <p
+                            class="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Binder Length Range
+                            <span class="text-red-500">*</span>
+                          </p>
+                          <app-length-range-slider
+                            [min]="pdbSequenceMin()"
+                            [max]="pdbSequenceLength()"
+                            [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
+                            [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
+                            [disabled]="isPdbUploading()"
+                            (rangeChange)="onLengthRangeChange(row.id, $event)"
+                          ></app-length-range-slider>
+                        </div>
+                        } @else if (field.name === 'target_hotspot_residues') {
+                        <app-form-field
+                          [field]="field"
+                          [value]="getRowValue(row.id, field.name)"
+                          [hasError]="hasRowFieldError(row.id, field.name)"
+                          [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                          (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
+                          (fieldBlur)="validateRowField(row.id, field.name)"
+                        ></app-form-field>
+                        } @else {
+                        <app-form-field
+                          [field]="field"
+                          [value]="getRowValue(row.id, field.name)"
+                          [hasError]="hasRowFieldError(row.id, field.name)"
+                          [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                          (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                          (fieldBlur)="validateRowField(row.id, field.name)"
+                        ></app-form-field>
+                        } } @if (creditsEnabled) {
+                        <app-credit-summary
+                          [total]="creditCost()"
+                          [remaining]="creditsRemaining()"
+                        ></app-credit-summary>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  }
+                </div>
+                }
+              </app-step-content>
+            </div>
+
+            <!-- Section 3: Tool Settings -->
+            <div id="tool-settings" class="scroll-mt-44">
+              <app-step-content
+                [step]="3"
+                title="Tool Settings"
+                description="Configure parameters specific to {{ selectedToolLabel() }}."
+              >
+                @if (!selectedToolHasParams()) {
+                <div class="p-4 bg-sky-50 border border-sky-200 rounded-lg">
+                  <h3 class="text-sm font-medium text-sky-800">
+                    No Parameters Available
+                  </h3>
+                  <div class="mt-2 text-sm text-sky-700">
                     There are no configurable parameters for
                     <strong>{{ selectedToolLabel() }}</strong> in this workflow.
                     This step is automatically completed and you can proceed to
                     review and submit your job.
-                  </p>
+                  </div>
                 </div>
-              </div>
+                } @else {
+                <div
+                  class="mt-3 grid gap-3 sm:grid-cols-3"
+                  role="region"
+                  aria-label="Tool specific parameters"
+                >
+                  @for (p of toolParams[selectedTool()] || []; track p.name) {
+                  <div class="bg-white border rounded-md p-3">
+                    <label
+                      [for]="'param-' + p.name"
+                      class="block text-sm font-medium text-gray-700"
+                      >{{ p.label }}</label
+                    >
+                    <div class="text-xs text-gray-500 mt-1">
+                      {{ p.description }}
+                    </div>
+                    <input
+                      [id]="'param-' + p.name"
+                      type="text"
+                      class="mt-2 block h-10 w-full px-4 border rounded-md bg-white text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
+                    />
+                  </div>
+                  }
+                </div>
+                }
+              </app-step-content>
             </div>
-          </div>
-          } @else {
-          <div
-            class="mt-3 grid gap-3 sm:grid-cols-3"
-            role="region"
-            aria-label="Tool specific parameters"
-          >
-            @for (p of toolParams[selectedTool()] || []; track p.name) {
-            <div class="bg-white border rounded-md p-3">
-              <label
-                [for]="'param-' + p.name"
-                class="block text-sm font-medium text-gray-700"
-                >{{ p.label }}</label
+
+            <!-- Section 4: Review & Submit -->
+            <div id="review" class="scroll-mt-44">
+              <app-step-content
+                [step]="4"
+                title="Review & Submit"
+                description="Confirm your selections before starting the job."
+                contentClass="space-y-4"
               >
-              <div class="text-xs text-gray-500 mt-1">{{ p.description }}</div>
-              <input
-                [id]="'param-' + p.name"
-                type="text"
-                class="mt-2 block h-10 w-full px-4 border rounded-md bg-white text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
-              />
+                <app-configuration-summary
+                  [selectedTool]="selectedToolLabel()"
+                  [hasParameters]="selectedToolHasParams()"
+                  [summaryItems]="formSummary()"
+                  [requiredFieldCount]="schemaLoader.requiredInputFields().length"
+                  [isValid]="isFormValid()"
+                ></app-configuration-summary>
+                @if (creditsEnabled) {
+                <app-credit-summary
+                  [total]="creditCost()"
+                  [remaining]="creditsRemaining()"
+                ></app-credit-summary>
+                }
+              </app-step-content>
             </div>
-            }
-          </div>
-          }
-        </app-step-content>
-        }
-
-        <!-- Step 3: Review & Submit -->
-        @if (currentStep() === 3) {
-        <app-step-content
-          title="Review & Submit"
-          description="Confirm your selections before starting the job."
-        >
-          <app-configuration-summary
-            [selectedTool]="selectedToolLabel()"
-            [hasParameters]="selectedToolHasParams()"
-            [summaryItems]="formSummary()"
-            [requiredFieldCount]="schemaLoader.requiredInputFields().length"
-            [isValid]="isFormValid()"
-          ></app-configuration-summary>
-          @if (creditsEnabled) {
-          <!-- Credit cost summary -->
-          <app-credit-summary
-            class="mt-6 block"
-            [total]="creditCost()"
-            [remaining]="creditsRemaining()"
-          ></app-credit-summary>
-          }
-        </app-step-content>
-        }
-
-        <!-- Step Navigation Buttons -->
-        <div class="mt-6 flex items-center justify-between">
-          <app-button
-            type="button"
-            variant="secondary"
-            [disabled]="!canGoPrev() || (auth.canExecuteWorkflows$ | async) === false"
-            (click)="previousStep()"
-          >
-            Previous
-          </app-button>
-          <div class="flex items-center gap-2">
-            @if (currentStep() < steps.length) {
-            <app-button
-              type="button"
-              variant="primary"
-              [disabled]="
-                !canGoNext() ||
-                isPdbUploading() ||
-                (creditsEnabled && creditsInsufficient()) ||
-                (auth.canExecuteWorkflows$ | async) === false
-              "
-              (click)="nextStep()"
-            >
-              @if (isPdbUploading()) { Uploading… } @else { Next }
-            </app-button>
-            } @if (currentStep() === steps.length) {
-            <app-button
-              type="button"
-              variant="primary"
-              [disabled]="
-                !isFormValid() ||
-                (creditsEnabled && creditsInsufficient()) ||
-                (auth.canExecuteWorkflows$ | async) === false
-              "
-              (click)="submitWorkflow()"
-            >
-              Submit
-            </app-button>
-            }
-          </div>
+          </app-workflow-form>
         </div>
       </div>
+
       }
 
       <!-- Output Tab Content -->

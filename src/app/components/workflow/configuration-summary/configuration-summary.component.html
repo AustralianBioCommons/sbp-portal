@@ -1,8 +1,8 @@
-<div class="mt-4 space-y-4">
+<div class="space-y-4">
   <!-- Selected Tool -->
   <div class="bg-sky-50 border border-sky-200 rounded-lg p-4">
     <div class="text-sm font-semibold text-sky-900 mb-2">Selected Tool</div>
-    <p class="text-sm text-sky-800">
+    <p class="text-sm">
       <span class="font-medium">{{ selectedTool() }}</span>
       @if (hasParameters()) {
       <span class="ml-2 text-xs bg-sky-200 text-sky-900 px-2 py-1 rounded-full">
@@ -20,11 +20,11 @@
 
   <!-- Input Configuration Summary -->
   <div class="bg-gray-50 border rounded-lg p-4">
-    <div class="text-sm font-semibold text-gray-900 mb-3">
+    <div class="text-sm font-semibold text-gray-900 mb-4">
       Input Configuration
     </div>
     @if (summaryItems().length > 0) {
-    <div class="space-y-3">
+    <div class="space-y-2">
       @for (item of summaryItems(); track item.fieldName) {
       <div
         class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4"

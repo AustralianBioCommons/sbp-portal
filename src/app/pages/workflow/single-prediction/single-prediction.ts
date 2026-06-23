@@ -5,7 +5,14 @@ import {
   DragDropModule,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { Component, computed, inject, Signal, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  Signal,
+  signal,
+  viewChild,
+} from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { bootstrapGripVertical } from "@ng-icons/bootstrap-icons";
@@ -26,9 +33,9 @@ import {
 } from "../../../components/workflow/listbox-select/listbox-select.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import {
-  Step,
-  StepNavigationComponent,
-} from "../../../components/workflow/step-navigation/step-navigation.component";
+  WorkflowFormComponent,
+  WorkflowSection,
+} from "../../../components/workflow/workflow-form/workflow-form.component";
 import {
   ToolOption,
   ToolSelectionComponent,
@@ -68,7 +75,6 @@ type SinglePredictionTool = Extract<
   WorkflowTool,
   "colabfold" | "alphafold2" | "boltz"
 >;
-type StepItem = Step;
 
 interface ToolChip extends ToolOption {
   id: SinglePredictionTool;
@@ -108,7 +114,7 @@ interface ToolSettingErrors {
     LoadingComponent,
     ToolSelectionComponent,
     ListboxSelectComponent,
-    StepNavigationComponent,
+    WorkflowFormComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
     NgIconComponent,
@@ -259,29 +265,16 @@ export default class SinglePredictionComponent {
   alphafold2RandomSeedTouched = signal(false);
   colabfoldNumRecyclesTouched = signal(false);
 
-  readonly steps: StepItem[] = [
-    {
-      id: 1,
-      title: "Input Configuration",
-      description:
-        "Define one or more entities with sequence, copies, and molecule type",
-    },
-    {
-      id: 2,
-      title: "Tool Settings",
-      description: "Configure only the settings required by the selected tool",
-    },
-    {
-      id: 3,
-      title: "Review & Submit",
-      description:
-        "Review entities, settings, and generated FASTA content before submission",
-    },
+  // Single-page form sections (rendered + tracked by app-workflow-form)
+  readonly sections: WorkflowSection[] = [
+    { id: "select-tool", label: "Select a Tool", mobileLabel: "Tool" },
+    { id: "input-config", label: "Input Configuration", mobileLabel: "Input" },
+    { id: "tool-settings", label: "Tool Settings", mobileLabel: "Settings" },
+    { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
-  currentStep = signal<number>(1);
-  completedSteps = signal<number[]>([]);
-  visitedSteps = signal<number[]>([1]);
-  isStepVisited = (id: number) => this.visitedSteps().includes(id);
+
+  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
+  private readonly workflowForm = viewChild(WorkflowFormComponent);
 
   readonly entityValidationResults = computed(() =>
     this.entityRows().map((row) => this.validateEntityRow(row))
@@ -302,20 +295,25 @@ export default class SinglePredictionComponent {
     () => this.isStep1Valid() && this.isStep2Valid()
   );
 
-  canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
-  canGoNext: Signal<boolean> = computed(() => {
-    if (this.currentStep() === 1) {
-      return this.isStep1Valid();
-    }
-    if (this.currentStep() === 2) {
-      return this.isStep2Valid();
-    }
-    return false;
-  });
-
   readonly canSubmit = computed(
     () => this.isFormValid() && this.isToolAvailable()
   );
+
+  /** Per-section validity — drives the progress-bar colours. */
+  isSectionValid = (id: string): boolean => {
+    switch (id) {
+      case "select-tool":
+        return this.isToolAvailable();
+      case "input-config":
+        return this.isStep1Valid();
+      case "tool-settings":
+        return this.isStep2Valid();
+      case "review":
+        return this.canSubmit();
+      default:
+        return true;
+    }
+  };
 
   readonly formSummary = computed(() => {
     const entityItems = this.entityRows().map((row, index) => ({
@@ -446,32 +444,6 @@ export default class SinglePredictionComponent {
     }
   }
 
-  isStepInvalid = (id: number) => {
-    if (id === 1) {
-      return !this.isStep1Valid();
-    }
-    if (id === 2) {
-      return !this.isStep2Valid();
-    }
-    return false;
-  };
-
-  isStepCompleted = (id: number) => {
-    if (id === 1) {
-      return (
-        this.isStep1Valid() &&
-        (this.completedSteps().includes(1) || this.currentStep() > 1)
-      );
-    }
-    if (id === 2) {
-      return (
-        this.isStep2Valid() &&
-        (this.completedSteps().includes(2) || this.currentStep() > 2)
-      );
-    }
-    return this.completedSteps().includes(id);
-  };
-
   touchRowField(id: number, field: keyof EntityRow["touched"]): void {
     this.entityRows.update((rows) =>
       rows.map((row) =>
@@ -567,41 +539,6 @@ export default class SinglePredictionComponent {
     };
   }
 
-  previousStep() {
-    if (this.currentStep() > 1) {
-      this.currentStep.update((value) => value - 1);
-    }
-  }
-
-  nextStep() {
-    if (this.currentStep() === 1) {
-      this.touchAllEntityRows();
-      if (!this.isStep1Valid()) {
-        return;
-      }
-      this.advanceStep();
-      return;
-    }
-
-    if (this.currentStep() === 2) {
-      this.touchToolSettings();
-      if (!this.isStep2Valid()) {
-        return;
-      }
-    }
-
-    this.advanceStep();
-  }
-
-  goToStep(step: number) {
-    if (step >= 1 && step <= this.steps.length) {
-      this.currentStep.set(step);
-      this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
-      );
-    }
-  }
-
   updateAlphafold2RandomSeed(value: string): void {
     this.alphafold2RandomSeed.set(value);
   }
@@ -631,6 +568,7 @@ export default class SinglePredictionComponent {
 
     if (!this.isFormValid()) {
       this.showError("Please fix the validation errors before submitting.");
+      this.workflowForm()?.scrollToFirstInvalidSection();
       return;
     }
 
@@ -852,20 +790,6 @@ export default class SinglePredictionComponent {
   private getParsedCopyNumber(value: string): number {
     const parsed = Number.parseInt(value, 10);
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
-  }
-
-  private advanceStep(): void {
-    const current = this.currentStep();
-    if (current < this.steps.length) {
-      this.completedSteps.update((steps) =>
-        steps.includes(current) ? steps : [...steps, current]
-      );
-      this.currentStep.update((value) => value + 1);
-      this.visitedSteps.update((arr) => {
-        const next = current + 1;
-        return arr.includes(next) ? arr : [...arr, next];
-      });
-    }
   }
 
   private prepareSinglePredictionInput(

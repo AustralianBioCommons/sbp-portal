@@ -90,6 +90,7 @@ export interface BreadcrumbInfo {
   ],
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.scss",
+  host: { class: "contents" },
 })
 export class Navbar implements AfterViewInit {
   private auth = inject(AuthService);
@@ -125,6 +126,7 @@ export class Navbar implements AfterViewInit {
   showTabs = signal(false);
   showBreadcrumb = signal(false);
   breadcrumb = signal<BreadcrumbInfo | null>(null);
+  scrolled = signal(false);
 
   private readonly workflowBreadcrumbs: Record<string, BreadcrumbInfo> =
     THEMES.reduce((acc, theme) => {
@@ -222,6 +224,14 @@ export class Navbar implements AfterViewInit {
       this.checkRoute(this.router.url);
       this.updateRouteState();
     }, 0);
+
+    // Toggle the navbar shadow based on scroll position.
+    this.scrolled.set(window.scrollY > 0);
+    window.addEventListener(
+      "scroll",
+      () => this.scrolled.set(window.scrollY > 0),
+      { passive: true }
+    );
 
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))

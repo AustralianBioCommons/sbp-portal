@@ -146,17 +146,7 @@ describe("SinglePredictionComponent", () => {
     expect(component.canSubmit()).toBe(false);
   });
 
-  it("should expose navigation and label fallbacks for unknown state", () => {
-    expect(component.canGoPrev()).toBe(false);
-    expect(component.canGoNext()).toBe(false);
-
-    fillValidProteinRow();
-    component.currentStep.set(2);
-    expect(component.canGoNext()).toBe(true);
-
-    component.currentStep.set(3);
-    expect(component.canGoNext()).toBe(false);
-
+  it("should expose label fallbacks for unknown state", () => {
     component.selectedTool.set("unknown" as never);
     expect(component.selectedToolLabel()).toBe("");
     expect(component.getToolSettingsSummaryItems()).toEqual([]);
@@ -441,49 +431,42 @@ describe("SinglePredictionComponent", () => {
     expect(component.isStep2Valid()).toBe(true);
   });
 
-  it("should track step validity and completion", () => {
-    expect(component.isStepInvalid(1)).toBe(true);
-
-    fillValidProteinRow();
-    expect(component.isStepInvalid(1)).toBe(false);
-    expect(component.isStepCompleted(1)).toBe(false);
-
-    component.nextStep();
-    expect(component.currentStep()).toBe(2);
-    expect(component.isStepCompleted(1)).toBe(true);
-
-    component.nextStep();
-    expect(component.currentStep()).toBe(3);
-    expect(component.isStepCompleted(2)).toBe(true);
+  it("should define the four uniform workflow sections", () => {
+    expect(component.sections.map((s) => s.id)).toEqual([
+      "select-tool",
+      "input-config",
+      "tool-settings",
+      "review",
+    ]);
   });
 
-  it("should block next step when step 1 is invalid and touch rows", () => {
-    component.nextStep();
+  it("should track section validity", () => {
+    expect(component.isSectionValid("input-config")).toBe(false);
+    expect(component.isSectionValid("select-tool")).toBe(true);
 
-    expect(component.currentStep()).toBe(1);
+    fillValidProteinRow();
+    expect(component.isSectionValid("input-config")).toBe(true);
+    expect(component.isSectionValid("tool-settings")).toBe(true);
+    expect(component.isSectionValid("review")).toBe(true);
+  });
+
+  it("should touch entity rows when submitting an invalid form", () => {
+    component.submitWorkflow();
+
     expect(component.stepOneTouched()).toBe(true);
     expect(component.entityRows()[0].touched.sequence).toBe(true);
+    expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
   });
 
-  it("should block next step when step 2 is invalid", () => {
+  it("should touch tool settings when submitting with invalid tool settings", () => {
     fillValidProteinRow();
-    component.nextStep();
     component.selectTool("alphafold2");
     component.updateAlphafold2RandomSeed("-3");
 
-    component.nextStep();
+    component.submitWorkflow();
 
-    expect(component.currentStep()).toBe(2);
     expect(component.stepTwoTouched()).toBe(true);
-  });
-
-  it("should navigate steps manually and move backward", () => {
-    fillValidProteinRow();
-    component.goToStep(2);
-    expect(component.currentStep()).toBe(2);
-
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
+    expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
   });
 
   it("should compute form validation summary", () => {
@@ -494,18 +477,6 @@ describe("SinglePredictionComponent", () => {
     fillValidProteinRow();
     const validSummary = component.getFormValidationSummary();
     expect(validSummary.rowCount).toBe(1);
-  });
-
-  it("should ignore invalid manual step changes and stay on the first step when moving back", () => {
-    component.goToStep(0);
-    expect(component.currentStep()).toBe(1);
-
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
-
-    component.completedSteps.set([3]);
-    expect(component.isStepInvalid(3)).toBe(false);
-    expect(component.isStepCompleted(3)).toBe(true);
   });
 
   it("should submit a valid workflow payload", () => {
@@ -703,21 +674,18 @@ describe("SinglePredictionComponent", () => {
     component.jobName.set("");
     expect(component.jobNameTouched()).toBe(true);
 
-    component.nextStep();
+    component.submitWorkflow();
     expect(component.jobNameTouched()).toBe(true);
   });
 
-  it("should not advance to step 2 until jobName is filled", () => {
+  it("should keep input-config invalid until jobName is filled", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
     component.jobName.set("");
-
-    component.nextStep();
-    expect(component.currentStep()).toBe(1);
+    expect(component.isSectionValid("input-config")).toBe(false);
 
     component.jobName.set("valid-run");
-    component.nextStep();
-    expect(component.currentStep()).toBe(2);
+    expect(component.isSectionValid("input-config")).toBe(true);
   });
 
   it("should use the cached FASTA/dataset on second submit without re-uploading", () => {

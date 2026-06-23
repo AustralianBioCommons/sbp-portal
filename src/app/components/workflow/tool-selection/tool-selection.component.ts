@@ -10,6 +10,7 @@ export interface ToolOption<ToolId extends string = string> {
 
 @Component({
   selector: "app-tool-selection",
+  host: { class: "block" },
   imports: [],
   templateUrl: "./tool-selection.component.html",
   styleUrl: "./tool-selection.component.scss",
