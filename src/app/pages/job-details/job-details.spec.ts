@@ -22,7 +22,7 @@ type JobDetailsPrivateApi = {
   formatValidationDetails: (
     validation: Record<string, unknown> | undefined
   ) => string[];
-  isPdbSettingKey: (key: string) => boolean;
+  isFileDownloadKey: (key: string) => boolean;
   extractFilename: (path: string) => string;
 };
 
@@ -68,7 +68,9 @@ describe("JobDetailsComponent", () => {
       "listJobs",
     ]);
     mockJobsService.normalizeJob.and.callFake((job) => job);
-    mockJobsService.getJob.and.returnValue(of(mockJob));
+    mockJobsService.getJob.and.returnValue(
+      of({ job: mockJob, seqeraUnavailable: false })
+    );
     mockJobsService.deleteJob.and.returnValue(
       of({
         runId: mockJob.id,
@@ -183,13 +185,16 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should show an error when the job cannot be found", () => {
-    mockJobsService.getJob.and.returnValue(of(null));
+    mockJobsService.getJob.and.returnValue(
+      of({ job: null, seqeraUnavailable: false })
+    );
     render();
 
     expect(component.error()).toBe("Job not found.");
   });
 
   it("should surface an error when fetching the job fails", () => {
+    spyOn(console, "error");
     mockJobsService.getJob.and.returnValue(throwError(() => new Error("boom")));
     render();
 
@@ -294,6 +299,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle logs fetch errors", () => {
+    spyOn(console, "error");
     render();
     resultsService.getJobLogs.and.returnValue(
       throwError(() => new Error("logs failed"))
@@ -336,6 +342,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle report fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobReport.and.returnValue(
       throwError(() => new Error("report failed"))
     );
@@ -380,6 +387,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle settings fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobSettingParams.and.returnValue(
       throwError(() => new Error("settings failed"))
     );
@@ -441,6 +449,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle downloads fetch errors", () => {
+    spyOn(console, "error");
     resultsService.getJobDownloads.and.returnValue(
       throwError(() => new Error("downloads failed"))
     );
@@ -643,19 +652,26 @@ describe("JobDetailsComponent", () => {
     expect(privateApi().formatValidationDetails(undefined)).toEqual([]);
   });
 
-  describe("isPdbSettingKey", () => {
+  describe("isFileDownloadKey", () => {
     it("should return true for keys containing 'pdb'", () => {
       const api = privateApi();
-      expect(api.isPdbSettingKey("starting_pdb")).toBeTrue();
-      expect(api.isPdbSettingKey("PDB_input")).toBeTrue();
-      expect(api.isPdbSettingKey("my_pdb_file")).toBeTrue();
+      expect(api.isFileDownloadKey("starting_pdb")).toBeTrue();
+      expect(api.isFileDownloadKey("PDB_input")).toBeTrue();
+      expect(api.isFileDownloadKey("my_pdb_file")).toBeTrue();
     });
 
-    it("should return false for keys that do not contain 'pdb'", () => {
+    it("should return true for keys containing 'fasta'", () => {
       const api = privateApi();
-      expect(api.isPdbSettingKey("binder_name")).toBeFalse();
-      expect(api.isPdbSettingKey("min_length")).toBeFalse();
-      expect(api.isPdbSettingKey("chains")).toBeFalse();
+      expect(api.isFileDownloadKey("fastaS3Uri")).toBeTrue();
+      expect(api.isFileDownloadKey("fastaFileUrl")).toBeTrue();
+      expect(api.isFileDownloadKey("FASTA_input")).toBeTrue();
+    });
+
+    it("should return false for keys that do not contain 'pdb' or 'fasta'", () => {
+      const api = privateApi();
+      expect(api.isFileDownloadKey("binder_name")).toBeFalse();
+      expect(api.isFileDownloadKey("min_length")).toBeFalse();
+      expect(api.isFileDownloadKey("chains")).toBeFalse();
     });
   });
 

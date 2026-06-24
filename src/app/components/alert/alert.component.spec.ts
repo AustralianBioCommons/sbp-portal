@@ -26,7 +26,7 @@ describe("AlertComponent", () => {
     fixture.detectChanges();
 
     const alertDiv = fixture.debugElement.query(By.css(".fixed"));
-    const icon = fixture.debugElement.query(By.css("svg.text-green-500"));
+    const icon = fixture.debugElement.query(By.css("ng-icon.text-green-500"));
     const messageDiv = fixture.debugElement.query(By.css("div.text-green-500"));
 
     expect(alertDiv.nativeElement).toHaveClass("bg-green-50");
@@ -40,7 +40,7 @@ describe("AlertComponent", () => {
     fixture.detectChanges();
 
     const alertDiv = fixture.debugElement.query(By.css(".fixed"));
-    const icon = fixture.debugElement.query(By.css("svg.text-red-500"));
+    const icon = fixture.debugElement.query(By.css("ng-icon.text-red-500"));
     const messageDiv = fixture.debugElement.query(By.css("div.text-red-500"));
 
     expect(alertDiv.nativeElement).toHaveClass("bg-red-50");

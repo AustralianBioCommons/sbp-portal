@@ -360,7 +360,7 @@ describe("JobsComponent", () => {
     component.viewJobDetails(mockJob);
 
     expect(navigateSpy).toHaveBeenCalledWith(["/jobs", mockJob.id], {
-      state: { job: mockJob },
+      state: { job: mockJob, seqeraUnavailable: false },
     });
   });
 

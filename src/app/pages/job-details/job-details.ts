@@ -16,6 +16,7 @@ import {
   heroFolder,
   heroTrash,
 } from "@ng-icons/heroicons/outline";
+import { AlertComponent } from "../../components/alert/alert.component";
 import { LoadingComponent } from "../../components/loading/loading.component";
 import { DialogComponent } from "../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../components/button/button.component";
@@ -37,6 +38,7 @@ type JobSettingItem = {
 @Component({
   selector: "app-job-details",
   imports: [
+    AlertComponent,
     RouterLink,
     NgIconComponent,
     LoadingComponent,
@@ -71,6 +73,7 @@ export default class JobDetailsComponent implements OnInit {
   job = signal<JobListItem | null>(null);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
+  seqeraUnavailable = signal<boolean>(false);
   showDeleteDialog = signal<boolean>(false);
   deleting = signal<boolean>(false);
 
@@ -102,11 +105,13 @@ export default class JobDetailsComponent implements OnInit {
   constructor() {
     // A job passed through router navigation state lets us render immediately
     // without an extra round-trip when arriving from the jobs list.
-    const navigatedJob = this.router.getCurrentNavigation()?.extras.state?.[
-      "job"
-    ] as JobListItem | undefined;
+    const navState = this.router.getCurrentNavigation()?.extras.state;
+    const navigatedJob = navState?.["job"] as JobListItem | undefined;
     if (navigatedJob) {
       this.job.set(this.jobsService.normalizeJob(navigatedJob));
+      this.seqeraUnavailable.set(
+        (navState?.["seqeraUnavailable"] as boolean) ?? false
+      );
     }
 
     // Reset and reload the results whenever the selected job changes.
@@ -148,12 +153,13 @@ export default class JobDetailsComponent implements OnInit {
           return EMPTY;
         })
       )
-      .subscribe((job) => {
+      .subscribe(({ job, seqeraUnavailable }) => {
         if (!job) {
           this.error.set("Job not found.");
         } else {
           this.job.set(job);
         }
+        this.seqeraUnavailable.set(seqeraUnavailable);
         this.loading.set(false);
       });
   }
@@ -496,27 +502,32 @@ export default class JobDetailsComponent implements OnInit {
       }
       details.push(...this.formatValidationDetails(value.validation));
       const rawValue = this.formatSettingValue(value.value);
-      const isPdb = this.isPdbSettingKey(key);
+      const isFileDownload = this.isFileDownloadKey(key);
       return {
         label: value.label || this.formatSettingLabel(key),
-        value: isPdb ? this.extractFilename(rawValue) : rawValue,
+        value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
         details,
-        ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {}),
+        ...(isFileDownload && rawValue.startsWith("http")
+          ? { url: rawValue }
+          : {}),
       };
     }
 
     const rawValue = this.formatSettingValue(value);
-    const isPdb = this.isPdbSettingKey(key);
+    const isFileDownload = this.isFileDownloadKey(key);
     return {
       label: this.formatSettingLabel(key),
-      value: isPdb ? this.extractFilename(rawValue) : rawValue,
+      value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
       details: [],
-      ...(isPdb && rawValue.startsWith("http") ? { url: rawValue } : {}),
+      ...(isFileDownload && rawValue.startsWith("http")
+        ? { url: rawValue }
+        : {}),
     };
   }
 
-  private isPdbSettingKey(key: string): boolean {
-    return key.toLowerCase().includes("pdb");
+  private isFileDownloadKey(key: string): boolean {
+    const lower = key.toLowerCase();
+    return lower.includes("pdb") || lower.includes("fasta");
   }
 
   private extractFilename(path: string): string {
