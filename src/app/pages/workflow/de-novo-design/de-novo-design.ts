@@ -3,6 +3,7 @@ import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroChevronDoubleLeft,
   heroEllipsisVertical,
+  heroExclamationTriangle,
   heroXMark,
 } from "@ng-icons/heroicons/outline";
 import {
@@ -88,7 +89,7 @@ type StepItem = Step;
     CreditSummaryComponent,
     NgIconComponent,
   ],
-  providers: [provideIcons({ heroChevronDoubleLeft, heroEllipsisVertical, heroXMark })],
+  providers: [provideIcons({ heroChevronDoubleLeft, heroEllipsisVertical, heroExclamationTriangle, heroXMark })],
   templateUrl: "./de-novo-design.html",
   styleUrl: "./de-novo-design.scss",
 })
