@@ -100,7 +100,7 @@
             [class.border-sky-500]="activeTab() === tab.id"
             [class.text-sky-600]="activeTab() === tab.id"
             [class.border-transparent]="activeTab() !== tab.id"
-            [class.text-gray-600]="activeTab() !== tab.id"
+            [class.text-gray-500]="activeTab() !== tab.id"
             [class.hover:border-gray-600]="activeTab() !== tab.id"
           >
             <ng-icon [name]="tab.icon" size="20"></ng-icon>
@@ -146,7 +146,7 @@
           } } @case ("files") {
           <div class="space-y-2">
             <div class="font-semibold text-gray-900">Available files</div>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-500">
               Download individual result files from this workflow run.
             </p>
           </div>
@@ -272,7 +272,7 @@
           } } @case ("citations") {
           <div class="space-y-2">
             <div class="font-semibold text-gray-900">Citations</div>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-500">
               Cite the workflow and platform used to produce the results from
               this run.
             </p>

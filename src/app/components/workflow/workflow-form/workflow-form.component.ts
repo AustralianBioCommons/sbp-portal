@@ -1,14 +1,15 @@
 import {
-  AfterViewInit,
+  afterNextRender,
   Component,
   computed,
+  DestroyRef,
+  ElementRef,
+  inject,
   input,
   output,
   signal,
+  viewChild,
 } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { animationFrameScheduler, fromEvent } from "rxjs";
-import { auditTime } from "rxjs/operators";
 import { ButtonComponent } from "../../button/button.component";
 
 export interface WorkflowSection {
@@ -24,7 +25,7 @@ export interface WorkflowSection {
   styleUrl: "./workflow-form.component.scss",
   host: { class: "block" },
 })
-export class WorkflowFormComponent implements AfterViewInit {
+export class WorkflowFormComponent {
   readonly sections = input.required<WorkflowSection[]>();
   readonly isSectionValid = input<(id: string) => boolean>(() => true);
   readonly disabled = input(false);
@@ -39,53 +40,91 @@ export class WorkflowFormComponent implements AfterViewInit {
     this.sections().findIndex((s) => s.id === this.activeSection())
   );
 
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly bottomSentinel =
+    viewChild<ElementRef<HTMLElement>>("bottomSentinel");
+
+  /** Ids of sections currently crossing the activation line. */
+  private readonly intersecting = new Set<string>();
+  private atBottom = false;
+
   constructor() {
-    fromEvent(window, "scroll", { passive: true })
-      .pipe(auditTime(0, animationFrameScheduler), takeUntilDestroyed())
-      .subscribe(() => this.updateActiveSection());
+    afterNextRender(() => {
+      const first = this.sections()[0];
+      if (first) {
+        this.activeSection.set(first.id);
+        this.visitedSections.set(new Set([first.id]));
+      }
+      this.setupObservers();
+    });
   }
 
-  ngAfterViewInit(): void {
-    const first = this.sections()[0];
-    if (first) {
-      this.activeSection.set(first.id);
-      this.visitedSections.set(new Set([first.id]));
-    }
-    this.updateActiveSection();
-  }
-
-  /** Recompute the active/visited sections from the current scroll position. */
-  private updateActiveSection(): void {
+  private setupObservers(): void {
     const sections = this.sections();
     if (sections.length === 0) return;
 
-    const scrollPosition = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
+    // rootMargin shrinks the root's bottom edge up by 67%, leaving an
+    // activation band in the top third of the viewport.
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) this.intersecting.add(entry.target.id);
+          else this.intersecting.delete(entry.target.id);
+        }
+        this.recomputeActiveSection();
+      },
+      { rootMargin: "0px 0px -67% 0px", threshold: 0 }
+    );
+    for (const section of sections) {
+      const element = document.getElementById(section.id);
+      if (element) sectionObserver.observe(element);
+    }
 
-    // A section becomes "active" once its top crosses the upper third.
-    const threshold = windowHeight / 3;
+    // A short final section can't scroll up to the activation line, so force it
+    // once the form's end comes into view.
+    let bottomObserver: IntersectionObserver | undefined;
+    const sentinel = this.bottomSentinel()?.nativeElement;
+    if (sentinel) {
+      bottomObserver = new IntersectionObserver(([entry]) => {
+        this.atBottom = entry.isIntersecting;
+        this.recomputeActiveSection();
+      });
+      bottomObserver.observe(sentinel);
+    }
 
-    // Near the bottom of the page, force-activate the last section so the final
-    // section is reachable even when it is short.
-    if (scrollPosition + windowHeight >= documentHeight - 50) {
+    this.destroyRef.onDestroy(() => {
+      sectionObserver.disconnect();
+      bottomObserver?.disconnect();
+    });
+  }
+
+  private recomputeActiveSection(): void {
+    const sections = this.sections();
+    if (sections.length === 0) return;
+
+    if (this.atBottom) {
       this.activeSection.set(sections[sections.length - 1].id);
       this.visitedSections.set(new Set(sections.map((s) => s.id)));
       return;
     }
 
+    // The deepest section crossing the activation line is the active one.
+    let activeIndex = -1;
     for (let i = sections.length - 1; i >= 0; i--) {
-      const element = document.getElementById(sections[i].id);
-      if (element && element.getBoundingClientRect().top <= threshold) {
-        this.activeSection.set(sections[i].id);
-        this.visitedSections.update((visited) => {
-          const next = new Set(visited);
-          for (let j = 0; j <= i; j++) next.add(sections[j].id);
-          return next;
-        });
-        return;
+      if (this.intersecting.has(sections[i].id)) {
+        activeIndex = i;
+        break;
       }
     }
+    // Nothing crossing the line yet; keep the current active section.
+    if (activeIndex === -1) return;
+
+    this.activeSection.set(sections[activeIndex].id);
+    this.visitedSections.update((visited) => {
+      const next = new Set(visited);
+      for (let j = 0; j <= activeIndex; j++) next.add(sections[j].id);
+      return next;
+    });
   }
 
   scrollToSection(event: Event, sectionId: string): void {

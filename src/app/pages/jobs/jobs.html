@@ -57,9 +57,7 @@
                   class="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-4 focus-within:ring-2 focus-within:ring-sky-100 focus-visible:outline-none hover:cursor-pointer"
                 >
                   <span class="flex items-center">
-                    <span class="text-sm text-gray-700 font-medium mr-2"
-                      >Status:</span
-                    >
+                    <span class="text-sm font-medium mr-2">Status:</span>
                     @if (selectedStatuses().length > 0) {
                     <span
                       class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800"
@@ -76,7 +74,7 @@
               <ng-template #menu>
                 @for (status of statusOptions; track status) {
                 <label
-                  class="flex cursor-pointer items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  class="flex cursor-pointer items-center px-4 py-2 text-sm hover:bg-gray-100"
                 >
                   <input
                     type="checkbox"
@@ -257,16 +255,16 @@
               >
                 {{ job.jobName }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ job.workflow || "—" }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ job.tool || "—" }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 @if (isInProgress(job.status)) {
                 <span
-                  class="inline-flex gap-2 items-center text-sm font-semibold text-gray-600"
+                  class="inline-flex gap-2 items-center text-sm font-semibold text-gray-500"
                 >
                   <ng-icon name="heroClock" size="16"></ng-icon>
                   In progress...
@@ -280,14 +278,14 @@
                 </span>
                 }
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ job.submittedAt | date:'dd/MM/yyyy' }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 @if (job.score !== null) { {{ job.score.toFixed(3) }} @if
                 (job.finalDesignCount !== null && job.finalDesignCount !==
                 undefined) {
-                <span class="text-xs text-gray-600">
+                <span class="text-xs text-gray-500">
                   ({{ job.finalDesignCount }} designs)
                 </span>
                 } } @else { — }

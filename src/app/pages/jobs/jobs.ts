@@ -289,7 +289,7 @@ export default class JobsComponent implements OnInit {
       case "Stopped":
         return "bg-amber-100 text-red-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-900";
     }
   }
 

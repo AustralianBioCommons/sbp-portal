@@ -12,14 +12,14 @@
   }
 
   <!-- Field Label -->
-  <label [for]="fieldId" class="block text-sm font-medium text-gray-700">
+  <label [for]="fieldId" class="block text-sm font-medium">
     {{ getDisplayFieldLabel() }}
     @if (f.required) {
     <span class="text-red-500 ml-1">*</span>
     } @if (f.description) {
     <div class="group relative inline-block ml-1">
       <svg
-        class="w-4 h-4 text-gray-400 cursor-help"
+        class="w-4 h-4 text-gray-500 cursor-help"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -37,14 +37,14 @@
       >
         <div class="font-medium">{{ getDisplayFieldLabel() }}</div>
         <div class="text-gray-300 mt-1">{{ f.description }}</div>
-        <div class="text-gray-400 text-xs mt-2">
+        <div class="text-gray-500 text-xs mt-2">
           Type: {{ f.type }}
           @if (f.required) {
           <span class="text-red-400"> • Required</span>
           }
         </div>
         @if (hasRange) {
-        <div class="text-gray-400 text-xs mt-1">{{ getRangeText() }}</div>
+        <div class="text-gray-500 text-xs mt-1">{{ getRangeText() }}</div>
         }
       </div>
     </div>
@@ -103,7 +103,7 @@
         (change)="onValueChange($any($event.target).checked)"
         (blur)="onBlur()"
       />
-      <span class="ml-2 text-sm text-gray-600">Enable this option</span>
+      <span class="ml-2 text-sm text-gray-500">Enable this option</span>
     </div>
     }
 

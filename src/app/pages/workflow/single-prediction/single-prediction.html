@@ -41,7 +41,7 @@
     <div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
       <div>
         <h1 class="text-3xl font-semibold text-gray-900">Single Prediction</h1>
-        <p class="mt-2 text-sm text-gray-600">
+        <p class="mt-2 text-sm text-gray-500">
           This workflow provides a bioinformatics best-practice analysis
           experience for protein 3D structure prediction. Configure one or more
           entities, validate inputs against the selected tool, then review the
@@ -52,7 +52,7 @@
       @if (isActiveTab('overview')) {
       <div>
         <h2 class="text-xl font-semibold text-gray-900">Description</h2>
-        <p class="mt-2 text-sm text-gray-600">
+        <p class="mt-2 text-sm text-gray-500">
           Single Prediction is designed for structure-prediction runs from
           curated biological inputs. Define entities row by row with sequence,
           copy number, and molecule type, then proceed through tool settings and
@@ -75,7 +75,7 @@
                 Access Restricted
               </p>
               @if ((auth.isAuthenticated$ | async) === false) {
-              <p class="text-sm text-gray-600">
+              <p class="text-sm text-gray-500">
                 To use this tool, please log in or register for a BioCommons
                 Access account and add the
                 <strong>SBP Workflow Execution bundle</strong> to your profile.
@@ -91,7 +91,7 @@
                 </app-button>
               </div>
               } @else {
-              <p class="text-sm text-gray-600">
+              <p class="text-sm text-gray-500">
                 You currently do not have access to this tool; please go to your
                 profile page to add the
                 <strong>SBP Workflow Execution</strong> bundle.
@@ -143,11 +143,8 @@
                 title="Input Configuration"
                 description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
               >
-                <div class="mt-6 rounded-lg border bg-gray-50 p-4">
-                  <label
-                    for="job-name"
-                    class="block text-sm font-medium text-gray-700"
-                  >
+                <div class="rounded-lg border p-4">
+                  <label for="job-name" class="block text-sm font-medium">
                     Job Name
                     <span class="ml-1 text-red-500">*</span>
                   </label>
@@ -206,7 +203,7 @@
                           #{{ i + 1 }}
                         </span>
                         <div
-                          class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
+                          class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
                           cdkDragHandle
                           title="Drag to reorder"
                           [attr.aria-label]="'Drag to reorder entity ' + (i + 1)"
@@ -373,12 +370,12 @@
                 title="Tool Settings"
                 description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}."
               >
-                <div class="mt-6 space-y-4">
+                <div class="space-y-4">
                   @if (selectedTool() === 'alphafold2') {
-                  <div class="rounded-lg border bg-gray-50 p-4">
+                  <div class="rounded-lg border p-4">
                     <label
                       for="alphafold2-random-seed"
-                      class="block text-sm font-medium text-gray-700"
+                      class="block text-sm font-medium"
                     >
                       alphafold2_random_seed
                     </label>
@@ -404,9 +401,7 @@
                     </p>
                     }
 
-                    <label
-                      class="mt-4 flex items-center gap-3 text-sm text-gray-700"
-                    >
+                    <label class="mt-4 flex items-center gap-3 text-sm">
                       <input
                         type="checkbox"
                         class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
@@ -420,7 +415,7 @@
                   <div class="rounded-lg border bg-gray-50 p-4">
                     <label
                       for="colabfold-num-recycles"
-                      class="block text-sm font-medium text-gray-700"
+                      class="block text-sm font-medium"
                     >
                       colabfold_num_recycles
                     </label>
@@ -448,9 +443,7 @@
                   </div>
                   } @if (selectedTool() === 'boltz') {
                   <div class="rounded-lg border bg-gray-50 p-4">
-                    <label
-                      class="flex items-center gap-3 text-sm text-gray-700"
-                    >
+                    <label class="flex items-center gap-3 text-sm">
                       <input
                         type="checkbox"
                         class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
@@ -480,13 +473,13 @@
                   [requiredFieldCount]="entityRows().length * 3 + getToolSettingsSummaryItems().length"
                   [isValid]="isFormValid()"
                 ></app-configuration-summary>
+                @if (creditsEnabled) {
+                <app-credit-summary
+                  [total]="creditCost()"
+                  [remaining]="creditsRemaining()"
+                ></app-credit-summary>
+                }
               </app-step-content>
-              @if (creditsEnabled) {
-              <app-credit-summary
-                [total]="creditCost()"
-                [remaining]="creditsRemaining()"
-              ></app-credit-summary>
-              }
             </div>
           </app-workflow-form>
         </div>

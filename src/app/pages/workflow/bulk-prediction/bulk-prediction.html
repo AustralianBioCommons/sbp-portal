@@ -43,7 +43,7 @@
     <div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
       <div>
         <h1 class="text-3xl font-semibold text-gray-900">Bulk Prediction</h1>
-        <p class="mt-2 text-sm text-gray-600">
+        <p class="mt-2 text-sm text-gray-500">
           Predict multiple protein structures in a single run by providing
           sequences in FASTA format. Multimers can be specified by separating
           chains with a <code class="font-mono">:</code> delimiter.
@@ -54,7 +54,7 @@
       @if (isActiveTab('overview')) {
       <div>
         <h2 class="text-xl font-semibold text-gray-900">Description</h2>
-        <p class="mt-2 text-sm text-gray-600">
+        <p class="mt-2 text-sm text-gray-500">
           This workflow enables the prediction of bulk protein structures by
           providing input sequences in FASTA format. Multimers can be predicted
           by separating sequences with a <code class="font-mono">:</code>
@@ -80,7 +80,7 @@
                 Access Restricted
               </p>
               @if ((auth.isAuthenticated$ | async) === false) {
-              <p class="text-sm text-gray-600">
+              <p class="text-sm text-gray-500">
                 To use this tool, please log in or register for a BioCommons
                 Access account and add the
                 <strong>SBP Workflow Execution bundle</strong> to your profile.
@@ -96,7 +96,7 @@
                 </app-button>
               </div>
               } @else {
-              <p class="text-sm text-gray-600">
+              <p class="text-sm text-gray-500">
                 You currently do not have access to this tool; please go to your
                 profile page to add the
                 <strong>SBP Workflow Execution</strong> bundle.
@@ -149,10 +149,7 @@
                 <div class="mt-6 space-y-6">
                   <!-- Job Name -->
                   <div>
-                    <label
-                      for="job-name"
-                      class="block text-sm font-medium text-gray-700"
-                    >
+                    <label for="job-name" class="block text-sm font-medium">
                       Job Name
                       <span class="ml-1 text-red-500" aria-hidden="true"
                         >*</span
@@ -186,10 +183,7 @@
 
                   <!-- FASTA Input -->
                   <div>
-                    <label
-                      for="bulk-fasta"
-                      class="block text-sm font-medium text-gray-700"
-                    >
+                    <label for="bulk-fasta" class="block text-sm font-medium">
                       Protein Sequences (FASTA)
                       <span class="text-red-500 ml-1" aria-hidden="true"
                         >*</span

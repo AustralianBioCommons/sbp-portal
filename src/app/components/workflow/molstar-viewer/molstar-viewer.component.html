@@ -16,7 +16,7 @@
     <h4 class="text-sm font-medium text-gray-700">Target Structure Preview</h4>
     @if (status() === 'loaded') {
     <label
-      class="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
+      class="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm hover:bg-gray-50"
       [ngClass]="{
         'cursor-pointer': !disabled(),
         'opacity-50 pointer-events-none': disabled()
@@ -65,7 +65,7 @@
         d="M20 7l-8-4-8 4m16 0v10l-8 4m0-10L4 7m8 10V11"
       />
     </svg>
-    <p class="text-sm text-gray-400">
+    <p class="text-sm text-gray-500">
       Load a
       <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file to
       preview the structure here
