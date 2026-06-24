@@ -8,6 +8,7 @@ import { AlertComponent } from "../../alert/alert.component";
   imports: [AlertComponent],
   templateUrl: "./form-field.component.html",
   styleUrl: "./form-field.component.scss",
+  host: { class: "block" },
 })
 export class FormFieldComponent {
   private pdbUploadService = inject(PdbUploadService);
@@ -113,7 +114,7 @@ export class FormFieldComponent {
 
   getInputClasses(): string {
     return (
-      "block h-10 w-full px-4 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100 " +
+      "block h-12 w-full px-4 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100 " +
       (this.hasError()
         ? "border-red-500 text-red-900 placeholder-red-400"
         : "bg-white text-gray-900 placeholder-gray-400")
@@ -122,7 +123,7 @@ export class FormFieldComponent {
 
   getSelectClasses(): string {
     return (
-      "block h-10 w-full px-4 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100 " +
+      "block h-12 w-full px-4 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100 " +
       (this.hasError()
         ? "border-red-500 text-red-900"
         : "bg-white text-gray-900")

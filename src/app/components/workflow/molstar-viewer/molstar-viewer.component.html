@@ -13,7 +13,6 @@
 
 <div class="space-y-2">
   <div class="flex items-center justify-between">
-    <h4 class="text-sm font-medium text-gray-700">Target Structure Preview</h4>
     @if (status() === 'loaded') {
     <label
       class="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
@@ -50,21 +49,8 @@
   <!-- Idle placeholder -->
   @if (status() === 'idle') {
   <div
-    class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed bg-gray-50 py-16 text-center"
+    class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed bg-gray-50 h-160 min-h-160 text-center"
   >
-    <svg
-      class="h-10 w-10 text-gray-300"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="1.5"
-        d="M20 7l-8-4-8 4m16 0v10l-8 4m0-10L4 7m8 10V11"
-      />
-    </svg>
     <p class="text-sm text-gray-400">
       Load a
       <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file to
@@ -152,34 +138,9 @@
   <!-- Viewer container (always present so mol* can attach) -->
   <div
     [id]="containerId"
-    class="relative w-full h-90 min-h-90 overflow-hidden border rounded-lg bg-[#1e1e2e]"
+    class="relative w-full h-160 min-h-160 overflow-hidden border rounded-lg bg-[#1e1e2e]"
     [class.hidden]="
       status() === 'idle' || status() === 'loading' || status() === 'error'
     "
   ></div>
-
-  <!-- Selection bar -->
-  @if (status() === 'loaded') {
-  <div class="rounded-md border border-sky-100 bg-sky-50 px-4 py-3 text-sm">
-    <p class="font-medium text-sky-800">Hotspot residue selection</p>
-    @if (selectedResidues().length > 0) {
-    <p class="mt-1 text-sky-700 font-mono break-all">
-      {{ selectedResidues().join(",") }}
-    </p>
-    <button
-      type="button"
-      class="mt-2 text-xs text-sky-600 underline hover:text-sky-800 rounded-md"
-      (click)="clearSelection()"
-    >
-      Clear selection
-    </button>
-    } @else {
-    <p class="mt-1 text-sky-600">
-      Click residues in the viewer to add them as hotspots. Hold
-      <kbd class="rounded bg-sky-100 px-1 py-0.5 font-mono text-xs">Shift</kbd>
-      to add to the selection; click empty space to deselect.
-    </p>
-    }
-  </div>
-  }
 </div>
