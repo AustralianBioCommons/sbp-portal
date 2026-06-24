@@ -91,7 +91,16 @@ type StepItem = Step;
     CreditSummaryComponent,
     NgIconComponent,
   ],
-  providers: [provideIcons({ heroArrowUpTray, heroChevronDoubleLeft, heroChevronDoubleRight, heroEllipsisVertical, heroExclamationTriangle, heroXMark })],
+  providers: [
+    provideIcons({
+      heroArrowUpTray,
+      heroChevronDoubleLeft,
+      heroChevronDoubleRight,
+      heroEllipsisVertical,
+      heroExclamationTriangle,
+      heroXMark,
+    }),
+  ],
   templateUrl: "./de-novo-design.html",
   styleUrl: "./de-novo-design.scss",
 })
@@ -240,14 +249,16 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     event.preventDefault();
   }
 
-  @HostListener('document:mousemove', ['$event'])
+  @HostListener("document:mousemove", ["$event"])
   onDocumentMouseMove(event: MouseEvent): void {
     if (!this.isDragging()) return;
     const delta = this._dragStartX - event.clientX; // drag left → panel grows
-    this.panelWidth.set(Math.max(150, Math.min(640, this._dragStartPanelWidth + delta)));
+    this.panelWidth.set(
+      Math.max(150, Math.min(640, this._dragStartPanelWidth + delta))
+    );
   }
 
-  @HostListener('document:mouseup')
+  @HostListener("document:mouseup")
   onDocumentMouseUp(): void {
     if (this.isDragging()) this.isDragging.set(false);
   }
@@ -1266,9 +1277,12 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   /** Returns true when any field inside the collapsible config section has a validation error. */
   hasConfigSectionErrors(rowId: string): boolean {
     if (this.jobNameTouched() && !!this.jobNameError()) return true;
-    return ['target_hotspot_residues', 'chains', 'min_length', 'max_length'].some(
-      (f) => this.hasRowFieldError(rowId, f)
-    );
+    return [
+      "target_hotspot_residues",
+      "chains",
+      "min_length",
+      "max_length",
+    ].some((f) => this.hasRowFieldError(rowId, f));
   }
 
   // Update row value with validation

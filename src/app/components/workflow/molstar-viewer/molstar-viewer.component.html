@@ -21,7 +21,11 @@
       'opacity-50 pointer-events-none': disabled()
     }"
   >
-    <ng-icon name="heroArrowUpTray" class="h-12 w-12 text-gray-400" aria-hidden="true"></ng-icon>
+    <ng-icon
+      name="heroArrowUpTray"
+      class="h-12 w-12 text-gray-400"
+      aria-hidden="true"
+    ></ng-icon>
     <p class="text-sm text-gray-400">
       Upload a PDB file to preview the structure.
     </p>
@@ -38,7 +42,11 @@
   <!-- Loading state -->
   @if (status() === 'loading') {
   <div class="flex items-center gap-2 text-sm text-gray-500 py-2">
-    <ng-icon name="heroArrowPath" class="animate-spin h-4 w-4 text-sky-600" aria-hidden="true"></ng-icon>
+    <ng-icon
+      name="heroArrowPath"
+      class="animate-spin h-4 w-4 text-sky-600"
+      aria-hidden="true"
+    ></ng-icon>
     Loading structure…
   </div>
   }
@@ -48,7 +56,11 @@
   <div
     class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3"
   >
-    <ng-icon name="heroExclamationCircle" class="mt-0.5 h-4 w-4 shrink-0 text-red-500" aria-hidden="true"></ng-icon>
+    <ng-icon
+      name="heroExclamationCircle"
+      class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
+      aria-hidden="true"
+    ></ng-icon>
     <p class="text-sm text-red-700">{{ errorMessage() }}</p>
   </div>
   }

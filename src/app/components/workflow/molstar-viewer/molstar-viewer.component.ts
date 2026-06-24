@@ -13,7 +13,12 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroArrowPath, heroArrowUpTray, heroExclamationCircle, heroFolder } from "@ng-icons/heroicons/outline";
+import {
+  heroArrowPath,
+  heroArrowUpTray,
+  heroExclamationCircle,
+  heroFolder,
+} from "@ng-icons/heroicons/outline";
 import { Viewer } from "molstar/lib/apps/viewer/app";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { StructureSelectionManager } from "molstar/lib/mol-plugin-state/manager/structure/selection";
@@ -31,7 +36,14 @@ import { OrderedSet } from "molstar/lib/mol-data/int";
 @Component({
   selector: "app-molstar-viewer",
   imports: [CommonModule, NgIconComponent],
-  providers: [provideIcons({ heroArrowPath, heroArrowUpTray, heroExclamationCircle, heroFolder })],
+  providers: [
+    provideIcons({
+      heroArrowPath,
+      heroArrowUpTray,
+      heroExclamationCircle,
+      heroFolder,
+    }),
+  ],
   encapsulation: ViewEncapsulation.None,
   templateUrl: "./molstar-viewer.component.html",
   styleUrl: "./molstar-viewer.component.scss",
