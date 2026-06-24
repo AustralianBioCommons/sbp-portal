@@ -11,9 +11,9 @@
   }
 </style>
 
-<div class="space-y-2">
-  <div class="flex items-center justify-between">
-    @if (status() === 'loaded') {
+<div class="h-full flex flex-col gap-2">
+  @if (status() === 'loaded') {
+  <div class="flex items-center justify-between shrink-0">
     <label
       class="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
       [ngClass]="{
@@ -43,13 +43,13 @@
         (change)="onFileInputChange($event)"
       />
     </label>
-    }
   </div>
+  }
 
   <!-- Idle placeholder -->
   @if (status() === 'idle') {
   <div
-    class="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed bg-gray-50 h-160 min-h-160 text-center"
+    class="flex-1 flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed bg-gray-50 text-center min-h-0"
   >
     <p class="text-sm text-gray-400">
       Load a
@@ -138,7 +138,7 @@
   <!-- Viewer container (always present so mol* can attach) -->
   <div
     [id]="containerId"
-    class="relative w-full h-160 min-h-160 overflow-hidden border rounded-lg bg-[#1e1e2e]"
+    class="flex-1 relative w-full overflow-hidden border rounded-lg bg-[#1e1e2e] min-h-0"
     [class.hidden]="
       status() === 'idle' || status() === 'loading' || status() === 'error'
     "

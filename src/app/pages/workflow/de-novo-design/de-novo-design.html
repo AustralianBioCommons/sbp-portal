@@ -231,11 +231,12 @@
                   }
 
                   <!-- Viewer + config panel — side by side with draggable divider -->
-                  <div class="flex">
+                  <div class="flex min-h-80 max-h-160">
 
                     <!-- Viewer column -->
                     <div class="relative flex-1 min-w-0 overflow-hidden">
                       <app-molstar-viewer
+                        class="absolute inset-0"
                         [pdbFile]="localPdbFile()"
                         [disabled]="isPdbUploading()"
                         [externalSelection]="programmaticViewerSelection()"
