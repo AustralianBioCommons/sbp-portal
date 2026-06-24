@@ -30,9 +30,16 @@ export class WorkflowFormComponent {
   readonly isSectionValid = input<(id: string) => boolean>(() => true);
   readonly disabled = input(false);
   readonly submitDisabled = input(false);
-  readonly submitLabel = input("Submit");
+  readonly credits = input<number | null>(null);
   readonly isSubmitting = input(false);
   readonly submitted = output<void>();
+
+  readonly buttonLabel = computed(() => {
+    const credits = this.credits();
+    if (credits == null) return "Submit";
+    const unit = credits === 1 ? "credit" : "credits";
+    return `Use ${credits} ${unit} and submit`;
+  });
   readonly activeSection = signal<string>("");
   readonly visitedSections = signal<Set<string>>(new Set());
 

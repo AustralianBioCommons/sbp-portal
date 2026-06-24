@@ -20,6 +20,7 @@
     [isSectionValid]="isSectionValid"
     [disabled]="(auth.canExecuteWorkflows$ | async) === false"
     [submitDisabled]="creditsEnabled && creditsInsufficient()"
+    [credits]="creditsEnabled ? creditCost() : null"
     [isSubmitting]="workflowSubmission.isSubmitting()"
     (submitted)="submitWorkflow()"
   >

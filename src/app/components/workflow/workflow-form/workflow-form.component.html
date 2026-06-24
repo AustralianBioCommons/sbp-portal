@@ -1,4 +1,4 @@
-<!-- Sticky scroll-spy progress bar (sits below the global navbar) -->
+<!-- Sticky progress bar -->
 <div class="sticky top-22 z-30 w-full bg-white pt-4">
   <div class="border-biocommons-secondary border rounded-t-lg">
     <div class="mx-auto max-w-4xl px-6 pb-2 pt-4">
@@ -85,11 +85,12 @@
     <app-button
       type="button"
       variant="primary"
+      widthClass="w-auto"
       [disabled]="disabled() || submitDisabled() || isSubmitting()"
       [loading]="isSubmitting()"
       (click)="onSubmit()"
     >
-      {{ submitLabel() }}
+      {{ buttonLabel() }}
     </app-button>
   </div>
 </div>

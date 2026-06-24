@@ -23,6 +23,7 @@
     [submitDisabled]="
       !isToolAvailable() || (creditsEnabled && creditsInsufficient())
     "
+    [credits]="creditsEnabled ? creditCost() : null"
     [isSubmitting]="workflowSubmission.isSubmitting()"
     (submitted)="submitWorkflow()"
   >
