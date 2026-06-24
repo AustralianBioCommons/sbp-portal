@@ -352,13 +352,6 @@ describe("BulkPredictionComponent", () => {
     expect(component.alertMessage()).toContain("no dataset ID");
   });
 
-  // ── 16. loginWithReturnUrl ────────────────────────────────────────────
-
-  it("should call auth.login with current url when loginWithReturnUrl is called", () => {
-    component.loginWithReturnUrl();
-    expect(authService.login).toHaveBeenCalled();
-  });
-
   // ── 17. submitWorkflowWithDataset error callback ──────────────────────
 
   it("should show error when submitWorkflowWithDataset calls error callback", () => {
@@ -435,21 +428,6 @@ describe("BulkPredictionComponent", () => {
   it("should return a non-empty string for getFastaError when FASTA is invalid", () => {
     component.form.controls.fasta.setValue(">bad\nXXX123");
     expect(component.getFastaError()).toBeTruthy();
-  });
-
-  // ── 23. switchTab / isActiveTab ───────────────────────────────────────
-
-  it("should switch active tab", () => {
-    component.switchTab("output");
-    expect(component.isActiveTab("output")).toBe(true);
-    expect(component.isActiveTab("overview")).toBe(false);
-  });
-
-  // ── 24. submitNewJob / goToJobs ───────────────────────────────────────
-
-  it("should call goToJobs on workflowSubmission", () => {
-    component.goToJobs();
-    expect(workflowSubmissionService.goToJobs).toHaveBeenCalled();
   });
 
   // ── 25. creditCost ───────────────────────────────────────────────────

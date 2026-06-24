@@ -1,347 +1,196 @@
-<section
-  class="bg-gray-100 bg-[url('/assets/denovo-design.png')] bg-no-repeat bg-size-[100%_auto] bg-top bg-fixed"
+<app-workflow-layout
+  title="Bulk Prediction"
+  [showAlert]="showAlert()"
+  [alertMessage]="alertMessage()"
+  (alertDismissed)="closeAlert()"
 >
-  <!-- Error Alert -->
-  @if (showAlert()) {
-  <app-alert
-    [type]="'error'"
-    [message]="alertMessage()"
-    [dismissible]="true"
-    (dismissed)="closeAlert()"
-  ></app-alert>
-  }
+  <span description>
+    Predict multiple protein structures in a single run by providing sequences
+    in FASTA format. Multimers can be specified by separating chains with a
+    <code class="font-mono">:</code> delimiter.
+  </span>
+  <span overview>
+    This workflow enables the prediction of bulk protein structures by providing
+    input sequences in FASTA format. Multimers can be predicted by separating
+    sequences with a <code class="font-mono">:</code> delimiter. Up to 1000
+    entries are supported, each with up to 1000 amino-acid residues.
+  </span>
+  <app-workflow-form
+    [sections]="sections"
+    [isSectionValid]="isSectionValid"
+    [disabled]="(auth.canExecuteWorkflows$ | async) === false"
+    [submitDisabled]="creditsEnabled && creditsInsufficient()"
+    [isSubmitting]="workflowSubmission.isSubmitting()"
+    (submitted)="submitWorkflow()"
+  >
+    <!-- Section 1: Select a Tool -->
+    <div id="select-tool" class="scroll-mt-44">
+      <app-step-content
+        [step]="1"
+        title="Select a Tool"
+        description="Choose the design tool to run this workflow with."
+      >
+        <app-tool-selection
+          [tools]="tools"
+          [selectedToolId]="selectedTool()"
+          (toolSelect)="selectTool($event)"
+        ></app-tool-selection>
+      </app-step-content>
+    </div>
 
-  <div class="max-w-7xl px-6 mx-auto py-12">
-    <!-- Browser-style Tabs attached to container -->
-    <nav class="flex justify-center" aria-label="Tabs">
-      <ul class="flex md:gap-6 gap-2">
-        @for (tab of tabs; track tab.id) {
-        <li class="relative">
-          <button
-            (click)="switchTab(tab.id)"
-            [class]="
-              isActiveTab(tab.id)
-                ? 'bg-white border-t border-l border-r  text-gray-900 font-semibold relative z-10'
-                : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-            "
-            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
-            type="button"
-          >
-            {{ tab.label }}
-          </button>
-        </li>
-        } @empty {
-        <li
-          class="px-4 py-2 text-sm text-gray-500 bg-white border rounded-t-lg"
-        >
-          No tabs available
-        </li>
-        }
-      </ul>
-    </nav>
+    <!-- Section 2: Input Configuration -->
+    <div id="input-config" class="scroll-mt-44">
+      <app-step-content
+        [step]="2"
+        title="Input Configuration"
+        description="Provide a job name and enter your protein sequences in FASTA format."
+      >
+        <div class="mt-6 space-y-6">
+          <!-- Job Name -->
+          <div>
+            <label for="job-name" class="block text-sm font-medium">
+              Job Name
+              <span class="ml-1 text-red-500" aria-hidden="true">*</span>
+            </label>
+            <p class="mt-1 text-xs text-gray-500">
+              Required identifier for this job. Allowed characters: letters,
+              numbers, hyphens, and underscores. Must not start with a number.
+            </p>
+            <input
+              id="job-name"
+              type="text"
+              autocomplete="off"
+              [formControl]="form.controls.jobName"
+              [class]="
+                hasJobNameError()
+                  ? 'border-red-500 focus:ring-red-100'
+                  : 'focus:ring-sky-100'
+              "
+              class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              placeholder="my-bulk-prediction"
+              maxlength="60"
+            />
+            @if (hasJobNameError()) {
+            <p class="mt-1 text-xs text-red-600" role="alert">
+              {{ getJobNameError() }}
+            </p>
+            }
+          </div>
 
-    <div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
-      <div>
-        <h1 class="text-3xl font-semibold text-gray-900">Bulk Prediction</h1>
-        <p class="mt-2 text-sm text-gray-500">
-          Predict multiple protein structures in a single run by providing
-          sequences in FASTA format. Multimers can be specified by separating
-          chains with a <code class="font-mono">:</code> delimiter.
-        </p>
-      </div>
+          <!-- FASTA Input -->
+          <div>
+            <label for="bulk-fasta" class="block text-sm font-medium">
+              Protein Sequences (FASTA)
+              <span class="text-red-500 ml-1" aria-hidden="true">*</span>
+            </label>
+            <p class="mt-1 text-xs text-gray-500">
+              Enter one or more protein sequences in FASTA format. Each entry
+              must have a unique header line starting with
+              <code class="font-mono">&#62;</code>, followed by the sequence on
+              the next line(s). Only the 20 canonical amino acids
+              (ARNDCQEGHILKMFPSTWYV) are accepted. Multimeric sequences can be
+              specified by separating chains with
+              <code class="font-mono">:</code> (e.g.
+              <code class="font-mono">SEQUENCEA:SEQUENCEB</code>). Maximum
+              1&thinsp;000 entries; each entry may contain up to 1&thinsp;000
+              amino-acid residues.
+            </p>
+            <textarea
+              id="bulk-fasta"
+              rows="12"
+              spellcheck="false"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              [formControl]="form.controls.fasta"
+              [class]="
+                hasFastaError()
+                  ? 'border-red-500 focus:ring-red-100'
+                  : 'focus:ring-sky-100'
+              "
+              class="mt-2 block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              placeholder=">protein1&#10;MKTAYIAKQRQISFVK&#10;>multimer1&#10;ACDEFGHIKLM:NQRSTVWYKL"
+            ></textarea>
+            @if (hasFastaError()) {
+            <p class="mt-1 text-xs text-red-600" role="alert">
+              {{ getFastaError() }}
+            </p>
+            }
+          </div>
 
-      <!-- Overview Tab Content -->
-      @if (isActiveTab('overview')) {
-      <div>
-        <h2 class="text-xl font-semibold text-gray-900">Description</h2>
-        <p class="mt-2 text-sm text-gray-500">
-          This workflow enables the prediction of bulk protein structures by
-          providing input sequences in FASTA format. Multimers can be predicted
-          by separating sequences with a <code class="font-mono">:</code>
-          delimiter. Up to 1&thinsp;000 entries are supported, each with up to
-          1&thinsp;000 amino-acid residues.
-        </p>
-      </div>
+          @if (creditsEnabled) {
+          <app-credit-summary
+            [total]="creditCost()"
+            [remaining]="creditsRemaining()"
+          ></app-credit-summary>
+          }
+        </div>
+      </app-step-content>
+    </div>
 
-      <!-- Workflow form -->
-      <div>
-        <h1 class="text-xl font-semibold text-gray-900">
-          Execute this workflow
-        </h1>
-
-        <div class="relative">
-          <!-- Lock overlay if user cannot execute workflows -->
-          @if ((auth.canExecuteWorkflows$ | async) === false) {
-          <div
-            class="absolute inset-0 z-10 bg-white/60 backdrop-blur-[1px] rounded-lg border flex items-center justify-center"
-          >
-            <div class="text-center p-4">
-              <p class="text-base font-semibold text-gray-900 mb-2">
-                Access Restricted
-              </p>
-              @if ((auth.isAuthenticated$ | async) === false) {
-              <p class="text-sm text-gray-500">
-                To use this tool, please log in or register for a BioCommons
-                Access account and add the
-                <strong>SBP Workflow Execution bundle</strong> to your profile.
-              </p>
-              <div class="mt-3 flex justify-center">
-                <app-button
-                  type="button"
-                  variant="primary"
-                  widthClass="w-auto"
-                  (click)="loginWithReturnUrl()"
-                >
-                  Log in or Register
-                </app-button>
+    <!-- Section 3: Tool Settings -->
+    <div id="tool-settings" class="scroll-mt-44">
+      <app-step-content
+        [step]="3"
+        title="Tool Settings"
+        description="Configure parameters specific to {{ selectedToolLabel() }}."
+      >
+        <div class="mt-4 p-6 bg-sky-50 border border-sky-200 rounded-lg">
+          <div class="flex items-start">
+            <div class="shrink-0">
+              <svg
+                class="h-5 w-5 text-sky-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-sky-800">
+                No Parameters Required
+              </h3>
+              <div class="mt-2 text-sm text-sky-700">
+                <p>
+                  There are no configurable parameters for
+                  <strong>{{ selectedToolLabel() }}</strong> in this workflow.
+                  This step is automatically completed — proceed to review and
+                  submit your job.
+                </p>
               </div>
-              } @else {
-              <p class="text-sm text-gray-500">
-                You currently do not have access to this tool; please go to your
-                profile page to add the
-                <strong>SBP Workflow Execution</strong> bundle.
-              </p>
-              <div class="mt-3 flex justify-center">
-                <a
-                  [href]="profileUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
-                >
-                  Add bundle
-                </a>
-              </div>
-              }
             </div>
           </div>
-          }
-
-          <app-workflow-form
-            [sections]="sections"
-            [isSectionValid]="isSectionValid"
-            [disabled]="(auth.canExecuteWorkflows$ | async) === false"
-            [submitDisabled]="creditsEnabled && creditsInsufficient()"
-            [isSubmitting]="workflowSubmission.isSubmitting()"
-            (submitted)="submitWorkflow()"
-          >
-            <!-- Section 1: Select a Tool -->
-            <div id="select-tool" class="scroll-mt-44">
-              <app-step-content
-                [step]="1"
-                title="Select a Tool"
-                description="Choose the design tool to run this workflow with."
-              >
-                <app-tool-selection
-                  [tools]="tools"
-                  [selectedToolId]="selectedTool()"
-                  (toolSelect)="selectTool($event)"
-                ></app-tool-selection>
-              </app-step-content>
-            </div>
-
-            <!-- Section 2: Input Configuration -->
-            <div id="input-config" class="scroll-mt-44">
-              <app-step-content
-                [step]="2"
-                title="Input Configuration"
-                description="Provide a job name and enter your protein sequences in FASTA format."
-              >
-                <div class="mt-6 space-y-6">
-                  <!-- Job Name -->
-                  <div>
-                    <label for="job-name" class="block text-sm font-medium">
-                      Job Name
-                      <span class="ml-1 text-red-500" aria-hidden="true"
-                        >*</span
-                      >
-                    </label>
-                    <p class="mt-1 text-xs text-gray-500">
-                      Required identifier for this job. Allowed characters:
-                      letters, numbers, hyphens, and underscores. Must not start
-                      with a number.
-                    </p>
-                    <input
-                      id="job-name"
-                      type="text"
-                      autocomplete="off"
-                      [formControl]="form.controls.jobName"
-                      [class]="
-                  hasJobNameError()
-                    ? 'border-red-500 focus:ring-red-100'
-                    : 'focus:ring-sky-100'
-                "
-                      class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
-                      placeholder="my-bulk-prediction"
-                      maxlength="60"
-                    />
-                    @if (hasJobNameError()) {
-                    <p class="mt-1 text-xs text-red-600" role="alert">
-                      {{ getJobNameError() }}
-                    </p>
-                    }
-                  </div>
-
-                  <!-- FASTA Input -->
-                  <div>
-                    <label for="bulk-fasta" class="block text-sm font-medium">
-                      Protein Sequences (FASTA)
-                      <span class="text-red-500 ml-1" aria-hidden="true"
-                        >*</span
-                      >
-                    </label>
-                    <p class="mt-1 text-xs text-gray-500">
-                      Enter one or more protein sequences in FASTA format. Each
-                      entry must have a unique header line starting with
-                      <code class="font-mono">&#62;</code>, followed by the
-                      sequence on the next line(s). Only the 20 canonical amino
-                      acids (ARNDCQEGHILKMFPSTWYV) are accepted. Multimeric
-                      sequences can be specified by separating chains with
-                      <code class="font-mono">:</code> (e.g.
-                      <code class="font-mono">SEQUENCEA:SEQUENCEB</code>).
-                      Maximum 1&thinsp;000 entries; each entry may contain up to
-                      1&thinsp;000 amino-acid residues.
-                    </p>
-                    <textarea
-                      id="bulk-fasta"
-                      rows="12"
-                      spellcheck="false"
-                      autocomplete="off"
-                      autocorrect="off"
-                      autocapitalize="off"
-                      [formControl]="form.controls.fasta"
-                      [class]="
-                  hasFastaError()
-                    ? 'border-red-500 focus:ring-red-100'
-                    : 'focus:ring-sky-100'
-                "
-                      class="mt-2 block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
-                      placeholder=">protein1&#10;MKTAYIAKQRQISFVK&#10;>multimer1&#10;ACDEFGHIKLM:NQRSTVWYKL"
-                    ></textarea>
-                    @if (hasFastaError()) {
-                    <p class="mt-1 text-xs text-red-600" role="alert">
-                      {{ getFastaError() }}
-                    </p>
-                    }
-                  </div>
-
-                  @if (creditsEnabled) {
-                  <app-credit-summary
-                    [total]="creditCost()"
-                    [remaining]="creditsRemaining()"
-                  ></app-credit-summary>
-                  }
-                </div>
-              </app-step-content>
-            </div>
-
-            <!-- Section 3: Tool Settings -->
-            <div id="tool-settings" class="scroll-mt-44">
-              <app-step-content
-                [step]="3"
-                title="Tool Settings"
-                description="Configure parameters specific to {{ selectedToolLabel() }}."
-              >
-                <div
-                  class="mt-4 p-6 bg-sky-50 border border-sky-200 rounded-lg"
-                >
-                  <div class="flex items-start">
-                    <div class="shrink-0">
-                      <svg
-                        class="h-5 w-5 text-sky-400"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div class="ml-3">
-                      <h3 class="text-sm font-medium text-sky-800">
-                        No Parameters Required
-                      </h3>
-                      <div class="mt-2 text-sm text-sky-700">
-                        <p>
-                          There are no configurable parameters for
-                          <strong>{{ selectedToolLabel() }}</strong> in this
-                          workflow. This step is automatically completed —
-                          proceed to review and submit your job.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </app-step-content>
-            </div>
-
-            <!-- Section 4: Review & Submit -->
-            <div id="review" class="scroll-mt-44">
-              <app-step-content
-                [step]="4"
-                title="Review & Submit"
-                description="Confirm your selections before starting the job."
-                contentClass="space-y-4"
-              >
-                <app-configuration-summary
-                  [selectedTool]="selectedToolLabel()"
-                  [hasParameters]="false"
-                  [summaryItems]="formSummary()"
-                  [requiredFieldCount]="3"
-                  [isValid]="isFormValid()"
-                ></app-configuration-summary>
-                @if (creditsEnabled) {
-                <app-credit-summary
-                  [total]="creditCost()"
-                  [remaining]="creditsRemaining()"
-                ></app-credit-summary>
-                }
-              </app-step-content>
-            </div>
-          </app-workflow-form>
         </div>
-      </div>
-      }
-
-      <!-- Output Tab Content -->
-      @if (isActiveTab('output')) {
-      <div class="bg-gray-50 border rounded-lg p-6 space-y-2">
-        <h2 class="text-base font-semibold text-gray-900">Output</h2>
-        <p class="text-sm text-gray-600">
-          Results, visualizations, and downloadable files will appear here after
-          submission.
-        </p>
-      </div>
-      }
-
-      <!-- Papers Tab Content -->
-      @if (isActiveTab('papers')) {
-      <div class="bg-gray-50 border rounded-lg p-6 space-y-2">
-        <h2 class="text-base font-semibold text-gray-900">Papers</h2>
-        <p class="text-sm text-gray-600">
-          Relevant publications and references for the selected prediction
-          engine will appear here.
-        </p>
-      </div>
-      }
+      </app-step-content>
     </div>
-  </div>
-</section>
 
-<!-- Loading Overlay -->
-@if (workflowSubmission.isSubmitting()) {
-<app-loading></app-loading>
-}
-
-<!-- Success Dialog -->
-<app-dialog
-  [isOpen]="workflowSubmission.showSuccessDialog()"
-  title="Workflow Submitted Successfully"
-  [message]="'Run ID: ' + (workflowSubmission.successDialogData()?.runId || 'N/A') + '\nStatus: ' + (workflowSubmission.successDialogData()?.status || 'N/A')"
-  [confirmText]="'View Jobs'"
-  [cancelText]="'New Job'"
-  (confirmed)="goToJobs()"
-  (cancelled)="submitNewJob()"
-></app-dialog>
+    <!-- Section 4: Review & Submit -->
+    <div id="review" class="scroll-mt-44">
+      <app-step-content
+        [step]="4"
+        title="Review & Submit"
+        description="Confirm your selections before starting the job."
+        contentClass="space-y-4"
+      >
+        <app-configuration-summary
+          [selectedTool]="selectedToolLabel()"
+          [hasParameters]="false"
+          [summaryItems]="formSummary()"
+          [requiredFieldCount]="3"
+          [isValid]="isFormValid()"
+        ></app-configuration-summary>
+        @if (creditsEnabled) {
+        <app-credit-summary
+          [total]="creditCost()"
+          [remaining]="creditsRemaining()"
+        ></app-credit-summary>
+        }
+      </app-step-content>
+    </div>
+  </app-workflow-form>
+</app-workflow-layout>

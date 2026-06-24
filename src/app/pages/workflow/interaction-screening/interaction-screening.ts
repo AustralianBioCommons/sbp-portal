@@ -20,13 +20,10 @@ import {
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
 import { filter, map, startWith, switchMap, take } from "rxjs/operators";
-import { AlertComponent } from "../../../components/alert/alert.component";
-import { ButtonComponent } from "../../../components/button/button.component";
-import { DialogComponent } from "../../../components/dialog/dialog.component";
-import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
+import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
   WorkflowFormComponent,
   WorkflowSection,
@@ -40,7 +37,6 @@ import {
   parseMultiFasta,
   validateMultiFastaProtein,
 } from "../../../cores/utils/fasta.utils";
-import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
   CreditsService,
@@ -89,11 +85,6 @@ function uniqueSequencesValidator(
   return result.valid ? null : { duplicateSequences: result.errorMessage };
 }
 
-interface TabItem {
-  id: "overview" | "output" | "papers";
-  label: string;
-}
-
 interface ToolChip extends ToolOption {
   id: "boltz" | "colabfold";
 }
@@ -103,12 +94,9 @@ interface ToolChip extends ToolOption {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    AlertComponent,
-    ButtonComponent,
-    DialogComponent,
-    LoadingComponent,
     ToolSelectionComponent,
     WorkflowFormComponent,
+    WorkflowLayoutComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
     CreditSummaryComponent,
@@ -122,7 +110,6 @@ interface ToolChip extends ToolOption {
 export default class InteractionScreeningComponent {
   // Auth
   public auth = inject(AuthService);
-  readonly profileUrl = environment.profileUrl;
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
   // FASTA upload service
@@ -233,18 +220,6 @@ export default class InteractionScreeningComponent {
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
-
-  // Tabs
-  readonly tabs: TabItem[] = [
-    { id: "overview", label: "Overview" },
-    { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
-  ];
-  activeTab = signal<TabItem["id"]>("overview");
-  isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
-  switchTab(id: TabItem["id"]) {
-    this.activeTab.set(id);
-  }
 
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
@@ -487,16 +462,6 @@ export default class InteractionScreeningComponent {
       });
   }
 
-  submitNewJob() {
-    window.location.reload();
-  }
-  goToJobs() {
-    this.workflowSubmission.goToJobs();
-  }
-  loginWithReturnUrl() {
-    const currentUrl = window.location.pathname + window.location.search;
-    this.auth.login(currentUrl);
-  }
   closeAlert(): void {
     this.showAlert.set(false);
     this.alertMessage.set("");

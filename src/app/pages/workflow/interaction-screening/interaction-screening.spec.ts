@@ -222,20 +222,6 @@ describe("InteractionScreeningComponent", () => {
     expect(component.isSectionValid("review")).toBe(true);
   });
 
-  // ── 7. switchTab ───────────────────────────────────────────────────────
-
-  it("should update activeTab when switchTab is called", () => {
-    expect(component.activeTab()).toBe("overview");
-
-    component.switchTab("papers");
-    expect(component.activeTab()).toBe("papers");
-    expect(component.isActiveTab("papers")).toBe(true);
-    expect(component.isActiveTab("overview")).toBe(false);
-
-    component.switchTab("output");
-    expect(component.activeTab()).toBe("output");
-  });
-
   // ── 8. selectTool ──────────────────────────────────────────────────────
 
   it("should update selectedTool when selectTool is called", () => {
@@ -421,22 +407,6 @@ describe("InteractionScreeningComponent", () => {
     component.form.setValue({ jobName: "job", queryFasta, targetFasta });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
-  });
-
-  // ── 18. goToJobs ──────────────────────────────────────────────────────────
-
-  it("should delegate to workflowSubmission.goToJobs()", () => {
-    component.goToJobs();
-    expect(workflowSubmissionService.goToJobs).toHaveBeenCalled();
-  });
-
-  // ── 19. loginWithReturnUrl ────────────────────────────────────────────────
-
-  it("should call auth.login with the current URL", () => {
-    component.loginWithReturnUrl();
-    expect(authService.login).toHaveBeenCalledWith(
-      window.location.pathname + window.location.search
-    );
   });
 
   // ── 22. submitWorkflow — "Unknown error" fallback ─────────────────────────

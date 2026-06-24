@@ -21,10 +21,7 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
-import { DialogComponent } from "../../../components/dialog/dialog.component";
-import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import {
@@ -32,6 +29,7 @@ import {
   ListboxSelectOption,
 } from "../../../components/workflow/listbox-select/listbox-select.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
+import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
   WorkflowFormComponent,
   WorkflowSection,
@@ -40,7 +38,6 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
-import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
   CreditsService,
@@ -64,11 +61,6 @@ import {
   SinglePredictionToolSettingsPayload,
   WorkflowTool,
 } from "../../../cores/interfaces/workflow.interfaces";
-
-interface TabItem {
-  id: "overview" | "output" | "papers";
-  label: string;
-}
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
 type SinglePredictionTool = Extract<
@@ -108,13 +100,11 @@ interface ToolSettingErrors {
   imports: [
     CommonModule,
     DragDropModule,
-    AlertComponent,
     ButtonComponent,
-    DialogComponent,
-    LoadingComponent,
     ToolSelectionComponent,
     ListboxSelectComponent,
     WorkflowFormComponent,
+    WorkflowLayoutComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
     NgIconComponent,
@@ -129,7 +119,6 @@ interface ToolSettingErrors {
 })
 export default class SinglePredictionComponent {
   public auth = inject(AuthService);
-  readonly profileUrl = environment.profileUrl;
   public workflowSubmission = inject(WorkflowSubmissionService);
   private datasetUploadService = inject(DatasetUploadService);
   private fastaUploadService = inject(FastaUploadService);
@@ -213,14 +202,6 @@ export default class SinglePredictionComponent {
 
   showAlert = signal(false);
   alertMessage = signal("");
-
-  readonly tabs: TabItem[] = [
-    { id: "overview", label: "Overview" },
-    { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
-  ];
-  activeTab = signal<TabItem["id"]>("overview");
-  isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
 
   readonly tools: ToolChip[] = [
     { id: "colabfold", label: "ColabFold" },
@@ -356,10 +337,6 @@ export default class SinglePredictionComponent {
 
     return fastaRecords.join("\n");
   });
-
-  switchTab(id: TabItem["id"]) {
-    this.activeTab.set(id);
-  }
 
   selectTool(id: SinglePredictionTool) {
     this.selectedTool.set(id);
@@ -577,19 +554,6 @@ export default class SinglePredictionComponent {
     this.prepareSinglePredictionInput((fastaUrl, datasetId) => {
       this.submitPreparedWorkflow(datasetId, fastaUrl);
     });
-  }
-
-  submitNewJob() {
-    window.location.reload();
-  }
-
-  goToJobs() {
-    this.workflowSubmission.goToJobs();
-  }
-
-  loginWithReturnUrl() {
-    const currentUrl = window.location.pathname + window.location.search;
-    this.auth.login(currentUrl);
   }
 
   closeAlert(): void {

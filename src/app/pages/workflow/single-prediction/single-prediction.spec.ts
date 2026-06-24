@@ -153,12 +153,6 @@ describe("SinglePredictionComponent", () => {
     expect(component.getMoleculeTypeLabel("unknown" as never)).toBe("unknown");
   });
 
-  it("should switch tabs", () => {
-    component.switchTab("papers");
-    expect(component.activeTab()).toBe("papers");
-    expect(component.isActiveTab("papers")).toBe(true);
-  });
-
   it("should add and remove rows while keeping one minimum row", () => {
     component.addEntityRow();
     const secondRowId = component.entityRows()[1].id;
@@ -587,14 +581,6 @@ describe("SinglePredictionComponent", () => {
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("Unknown error");
-  });
-
-  it("should delegate login and jobs navigation helpers", () => {
-    component.loginWithReturnUrl();
-    component.goToJobs();
-
-    expect(authService.login).toHaveBeenCalled();
-    expect(workflowSubmissionService.goToJobs).toHaveBeenCalled();
   });
 
   it("should close alerts and set touched flags for tool settings", () => {

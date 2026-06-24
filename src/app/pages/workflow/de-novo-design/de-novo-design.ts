@@ -14,18 +14,14 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { Router } from "@angular/router";
 import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
 
 import { filter, Subscription, take } from "rxjs";
-import { AlertComponent } from "../../../components/alert/alert.component";
-import { ButtonComponent } from "../../../components/button/button.component";
-import { DialogComponent } from "../../../components/dialog/dialog.component";
-import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { FormFieldComponent } from "../../../components/workflow/form-field/form-field.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
+import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
   WorkflowFormComponent,
   WorkflowSection,
@@ -35,7 +31,6 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
-import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
   CreditsService,
@@ -52,11 +47,6 @@ import {
   WorkflowTool,
 } from "../../../cores/interfaces/workflow.interfaces";
 
-interface TabItem {
-  id: "overview" | "output" | "papers";
-  label: string;
-}
-
 interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
 }
@@ -66,12 +56,9 @@ interface ToolChip extends ToolOption {
   imports: [
     CommonModule,
     FormsModule,
-    AlertComponent,
-    ButtonComponent,
-    DialogComponent,
-    LoadingComponent,
     ToolSelectionComponent,
     WorkflowFormComponent,
+    WorkflowLayoutComponent,
     StepContentComponent,
     FormFieldComponent,
     ConfigurationSummaryComponent,
@@ -90,9 +77,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   // Auth
   public auth = inject(AuthService);
-  readonly profileUrl = environment.profileUrl;
-  // Router for navigation
-  private router = inject(Router);
   // Schema loader service
   public schemaLoader = inject(SchemaLoaderService);
   // Workflow submission service
@@ -126,17 +110,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   formData = signal<Record<string, unknown>>({});
   formErrors = signal<{ [key: string]: string }>({});
   isFormValid = signal<boolean>(false);
-  // Tabs
-  readonly tabs: TabItem[] = [
-    { id: "overview", label: "Overview" },
-    { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
-  ];
-  activeTab = signal<TabItem["id"]>("overview");
-  isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
-  switchTab(id: TabItem["id"]) {
-    this.activeTab.set(id);
-  }
 
   // Tools
   readonly tools: ToolChip[] = [
@@ -715,22 +688,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
           this.showError(`Failed to upload dataset: ${getErrorMessage(error)}`);
         },
       });
-  }
-
-  // Refresh the page to submit a new job
-  submitNewJob() {
-    window.location.reload();
-  }
-
-  // Navigate to jobs page (delegates to service)
-  goToJobs() {
-    this.workflowSubmission.goToJobs();
-  }
-
-  // Login with return URL to come back to this page
-  loginWithReturnUrl() {
-    const currentUrl = window.location.pathname + window.location.search;
-    this.auth.login(currentUrl);
   }
 
   closeAlert(): void {
