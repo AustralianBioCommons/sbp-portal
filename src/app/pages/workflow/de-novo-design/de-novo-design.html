@@ -192,18 +192,24 @@
                         <span class="text-red-500 ml-1">*</span>
                       </p>
                     </div>
-                    <label
-                      class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
+                    <input
+                      #pdbFileInput
+                      type="file"
+                      class="sr-only"
+                      accept=".pdb"
+                      [disabled]="isPdbUploading()"
+                      (change)="$any($event.target).files?.[0] && onPdbFilePicked($any($event.target).files[0], row.id)"
+                    />
+                    <app-button
+                      type="button"
+                      variant="secondary"
+                      widthClass="w-auto"
+                      [disabled]="isPdbUploading()"
+                      (click)="pdbFileInput.click()"
                     >
+                      <ng-icon name="heroArrowUpTray" class="h-3.5 w-3.5 mr-1.5 inline-block" aria-hidden="true"></ng-icon>
                       {{ localPdbFile() ? 'Upload new structure' : 'Upload a PDB file' }}
-                      <input
-                        type="file"
-                        class="sr-only"
-                        accept=".pdb"
-                        [disabled]="isPdbUploading()"
-                        (change)="$any($event.target).files?.[0] && onPdbFilePicked($any($event.target).files[0], row.id)"
-                      />
-                    </label>
+                    </app-button>
                   </div>
 
                   <!-- Viewer + config panel — side by side with draggable divider -->
