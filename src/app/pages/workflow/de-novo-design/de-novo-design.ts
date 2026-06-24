@@ -1,7 +1,9 @@
 import { CommonModule } from "@angular/common";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
+  heroArrowUpTray,
   heroChevronDoubleLeft,
+  heroChevronDoubleRight,
   heroEllipsisVertical,
   heroExclamationTriangle,
   heroXMark,
@@ -89,7 +91,7 @@ type StepItem = Step;
     CreditSummaryComponent,
     NgIconComponent,
   ],
-  providers: [provideIcons({ heroChevronDoubleLeft, heroEllipsisVertical, heroExclamationTriangle, heroXMark })],
+  providers: [provideIcons({ heroArrowUpTray, heroChevronDoubleLeft, heroChevronDoubleRight, heroEllipsisVertical, heroExclamationTriangle, heroXMark })],
   templateUrl: "./de-novo-design.html",
   styleUrl: "./de-novo-design.scss",
 })

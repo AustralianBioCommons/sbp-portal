@@ -12,32 +12,10 @@
 </style>
 
 <div class="h-full flex flex-col gap-2">
-  @if (status() === 'loaded') {
-  <div class="flex items-center justify-between shrink-0">
-    <label
-      class="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
-      [ngClass]="{
-        'cursor-pointer': !disabled(),
-        'opacity-50 pointer-events-none': disabled()
-      }"
-    >
-      <ng-icon name="heroArrowUpTray" class="h-10 w-10 text-gray-300" aria-hidden="true"></ng-icon>
-      Upload new structure
-      <input
-        type="file"
-        class="sr-only"
-        accept=".pdb"
-        [disabled]="disabled()"
-        (change)="onFileInputChange($event)"
-      />
-    </label>
-  </div>
-  }
-
   <!-- Idle placeholder -->
   @if (status() === 'idle') {
   <label
-    class="flex-1 flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed bg-gray-50 text-center min-h-0 transition-colors"
+    class="flex-1 flex flex-col items-center justify-center gap-3 rounded-lg bg-gray-50 text-center min-h-0 transition-colors"
     [ngClass]="{
       'cursor-pointer hover:border-sky-400 hover:bg-sky-50': !disabled(),
       'opacity-50 pointer-events-none': disabled()
@@ -45,7 +23,7 @@
   >
     <ng-icon name="heroArrowUpTray" class="h-12 w-12 text-gray-400" aria-hidden="true"></ng-icon>
     <p class="text-sm text-gray-400">
-      Load a <code class="rounded bg-gray-100 px-1 py-0.5 text-xs">.pdb</code> file to preview the structure here
+      Upload a PDB file to preview the structure.
     </p>
     <input
       type="file"

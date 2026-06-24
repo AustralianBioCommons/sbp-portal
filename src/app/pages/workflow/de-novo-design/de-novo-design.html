@@ -185,27 +185,25 @@
                   >
                     <div>
                       <p class="block text-sm font-medium text-gray-700">
-                        Target PDB file
+                        Target Structure
+                        @if (localPdbFile()) {
+                        <span class="font-normal text-gray-300"> | </span><span class="font-semibold text-sky-900">Model: {{ localPdbFile()!.name.replace('.pdb', '').replace('.PDB', '') }}</span>
+                        }
                         <span class="text-red-500 ml-1">*</span>
                       </p>
-                      <p class="mt-0.5 text-xs text-gray-500">
-                        Click residues in the preview to set hotspot targets.
-                      </p>
                     </div>
-                    @if (localPdbFile()) {
-                    <div class="flex shrink-0 items-center gap-2">
-                      <span class="max-w-48 truncate text-xs text-gray-500"
-                        >{{ localPdbFile()!.name }}</span
-                      >
-                      <button
-                        type="button"
-                        class="whitespace-nowrap text-xs text-gray-400 underline hover:text-red-600 rounded-md"
-                        (click)="clearLocalPdb(row.id)"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                    }
+                    <label
+                      class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50"
+                    >
+                      {{ localPdbFile() ? 'Upload new structure' : 'Upload a PDB file' }}
+                      <input
+                        type="file"
+                        class="sr-only"
+                        accept=".pdb"
+                        [disabled]="isPdbUploading()"
+                        (change)="$any($event.target).files?.[0] && onPdbFilePicked($any($event.target).files[0], row.id)"
+                      />
+                    </label>
                   </div>
 
                   <!-- Viewer + config panel — side by side with draggable divider -->
