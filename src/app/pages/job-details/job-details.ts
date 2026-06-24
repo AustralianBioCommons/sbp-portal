@@ -102,9 +102,7 @@ export default class JobDetailsComponent implements OnInit {
   logsError = signal<string | null>(null);
   canDownloadAllFiles = computed(
     () =>
-      !this.filesLoading() &&
-      !this.filesError() &&
-      this.filesItems().length > 0
+      !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
   );
   downloadAllUrl = computed(() => {
     const job = this.job();
