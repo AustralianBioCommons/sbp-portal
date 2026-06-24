@@ -76,6 +76,10 @@ export class ResultsService {
     );
   }
 
+  getDownloadAllUrl(runId: string): string {
+    return `${this.resultsUrl}/${encodeURIComponent(runId)}/download-all`;
+  }
+
   /**
    * Normalizes report preview URLs into an absolute HTTPS URL that is safe to hand to an iframe.
    *
