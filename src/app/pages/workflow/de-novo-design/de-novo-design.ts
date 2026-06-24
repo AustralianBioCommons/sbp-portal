@@ -411,15 +411,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     }
   };
 
-  constructor() {
-    console.log("DeNovoDesignComponent constructor called");
-
-    // Ensure all signals are properly initialized
-    this.formData.set({});
-    this.formErrors.set({});
-    this.isFormValid.set(false);
-  }
-
   private subscription = new Subscription();
 
   ngOnInit() {
