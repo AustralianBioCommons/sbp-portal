@@ -1,7 +1,17 @@
 import { CommonModule } from "@angular/common";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import {
+  heroArrowUpTray,
+  heroChevronDoubleLeft,
+  heroChevronDoubleRight,
+  heroEllipsisVertical,
+  heroXMark,
+} from "@ng-icons/heroicons/outline";
+import { heroXCircleSolid } from "@ng-icons/heroicons/solid";
 import {
   Component,
   computed,
+  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -14,6 +24,7 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
+import { ButtonComponent } from "../../../components/button/button.component";
 import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
 
@@ -56,6 +67,7 @@ interface ToolChip extends ToolOption {
   imports: [
     CommonModule,
     FormsModule,
+    ButtonComponent,
     ToolSelectionComponent,
     WorkflowFormComponent,
     WorkflowLayoutComponent,
@@ -65,6 +77,17 @@ interface ToolChip extends ToolOption {
     MolstarViewerComponent,
     LengthRangeSliderComponent,
     CreditSummaryComponent,
+    NgIconComponent,
+  ],
+  providers: [
+    provideIcons({
+      heroArrowUpTray,
+      heroChevronDoubleLeft,
+      heroChevronDoubleRight,
+      heroEllipsisVertical,
+      heroXCircleSolid,
+      heroXMark,
+    }),
   ],
   templateUrl: "./de-novo-design.html",
   styleUrl: "./de-novo-design.scss",
@@ -183,6 +206,36 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   /** True while the PDB file is being uploaded to S3 on Next click. */
   isPdbUploading = signal(false);
+
+  /** Width of the config panel in pixels. 0 = fully collapsed. */
+  panelWidth = signal(320);
+  /** True during an active divider drag — suppresses CSS transition for smooth tracking. */
+  isDragging = signal(false);
+
+  private _dragStartX = 0;
+  private _dragStartPanelWidth = 0;
+
+  onDividerMouseDown(event: MouseEvent): void {
+    if (this.panelWidth() === 0) return;
+    this.isDragging.set(true);
+    this._dragStartX = event.clientX;
+    this._dragStartPanelWidth = this.panelWidth();
+    event.preventDefault();
+  }
+
+  @HostListener("document:mousemove", ["$event"])
+  onDocumentMouseMove(event: MouseEvent): void {
+    if (!this.isDragging()) return;
+    const delta = this._dragStartX - event.clientX; // drag left → panel grows
+    this.panelWidth.set(
+      Math.max(150, Math.min(640, this._dragStartPanelWidth + delta))
+    );
+  }
+
+  @HostListener("document:mouseup")
+  onDocumentMouseUp(): void {
+    if (this.isDragging()) this.isDragging.set(false);
+  }
 
   /** Called when user picks a .pdb file via the custom picker.
    *  Sets the local viewer file and marks the form field value with the
@@ -521,6 +574,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
           "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_filters.json";
         defaultValues.settings_advanced =
           "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_4stage_multimer.json";
+        defaultValues["number_of_final_designs"] = 1;
 
         this.initializeFormData(defaultValues);
 
@@ -547,6 +601,11 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
               firstRowId,
               "settings_advanced",
               defaultValues.settings_advanced
+            );
+            this.schemaLoader.updateRowValue(
+              firstRowId,
+              "number_of_final_designs",
+              1
             );
           }
 
@@ -962,6 +1021,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   resetForm(): void {
     const defaultValues = this.schemaLoader.generateDefaultValues();
     if (Object.keys(defaultValues).length > 0) {
+      defaultValues["number_of_final_designs"] = 1;
       this.initializeFormData(defaultValues);
     }
   }
@@ -1088,6 +1148,17 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   // Check if a specific cell has an error
   hasRowFieldError(rowId: string, fieldName: string): boolean {
     return this.getRowFieldError(rowId, fieldName) !== null;
+  }
+
+  /** Returns true when any field inside the collapsible config section has a validation error. */
+  hasConfigSectionErrors(rowId: string): boolean {
+    if (this.jobNameTouched() && !!this.jobNameError()) return true;
+    return [
+      "target_hotspot_residues",
+      "chains",
+      "min_length",
+      "max_length",
+    ].some((f) => this.hasRowFieldError(rowId, f));
   }
 
   // Update row value with validation

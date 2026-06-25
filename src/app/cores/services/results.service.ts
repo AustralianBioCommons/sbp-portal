@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpResponse } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from "@angular/platform-browser";
 import normalizeUrlPath from "als-normalize-urlpath";
@@ -74,6 +74,17 @@ export class ResultsService {
     return this.http.get<ResultDownloadsResponse>(
       `${this.resultsUrl}/${encodeURIComponent(runId)}/downloads`
     );
+  }
+
+  getDownloadAllUrl(runId: string): string {
+    return `${this.resultsUrl}/${encodeURIComponent(runId)}/download-all`;
+  }
+
+  downloadAll(runId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(this.getDownloadAllUrl(runId), {
+      observe: "response",
+      responseType: "blob",
+    });
   }
 
   /**

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { HttpHeaders, HttpResponse } from "@angular/common/http";
 import { DomSanitizer } from "@angular/platform-browser";
 import { ActivatedRoute, provideRouter, Router } from "@angular/router";
 import { of, throwError } from "rxjs";
@@ -83,6 +84,7 @@ describe("JobDetailsComponent", () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getJobReport",
       "getJobDownloads",
+      "downloadAll",
       "getJobSettingParams",
       "getJobLogs",
     ]);
@@ -112,6 +114,16 @@ describe("JobDetailsComponent", () => {
     );
     resultsService.getJobDownloads.and.returnValue(
       of({ runId: mockJob.id, downloads: [] })
+    );
+    resultsService.downloadAll.and.returnValue(
+      of(
+        new HttpResponse({
+          body: new Blob(["zip"], { type: "application/zip" }),
+          headers: new HttpHeaders({
+            "content-disposition": 'attachment; filename="results.zip"',
+          }),
+        })
+      )
     );
     resultsService.getJobSettingParams.and.returnValue(
       of({
@@ -215,6 +227,77 @@ describe("JobDetailsComponent", () => {
     expect(mockJobsService.deleteJob).toHaveBeenCalledWith(mockJob.id);
     expect(navigateSpy).toHaveBeenCalledWith(["/jobs"]);
     expect(component.showDeleteDialog()).toBeFalse();
+  });
+
+  it("should render an enabled download all files button for the selected job", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: mockJob.id,
+        downloads: [
+          {
+            label: "Results CSV",
+            key: "results_csv",
+            url: "https://cdn.test/results.csv",
+            category: "stat_csv",
+          },
+        ],
+      })
+    );
+    render();
+
+    const downloadLink = fixture.nativeElement.querySelector(
+      'a[title="Download all files"]'
+    ) as HTMLAnchorElement;
+    const downloadButton = fixture.nativeElement.querySelector(
+      'app-button[title="Download all files"] button'
+    ) as HTMLButtonElement;
+
+    expect(downloadLink).toBeNull();
+    expect(downloadButton.disabled).toBeFalse();
+  });
+
+  it("should download all files through the results service", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: mockJob.id,
+        downloads: [
+          {
+            label: "Results CSV",
+            key: "results_csv",
+            url: "https://cdn.test/results.csv",
+            category: "stat_csv",
+          },
+        ],
+      })
+    );
+    const createObjectUrlSpy = spyOn(URL, "createObjectURL").and.returnValue(
+      "blob:results"
+    );
+    const revokeObjectUrlSpy = spyOn(URL, "revokeObjectURL");
+    const clickSpy = spyOn(HTMLAnchorElement.prototype, "click");
+    render();
+
+    component.downloadAllFiles();
+
+    expect(resultsService.downloadAll).toHaveBeenCalledWith(mockJob.id);
+    expect(createObjectUrlSpy).toHaveBeenCalledWith(jasmine.any(Blob));
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:results");
+    expect(component.downloadingAllFiles()).toBeFalse();
+  });
+
+  it("should render a disabled download all files button when no files are available", () => {
+    render();
+
+    const downloadLink = fixture.nativeElement.querySelector(
+      'a[title="Download all files"]'
+    ) as HTMLAnchorElement | null;
+    const downloadButton = fixture.nativeElement.querySelector(
+      'app-button[title="Download all files"] button'
+    ) as HTMLButtonElement;
+
+    expect(downloadLink).toBeNull();
+    expect(downloadButton.disabled).toBeTrue();
   });
 
   // --- Results panel --------------------------------------------------------
@@ -497,12 +580,15 @@ describe("JobDetailsComponent", () => {
     component.setActiveTab("settings");
     fixture.detectChanges();
 
-    const anchor = fixture.nativeElement.querySelector(
-      "a[download]"
-    ) as HTMLAnchorElement;
+    const anchors = Array.from(
+      fixture.nativeElement.querySelectorAll("a[download]")
+    ) as HTMLAnchorElement[];
+    const anchor = anchors.find((link) =>
+      link.href.includes("api.example.com/uploads/target.pdb")
+    );
     expect(anchor).not.toBeNull();
-    expect(anchor.textContent?.trim()).toBe("target.pdb");
-    expect(anchor.href).toContain("api.example.com/uploads/target.pdb");
+    expect(anchor?.textContent?.trim()).toBe("target.pdb");
+    expect(anchor?.href).toContain("api.example.com/uploads/target.pdb");
   });
 
   it("should reset logs without loading when there is no selected job", () => {

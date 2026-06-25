@@ -51,8 +51,10 @@
           type="button"
           variant="primary"
           widthClass="w-auto"
-          [disabled]="true"
-          title="Download all files (coming soon)"
+          [disabled]="!canDownloadAllFiles()"
+          [loading]="downloadingAllFiles()"
+          title="Download all files"
+          (click)="downloadAllFiles()"
         >
           <span class="flex items-center gap-2">
             <ng-icon name="heroArrowDownTray" size="16"></ng-icon>

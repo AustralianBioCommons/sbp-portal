@@ -45,6 +45,30 @@ describe("ResultsService", () => {
     );
   });
 
+  it("should build the encoded download-all URL", () => {
+    expect(service.getDownloadAllUrl("job/1")).toBe(
+      `${environment.apiBaseUrl}/api/results/job%2F1/download-all`
+    );
+  });
+
+  it("should download all files as a blob response", () => {
+    service.downloadAll("job/1").subscribe((response) => {
+      expect(response.body?.type).toBe("application/zip");
+      expect(response.headers.get("content-disposition")).toBe(
+        'attachment; filename="results.zip"'
+      );
+    });
+
+    const request = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/download-all`
+    );
+    expect(request.request.method).toBe("GET");
+    expect(request.request.responseType).toBe("blob");
+    request.flush(new Blob(["zip"], { type: "application/zip" }), {
+      headers: { "content-disposition": 'attachment; filename="results.zip"' },
+    });
+  });
+
   it("should fetch setting params", () => {
     service.getJobSettingParams("job/1").subscribe((response) => {
       expect(response.settingParams).toEqual({ binder_name: "PDL1" });

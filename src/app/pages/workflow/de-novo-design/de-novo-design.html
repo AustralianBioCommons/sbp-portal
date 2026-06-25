@@ -56,154 +56,257 @@
         schemaLoader.inputSchemaFields().length > 0) {
         <div class="space-y-4">
           @for (row of schemaLoader.inputRows(); track row.id; let i = $index) {
-          <div class="bg-white border rounded-lg p-4">
-            <div class="mb-4">
-              <h4 class="text-base font-medium text-gray-900">
-                Input Parameters
-              </h4>
+
+          <!-- Job Name -->
+          <div class="rounded-lg border bg-white p-4">
+            <label for="jobNameInput" class="block text-sm font-medium mb-1">
+              Job Name <span class="text-red-500">*</span>
+            </label>
+            <p class="mt-1 text-xs text-gray-500">
+              Required identifier for this job. Allowed characters: letters,
+              numbers, hyphens, and underscores. Must not start with a number.
+            </p>
+            <input
+              id="jobNameInput"
+              type="text"
+              class="mt-2 block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
+              [class.border-red-500]="jobNameTouched() && jobNameError()"
+              [value]="jobName()"
+              (input)="onJobNameChange($any($event.target).value)"
+              (blur)="jobNameTouched.set(true)"
+              placeholder="e.g. my-binder-job"
+              maxlength="60"
+            />
+            @if (jobNameTouched() && jobNameError()) {
+            <p class="mt-1 text-xs text-red-600">{{ jobNameError() }}</p>
+            }
+          </div>
+
+          <!-- PDB viewer + right-side sliding config panel -->
+          <div class="w-full overflow-hidden rounded-lg border">
+            <!-- PDB file header — always visible above the viewer -->
+            <div
+              class="flex items-center justify-between gap-4 border-b bg-gray-50 p-4"
+            >
+              <div>
+                <p class="block text-sm font-medium">
+                  Target Structure @if (localPdbFile()) {
+                  <span class="font-normal text-gray-300"> | </span
+                  ><span class="font-semibold text-sky-900"
+                    >Model: {{ localPdbFile()!.name.replace('.pdb',
+                    '').replace('.PDB', '') }}</span
+                  >
+                  }
+                  <span class="text-red-500" aria-hidden="true">*</span>
+                </p>
+              </div>
+              <input
+                #pdbFileInput
+                type="file"
+                class="sr-only"
+                accept=".pdb"
+                [disabled]="isPdbUploading()"
+                (change)="$any($event.target).files?.[0] && onPdbFilePicked($any($event.target).files[0], row.id)"
+              />
+              <app-button
+                type="button"
+                variant="secondary"
+                widthClass="w-auto"
+                [disabled]="isPdbUploading()"
+                (click)="pdbFileInput.click()"
+              >
+                <ng-icon
+                  name="heroArrowUpTray"
+                  class="h-3.5 w-3.5 mr-1.5 inline-block"
+                  aria-hidden="true"
+                ></ng-icon>
+                {{ localPdbFile() ? 'Upload new structure' : 'Upload a PDB file'
+                }}
+              </app-button>
             </div>
 
-            <div class="flex flex-col lg:flex-row gap-4 items-start">
-              <!-- Left half: PDB viewer -->
-              <div class="w-full lg:w-1/2 overflow-hidden rounded-lg border">
-                <!-- Header row -->
-                <div
-                  class="flex items-center justify-between gap-4 border-b bg-gray-50 p-4"
-                >
-                  <div>
-                    <p class="block text-sm font-medium">
-                      Target PDB file
-                      <span class="text-red-500" aria-hidden="true">*</span>
-                    </p>
-                    <p class="mt-0.5 text-xs text-gray-500">
-                      Click residues in the preview to set hotspot targets. The
-                      file is uploaded when you click <strong>Next</strong>.
-                    </p>
-                  </div>
-                  @if (localPdbFile()) {
-                  <div class="flex shrink-0 items-center gap-2">
-                    <span class="max-w-48 truncate text-xs text-gray-500"
-                      >{{ localPdbFile()!.name }}</span
-                    >
-                    <button
-                      type="button"
-                      class="whitespace-nowrap text-xs text-gray-500 underline hover:text-red-600 rounded-md"
-                      (click)="clearLocalPdb(row.id)"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                  }
-                </div>
+            <!-- Viewer + config panel — side by side with draggable divider -->
+            <div class="flex min-h-80 max-h-[60vh]">
+              <!-- Viewer column -->
+              <div class="relative flex-1 min-w-0 overflow-hidden">
+                <app-molstar-viewer
+                  #molstarViewer
+                  class="absolute inset-0"
+                  [pdbFile]="localPdbFile()"
+                  [disabled]="isPdbUploading()"
+                  [externalSelection]="programmaticViewerSelection()"
+                  (filePicked)="onPdbFilePicked($event, row.id)"
+                  (residuesSelected)="onResiduesSelected(row.id, $event)"
+                  (structureResiduesDetected)="onStructureResiduesDetected($event)"
+                  (sequenceLengthDetected)="onSequenceLengthDetected($event)"
+                ></app-molstar-viewer>
 
+                <!-- starting_pdb error — overlaid on viewer, takes no layout space -->
                 @if (hasRowFieldError(row.id, 'starting_pdb')) {
                 <div
-                  class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-4"
+                  class="absolute top-3 left-3 right-3 z-10 flex items-center gap-2 rounded-md border border-red-200 bg-red-50/95 px-3 py-2.5 shadow-sm backdrop-blur-sm"
                 >
-                  <svg
-                    class="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  <p class="text-xs text-red-600">
+                  <ng-icon
+                    name="heroXCircleSolid"
+                    size="20"
+                    style="color: rgb(239 68 68)"
+                    class="shrink-0"
+                    aria-hidden="true"
+                  ></ng-icon>
+                  <p class="text-sm text-red-500">
                     {{ getRowFieldError(row.id, 'starting_pdb') }}
                   </p>
                 </div>
                 }
-
-                <div class="p-4">
-                  <app-molstar-viewer
-                    [pdbFile]="localPdbFile()"
-                    [disabled]="isPdbUploading()"
-                    [externalSelection]="programmaticViewerSelection()"
-                    (filePicked)="onPdbFilePicked($event, row.id)"
-                    (residuesSelected)="onResiduesSelected(row.id, $event)"
-                    (structureResiduesDetected)="onStructureResiduesDetected($event)"
-                    (sequenceLengthDetected)="onSequenceLengthDetected($event)"
-                  ></app-molstar-viewer>
-                </div>
               </div>
 
-              <!-- Right half: all other fields -->
-              <div class="w-full lg:w-1/2 min-w-0 flex flex-col gap-4">
-                <!-- Job Name -->
-                <div>
-                  <label
-                    for="jobNameInput"
-                    class="block text-sm font-medium mb-1"
-                  >
-                    Job Name
-                    <span class="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    id="jobNameInput"
-                    type="text"
-                    class="block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
-                    [class.border-red-500]="jobNameTouched() && jobNameError()"
-                    [value]="jobName()"
-                    (input)="onJobNameChange($any($event.target).value)"
-                    (blur)="jobNameTouched.set(true)"
-                    placeholder="e.g. my-binder-job"
-                    maxlength="60"
-                  />
-                  @if (jobNameTouched() && jobNameError()) {
-                  <p class="mt-1 text-xs text-red-600">{{ jobNameError() }}</p>
-                  }
-                </div>
+              <!-- Draggable divider -->
+              <div
+                class="relative w-1 shrink-0 cursor-col-resize select-none bg-gray-200 transition-colors hover:bg-sky-200"
+                (mousedown)="onDividerMouseDown($event)"
+              >
+                <ng-icon
+                  name="heroEllipsisVertical"
+                  class="pointer-events-none absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-400"
+                  aria-hidden="true"
+                ></ng-icon>
+              </div>
 
-                @for (field of schemaLoader.requiredInputFields(); track
-                field.name) { @if (field.name === 'starting_pdb' || field.name
-                === 'max_length' || field.name === 'binder_name' || field.name
-                === 'id') {
-                <!-- skip: viewer on left, max_length handled by slider, binder_name/id handled by Job Name above -->
-                } @else if (field.name === 'min_length') {
-                <div class="rounded-lg border p-4">
-                  <p class="block text-sm font-medium mb-1">
-                    Binder Length Range
-                    <span class="text-red-500" aria-hidden="true">*</span>
-                  </p>
-                  <app-length-range-slider
-                    [min]="pdbSequenceMin()"
-                    [max]="pdbSequenceLength()"
-                    [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
-                    [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
-                    [disabled]="isPdbUploading()"
-                    (rangeChange)="onLengthRangeChange(row.id, $event)"
-                  ></app-length-range-slider>
-                </div>
-                } @else if (field.name === 'target_hotspot_residues') {
-                <app-form-field
-                  [field]="field"
-                  [value]="getRowValue(row.id, field.name)"
-                  [hasError]="hasRowFieldError(row.id, field.name)"
-                  [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                  (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
-                  (fieldBlur)="validateRowField(row.id, field.name)"
-                ></app-form-field>
-                } @else {
-                <app-form-field
-                  [field]="field"
-                  [value]="getRowValue(row.id, field.name)"
-                  [hasError]="hasRowFieldError(row.id, field.name)"
-                  [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                  (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                  (fieldBlur)="validateRowField(row.id, field.name)"
-                ></app-form-field>
-                } } @if (creditsEnabled) {
-                <app-credit-summary
-                  [total]="creditCost()"
-                  [remaining]="creditsRemaining()"
-                ></app-credit-summary>
+              <!-- Config panel column — outer has no overflow-hidden so the tab button can protrude left -->
+              <div
+                id="config-params-panel"
+                class="relative shrink-0"
+                [class.transition-all]="!isDragging()"
+                [class.duration-300]="!isDragging()"
+                [class.ease-in-out]="!isDragging()"
+                [style.width.px]="panelWidth()"
+                role="region"
+                aria-label="Configuration parameters"
+              >
+                <!-- Open pill: only visible when panel is closed -->
+                @if (panelWidth() === 0) {
+                <button
+                  type="button"
+                  class="absolute top-4 right-1 z-20 flex items-center gap-2 whitespace-nowrap rounded-l-full border bg-white p-2 text-sm font-medium shadow-md transition-colors focus:outline-none"
+                  [class]="hasConfigSectionErrors(row.id) ? 'border-red-300 text-red-700 hover:bg-red-50' : 'border-gray-300 text-gray-600 hover:bg-gray-50'"
+                  (click)="panelWidth.set(320)"
+                  title="Open Input Configuration"
+                >
+                  <ng-icon
+                    name="heroChevronDoubleLeft"
+                    class="h-4 w-4"
+                    [class]="hasConfigSectionErrors(row.id) ? 'text-red-400' : 'text-gray-500'"
+                    aria-hidden="true"
+                  ></ng-icon>
+                  <span>Input Configuration</span>
+                  @if (hasConfigSectionErrors(row.id)) {
+                  <span
+                    class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold leading-none text-white"
+                    aria-label="Has errors"
+                    >!</span
+                  >
+                  }
+                </button>
                 }
+
+                <!-- Inner content wrapper — clips panel content to the outer's dynamic width -->
+                <div class="h-full overflow-hidden">
+                  <div class="flex h-full w-full flex-col border-l bg-white">
+                    <!-- Panel header -->
+                    <div
+                      class="flex shrink-0 p-4 items-center gap-2 border-b px-4"
+                    >
+                      <span class="flex-1 truncate text-sm font-semibold"
+                        >Input Configuration</span
+                      >
+                      <button
+                        type="button"
+                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
+                        (click)="panelWidth.set(0)"
+                        title="Close"
+                      >
+                        <ng-icon
+                          name="heroXMark"
+                          class="h-4 w-4"
+                          aria-hidden="true"
+                        ></ng-icon>
+                      </button>
+                    </div>
+
+                    <!-- Panel scrollable body — clip x so field tooltips can't trigger a horizontal scrollbar in the narrow panel -->
+                    <div
+                      class="flex flex-col gap-4 flex-1 overflow-y-auto overflow-x-hidden p-4"
+                    >
+                      @for (field of schemaLoader.requiredInputFields(); track
+                      field.name) { @if (field.name === 'starting_pdb' ||
+                      field.name === 'max_length' || field.name ===
+                      'binder_name' || field.name === 'id' || field.name ===
+                      'number_of_final_designs') {
+                      <!-- skip -->
+                      } @else if (field.name === 'min_length') {
+                      <div class="rounded-lg border p-4">
+                        <p class="block text-sm font-medium mb-1">
+                          Binder Length Range
+                          <span class="text-red-500">*</span>
+                        </p>
+                        <app-length-range-slider
+                          [min]="pdbSequenceMin()"
+                          [max]="pdbSequenceLength()"
+                          [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
+                          [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
+                          [disabled]="isPdbUploading()"
+                          (rangeChange)="onLengthRangeChange(row.id, $event)"
+                        ></app-length-range-slider>
+                      </div>
+                      } @else if (field.name === 'target_hotspot_residues') {
+                      <app-form-field
+                        [field]="field"
+                        [value]="getRowValue(row.id, field.name)"
+                        [hasError]="hasRowFieldError(row.id, field.name)"
+                        [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                        (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
+                        (fieldBlur)="validateRowField(row.id, field.name)"
+                      ></app-form-field>
+                      } @else {
+                      <app-form-field
+                        [field]="field"
+                        [value]="getRowValue(row.id, field.name)"
+                        [hasError]="hasRowFieldError(row.id, field.name)"
+                        [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                        (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                        (fieldBlur)="validateRowField(row.id, field.name)"
+                      ></app-form-field>
+                      } }
+
+                      <!-- Number of designs + credits -->
+                      <div
+                        class="flex flex-col gap-4 rounded-lg border bg-gray-50 p-4"
+                      >
+                        @for (field of schemaLoader.requiredInputFields(); track
+                        field.name) { @if (field.name ===
+                        'number_of_final_designs') {
+                        <app-form-field
+                          [field]="field"
+                          [value]="getRowValue(row.id, field.name)"
+                          [hasError]="hasRowFieldError(row.id, field.name)"
+                          [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                          (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                          (fieldBlur)="validateRowField(row.id, field.name)"
+                        ></app-form-field>
+                        } } @if (creditsEnabled) {
+                        <app-credit-summary
+                          [total]="creditCost()"
+                          [remaining]="creditsRemaining()"
+                        ></app-credit-summary>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
           }
         </div>
         }
@@ -231,12 +334,12 @@
         </div>
         } @else {
         <div
-          class="mt-3 grid gap-3 sm:grid-cols-3"
+          class="mt-4 grid gap-4 sm:grid-cols-3"
           role="region"
           aria-label="Tool specific parameters"
         >
           @for (p of toolParams[selectedTool()] || []; track p.name) {
-          <div class="bg-white border rounded-md p-3">
+          <div class="bg-white border rounded-lg p-4">
             <label [for]="'param-' + p.name" class="block text-sm font-medium"
               >{{ p.label }}</label
             >
