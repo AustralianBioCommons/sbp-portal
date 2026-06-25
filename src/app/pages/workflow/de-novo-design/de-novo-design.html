@@ -68,12 +68,12 @@
               <div class="w-full lg:w-1/2 overflow-hidden rounded-lg border">
                 <!-- Header row -->
                 <div
-                  class="flex items-center justify-between gap-4 border-b bg-gray-50 px-4 py-3"
+                  class="flex items-center justify-between gap-4 border-b bg-gray-50 p-4"
                 >
                   <div>
                     <p class="block text-sm font-medium">
                       Target PDB file
-                      <span class="text-red-500 ml-1">*</span>
+                      <span class="text-red-500" aria-hidden="true">*</span>
                     </p>
                     <p class="mt-0.5 text-xs text-gray-500">
                       Click residues in the preview to set hotspot targets. The
@@ -98,7 +98,7 @@
 
                 @if (hasRowFieldError(row.id, 'starting_pdb')) {
                 <div
-                  class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3"
+                  class="mx-4 mt-2 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-4"
                 >
                   <svg
                     class="mt-0.5 h-4 w-4 shrink-0 text-amber-500"
@@ -138,7 +138,8 @@
                     for="jobNameInput"
                     class="block text-sm font-medium mb-1"
                   >
-                    Job Name <span class="text-red-500">*</span>
+                    Job Name
+                    <span class="text-red-500" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="jobNameInput"
@@ -162,10 +163,10 @@
                 === 'id') {
                 <!-- skip: viewer on left, max_length handled by slider, binder_name/id handled by Job Name above -->
                 } @else if (field.name === 'min_length') {
-                <div class="rounded-lg border px-4 py-3">
+                <div class="rounded-lg border p-4">
                   <p class="block text-sm font-medium mb-1">
                     Binder Length Range
-                    <span class="text-red-500">*</span>
+                    <span class="text-red-500" aria-hidden="true">*</span>
                   </p>
                   <app-length-range-slider
                     [min]="pdbSequenceMin()"

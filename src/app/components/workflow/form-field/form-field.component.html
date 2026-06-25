@@ -15,7 +15,7 @@
   <label [for]="fieldId" class="block text-sm font-medium">
     {{ getDisplayFieldLabel() }}
     @if (f.required) {
-    <span class="text-red-500 ml-1">*</span>
+    <span class="text-red-500" aria-hidden="true">*</span>
     } @if (f.description) {
     <div class="group relative inline-block ml-1">
       <svg

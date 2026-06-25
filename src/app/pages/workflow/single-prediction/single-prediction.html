@@ -80,7 +80,7 @@
         </div>
 
         <div
-          class="sequence-list relative mt-6 flex flex-col gap-2"
+          class="sequence-list relative mt-4 flex flex-col gap-4"
           cdkDropList
           cdkDropListOrientation="vertical"
           [cdkDropListData]="entityRows()"
@@ -88,14 +88,14 @@
         >
           @for (row of entityRows(); track row.id; let i = $index) {
           <div
-            class="entity-row rounded-lg border bg-white px-4 py-3 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
+            class="entity-row rounded-lg border bg-white p-4 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
             cdkDrag
             cdkDragLockAxis="y"
             cdkDragBoundary=".sequence-list"
             cdkDragPreviewContainer="parent"
           >
             <div
-              class="grid gap-3 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
+              class="grid gap-4 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
             >
               <div class="flex shrink-0 cursor-grab flex-col items-center">
                 <span class="mb-1 block text-sm font-medium">
@@ -243,9 +243,9 @@
           }
 
           <div
-            class="flex items-center justify-between rounded-lg border border-dashed border-sky-300 bg-sky-50 px-4 py-3"
+            class="flex items-center justify-between rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800"
           >
-            <p class="text-sm text-biocommons-primary">
+            <p>
               Add another entity row to define a multicomponent prediction
               input.
             </p>
@@ -290,7 +290,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
             />
             @if ((stepTwoTouched() || alphafold2RandomSeedTouched()) &&
             toolSettingErrors().alphafold2RandomSeed) {
@@ -299,7 +299,7 @@
             </p>
             }
 
-            <label class="mt-4 flex items-center gap-3 text-sm">
+            <label class="mt-4 flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
@@ -310,7 +310,7 @@
             </label>
           </div>
           } @if (selectedTool() === 'colabfold') {
-          <div class="rounded-lg border bg-gray-50 p-4">
+          <div class="rounded-lg border p-4">
             <label
               for="colabfold-num-recycles"
               class="block text-sm font-medium"
@@ -330,7 +330,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
             />
             @if ((stepTwoTouched() || colabfoldNumRecyclesTouched()) &&
             toolSettingErrors().colabfoldNumRecycles) {
@@ -340,8 +340,8 @@
             }
           </div>
           } @if (selectedTool() === 'boltz') {
-          <div class="rounded-lg border bg-gray-50 p-4">
-            <label class="flex items-center gap-3 text-sm">
+          <div class="rounded-lg border p-4">
+            <label class="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
