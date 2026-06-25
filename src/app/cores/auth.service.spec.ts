@@ -719,9 +719,7 @@ describe("AuthService", () => {
 
   describe("Auto-login on launch (?login=true)", () => {
     const originalUrl =
-      window.location.pathname +
-      window.location.search +
-      window.location.hash;
+      window.location.pathname + window.location.search + window.location.hash;
 
     let localIsAuth: BehaviorSubject<boolean>;
     let localIsLoading: BehaviorSubject<boolean>;
