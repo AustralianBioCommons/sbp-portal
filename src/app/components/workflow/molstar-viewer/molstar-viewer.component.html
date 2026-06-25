@@ -51,20 +51,6 @@
   </div>
   }
 
-  <!-- Error state -->
-  @if (status() === 'error') {
-  <div
-    class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3"
-  >
-    <ng-icon
-      name="heroExclamationCircle"
-      class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
-      aria-hidden="true"
-    ></ng-icon>
-    <p class="text-sm text-red-700">{{ errorMessage() }}</p>
-  </div>
-  }
-
   <!-- Viewer container (always present so mol* can attach) -->
   <div
     [id]="containerId"

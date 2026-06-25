@@ -5,9 +5,9 @@ import {
   heroChevronDoubleLeft,
   heroChevronDoubleRight,
   heroEllipsisVertical,
-  heroExclamationTriangle,
   heroXMark,
 } from "@ng-icons/heroicons/outline";
+import { heroXCircleSolid } from "@ng-icons/heroicons/solid";
 import {
   Component,
   computed,
@@ -97,7 +97,7 @@ type StepItem = Step;
       heroChevronDoubleLeft,
       heroChevronDoubleRight,
       heroEllipsisVertical,
-      heroExclamationTriangle,
+      heroXCircleSolid,
       heroXMark,
     }),
   ],
