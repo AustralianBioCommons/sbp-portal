@@ -11,7 +11,7 @@
   }
 </style>
 
-<div class="h-full flex flex-col gap-2">
+<div class="h-full flex flex-col gap-2 relative">
   <!-- Idle placeholder -->
   @if (status() === 'idle') {
   <label
@@ -59,4 +59,17 @@
       status() === 'idle' || status() === 'loading' || status() === 'error'
     "
   ></div>
+
+  <!-- Instruction overlay (visible when a structure is loaded) -->
+  @if (status() === 'loaded') {
+  <div
+    class="absolute bottom-3 left-3 right-3 z-10 pointer-events-none flex justify-center"
+  >
+    <p
+      class="rounded-md bg-black/50 px-3 py-1.5 text-xs text-white/80 backdrop-blur-sm"
+    >
+      Click residues in the viewer to add them as hotspots.
+    </p>
+  </div>
+  }
 </div>
