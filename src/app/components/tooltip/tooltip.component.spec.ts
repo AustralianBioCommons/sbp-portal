@@ -53,7 +53,9 @@ describe("TooltipComponent", () => {
     const mockEl = {
       getBoundingClientRect: () => mockRect,
     } as HTMLElement;
-    component.onTriggerEnter({ currentTarget: mockEl } as unknown as MouseEvent);
+    component.onTriggerEnter({
+      currentTarget: mockEl,
+    } as unknown as MouseEvent);
     fixture.detectChanges();
 
     const popup = fixture.nativeElement.querySelector("[role='tooltip']");
