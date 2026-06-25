@@ -716,4 +716,102 @@ describe("AuthService", () => {
       environment.apiBaseUrl = originalApiBaseUrl;
     });
   });
+
+  describe("Auto-login on launch (?login=true)", () => {
+    const originalUrl =
+      window.location.pathname +
+      window.location.search +
+      window.location.hash;
+
+    let localIsAuth: BehaviorSubject<boolean>;
+    let localIsLoading: BehaviorSubject<boolean>;
+    let localMock: jasmine.SpyObj<Auth0Service>;
+    let localRouter: jasmine.SpyObj<Router>;
+    let localHttp: HttpTestingController;
+
+    // Build a fully isolated AuthService instance reading a controlled URL, so
+    // the constructor's handleAutoLogin() runs against `search`. Isolated
+    // subjects keep it from interfering with the suite's shared service.
+    function build(search: string, authenticated: boolean): void {
+      window.history.replaceState({}, "", "/" + search);
+      localIsAuth = new BehaviorSubject<boolean>(authenticated);
+      localIsLoading = new BehaviorSubject<boolean>(true);
+      localRouter = jasmine.createSpyObj("Router", ["navigateByUrl"]);
+      localMock = jasmine.createSpyObj(
+        "AuthService",
+        ["loginWithRedirect", "logout", "getAccessTokenSilently"],
+        {
+          isAuthenticated$: localIsAuth.asObservable(),
+          user$: of(null),
+          error$: of(null),
+          isLoading$: localIsLoading.asObservable(),
+          appState$: of(null),
+        }
+      );
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          AuthService,
+          { provide: Auth0Service, useValue: localMock },
+          { provide: Router, useValue: localRouter },
+        ],
+      });
+      TestBed.inject(AuthService);
+      localHttp = TestBed.inject(HttpTestingController);
+    }
+
+    afterEach(() => {
+      window.history.replaceState({}, "", originalUrl);
+      // Flush the user-sync request the authenticated path triggers, if any.
+      localHttp.match(() => true).forEach((req) => req.flush({}));
+      localHttp.verify();
+    });
+
+    it("redirects to Auth0 login when launched unauthenticated", () => {
+      build("?login=true", false);
+      localIsLoading.next(false);
+      expect(localMock.loginWithRedirect).toHaveBeenCalledWith(
+        jasmine.objectContaining({ appState: { target: "/" } })
+      );
+      expect(localRouter.navigateByUrl).not.toHaveBeenCalled();
+    });
+
+    it("navigates without re-login when already authenticated", () => {
+      build("?login=true", true);
+      localIsLoading.next(false);
+      expect(localRouter.navigateByUrl).toHaveBeenCalledWith("/");
+      expect(localMock.loginWithRedirect).not.toHaveBeenCalled();
+    });
+
+    it("does nothing during the Auth0 code callback", () => {
+      build("?login=true&code=abc&state=xyz", false);
+      localIsLoading.next(false);
+      expect(localMock.loginWithRedirect).not.toHaveBeenCalled();
+      expect(localRouter.navigateByUrl).not.toHaveBeenCalled();
+    });
+
+    it("does nothing during an Auth0 state callback", () => {
+      build("?login=true&state=xyz", false);
+      localIsLoading.next(false);
+      expect(localMock.loginWithRedirect).not.toHaveBeenCalled();
+      expect(localRouter.navigateByUrl).not.toHaveBeenCalled();
+    });
+
+    it("does nothing during an Auth0 error callback", () => {
+      build("?login=true&error=access_denied", false);
+      localIsLoading.next(false);
+      expect(localMock.loginWithRedirect).not.toHaveBeenCalled();
+      expect(localRouter.navigateByUrl).not.toHaveBeenCalled();
+    });
+
+    it("ignores launches without the login flag", () => {
+      build("", false);
+      localIsLoading.next(false);
+      expect(localMock.loginWithRedirect).not.toHaveBeenCalled();
+      expect(localRouter.navigateByUrl).not.toHaveBeenCalled();
+    });
+  });
 });
