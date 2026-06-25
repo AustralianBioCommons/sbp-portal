@@ -33,38 +33,38 @@
 
       <!-- Nav Links -->
       <nav
-        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-sky-900 transition-all text-sm"
+        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-biocommons-primary transition-all text-sm"
         aria-label="Main navigation"
       >
         <a
           routerLink="/binder-design"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
             currentRoute() === '/binder-design'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
+              ? 'border-biocommons-primary'
+              : 'border-transparent hover:border-biocommons-primary/20'
           "
         >
           Binder Design
         </a>
         <a
           routerLink="/structure-prediction"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
             currentRoute() === '/structure-prediction'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
+              ? 'border-biocommons-primary'
+              : 'border-transparent hover:border-biocommons-primary/20'
           "
         >
           Structure Prediction
         </a>
         <a
           routerLink="/jobs"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
             currentRoute() === '/jobs'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
+              ? 'border-biocommons-primary'
+              : 'border-transparent hover:border-biocommons-primary/20'
           "
         >
           Jobs
@@ -152,7 +152,9 @@
           </button>
         </ng-template>
         <ng-template #menu>
-          <div class="truncate px-4 py-3 text-sm text-sky-900 border-b">
+          <div
+            class="truncate px-4 py-3 text-sm text-biocommons-primary border-b"
+          >
             {{ user?.email || "" }}
           </div>
           <button
@@ -240,7 +242,9 @@
       <div>
         <div class="flex items-center gap-2 p-2 text-gray-900">
           @if (item.icon) {
-          <div class="text-sky-900 flex items-center justify-center shrink-0">
+          <div
+            class="text-biocommons-primary flex items-center justify-center shrink-0"
+          >
             <ng-icon [name]="item.icon" size="18" class="shrink-0" />
           </div>
           }
@@ -252,7 +256,7 @@
           <a
             [routerLink]="child.path"
             (click)="closeMobileMenu()"
-            class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
+            class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-biocommons-primary"
             [class]="
               isNavItemActive(child) ? 'bg-sky-50 ' : ' hover:bg-gray-50'
             "
@@ -266,7 +270,7 @@
       <a
         [routerLink]="item.path"
         (click)="closeMobileMenu()"
-        class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
+        class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-biocommons-primary"
         [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
       >
         @if (item.icon) {
@@ -287,7 +291,7 @@
 >
   <a
     [routerLink]="'/' + crumb.themeTab"
-    class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
+    class="text-biocommons-primary hover:text-sky-800 transition-all hover:underline no-underline"
   >
     {{ crumb.themeLabel }}
   </a>

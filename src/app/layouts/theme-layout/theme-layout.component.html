@@ -18,14 +18,14 @@
         <div class="flex flex-wrap gap-4">
           @for (item of section.items; track item.id) { @if (item.disabled) {
           <span
-            class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-sky-900 opacity-50 cursor-not-allowed"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-biocommons-primary opacity-50 cursor-not-allowed"
           >
             {{ item.label }}
           </span>
           } @else {
           <a
             [routerLink]="item.href"
-            class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-sky-900 hover:text-sky-700 transition-all no-underline"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-biocommons-primary hover:text-sky-700 transition-all no-underline"
           >
             {{ item.label }}
           </a>

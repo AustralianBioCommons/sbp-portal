@@ -1,11 +1,15 @@
 <div class="space-y-4">
   <!-- Selected Tool -->
   <div class="bg-sky-50 border border-sky-200 rounded-lg p-4">
-    <div class="text-sm font-semibold text-sky-900 mb-2">Selected Tool</div>
+    <div class="text-sm font-semibold text-biocommons-primary mb-2">
+      Selected Tool
+    </div>
     <p class="text-sm">
       <span class="font-medium">{{ selectedTool() }}</span>
       @if (hasParameters()) {
-      <span class="ml-2 text-xs bg-sky-200 text-sky-900 px-2 py-1 rounded-full">
+      <span
+        class="ml-2 text-xs bg-sky-200 text-biocommons-primary px-2 py-1 rounded-full"
+      >
         Has Parameters
       </span>
       } @else {
@@ -38,7 +42,7 @@
           target="_blank"
           rel="noopener noreferrer"
           download
-          class="text-sm text-sky-700 underline hover:text-sky-900 sm:w-2/3 break-all"
+          class="text-sm text-sky-700 underline hover:text-biocommons-primary sm:w-2/3 break-all"
         >
           {{ item.value }}
         </a>
