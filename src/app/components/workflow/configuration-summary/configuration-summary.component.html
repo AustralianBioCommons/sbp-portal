@@ -16,19 +16,19 @@
         </div>
         <div class="space-y-1">
           <p class="font-medium">Tool</p>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <p class="text-gray-600 wrap-break-word">
               {{ selectedTool() || "—" }}
             </p>
             @if (hasParameters()) {
             <span
-              class="inline-block text-xs bg-sky-200 text-biocommons-primary px-2 py-1 rounded-full"
+              class="inline-block shrink-0 text-xs bg-sky-200 text-biocommons-primary px-2 py-1 rounded-full"
             >
               Has Parameters
             </span>
             } @else {
             <span
-              class="inline-block text-xs bg-gray-200 px-2 py-1 rounded-full"
+              class="inline-block shrink-0 text-xs bg-gray-200 px-2 py-1 rounded-full"
             >
               No Parameters
             </span>
