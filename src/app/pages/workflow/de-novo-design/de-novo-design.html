@@ -363,18 +363,7 @@
                             [value]="getRowValue(row.id, field.name)"
                             [hasError]="hasRowFieldError(row.id, field.name)"
                             [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                            [tooltipHelper]="hotspotTooltip"
                             (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
-                            (fieldBlur)="validateRowField(row.id, field.name)"
-                          ></app-form-field>
-                          } @else if (field.name === 'chains') {
-                          <app-form-field
-                            [field]="field"
-                            [value]="getRowValue(row.id, field.name)"
-                            [hasError]="hasRowFieldError(row.id, field.name)"
-                            [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                            [tooltipHelper]="chainsTooltip"
-                            (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
                             (fieldBlur)="validateRowField(row.id, field.name)"
                           ></app-form-field>
                           } @else {

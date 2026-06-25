@@ -1,4 +1,4 @@
-import { Component, input, signal } from "@angular/core";
+import { Component, input } from "@angular/core";
 import { heroInformationCircleSolid } from "@ng-icons/heroicons/solid";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 
@@ -15,20 +15,4 @@ export class TooltipComponent {
   message = input.required<string>();
   iconColor = input<string>("text-red-500 hover:text-red-600");
   readonly tooltipId = `app-tooltip-${nextTooltipId++}`;
-
-  showPopup = signal(false);
-  popupTop = signal("0px");
-  popupLeft = signal("0px");
-
-  onTriggerEnter(event: MouseEvent): void {
-    const el = event.currentTarget as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    this.popupTop.set(`${rect.bottom + 6}px`);
-    this.popupLeft.set(`${rect.left}px`);
-    this.showPopup.set(true);
-  }
-
-  onTriggerLeave(): void {
-    this.showPopup.set(false);
-  }
 }

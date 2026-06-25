@@ -1,8 +1,4 @@
-<div
-  class="relative flex items-center"
-  (mouseenter)="onTriggerEnter($event)"
-  (mouseleave)="onTriggerLeave()"
->
+<div class="group relative flex items-center">
   <!-- Trigger: projected content, or the default info icon button -->
   <ng-content>
     <button
@@ -18,20 +14,16 @@
       ></ng-icon>
     </button>
   </ng-content>
-</div>
 
-<!-- Fixed-position popup: escapes overflow-hidden ancestors -->
-@if (showPopup() && message()) {
-<div
-  [id]="tooltipId"
-  role="tooltip"
-  class="fixed z-9999 w-max max-w-48 whitespace-pre-line rounded-md bg-gray-900 px-3 py-2 text-sm text-white opacity-90 shadow-lg pointer-events-none sm:max-w-56 md:max-w-64 lg:max-w-72"
-  [style.top]="popupTop()"
-  [style.left]="popupLeft()"
->
-  <span class="wrap-break-word">{{ message() }}</span>
+  <!-- Tooltip -->
   <div
-    class="absolute left-3 top-0 h-2 w-2 -translate-y-1 rotate-45 bg-gray-900"
-  ></div>
+    [id]="tooltipId"
+    role="tooltip"
+    class="absolute left-1/2 top-full z-50 hidden w-max max-w-48 -translate-x-1/2 translate-y-1.5 whitespace-pre-line rounded-md bg-gray-900 px-3 py-2 text-sm text-white opacity-0 shadow-lg transition-all group-hover:block group-hover:opacity-90 group-focus-within:block group-focus-within:opacity-90 sm:max-w-56 md:max-w-64 lg:max-w-72"
+  >
+    <span class="wrap-break-word">{{ message() }}</span>
+    <div
+      class="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-gray-900"
+    ></div>
+  </div>
 </div>
-}

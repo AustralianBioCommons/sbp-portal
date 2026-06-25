@@ -2,14 +2,10 @@ import { Component, inject, input, output, signal } from "@angular/core";
 import { InputSchemaField } from "../../../cores/input-schema.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { AlertComponent } from "../../alert/alert.component";
-import { TooltipComponent } from "../../tooltip/tooltip.component";
-import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroInformationCircle } from "@ng-icons/heroicons/outline";
 
 @Component({
   selector: "app-form-field",
-  imports: [AlertComponent, TooltipComponent, NgIconComponent],
-  viewProviders: [provideIcons({ heroInformationCircle })],
+  imports: [AlertComponent],
   templateUrl: "./form-field.component.html",
   styleUrl: "./form-field.component.scss",
 })
@@ -19,14 +15,12 @@ export class FormFieldComponent {
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");
-  alertType = signal<"error" | "success" | "warning">("error");
+  alertType = signal<"error" | "success" | "warning" | "info">("error");
 
   readonly field = input.required<InputSchemaField>();
   readonly value = input<unknown>("");
   readonly hasError = input(false);
   readonly errorMessage = input<string | null>(null);
-  /** Optional HTML string passed from the parent to override the schema description in the tooltip. */
-  readonly tooltipHelper = input<string>("");
 
   readonly valueChange = output<unknown>();
   readonly fieldBlur = output<void>();
