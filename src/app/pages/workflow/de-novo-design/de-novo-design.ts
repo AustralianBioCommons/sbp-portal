@@ -127,6 +127,11 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   private creditsService = inject(CreditsService);
   readonly creditsEnabled = USER_CREDITS_ENABLED;
 
+  readonly chainsTooltip =
+    'Enter chain letter(s) to target, e.g. <span class="font-mono font-medium text-white">A</span> or <span class="font-mono font-medium text-white">A,B</span>. This is filled automatically when you select hotspot residues in the viewer.';
+  readonly hotspotTooltip =
+    'Type residues as <span class="font-mono font-medium text-white">ChainResidue</span>, e.g. <span class="font-mono font-medium text-white">A100,A101,B200</span>. Or click residues directly in the viewer to add them here.';
+
   // Alert state
   showAlert = signal(false);
   alertMessage = signal("");

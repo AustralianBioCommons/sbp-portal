@@ -16,40 +16,45 @@
     {{ getDisplayFieldLabel() }}
     @if (f.required) {
     <span class="text-red-500 ml-1">*</span>
-    } @if (f.description) {
-    <div class="group relative inline-block ml-1">
-      <svg
-        class="w-4 h-4 text-gray-400 cursor-help"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        ></path>
-      </svg>
-      <!-- Tooltip -->
-      <div
-        class="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded-lg px-3 py-2 mt-1 left-0 min-w-50 max-w-75 shadow-lg"
-      >
-        <div class="font-medium">{{ getDisplayFieldLabel() }}</div>
-        <div class="text-gray-300 mt-1">{{ f.description }}</div>
-        <div class="text-gray-400 text-xs mt-2">
-          Type: {{ f.type }}
-          @if (f.required) {
-          <span class="text-red-400"> • Required</span>
-          }
-        </div>
-        @if (hasRange) {
-        <div class="text-gray-400 text-xs mt-1">{{ getRangeText() }}</div>
-        }
-      </div>
-    </div>
+    } @if (tooltipHelper() || f.description) {
+    <span
+      class="inline-block ml-1 align-middle cursor-help"
+      (mouseenter)="onIconEnter($event)"
+      (mouseleave)="onIconLeave()"
+    >
+      <ng-icon
+        name="heroInformationCircle"
+        class="w-4 h-4 text-gray-400"
+        aria-hidden="true"
+      ></ng-icon>
+    </span>
     }
   </label>
+
+  <!-- Fixed-position tooltip: escapes overflow-hidden/overflow-y-auto clipping -->
+  @if (showTooltipPopup()) {
+  <div
+    class="fixed z-9999 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 min-w-50 max-w-75 shadow-lg pointer-events-none"
+    [style.top]="tooltipTop()"
+    [style.left]="tooltipLeft()"
+  >
+    @if (tooltipHelper()) {
+    <div class="text-gray-300 leading-relaxed" [innerHTML]="tooltipHelper()"></div>
+    } @else {
+    <div class="font-medium">{{ getDisplayFieldLabel() }}</div>
+    <div class="text-gray-300 mt-1">{{ f.description }}</div>
+    <div class="text-gray-400 text-xs mt-2">
+      Type: {{ f.type }}
+      @if (f.required) {
+      <span class="text-red-400"> • Required</span>
+      }
+    </div>
+    @if (hasRange) {
+    <div class="text-gray-400 text-xs mt-1">{{ getRangeText() }}</div>
+    }
+    }
+  </div>
+  }
 
   <!-- Field Input -->
   <div class="relative">
