@@ -10,7 +10,7 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { SafeResourceUrl } from "@angular/platform-browser";
 import { DatePipe } from "@angular/common";
 import { EMPTY } from "rxjs";
-import { catchError } from "rxjs/operators";
+import { catchError, finalize } from "rxjs/operators";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDownTray,
@@ -100,16 +100,11 @@ export default class JobDetailsComponent implements OnInit {
   logsItems = signal<string[]>([]);
   logsLoading = signal(false);
   logsError = signal<string | null>(null);
+  downloadingAllFiles = signal(false);
   canDownloadAllFiles = computed(
     () =>
       !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
   );
-  downloadAllUrl = computed(() => {
-    const job = this.job();
-    return job && this.canDownloadAllFiles()
-      ? this.resultsService.getDownloadAllUrl(job.id)
-      : null;
-  });
 
   readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
     { id: "results", label: "Results", icon: "heroChartBarSquare" },
@@ -215,6 +210,35 @@ export default class JobDetailsComponent implements OnInit {
       });
   }
 
+  downloadAllFiles(): void {
+    const job = this.job();
+    if (!job || !this.canDownloadAllFiles() || this.downloadingAllFiles()) {
+      return;
+    }
+
+    this.downloadingAllFiles.set(true);
+    this.resultsService
+      .downloadAll(job.id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error downloading all files:", err);
+          return EMPTY;
+        }),
+        finalize(() => this.downloadingAllFiles.set(false))
+      )
+      .subscribe((response) => {
+        if (!response.body) {
+          return;
+        }
+
+        const filename =
+          this.getDownloadFilename(
+            response.headers.get("content-disposition")
+          ) ?? `${job.id}_results.zip`;
+        this.startBrowserDownload(response.body, filename);
+      });
+  }
+
   setActiveTab(tab: JobResultsTab): void {
     this.activeTab.set(tab);
     if (tab === "logs") {
@@ -310,6 +334,41 @@ export default class JobDetailsComponent implements OnInit {
     this.reportLoading.set(false);
     this.reportUrl.set(null);
     this.reportError.set("Failed to load report.");
+  }
+
+  private getDownloadFilename(
+    contentDisposition: string | null
+  ): string | null {
+    if (!contentDisposition) {
+      return null;
+    }
+
+    const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (encodedMatch?.[1]) {
+      try {
+        return decodeURIComponent(encodedMatch[1].trim());
+      } catch {
+        return encodedMatch[1].trim();
+      }
+    }
+
+    return (
+      contentDisposition.match(/filename="([^"]+)"/i)?.[1]?.trim() ??
+      contentDisposition.match(/filename=([^;]+)/i)?.[1]?.trim() ??
+      null
+    );
+  }
+
+  private startBrowserDownload(blob: Blob, filename: string): void {
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
   }
 
   private loadReport(): void {
