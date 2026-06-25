@@ -1,6 +1,6 @@
 import { Component, input } from "@angular/core";
-import { heroInformationCircleSolid } from "@ng-icons/heroicons/solid";
 import { NgIcon, provideIcons } from "@ng-icons/core";
+import { heroInformationCircle } from "@ng-icons/heroicons/outline";
 
 let nextTooltipId = 0;
 
@@ -9,7 +9,7 @@ let nextTooltipId = 0;
   imports: [NgIcon],
   templateUrl: "./tooltip.component.html",
   styleUrl: "./tooltip.component.scss",
-  viewProviders: [provideIcons({ heroInformationCircleSolid })],
+  viewProviders: [provideIcons({ heroInformationCircle })],
 })
 export class TooltipComponent {
   message = input.required<string>();
