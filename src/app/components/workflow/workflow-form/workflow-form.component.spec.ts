@@ -78,4 +78,13 @@ describe("WorkflowFormComponent", () => {
     const submitButton = buttons[buttons.length - 1] as HTMLButtonElement;
     expect(submitButton.disabled).toBe(true);
   });
+
+  it("should disable submit when a section is invalid", () => {
+    fixture.componentRef.setInput("isSectionValid", (id: string) => id !== "b");
+    fixture.detectChanges();
+    expect(component.allSectionsValid()).toBe(false);
+    const buttons = fixture.nativeElement.querySelectorAll("button");
+    const submitButton = buttons[buttons.length - 1] as HTMLButtonElement;
+    expect(submitButton.disabled).toBe(true);
+  });
 });

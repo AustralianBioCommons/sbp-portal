@@ -273,11 +273,7 @@ export default class SinglePredictionComponent {
     () => Object.keys(this.toolSettingErrors()).length === 0
   );
   readonly isFormValid = computed(
-    () => this.isStep1Valid() && this.isStep2Valid()
-  );
-
-  readonly canSubmit = computed(
-    () => this.isFormValid() && this.isToolAvailable()
+    () => this.isStep1Valid() && this.isStep2Valid() && this.isToolAvailable()
   );
 
   /** Per-section validity — drives the progress-bar colours. */
@@ -290,7 +286,7 @@ export default class SinglePredictionComponent {
       case "tool-settings":
         return this.isStep2Valid();
       case "review":
-        return this.canSubmit();
+        return this.isFormValid();
       default:
         return true;
     }

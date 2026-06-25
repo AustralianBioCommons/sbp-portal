@@ -34,6 +34,10 @@ export class WorkflowFormComponent {
   readonly isSubmitting = input(false);
   readonly submitted = output<void>();
 
+  readonly allSectionsValid = computed(() =>
+    this.sections().every((s) => this.isSectionValid()(s.id))
+  );
+
   readonly buttonLabel = computed(() => {
     const credits = this.credits();
     if (credits == null) return "Submit";

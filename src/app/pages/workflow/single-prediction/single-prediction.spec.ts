@@ -143,7 +143,7 @@ describe("SinglePredictionComponent", () => {
     expect(component.entityRows()[0].copyNumber).toBe("1");
     expect(component.entityRows()[0].moleculeType).toBe("protein");
     expect(component.selectedTool()).toBe("colabfold");
-    expect(component.canSubmit()).toBe(false);
+    expect(component.isFormValid()).toBe(false);
   });
 
   it("should expose label fallbacks for unknown state", () => {
@@ -503,7 +503,7 @@ describe("SinglePredictionComponent", () => {
     expect(payload["fastaContent"]).toContain(">pro_1");
     expect(payload["fastaFileUrl"]).toBe(MOCK_FASTA_RESPONSE.s3Uri);
     expect(payload["sample_id"]).toBe(samplesheetId);
-    expect(component.canSubmit()).toBe(true);
+    expect(component.isFormValid()).toBe(true);
   });
 
   it("should block submission when tools are unavailable", () => {

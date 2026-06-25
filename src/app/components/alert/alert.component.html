@@ -4,13 +4,13 @@
   <ng-icon
     name="heroCheckCircleSolid"
     size="20"
-    class="shrink-0 text-emerald-500"
+    class="shrink-0 text-green-500"
   ></ng-icon>
   } @else if (type() === "warning") {
   <ng-icon
     name="heroExclamationTriangleSolid"
     size="20"
-    class="shrink-0 text-yellow-600"
+    class="shrink-0 text-amber-600"
   ></ng-icon>
   } @else {
   <ng-icon
@@ -27,7 +27,7 @@
       type() === 'success'
         ? 'text-green-500'
         : type() === 'warning'
-        ? 'text-yellow-800'
+        ? 'text-amber-800'
         : 'text-red-500'
     "
   >
@@ -44,7 +44,7 @@
       type() === 'success'
         ? 'text-green-500 hover:bg-green-100'
         : type() === 'warning'
-        ? 'text-yellow-700 hover:bg-yellow-100'
+        ? 'text-amber-700 hover:bg-amber-100'
         : 'text-red-500 hover:bg-red-100'
     "
   >

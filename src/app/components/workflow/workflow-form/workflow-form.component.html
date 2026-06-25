@@ -86,7 +86,9 @@
       type="button"
       variant="primary"
       widthClass="w-auto"
-      [disabled]="disabled() || submitDisabled() || isSubmitting()"
+      [disabled]="
+        disabled() || submitDisabled() || isSubmitting() || !allSectionsValid()
+      "
       [loading]="isSubmitting()"
       (click)="onSubmit()"
     >

@@ -20,9 +20,7 @@
     [sections]="sections"
     [isSectionValid]="isSectionValid"
     [disabled]="(auth.canExecuteWorkflows$ | async) === false"
-    [submitDisabled]="
-      !isToolAvailable() || (creditsEnabled && creditsInsufficient())
-    "
+    [submitDisabled]="creditsEnabled && creditsInsufficient()"
     [credits]="creditsEnabled ? creditCost() : null"
     [isSubmitting]="workflowSubmission.isSubmitting()"
     (submitted)="submitWorkflow()"
@@ -100,7 +98,7 @@
               class="grid gap-3 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
             >
               <div class="flex shrink-0 cursor-grab flex-col items-center">
-                <span class="mb-1 block text-xs font-semibold text-gray-500">
+                <span class="mb-1 block text-sm font-medium">
                   #{{ i + 1 }}
                 </span>
                 <div
@@ -120,7 +118,7 @@
               <div>
                 <label
                   [for]="'molecule-type-' + row.id"
-                  class="mb-1 block text-xs font-semibold text-gray-500"
+                  class="mb-1 block text-sm font-medium"
                 >
                   Type
                 </label>
@@ -136,7 +134,7 @@
               <div>
                 <label
                   [for]="'copy-number-' + row.id"
-                  class="mb-1 block text-xs font-semibold text-gray-500"
+                  class="mb-1 block text-sm font-medium"
                 >
                   Copies
                 </label>
@@ -166,7 +164,7 @@
               <div class="min-w-0">
                 <label
                   [for]="'sequence-' + row.id"
-                  class="mb-1 block text-xs font-semibold text-gray-500"
+                  class="mb-1 block text-sm font-medium"
                 >
                   Sequence
                 </label>
