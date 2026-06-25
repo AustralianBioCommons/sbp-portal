@@ -17,46 +17,13 @@
     @if (f.required) {
     <span class="text-red-500 ml-1">*</span>
     } @if (tooltipHelper() || f.description) {
-    <span
-      class="inline-block ml-1 align-middle cursor-help"
-      (mouseenter)="onIconEnter($event)"
-      (mouseleave)="onIconLeave()"
-    >
-      <ng-icon
-        name="heroInformationCircle"
-        class="w-4 h-4 text-gray-400"
-        aria-hidden="true"
-      ></ng-icon>
-    </span>
+    <app-tooltip
+      class="inline-block ml-1 align-middle"
+      [message]="tooltipHelper() || f.description || ''"
+      iconColor="text-gray-400 hover:text-gray-600"
+    ></app-tooltip>
     }
   </label>
-
-  <!-- Fixed-position tooltip: escapes overflow-hidden/overflow-y-auto clipping -->
-  @if (showTooltipPopup()) {
-  <div
-    class="fixed z-9999 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 min-w-35 max-w-50 shadow-lg pointer-events-none"
-    [style.top]="tooltipTop()"
-    [style.left]="tooltipLeft()"
-  >
-    @if (tooltipHelper()) {
-    <div
-      class="text-gray-300 leading-relaxed"
-      [innerHTML]="tooltipHelper()"
-    ></div>
-    } @else {
-    <div class="font-medium">{{ getDisplayFieldLabel() }}</div>
-    <div class="text-gray-300 mt-1">{{ f.description }}</div>
-    <div class="text-gray-400 text-xs mt-2">
-      Type: {{ f.type }}
-      @if (f.required) {
-      <span class="text-red-400"> • Required</span>
-      }
-    </div>
-    @if (hasRange) {
-    <div class="text-gray-400 text-xs mt-1">{{ getRangeText() }}</div>
-    } }
-  </div>
-  }
 
   <!-- Field Input -->
   <div class="relative">

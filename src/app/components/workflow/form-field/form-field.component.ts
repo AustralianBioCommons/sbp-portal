@@ -2,13 +2,11 @@ import { Component, inject, input, output, signal } from "@angular/core";
 import { InputSchemaField } from "../../../cores/input-schema.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { AlertComponent } from "../../alert/alert.component";
-import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroInformationCircle } from "@ng-icons/heroicons/outline";
+import { TooltipComponent } from "../../tooltip/tooltip.component";
 
 @Component({
   selector: "app-form-field",
-  imports: [AlertComponent, NgIconComponent],
-  viewProviders: [provideIcons({ heroInformationCircle })],
+  imports: [AlertComponent, TooltipComponent],
   templateUrl: "./form-field.component.html",
   styleUrl: "./form-field.component.scss",
 })
@@ -31,22 +29,6 @@ export class FormFieldComponent {
   readonly fieldBlur = output<void>();
   /** Emits the raw File immediately when the user picks a file, before any upload. */
   readonly fileSelected = output<File | null>();
-
-  showTooltipPopup = signal(false);
-  tooltipTop = signal("0px");
-  tooltipLeft = signal("0px");
-
-  onIconEnter(event: MouseEvent): void {
-    const icon = event.currentTarget as HTMLElement;
-    const rect = icon.getBoundingClientRect();
-    this.tooltipTop.set(`${rect.bottom + 6}px`);
-    this.tooltipLeft.set(`${rect.left}px`);
-    this.showTooltipPopup.set(true);
-  }
-
-  onIconLeave(): void {
-    this.showTooltipPopup.set(false);
-  }
 
   get fieldId(): string {
     return `field-${this.field().name}`;
