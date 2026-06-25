@@ -20,8 +20,14 @@
     <app-tooltip
       class="inline-block ml-1 align-middle"
       [message]="tooltipHelper() || f.description || ''"
-      iconColor="text-gray-400 hover:text-gray-600"
-    ></app-tooltip>
+    >
+      <ng-icon
+        name="heroInformationCircle"
+        size="16"
+        class="text-gray-400 cursor-help align-middle"
+        aria-hidden="true"
+      ></ng-icon>
+    </app-tooltip>
     }
   </label>
 

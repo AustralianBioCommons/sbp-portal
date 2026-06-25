@@ -3,10 +3,13 @@ import { InputSchemaField } from "../../../cores/input-schema.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { AlertComponent } from "../../alert/alert.component";
 import { TooltipComponent } from "../../tooltip/tooltip.component";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { heroInformationCircle } from "@ng-icons/heroicons/outline";
 
 @Component({
   selector: "app-form-field",
-  imports: [AlertComponent, TooltipComponent],
+  imports: [AlertComponent, TooltipComponent, NgIconComponent],
+  viewProviders: [provideIcons({ heroInformationCircle })],
   templateUrl: "./form-field.component.html",
   styleUrl: "./form-field.component.scss",
 })
