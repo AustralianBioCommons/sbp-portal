@@ -63,17 +63,17 @@ describe("WorkflowSubmissionService", () => {
     expect(service.isSubmitting()).toBeFalse();
   });
 
-  it("should fall back to alert when dataset id is missing and no error handler is provided", () => {
+  it("should fall back to alert when s3InputKey is missing and no error handler is provided", () => {
     const alertSpy = spyOn(window, "alert");
 
     service.submitWorkflowWithDataset(minimalPayload);
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Failed to launch workflow: datasetId is required to launch workflow."
+      "Failed to launch workflow: s3InputKey is required to launch workflow."
     );
   });
 
-  it("should submit workflow with normalized dataset id and show success dialog", () => {
+  it("should submit workflow with normalized s3InputKey and show success dialog", () => {
     workflowApiService.launchWorkflow.and.returnValue(
       of({
         message: "submitted",
@@ -89,9 +89,9 @@ describe("WorkflowSubmissionService", () => {
     );
 
     expect(workflowApiService.launchWorkflow).toHaveBeenCalled();
-    const [launch, formData, datasetId] =
+    const [launch, formData, s3InputKey] =
       workflowApiService.launchWorkflow.calls.mostRecent().args;
-    expect(datasetId).toBe("dataset-123");
+    expect(s3InputKey).toBe("dataset-123");
     expect(formData).toEqual({
       ...minimalPayload,
       configProfiles: ["docker"],

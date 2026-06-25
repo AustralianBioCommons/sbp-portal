@@ -36,7 +36,7 @@ const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
 const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
   success: true,
   message: "Dataset uploaded successfully",
-  datasetId: "dataset-1",
+  s3Key: "inputs/samplesheets/dataset-1.csv",
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────

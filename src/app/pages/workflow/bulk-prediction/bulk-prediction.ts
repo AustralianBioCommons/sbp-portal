@@ -385,11 +385,11 @@ export default class BulkPredictionComponent {
       )
       .subscribe({
         next: (datasetResponse) => {
-          const datasetId = datasetResponse.datasetId;
-          if (!datasetId) {
+          const s3InputKey = datasetResponse.s3Key;
+          if (!s3InputKey) {
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned."
+              "Dataset upload succeeded but no S3 key was returned."
             );
             return;
           }
@@ -401,7 +401,7 @@ export default class BulkPredictionComponent {
           };
           this.workflowSubmission.submitWorkflowWithDataset(
             formData,
-            datasetId,
+            s3InputKey,
             (error) => {
               this.workflowSubmission.isSubmitting.set(false);
               this.showError(

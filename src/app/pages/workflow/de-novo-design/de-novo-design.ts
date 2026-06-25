@@ -745,13 +745,13 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (response) => {
-          const datasetId = response.datasetId;
+          const s3InputKey = response.s3Key;
 
-          if (!datasetId) {
-            console.error("Dataset upload succeeded but no datasetId returned");
+          if (!s3InputKey) {
+            console.error("Dataset upload succeeded but no S3 key returned");
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned."
+              "Dataset upload succeeded but no S3 key was returned."
             );
             return;
           }
@@ -764,7 +764,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
           this.workflowSubmission.submitWorkflowWithDataset(
             workflowFormData,
-            datasetId,
+            s3InputKey,
             (error) => {
               console.error(
                 "Workflow launch failed after dataset upload",

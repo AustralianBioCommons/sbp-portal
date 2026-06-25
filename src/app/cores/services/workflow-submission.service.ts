@@ -27,14 +27,14 @@ export class WorkflowSubmissionService {
   isSubmitting = signal<boolean>(false);
 
   /**
-   * Submit workflow with form data and optional dataset ID
+   * Submit workflow with form data and S3 input key
    * @param formData - The form data to submit
-   * @param datasetId - Optional dataset ID to attach to the workflow
+   * @param s3InputKey - S3 object key for the input samplesheet CSV
    * @param onError - Optional error handler
    */
   submitWorkflowWithDataset(
     formData: WorkflowFormData,
-    datasetId?: string,
+    s3InputKey?: string,
     onError?: (error: Error) => void
   ): void {
     // Generate a random run name with timestamp and random string
@@ -56,13 +56,13 @@ export class WorkflowSubmissionService {
 
     console.log("Submitting workflow with launch config:", launch);
     console.log("Form data:", formData);
-    if (datasetId) {
-      console.log("With dataset ID:", datasetId);
+    if (s3InputKey) {
+      console.log("With S3 input key:", s3InputKey);
     }
 
-    const normalizedDatasetId = datasetId?.trim();
-    if (!normalizedDatasetId) {
-      const error = new Error("datasetId is required to launch workflow.");
+    const normalizedS3InputKey = s3InputKey?.trim();
+    if (!normalizedS3InputKey) {
+      const error = new Error("s3InputKey is required to launch workflow.");
       if (onError) {
         onError(error);
       } else {
@@ -76,7 +76,7 @@ export class WorkflowSubmissionService {
 
     // Call the API service with separate launch and formData
     this.workflowApiService
-      .launchWorkflow(launch, formData, normalizedDatasetId)
+      .launchWorkflow(launch, formData, normalizedS3InputKey)
       .subscribe({
         next: (response) => {
           console.log("Workflow launched successfully:", response);

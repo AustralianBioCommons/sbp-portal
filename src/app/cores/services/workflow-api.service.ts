@@ -22,16 +22,16 @@ export class WorkflowApiService {
    * Launch a new workflow
    * @param launch - Workflow launch configuration
    * @param formData - Form data to be passed to the workflow
-   * @param datasetId - Optional dataset ID to attach to the workflow
+   * @param s3InputKey - S3 object key for the input samplesheet CSV
    */
   launchWorkflow(
     launch: WorkflowLaunchForm,
     formData: WorkflowLaunchPayload["formData"],
-    datasetId: string
+    s3InputKey: string
   ): Observable<WorkflowLaunchResponse> {
     const payload: WorkflowLaunchPayload = {
       launch,
-      datasetId,
+      s3InputKey,
       formData,
     };
     return this.http.post<WorkflowLaunchResponse>(

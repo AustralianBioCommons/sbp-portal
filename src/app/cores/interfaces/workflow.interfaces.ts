@@ -26,7 +26,7 @@ export interface WorkflowLaunchForm {
  */
 export interface WorkflowLaunchPayload {
   launch: WorkflowLaunchForm;
-  datasetId: string;
+  s3InputKey: string;
   formData: WorkflowFormData;
 }
 

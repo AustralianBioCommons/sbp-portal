@@ -10,9 +10,9 @@ export interface DatasetUploadRequest {
 export interface DatasetUploadResponse {
   message: string;
   success: boolean;
-  datasetId?: string;
+  s3Key?: string;
+  s3Uri?: string;
   splitOutputDir?: string;
-  details?: unknown;
 }
 
 export interface InteractionScreeningDatasetUploadRequest {
