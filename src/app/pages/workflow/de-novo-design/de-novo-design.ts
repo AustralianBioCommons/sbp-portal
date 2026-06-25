@@ -897,9 +897,12 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       }
 
       const value = data[field.name];
-      if (value !== undefined && value !== null && value !== "") {
-        let displayValue = String(value);
-        let downloadUrl: string | undefined;
+      const isEmpty = value === undefined || value === null || value === "";
+      let displayValue = "";
+      let downloadUrl: string | undefined;
+
+      if (!isEmpty) {
+        displayValue = String(value);
 
         if (field.name === "starting_pdb") {
           // Show only the filename; optionally link to the file if it's an HTTP URL.
@@ -915,31 +918,24 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         } else if (typeof value === "object") {
           displayValue = JSON.stringify(value);
         }
-
-        summary.push({
-          label: field.label || field.name,
-          value: displayValue,
-          fieldName: field.name,
-          ...(downloadUrl ? { url: downloadUrl } : {}),
-        });
+      } else if (localPdb && field.name === "starting_pdb") {
+        // A file is staged locally but not yet reflected in the form data.
+        displayValue = localPdb.name;
       }
+
+      summary.push({
+        label: field.label || field.name,
+        value: displayValue,
+        fieldName: field.name,
+        ...(downloadUrl ? { url: downloadUrl } : {}),
+      });
     });
 
-    if (this.selectedToolLabel()) {
-      summary.unshift({
-        label: "Mode",
-        value: this.selectedToolLabel(),
-        fieldName: "tool",
-      });
-    }
-
-    if (this.jobName()) {
-      summary.unshift({
-        label: "Job Name",
-        value: this.jobName(),
-        fieldName: "id",
-      });
-    }
+    summary.unshift({
+      label: "Job Name",
+      value: this.jobName(),
+      fieldName: "id",
+    });
 
     return summary;
   });

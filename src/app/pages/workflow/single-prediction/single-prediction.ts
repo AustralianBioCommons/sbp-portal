@@ -293,19 +293,23 @@ export default class SinglePredictionComponent {
   };
 
   readonly formSummary = computed(() => {
-    const entityItems = this.entityRows().map((row, index) => ({
-      label: `Entity ${index + 1}`,
-      value: `${this.getMoleculeTypeLabel(
-        row.moleculeType
-      )} x${this.getParsedCopyNumber(
-        row.copyNumber
-      )} • ${this.getNormalizedSequence(row)}`,
-      fieldName: `entity_${row.id}`,
-    }));
+    const entityItems = this.entityRows().map((row, index) => {
+      const sequence = this.getNormalizedSequence(row);
+      return {
+        label: `Entity ${index + 1}`,
+        value: sequence
+          ? `${this.getMoleculeTypeLabel(
+              row.moleculeType
+            )} x${this.getParsedCopyNumber(row.copyNumber)} • ${sequence}`
+          : "",
+        fieldName: `entity_${row.id}`,
+      };
+    });
 
-    const settingItems = this.getToolSettingsSummaryItems();
-
-    return [...entityItems, ...settingItems];
+    return [
+      { label: "Job Name", value: this.jobName().trim(), fieldName: "job_id" },
+      ...entityItems,
+    ];
   });
 
   readonly generatedFastaContent = computed(() => {

@@ -369,7 +369,10 @@ describe("SinglePredictionComponent", () => {
 
   it("should normalize protein sequence content in summary", () => {
     fillValidProteinRow("ac de fg");
-    expect(component.formSummary()[0].value).toContain("ACDEFG");
+    const entityItem = component
+      .formSummary()
+      .find((item) => item.fieldName.startsWith("entity_"));
+    expect(entityItem?.value).toContain("ACDEFG");
   });
 
   it("should expose tool-specific settings for all tools", () => {

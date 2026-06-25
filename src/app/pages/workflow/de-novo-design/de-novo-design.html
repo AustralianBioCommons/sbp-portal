@@ -4,12 +4,12 @@
   [alertMessage]="alertMessage()"
   (alertDismissed)="closeAlert()"
 >
-  <span description
-    >Design a protein binder to your target protein using your preferred tool.
+  <span description>
+    Design a protein binder to your target protein using your preferred tool.
     Configure inputs, choose parameters, and review before submission.</span
   >
-  <span overview
-    >This workflow enables the de novo design of protein binders by defining
+  <span overview>
+    This workflow enables the de novo design of protein binders by defining
     hotspot residues on the surface of the target. Choose a tool from the
     options below and configure the necessary job parameters to execute the
     workflow.</span
@@ -262,10 +262,10 @@
         contentClass="space-y-4"
       >
         <app-configuration-summary
+          workflowName="De Novo Design"
           [selectedTool]="selectedToolLabel()"
           [hasParameters]="selectedToolHasParams()"
-          [summaryItems]="formSummary()"
-          [requiredFieldCount]="schemaLoader.requiredInputFields().length"
+          [inputItems]="formSummary()"
           [isValid]="isFormValid()"
         ></app-configuration-summary>
         @if (creditsEnabled) {

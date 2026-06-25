@@ -374,8 +374,14 @@ describe("InteractionScreeningComponent", () => {
     ).toContain("1");
   });
 
-  it("should return empty summary when form is empty", () => {
-    expect(component.formSummary()).toEqual([]);
+  it("should list all input fields with empty values when form is empty", () => {
+    const summary = component.formSummary();
+    expect(summary.map((i) => i.fieldName)).toEqual([
+      "job_id",
+      "query_sequences",
+      "target_sequences",
+    ]);
+    expect(summary.every((i) => i.value === "")).toBe(true);
   });
 
   // ── 17. getFormValidationSummary ──────────────────────────────────────────

@@ -4,14 +4,14 @@
   [alertMessage]="alertMessage()"
   (alertDismissed)="closeAlert()"
 >
-  <span description
-    >This workflow provides a bioinformatics best-practice analysis experience
+  <span description>
+    This workflow provides a bioinformatics best-practice analysis experience
     for protein 3D structure prediction. Configure one or more entities,
     validate inputs against the selected tool, then review the generated FASTA
     and settings before submission.</span
   >
-  <span overview
-    >Single Prediction is designed for structure-prediction runs from curated
+  <span overview>
+    Single Prediction is designed for structure-prediction runs from curated
     biological inputs. Define entities row by row with sequence, copy number,
     and molecule type, then proceed through tool settings and review before
     launch.</span
@@ -365,10 +365,11 @@
         contentClass="space-y-4"
       >
         <app-configuration-summary
+          workflowName="Single Prediction"
           [selectedTool]="selectedToolLabel()"
           [hasParameters]="true"
-          [summaryItems]="formSummary()"
-          [requiredFieldCount]="entityRows().length * 3 + getToolSettingsSummaryItems().length"
+          [inputItems]="formSummary()"
+          [toolSettingItems]="getToolSettingsSummaryItems()"
           [isValid]="isFormValid()"
         ></app-configuration-summary>
         @if (creditsEnabled) {

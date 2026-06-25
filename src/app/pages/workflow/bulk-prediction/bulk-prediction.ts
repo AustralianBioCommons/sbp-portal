@@ -221,33 +221,22 @@ export default class BulkPredictionComponent {
   formSummary = computed(() => {
     const val = this.formValue();
     const fastaResult = validateBulkFastaProtein(val?.fasta ?? "");
-    const items: { label: string; value: string; fieldName: string }[] = [];
-
-    if (val?.jobName) {
-      items.push({
+    return [
+      {
         label: "Job Name",
-        value: val.jobName,
+        value: val?.jobName ?? "",
         fieldName: "job_id",
-      });
-    }
-
-    items.push({
-      label: "Tool",
-      value: this.selectedToolLabel(),
-      fieldName: "tool",
-    });
-
-    if (fastaResult.valid) {
-      items.push({
+      },
+      {
         label: "FASTA Entries",
-        value: `${fastaResult.sequenceCount} sequence${
-          fastaResult.sequenceCount !== 1 ? "s" : ""
-        }`,
+        value: fastaResult.valid
+          ? `${fastaResult.sequenceCount} sequence${
+              fastaResult.sequenceCount !== 1 ? "s" : ""
+            }`
+          : "",
         fieldName: "fasta_entries",
-      });
-    }
-
-    return items;
+      },
+    ];
   });
 
   // Field error helpers

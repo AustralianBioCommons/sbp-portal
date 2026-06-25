@@ -314,20 +314,20 @@ describe("BulkPredictionComponent", () => {
 
   // ── 12. formSummary ────────────────────────────────────────────────────
 
-  it("should include job name, tool, and entry count in formSummary", () => {
+  it("should include job name and entry count in formSummary", () => {
     fillValidForm();
     const summary = component.formSummary();
     expect(summary.some((item) => item.fieldName === "job_id")).toBe(true);
-    expect(summary.some((item) => item.fieldName === "tool")).toBe(true);
     expect(summary.some((item) => item.fieldName === "fasta_entries")).toBe(
       true
     );
   });
 
-  it("should omit job name from formSummary when jobName is empty", () => {
+  it("should leave job name value empty in formSummary when jobName is empty", () => {
     component.form.setValue({ jobName: "", fasta: VALID_FASTA });
     const summary = component.formSummary();
-    expect(summary.some((item) => item.fieldName === "job_id")).toBe(false);
+    const jobItem = summary.find((item) => item.fieldName === "job_id");
+    expect(jobItem?.value).toBe("");
   });
 
   it("should use singular 'sequence' when FASTA has exactly one entry", () => {
@@ -397,12 +397,13 @@ describe("BulkPredictionComponent", () => {
     expect(fastaItem?.value).toBe("2 sequences");
   });
 
-  it("should omit fasta_entries from formSummary when FASTA is invalid", () => {
+  it("should leave fasta_entries value empty in formSummary when FASTA is invalid", () => {
     component.form.setValue({ jobName: "bulk-job", fasta: "" });
     const summary = component.formSummary();
-    expect(summary.some((item) => item.fieldName === "fasta_entries")).toBe(
-      false
+    const fastaItem = summary.find(
+      (item) => item.fieldName === "fasta_entries"
     );
+    expect(fastaItem?.value).toBe("");
   });
 
   // ── 22. hasJobNameError / hasFastaError ───────────────────────────────

@@ -179,10 +179,10 @@
         contentClass="space-y-4"
       >
         <app-configuration-summary
+          workflowName="Bulk Prediction"
           [selectedTool]="selectedToolLabel()"
           [hasParameters]="false"
-          [summaryItems]="formSummary()"
-          [requiredFieldCount]="3"
+          [inputItems]="formSummary()"
           [isValid]="isFormValid()"
         ></app-configuration-summary>
         @if (creditsEnabled) {

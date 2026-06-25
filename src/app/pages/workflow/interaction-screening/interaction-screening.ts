@@ -264,33 +264,31 @@ export default class InteractionScreeningComponent {
     const val = this.formValue();
     const queryResult = validateMultiFastaProtein(val?.queryFasta ?? "");
     const targetResult = validateMultiFastaProtein(val?.targetFasta ?? "");
-    const items: { label: string; value: string; fieldName: string }[] = [];
-    if (val?.jobName) {
-      items.push({
+    return [
+      {
         label: "Job Name",
-        value: val.jobName,
+        value: val?.jobName ?? "",
         fieldName: "job_id",
-      });
-    }
-    if (queryResult.valid) {
-      items.push({
+      },
+      {
         label: "Query Sequences",
-        value: `${queryResult.sequenceCount} sequence${
-          queryResult.sequenceCount !== 1 ? "s" : ""
-        }`,
+        value: queryResult.valid
+          ? `${queryResult.sequenceCount} sequence${
+              queryResult.sequenceCount !== 1 ? "s" : ""
+            }`
+          : "",
         fieldName: "query_sequences",
-      });
-    }
-    if (targetResult.valid) {
-      items.push({
+      },
+      {
         label: "Target Sequences",
-        value: `${targetResult.sequenceCount} sequence${
-          targetResult.sequenceCount !== 1 ? "s" : ""
-        }`,
+        value: targetResult.valid
+          ? `${targetResult.sequenceCount} sequence${
+              targetResult.sequenceCount !== 1 ? "s" : ""
+            }`
+          : "",
         fieldName: "target_sequences",
-      });
-    }
-    return items;
+      },
+    ];
   });
 
   // Form validation summary for FormStatusComponent

@@ -4,13 +4,13 @@
   [alertMessage]="alertMessage()"
   (alertDismissed)="closeAlert()"
 >
-  <span description
-    >Screen protein–protein interactions using the wisps pipeline. Provide query
+  <span description>
+    Screen protein–protein interactions using the wisps pipeline. Provide query
     and target protein sequences, choose a prediction tool, and submit your
     job.</span
   >
-  <span overview
-    >This workflow screens all pairwise interactions between the provided query
+  <span overview>
+    This workflow screens all pairwise interactions between the provided query
     sequences and target sequences. Each query–target pair is evaluated using
     the selected structure prediction tool (Boltz or ColabFold) to predict
     structural geometry.</span
@@ -217,10 +217,10 @@
         contentClass="space-y-4"
       >
         <app-configuration-summary
+          workflowName="Interaction Screening"
           [selectedTool]="selectedToolLabel()"
           [hasParameters]="false"
-          [summaryItems]="formSummary()"
-          [requiredFieldCount]="3"
+          [inputItems]="formSummary()"
           [isValid]="isFormValid()"
         ></app-configuration-summary>
         @if (creditsEnabled) {
