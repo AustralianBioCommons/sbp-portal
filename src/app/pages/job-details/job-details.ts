@@ -1,4 +1,11 @@
-import { Component, effect, inject, OnInit, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  OnInit,
+  signal,
+} from "@angular/core";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { SafeResourceUrl } from "@angular/platform-browser";
 import { DatePipe } from "@angular/common";
@@ -93,6 +100,16 @@ export default class JobDetailsComponent implements OnInit {
   logsItems = signal<string[]>([]);
   logsLoading = signal(false);
   logsError = signal<string | null>(null);
+  canDownloadAllFiles = computed(
+    () =>
+      !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
+  );
+  downloadAllUrl = computed(() => {
+    const job = this.job();
+    return job && this.canDownloadAllFiles()
+      ? this.resultsService.getDownloadAllUrl(job.id)
+      : null;
+  });
 
   readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
     { id: "results", label: "Results", icon: "heroChartBarSquare" },

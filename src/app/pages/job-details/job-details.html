@@ -47,18 +47,32 @@
             Delete
           </span>
         </app-button>
+        @if (downloadAllUrl(); as downloadUrl) {
+        <a
+          [href]="downloadUrl"
+          download
+          class="rounded-md px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap overflow-hidden text-white bg-biocommons-primary hover:bg-sky-900 inline-flex items-center"
+          title="Download all files"
+        >
+          <span class="flex items-center gap-2">
+            <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
+            Download all files
+          </span>
+        </a>
+        } @else {
         <app-button
           type="button"
           variant="primary"
           widthClass="w-auto"
           [disabled]="true"
-          title="Download all files (coming soon)"
+          title="Download all files"
         >
           <span class="flex items-center gap-2">
             <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
             Download all files
           </span>
         </app-button>
+        }
       </div>
       }
     </div>

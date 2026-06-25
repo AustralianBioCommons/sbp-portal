@@ -45,6 +45,12 @@ describe("ResultsService", () => {
     );
   });
 
+  it("should build the encoded download-all URL", () => {
+    expect(service.getDownloadAllUrl("job/1")).toBe(
+      `${environment.apiBaseUrl}/api/results/job%2F1/download-all`
+    );
+  });
+
   it("should fetch setting params", () => {
     service.getJobSettingParams("job/1").subscribe((response) => {
       expect(response.settingParams).toEqual({ binder_name: "PDL1" });
