@@ -6,6 +6,7 @@ import {
   BehaviorSubject,
   Observable,
   catchError,
+  filter,
   map,
   of,
   switchMap,
@@ -24,6 +25,8 @@ interface AuthError {
 })
 export class AuthService {
   private static readonly RETURN_URL_KEY = "sbp.returnUrl";
+  // Query flag set by the AAI portal "Launch" button to request seamless SSO.
+  private static readonly AUTO_LOGIN_PARAM = "login";
   private auth0 = inject(Auth0Service);
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -94,6 +97,51 @@ export class AuthService {
     this.initializeLoadingStates();
     this.initializeBannerHandling();
     this.handleAuthCallback();
+    this.handleAutoLogin();
+  }
+
+  /**
+   * Seamless SSO entry point. When the app is opened with `?login=true` (set by
+   * the AAI portal "Launch" button), trigger a full-page Auth0 redirect. Because
+   * a top-level redirect reads the Auth0 session as a first-party cookie, an
+   * existing SSO session completes without prompting for credentials — unlike
+   * iframe silent auth, which depends on third-party cookies. Organic visitors
+   * (no flag) are left anonymous so the public home page still works.
+   */
+  private handleAutoLogin(): void {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get(AuthService.AUTO_LOGIN_PARAM) !== "true") {
+      return;
+    }
+
+    // Never interfere with the Auth0 redirect callback round-trip.
+    const search = window.location.search;
+    if (
+      search.includes("code=") ||
+      search.includes("state=") ||
+      search.includes("error=")
+    ) {
+      return;
+    }
+
+    // Wait until Auth0 has restored any existing local session before deciding.
+    this.auth0.isLoading$
+      .pipe(
+        filter((loading) => !loading),
+        take(1),
+        switchMap(() => this.auth0.isAuthenticated$.pipe(take(1)))
+      )
+      .subscribe((isAuthenticated) => {
+        // Drop the login flag from the URL so it isn't reused as the return
+        // target after the round-trip.
+        const target =
+          window.location.pathname + window.location.hash || "/binder-design";
+        if (isAuthenticated) {
+          this.router.navigateByUrl(target);
+        } else {
+          this.login(target);
+        }
+      });
   }
 
   private initializeLoadingStates(): void {
