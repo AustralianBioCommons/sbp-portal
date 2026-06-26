@@ -28,6 +28,7 @@ import { LoadingComponent } from "../../components/loading/loading.component";
 import { DialogComponent } from "../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../components/button/button.component";
 import { JobListItem, JobsService } from "../../cores/services/jobs.service";
+import { HealthService } from "../../cores/services/health.service";
 import {
   ResultLogsResponse,
   ResultsService,
@@ -74,13 +75,18 @@ export default class JobDetailsComponent implements OnInit {
   private router = inject(Router);
   private jobsService = inject(JobsService);
   private resultsService = inject(ResultsService);
+  private healthService = inject(HealthService);
   private datePipe = inject(DatePipe);
 
   // Page state
   job = signal<JobListItem | null>(null);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
-  seqeraUnavailable = signal<boolean>(false);
+  // Driven by the system health API (GET /api/health/components): true when any
+  // monitored component is not healthy, so we can warn that job status / logs may
+  // be stale. The accompanying message comes from the backend.
+  systemUnhealthy = signal<boolean>(false);
+  healthMessage = signal<string | null>(null);
   showDeleteDialog = signal<boolean>(false);
   deleting = signal<boolean>(false);
 
@@ -121,9 +127,6 @@ export default class JobDetailsComponent implements OnInit {
     const navigatedJob = navState?.["job"] as JobListItem | undefined;
     if (navigatedJob) {
       this.job.set(this.jobsService.normalizeJob(navigatedJob));
-      this.seqeraUnavailable.set(
-        (navState?.["seqeraUnavailable"] as boolean) ?? false
-      );
     }
 
     // Reset and reload the results whenever the selected job changes.
@@ -138,6 +141,8 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.checkSystemHealth();
+
     const id = this.route.snapshot.paramMap.get("id");
     if (!id) {
       this.error.set("Job not found.");
@@ -150,6 +155,27 @@ export default class JobDetailsComponent implements OnInit {
     }
 
     this.loadJob(id);
+  }
+
+  /**
+   * Check overall system health and surface a warning when any monitored
+   * component is not healthy. Best-effort: a failed health check leaves the
+   * page untouched.
+   */
+  private checkSystemHealth(): void {
+    this.healthService
+      .getComponentsHealth()
+      .pipe(
+        catchError((err) => {
+          console.error("Error checking system health:", err);
+          return EMPTY;
+        })
+      )
+      .subscribe((health) => {
+        const unhealthy = health.overallStatus !== "healthy";
+        this.systemUnhealthy.set(unhealthy);
+        this.healthMessage.set(unhealthy ? health.message : null);
+      });
   }
 
   private loadJob(id: string): void {
@@ -165,13 +191,12 @@ export default class JobDetailsComponent implements OnInit {
           return EMPTY;
         })
       )
-      .subscribe(({ job, seqeraUnavailable }) => {
+      .subscribe((job) => {
         if (!job) {
           this.error.set("Job not found.");
         } else {
           this.job.set(job);
         }
-        this.seqeraUnavailable.set(seqeraUnavailable);
         this.loading.set(false);
       });
   }

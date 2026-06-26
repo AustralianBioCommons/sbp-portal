@@ -10,6 +10,7 @@ import {
   ResultsService,
 } from "../../cores/services/results.service";
 import { JobListItem, JobsService } from "../../cores/services/jobs.service";
+import { HealthService } from "../../cores/services/health.service";
 import { environment } from "../../../environments/environment";
 
 type JobDetailsPrivateApi = {
@@ -32,6 +33,7 @@ describe("JobDetailsComponent", () => {
   let fixture: ComponentFixture<JobDetailsComponent>;
   let mockJobsService: jasmine.SpyObj<JobsService>;
   let resultsService: jasmine.SpyObj<ResultsService>;
+  let mockHealthService: jasmine.SpyObj<HealthService>;
   let sanitizer: DomSanitizer;
   let routeId: string | null;
 
@@ -69,9 +71,7 @@ describe("JobDetailsComponent", () => {
       "listJobs",
     ]);
     mockJobsService.normalizeJob.and.callFake((job) => job);
-    mockJobsService.getJob.and.returnValue(
-      of({ job: mockJob, seqeraUnavailable: false })
-    );
+    mockJobsService.getJob.and.returnValue(of(mockJob));
     mockJobsService.deleteJob.and.returnValue(
       of({
         runId: mockJob.id,
@@ -89,12 +89,24 @@ describe("JobDetailsComponent", () => {
       "getJobLogs",
     ]);
 
+    mockHealthService = jasmine.createSpyObj("HealthService", [
+      "getComponentsHealth",
+    ]);
+    mockHealthService.getComponentsHealth.and.returnValue(
+      of({
+        overallStatus: "healthy",
+        checkedAt: "2026-06-25T03:12:55Z",
+        message: null,
+      })
+    );
+
     await TestBed.configureTestingModule({
       imports: [JobDetailsComponent],
       providers: [
         provideRouter([]),
         { provide: JobsService, useValue: mockJobsService },
         { provide: ResultsService, useValue: resultsService },
+        { provide: HealthService, useValue: mockHealthService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -197,9 +209,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should show an error when the job cannot be found", () => {
-    mockJobsService.getJob.and.returnValue(
-      of({ job: null, seqeraUnavailable: false })
-    );
+    mockJobsService.getJob.and.returnValue(of(null));
     render();
 
     expect(component.error()).toBe("Job not found.");

@@ -70,9 +70,7 @@ describe("JobsService", () => {
   });
 
   it("should resolve a job by run id from the listing and normalize it", () => {
-    let result:
-      | { job: JobListItem | null; seqeraUnavailable: boolean }
-      | undefined;
+    let result: JobListItem | null | undefined;
     service.getJob("run-2").subscribe((r) => (result = r));
 
     const req = httpMock.expectOne(
@@ -107,20 +105,17 @@ describe("JobsService", () => {
       offset: 0,
     });
 
-    expect(result?.job).toEqual(
+    expect(result).toEqual(
       jasmine.objectContaining({
         id: "run-2",
         workflow: "wf-b",
         finalDesignCount: 5,
       })
     );
-    expect(result?.seqeraUnavailable).toBeFalse();
   });
 
   it("should return null from getJob when no job matches the run id", () => {
-    let result:
-      | { job: JobListItem | null; seqeraUnavailable: boolean }
-      | undefined;
+    let result: JobListItem | null | undefined;
     service.getJob("missing").subscribe((r) => (result = r));
 
     const req = httpMock.expectOne(
@@ -128,7 +123,7 @@ describe("JobsService", () => {
     );
     req.flush({ jobs: [], total: 0, limit: 1000, offset: 0 });
 
-    expect(result?.job).toBeNull();
+    expect(result).toBeNull();
   });
 
   it("should fall back to defaults when normalizing a job without aliases", () => {

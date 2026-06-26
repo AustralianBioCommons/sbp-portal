@@ -116,12 +116,12 @@
     </div>
     }
 
-    <!-- Seqera Unavailable Warning -->
-    @if (seqeraUnavailable()) {
+    <!-- System Health Warning -->
+    @if (systemUnhealthy()) {
     <app-alert
       type="warning"
       position="fixed"
-      message="Seqera services are currently unavailable. Job statuses may not be up to date and logs cannot be retrieved until the service is restored."
+      [message]="healthMessage() ?? 'Some workflow services are currently unavailable. Job status and logs may not be up to date until the service is restored.'"
     ></app-alert>
     } @if (loading()) {
     <!-- Loading State -->
