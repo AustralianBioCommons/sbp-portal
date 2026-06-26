@@ -61,13 +61,13 @@
           } @else if (item.value) {
           <p class="text-gray-600 wrap-break-word">{{ item.value }}</p>
           } @else {
-          <p class="text-red-700">Not provided</p>
+          <p class="text-red-600">Not provided</p>
           }
         </div>
         }
       </div>
       } @else {
-      <p class="text-red-700">No input configuration provided</p>
+      <p class="text-red-600">No input configuration provided</p>
       }
     </div>
 
@@ -84,7 +84,7 @@
           @if (item.value) {
           <p class="text-gray-600 wrap-break-word">{{ item.value }}</p>
           } @else {
-          <p class="text-red-700">Not provided</p>
+          <p class="text-red-600">Not provided</p>
           }
         </div>
         }
@@ -122,7 +122,7 @@
         Configuration Incomplete
       </span>
     </div>
-    <p class="text-sm text-red-700 mt-1">
+    <p class="text-sm text-red-600 mt-1">
       Please complete all required fields in the Input Configuration step.
     </p>
   </div>
