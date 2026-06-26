@@ -168,7 +168,10 @@ describe("WorkflowFormComponent", () => {
       window.IntersectionObserver = originalObserver;
     });
 
-    function fire(index: number, entries: Partial<IntersectionObserverEntry>[]) {
+    function fire(
+      index: number,
+      entries: Partial<IntersectionObserverEntry>[]
+    ) {
       observers[index](
         entries as IntersectionObserverEntry[],
         {} as IntersectionObserver
@@ -187,12 +190,8 @@ describe("WorkflowFormComponent", () => {
     });
 
     it("keeps the current section when nothing is intersecting", () => {
-      fire(0, [
-        { isIntersecting: true, target: { id: "c" } as Element },
-      ]);
-      fire(0, [
-        { isIntersecting: false, target: { id: "c" } as Element },
-      ]);
+      fire(0, [{ isIntersecting: true, target: { id: "c" } as Element }]);
+      fire(0, [{ isIntersecting: false, target: { id: "c" } as Element }]);
 
       expect(component.activeSection()).toBe("c");
     });

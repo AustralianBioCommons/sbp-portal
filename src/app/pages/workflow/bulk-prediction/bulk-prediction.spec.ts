@@ -98,18 +98,20 @@ describe("BulkPredictionComponent", () => {
     };
 
     creditsService = {
-      getWorkflowCredits: jasmine.createSpy("getWorkflowCredits").and.returnValue(
-        of({
-          workflows: [
-            {
-              category: "bulk-prediction",
-              displayName: "Bulk Prediction",
-              basis: "sequence",
-              toolMultipliers: { boltz: 2, colabfold: 3 },
-            },
-          ],
-        })
-      ),
+      getWorkflowCredits: jasmine
+        .createSpy("getWorkflowCredits")
+        .and.returnValue(
+          of({
+            workflows: [
+              {
+                category: "bulk-prediction",
+                displayName: "Bulk Prediction",
+                basis: "sequence",
+                toolMultipliers: { boltz: 2, colabfold: 3 },
+              },
+            ],
+          })
+        ),
       getMyCredit: jasmine
         .createSpy("getMyCredit")
         .and.returnValue(of({ userId: "u1", credit: 100 })),
