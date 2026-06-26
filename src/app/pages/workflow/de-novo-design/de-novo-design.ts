@@ -207,8 +207,16 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   /** True while the PDB file is being uploaded to S3 on Next click. */
   isPdbUploading = signal(false);
 
+  /** Default width (px) of the config panel when opened. */
+  readonly defaultPanelWidth = 360;
+  /** Minimum width (px) of the config panel while open — the divider drag
+   *  cannot shrink it below this; below it the panel can only be fully closed (0). */
+  readonly minPanelWidth = 240;
+  /** Maximum width (px) the config panel can be dragged to. */
+  readonly maxPanelWidth = 600;
+
   /** Width of the config panel in pixels. 0 = fully collapsed. */
-  panelWidth = signal(320);
+  panelWidth = signal(this.defaultPanelWidth);
   /** True during an active divider drag — suppresses CSS transition for smooth tracking. */
   isDragging = signal(false);
 
@@ -228,7 +236,10 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (!this.isDragging()) return;
     const delta = this._dragStartX - event.clientX; // drag left → panel grows
     this.panelWidth.set(
-      Math.max(150, Math.min(640, this._dragStartPanelWidth + delta))
+      Math.max(
+        this.minPanelWidth,
+        Math.min(this.maxPanelWidth, this._dragStartPanelWidth + delta)
+      )
     );
   }
 

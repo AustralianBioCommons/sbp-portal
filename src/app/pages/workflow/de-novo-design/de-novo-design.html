@@ -134,6 +134,7 @@
                   class="absolute inset-0"
                   [pdbFile]="localPdbFile()"
                   [disabled]="isPdbUploading()"
+                  [roundBottomRight]="panelWidth() === 0"
                   [externalSelection]="programmaticViewerSelection()"
                   (filePicked)="onPdbFilePicked($event, row.id)"
                   (residuesSelected)="onResiduesSelected(row.id, $event)"
@@ -144,13 +145,12 @@
                 <!-- starting_pdb error — overlaid on viewer, takes no layout space -->
                 @if (hasRowFieldError(row.id, 'starting_pdb')) {
                 <div
-                  class="absolute top-3 left-3 right-3 z-10 flex items-center gap-2 rounded-md border border-red-200 bg-red-50/95 px-3 py-2.5 shadow-sm backdrop-blur-sm"
+                  class="absolute top-4 left-4 right-4 z-10 flex items-center gap-2 rounded-md border border-red-200 bg-red-50/95 px-3 py-2.5 shadow-sm backdrop-blur-sm"
                 >
                   <ng-icon
                     name="heroXCircleSolid"
                     size="20"
-                    style="color: rgb(239 68 68)"
-                    class="shrink-0"
+                    class="shrink-0 text-red-500"
                     aria-hidden="true"
                   ></ng-icon>
                   <p class="text-sm text-red-500">
@@ -160,7 +160,8 @@
                 }
               </div>
 
-              <!-- Draggable divider -->
+              <!-- Draggable divider — hidden when the panel is collapsed -->
+              @if (panelWidth() > 0) {
               <div
                 class="relative w-1 shrink-0 cursor-col-resize select-none bg-gray-200 transition-colors hover:bg-sky-200"
                 (mousedown)="onDividerMouseDown($event)"
@@ -171,6 +172,7 @@
                   aria-hidden="true"
                 ></ng-icon>
               </div>
+              }
 
               <!-- Config panel column — outer has no overflow-hidden so the tab button can protrude left -->
               <div
@@ -180,6 +182,7 @@
                 [class.duration-300]="!isDragging()"
                 [class.ease-in-out]="!isDragging()"
                 [style.width.px]="panelWidth()"
+                [style.minWidth.px]="panelWidth() === 0 ? 0 : minPanelWidth"
                 role="region"
                 aria-label="Configuration parameters"
               >
@@ -187,9 +190,9 @@
                 @if (panelWidth() === 0) {
                 <button
                   type="button"
-                  class="absolute top-4 right-1 z-20 flex items-center gap-2 whitespace-nowrap rounded-l-full border bg-white p-2 text-sm font-medium shadow-md transition-colors focus:outline-none"
-                  [class]="hasConfigSectionErrors(row.id) ? 'border-red-300 text-red-700 hover:bg-red-50' : 'border-gray-300 text-gray-600 hover:bg-gray-50'"
-                  (click)="panelWidth.set(320)"
+                  class="absolute top-4 right-0 z-50 bg-white flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 p-2 text-sm font-medium shadow-md transition-colors focus:outline-none"
+                  [class]="hasConfigSectionErrors(row.id) ? 'border-red-500 text-red-700 hover:bg-red-50' : 'border-gray-300  hover:bg-gray-50'"
+                  (click)="panelWidth.set(defaultPanelWidth)"
                   title="Open Input Configuration"
                 >
                   <ng-icon
@@ -211,14 +214,14 @@
 
                 <!-- Inner content wrapper — clips panel content to the outer's dynamic width -->
                 <div class="h-full overflow-hidden">
-                  <div class="flex h-full w-full flex-col border-l bg-white">
+                  <div class="flex h-full w-full flex-col bg-white">
                     <!-- Panel header -->
                     <div
                       class="flex shrink-0 p-4 items-center gap-2 border-b px-4"
                     >
-                      <span class="flex-1 truncate text-sm font-semibold"
-                        >Input Configuration</span
-                      >
+                      <span class="flex-1 truncate text-sm font-medium">
+                        Input Configuration
+                      </span>
                       <button
                         type="button"
                         class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
@@ -264,7 +267,18 @@
                         [value]="getRowValue(row.id, field.name)"
                         [hasError]="hasRowFieldError(row.id, field.name)"
                         [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                        tooltip="Type residues as ChainResidue, e.g. A100,A101,B200. Or click residues in the viewer to add them here."
                         (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
+                        (fieldBlur)="validateRowField(row.id, field.name)"
+                      ></app-form-field>
+                      } @else if (field.name === 'chains') {
+                      <app-form-field
+                        [field]="field"
+                        [value]="getRowValue(row.id, field.name)"
+                        [hasError]="hasRowFieldError(row.id, field.name)"
+                        [errorMessage]="getRowFieldError(row.id, field.name) || ''"
+                        tooltip="Enter chain letter(s) to target, e.g. A or A,B. Auto-filled when you select hotspot residues in the viewer."
+                        (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
                         (fieldBlur)="validateRowField(row.id, field.name)"
                       ></app-form-field>
                       } @else {

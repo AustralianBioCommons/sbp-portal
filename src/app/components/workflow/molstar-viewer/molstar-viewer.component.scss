@@ -1,0 +1,10 @@
+/* Keep only the sequence bar (top) and 3D viewport visible */
+app-molstar-viewer .msp-layout-region-right,
+app-molstar-viewer .msp-layout-region-left,
+app-molstar-viewer .msp-layout-region-bottom,
+app-molstar-viewer .msp-viewport-controls,
+app-molstar-viewer .msp-viewport-controls-panels,
+app-molstar-viewer .msp-selection-viewport-controls,
+app-molstar-viewer .msp-controls-panel {
+  display: none !important;
+}

@@ -57,6 +57,10 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
    *  Accepts the same comma-separated token format the viewer emits:
    *  "A56,B12" or ranges "A12-A14". Set to "" to clear the selection. */
   externalSelection = input("");
+  /** Round the viewport's bottom-right corner. Set when the viewer meets the
+   *  container's right edge (e.g. the config panel is collapsed); the WebGL
+   *  canvas must be rounded on its own container, not by an ancestor clip. */
+  roundBottomRight = input(false);
 
   /** Emits a comma-separated residue string (e.g. "A42,A43,B11") on each selection change. */
   residuesSelected = output<string>();
