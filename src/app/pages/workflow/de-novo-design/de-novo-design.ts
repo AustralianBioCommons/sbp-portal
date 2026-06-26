@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common";
+import { CommonModule, DOCUMENT } from "@angular/common";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowUpTray,
@@ -11,7 +11,6 @@ import { heroXCircleSolid } from "@ng-icons/heroicons/solid";
 import {
   Component,
   computed,
-  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -98,6 +97,8 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   // // Make Object available in template
   Object = Object;
 
+  // Document reference (SSR-safe; avoids touching the global directly)
+  private readonly document = inject(DOCUMENT);
   // Auth
   public auth = inject(AuthService);
   // Schema loader service
@@ -222,6 +223,13 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   private _dragStartX = 0;
   private _dragStartPanelWidth = 0;
+  /** Step (px) the divider moves per arrow-key press for keyboard resizing. */
+  private readonly keyboardResizeStep = 12;
+
+  /** Clamp a width to the open panel's allowed range. */
+  private clampPanelWidth(width: number): number {
+    return Math.max(this.minPanelWidth, Math.min(this.maxPanelWidth, width));
+  }
 
   onDividerMouseDown(event: MouseEvent): void {
     if (this.panelWidth() === 0) return;
@@ -229,23 +237,45 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     this._dragStartX = event.clientX;
     this._dragStartPanelWidth = this.panelWidth();
     event.preventDefault();
+
+    this.document.addEventListener("mousemove", this.onDocumentMouseMove);
+    this.document.addEventListener("mouseup", this.onDocumentMouseUp);
   }
 
-  @HostListener("document:mousemove", ["$event"])
-  onDocumentMouseMove(event: MouseEvent): void {
-    if (!this.isDragging()) return;
-    const delta = this._dragStartX - event.clientX; // drag left → panel grows
+  private onDocumentMouseMove = (event: MouseEvent): void => {
+    const delta = this._dragStartX - event.clientX;
     this.panelWidth.set(
-      Math.max(
-        this.minPanelWidth,
-        Math.min(this.maxPanelWidth, this._dragStartPanelWidth + delta)
-      )
+      this.clampPanelWidth(this._dragStartPanelWidth + delta)
     );
-  }
+  };
 
-  @HostListener("document:mouseup")
-  onDocumentMouseUp(): void {
-    if (this.isDragging()) this.isDragging.set(false);
+  private onDocumentMouseUp = (): void => {
+    this.isDragging.set(false);
+    this.document.removeEventListener("mousemove", this.onDocumentMouseMove);
+    this.document.removeEventListener("mouseup", this.onDocumentMouseUp);
+  };
+
+  onDividerKeydown(event: KeyboardEvent): void {
+    if (this.panelWidth() === 0) return;
+    let next: number;
+    switch (event.key) {
+      case "ArrowLeft":
+        next = this.panelWidth() + this.keyboardResizeStep;
+        break;
+      case "ArrowRight":
+        next = this.panelWidth() - this.keyboardResizeStep;
+        break;
+      case "Home":
+        next = this.maxPanelWidth;
+        break;
+      case "End":
+        next = this.minPanelWidth;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    this.panelWidth.set(this.clampPanelWidth(next));
   }
 
   /** Called when user picks a .pdb file via the custom picker.
@@ -571,6 +601,9 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    // Defensive: remove drag listeners if destroyed mid-drag.
+    this.document.removeEventListener("mousemove", this.onDocumentMouseMove);
+    this.document.removeEventListener("mouseup", this.onDocumentMouseUp);
   }
 
   loadInputSchema() {
