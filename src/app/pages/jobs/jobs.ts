@@ -10,6 +10,7 @@ import {
   JobListQueryParams,
   JobsService,
 } from "../../cores/services/jobs.service";
+import { HealthService } from "../../cores/services/health.service";
 import { DatePipe } from "@angular/common";
 import { EMPTY } from "rxjs";
 import { catchError } from "rxjs/operators";
@@ -55,6 +56,7 @@ import {
 })
 export default class JobsComponent implements OnInit {
   private jobsService = inject(JobsService);
+  private healthService = inject(HealthService);
   private router = inject(Router);
 
   // Expose Math to template
@@ -65,7 +67,11 @@ export default class JobsComponent implements OnInit {
   total = signal<number>(0);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
-  seqeraUnavailable = signal<boolean>(false);
+  // Driven by the system health API (GET /api/health/components): true when any
+  // monitored component is not healthy, so we can warn that job status / logs may
+  // be stale. The accompanying message comes from the backend.
+  systemUnhealthy = signal<boolean>(false);
+  healthMessage = signal<string | null>(null);
   selectedJobs = signal<string[]>([]);
   showDeleteDialog = signal(false);
   showStatusDropdown = signal(false);
@@ -84,6 +90,28 @@ export default class JobsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadJobs();
+    this.checkSystemHealth();
+  }
+
+  /**
+   * Check overall system health and surface a warning when any monitored
+   * component is not healthy. Best-effort: a failed health check leaves the
+   * jobs UI untouched.
+   */
+  private checkSystemHealth(): void {
+    this.healthService
+      .getComponentsHealth()
+      .pipe(
+        catchError((err) => {
+          console.error("Error checking system health:", err);
+          return EMPTY;
+        })
+      )
+      .subscribe((health) => {
+        const unhealthy = health.overallStatus !== "healthy";
+        this.systemUnhealthy.set(unhealthy);
+        this.healthMessage.set(unhealthy ? health.message : null);
+      });
   }
 
   /**
@@ -92,7 +120,6 @@ export default class JobsComponent implements OnInit {
   loadJobs(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.seqeraUnavailable.set(false);
     this.selectedJobs.set([]); // Clear selection when reloading
 
     const params: JobListQueryParams = {
@@ -133,7 +160,6 @@ export default class JobsComponent implements OnInit {
         });
         this.jobs.set(this.sortJobs(normalizedJobs));
         this.total.set(response.total);
-        this.seqeraUnavailable.set(response.seqeraUnavailable ?? false);
         this.loading.set(false);
       });
   }
@@ -408,7 +434,7 @@ export default class JobsComponent implements OnInit {
 
   viewJobDetails(job: JobListItem): void {
     this.router.navigate(["/jobs", job.id], {
-      state: { job, seqeraUnavailable: this.seqeraUnavailable() },
+      state: { job },
     });
   }
 }

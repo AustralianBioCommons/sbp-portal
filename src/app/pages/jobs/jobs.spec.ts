@@ -9,12 +9,23 @@ import {
   JobListResponse,
   JobsService,
 } from "../../cores/services/jobs.service";
+import {
+  ComponentsHealthResponse,
+  HealthService,
+} from "../../cores/services/health.service";
 
 describe("JobsComponent", () => {
   let component: JobsComponent;
   let fixture: ComponentFixture<JobsComponent>;
   let mockJobsService: jasmine.SpyObj<JobsService>;
   let mockResultsService: jasmine.SpyObj<ResultsService>;
+  let mockHealthService: jasmine.SpyObj<HealthService>;
+
+  const healthyResponse: ComponentsHealthResponse = {
+    overallStatus: "healthy",
+    checkedAt: "2026-06-25T03:12:55Z",
+    message: null,
+  };
   let sanitizer: DomSanitizer;
 
   const mockJob: JobListItem = {
@@ -64,6 +75,10 @@ describe("JobsComponent", () => {
       "getJobSettingParams",
       "getJobLogs",
     ]);
+    mockHealthService = jasmine.createSpyObj("HealthService", [
+      "getComponentsHealth",
+    ]);
+    mockHealthService.getComponentsHealth.and.returnValue(of(healthyResponse));
     mockJobsService.listJobs.and.returnValue(of(mockResponse));
     mockJobsService.cancelJob.and.returnValue(
       of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" })
@@ -76,6 +91,7 @@ describe("JobsComponent", () => {
       providers: [
         { provide: JobsService, useValue: mockJobsService },
         { provide: ResultsService, useValue: mockResultsService },
+        { provide: HealthService, useValue: mockHealthService },
         provideRouter([]),
       ],
     }).compileComponents();
@@ -105,6 +121,44 @@ describe("JobsComponent", () => {
 
   it("should create", () => {
     expect(component).toBeTruthy();
+  });
+
+  it("does not flag a warning when all components are healthy", () => {
+    expect(mockHealthService.getComponentsHealth).toHaveBeenCalled();
+    expect(component.systemUnhealthy()).toBeFalse();
+    expect(component.healthMessage()).toBeNull();
+  });
+
+  it("flags a warning with the backend message when a component is not healthy", async () => {
+    mockHealthService.getComponentsHealth.and.returnValue(
+      of({
+        overallStatus: "degraded",
+        checkedAt: "2026-06-25T03:12:55Z",
+        message: "Some workflow services are currently unavailable.",
+      })
+    );
+
+    fixture = TestBed.createComponent(JobsComponent);
+    component = fixture.componentInstance;
+    await detectComponentChanges();
+
+    expect(component.systemUnhealthy()).toBeTrue();
+    expect(component.healthMessage()).toBe(
+      "Some workflow services are currently unavailable."
+    );
+  });
+
+  it("does not surface a warning when the health check fails", async () => {
+    mockHealthService.getComponentsHealth.and.returnValue(
+      throwError(() => new Error("network error"))
+    );
+
+    fixture = TestBed.createComponent(JobsComponent);
+    component = fixture.componentInstance;
+    await detectComponentChanges();
+
+    expect(component.systemUnhealthy()).toBeFalse();
+    expect(component.healthMessage()).toBeNull();
   });
 
   it("should load jobs on init", () => {
@@ -360,7 +414,7 @@ describe("JobsComponent", () => {
     component.viewJobDetails(mockJob);
 
     expect(navigateSpy).toHaveBeenCalledWith(["/jobs", mockJob.id], {
-      state: { job: mockJob, seqeraUnavailable: false },
+      state: { job: mockJob },
     });
   });
 

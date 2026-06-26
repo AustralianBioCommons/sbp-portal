@@ -25,7 +25,6 @@ export interface JobListResponse {
   total: number;
   limit: number;
   offset: number;
-  seqeraUnavailable?: boolean;
 }
 
 /**
@@ -103,16 +102,11 @@ export class JobsService {
    * @param runId The job run id
    * @returns Observable of the matching JobListItem, or null if not found
    */
-  getJob(
-    runId: string
-  ): Observable<{ job: JobListItem | null; seqeraUnavailable: boolean }> {
+  getJob(runId: string): Observable<JobListItem | null> {
     return this.listJobs({ limit: 1000, offset: 0 }).pipe(
       map((response) => {
         const job = response.jobs.find((item) => item.id === runId);
-        return {
-          job: job ? this.normalizeJob(job) : null,
-          seqeraUnavailable: response.seqeraUnavailable ?? false,
-        };
+        return job ? this.normalizeJob(job) : null;
       })
     );
   }
