@@ -37,9 +37,16 @@ export async function getAppConfig(): Promise<ApplicationConfig> {
         domain: environment.auth.domain,
         clientId: environment.auth.clientId,
         cacheLocation: "localstorage",
+        // Use rotating refresh tokens so the session survives without relying on
+        // third-party-cookie iframe checks (which browsers block intermittently).
+        useRefreshTokens: true,
+        // Fall back to silent iframe auth when no refresh token is cached (e.g.
+        // before login) instead of throwing a "Missing Refresh Token" error.
+        useRefreshTokensFallback: true,
         authorizationParams: {
           audience: environment.auth.audience,
           redirect_uri: window.location.origin,
+          scope: "openid profile email offline_access",
         },
         httpInterceptor: {
           allowedList: [`${apiBaseUrl}/api/*`],
