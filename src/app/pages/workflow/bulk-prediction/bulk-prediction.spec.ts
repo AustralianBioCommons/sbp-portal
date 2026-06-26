@@ -13,6 +13,7 @@ import {
   DatasetUploadService,
 } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+import { CreditsService } from "../../../cores/services/credits.service";
 import BulkPredictionComponent from "./bulk-prediction";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -57,6 +58,10 @@ describe("BulkPredictionComponent", () => {
     profileUrl: string;
     login: jasmine.Spy;
   };
+  let creditsService: {
+    getWorkflowCredits: jasmine.Spy;
+    getMyCredit: jasmine.Spy;
+  };
 
   beforeEach(async () => {
     fastaUploadService = jasmine.createSpyObj<FastaUploadService>(
@@ -92,6 +97,24 @@ describe("BulkPredictionComponent", () => {
       login: jasmine.createSpy("login"),
     };
 
+    creditsService = {
+      getWorkflowCredits: jasmine.createSpy("getWorkflowCredits").and.returnValue(
+        of({
+          workflows: [
+            {
+              category: "bulk-prediction",
+              displayName: "Bulk Prediction",
+              basis: "sequence",
+              toolMultipliers: { boltz: 2, colabfold: 3 },
+            },
+          ],
+        })
+      ),
+      getMyCredit: jasmine
+        .createSpy("getMyCredit")
+        .and.returnValue(of({ userId: "u1", credit: 100 })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [BulkPredictionComponent],
       providers: [
@@ -104,6 +127,7 @@ describe("BulkPredictionComponent", () => {
           provide: WorkflowSubmissionService,
           useValue: workflowSubmissionService,
         },
+        { provide: CreditsService, useValue: creditsService },
       ],
     }).compileComponents();
 
@@ -476,6 +500,41 @@ describe("BulkPredictionComponent", () => {
       fixture.detectChanges();
 
       expect(component.creditsInsufficient()).toBe(false);
+    });
+  });
+
+  // ── 26. loadToolCredits ────────────────────────────────────────────────
+
+  describe("loadToolCredits", () => {
+    it("applies tool multipliers and the remaining balance when authenticated", () => {
+      expect(creditsService.getWorkflowCredits).toHaveBeenCalled();
+      expect(creditsService.getMyCredit).toHaveBeenCalled();
+      expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(2);
+      expect(component.creditsRemaining()).toBe(100);
+    });
+
+    it("ignores the response when no matching workflow config is returned", () => {
+      creditsService.getWorkflowCredits.and.returnValue(of({ workflows: [] }));
+      const fresh = TestBed.createComponent(BulkPredictionComponent);
+      fresh.detectChanges();
+      expect(
+        fresh.componentInstance.tools.find((t) => t.id === "boltz")?.credits
+      ).toBeUndefined();
+    });
+
+    it("warns and continues when the credit requests fail", () => {
+      const warnSpy = spyOn(console, "warn");
+      creditsService.getWorkflowCredits.and.returnValue(
+        throwError(() => new Error("credits down"))
+      );
+      creditsService.getMyCredit.and.returnValue(
+        throwError(() => new Error("balance down"))
+      );
+
+      const fresh = TestBed.createComponent(BulkPredictionComponent);
+      fresh.detectChanges();
+
+      expect(warnSpy).toHaveBeenCalled();
     });
   });
 });
