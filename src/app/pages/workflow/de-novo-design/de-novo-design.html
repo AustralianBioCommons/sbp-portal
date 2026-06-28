@@ -85,15 +85,17 @@
           <!-- PDB viewer + right-side sliding config panel -->
           <div class="w-full overflow-hidden rounded-lg border">
             <!-- PDB file header — always visible above the viewer -->
-            <div class="flex items-center justify-between gap-4 border-b p-4">
+            <div
+              class="flex flex-wrap items-center justify-between gap-4 border-b p-4"
+            >
               <div>
                 <p class="block text-sm font-medium">
                   Target Structure @if (localPdbFile()) {
-                  <span class="font-normal text-gray-300"> | </span
-                  ><span class="font-semibold text-sky-900"
-                    >Model: {{ localPdbFile()!.name.replace('.pdb',
-                    '').replace('.PDB', '') }}</span
-                  >
+                  <span class="font-normal text-gray-300 mx-2">|</span>
+                  <span class="font-semibold text-sky-900">
+                    Model: {{ localPdbFile()!.name.replace('.pdb',
+                    '').replace('.PDB', '') }}
+                  </span>
                   }
                   <span class="text-red-500" aria-hidden="true">*</span>
                 </p>
