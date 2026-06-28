@@ -65,15 +65,15 @@
 </style>
 
 <div class="w-full min-w-0">
-  <div class="flex items-center justify-between mb-2">
-    <span class="text-xs text-gray-500"
-      >Min length:
-      <strong class="text-gray-700">{{ currentMin() }}</strong></span
-    >
-    <span class="text-xs text-gray-500"
-      >Max length:
-      <strong class="text-gray-700">{{ currentMax() }}</strong></span
-    >
+  <div class="flex items-center justify-between gap-4 mb-2">
+    <div class="text-xs text-gray-500">
+      Min length:
+      <span class="font-medium text-gray-900">{{ currentMin() }}</span>
+    </div>
+    <div class="text-xs text-gray-500">
+      Max length:
+      <span class="font-medium text-gray-900">{{ currentMax() }}</span>
+    </div>
   </div>
   <div class="slider-track">
     <div class="slider-track-bar"></div>
