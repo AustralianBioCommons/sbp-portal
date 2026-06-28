@@ -126,8 +126,8 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   jobNameTouched = signal(false);
   readonly jobNameError = computed<string>(() =>
     jobNameErrorMessage(
-      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors,
-    ),
+      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
+    )
   );
 
   // Form data and validation
@@ -162,10 +162,10 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? "",
+    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
   );
   selectedToolData: Signal<ToolChip | undefined> = computed(() =>
-    this.tools.find((t) => t.id === this.selectedTool()),
+    this.tools.find((t) => t.id === this.selectedTool())
   );
 
   // Tool-specific parameter definitions (no params for any tool yet)
@@ -245,7 +245,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   private onDocumentMouseMove = (event: MouseEvent): void => {
     const delta = this._dragStartX - event.clientX;
     this.panelWidth.set(
-      this.clampPanelWidth(this._dragStartPanelWidth + delta),
+      this.clampPanelWidth(this._dragStartPanelWidth + delta)
     );
   };
 
@@ -318,7 +318,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         residues
           .split(",")
           .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
-          .filter(Boolean),
+          .filter(Boolean)
       ),
     ]
       .sort()
@@ -420,7 +420,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(
       rowId,
       "target_hotspot_residues",
-      residues,
+      residues
     );
     const chains = this.chainsFromResidues(residues);
     if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
@@ -456,7 +456,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   onLengthRangeChange(
     rowId: string,
-    range: { min: number; max: number },
+    range: { min: number; max: number }
   ): void {
     this.updateRowValueWithValidation(rowId, "min_length", range.min);
     this.updateRowValueWithValidation(rowId, "max_length", range.max);
@@ -470,7 +470,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(
       rowId,
       "target_hotspot_residues",
-      residues,
+      residues
     );
     const chains = this.chainsFromResidues(residues);
     this.updateRowValueWithValidation(rowId, "chains", chains);
@@ -514,11 +514,11 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.auth.isLoading$
         .pipe(
           filter((isLoading) => !isLoading),
-          take(1),
+          take(1)
         )
         .subscribe(() => {
           this.loadInputSchema();
-        }),
+        })
     );
 
     // Fallback: If auth doesn't initialize within 5 seconds, load anyway
@@ -536,7 +536,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.subscription.add(
         this.auth.isAuthenticated$
           .pipe(filter(Boolean), take(1))
-          .subscribe(() => this.loadToolCredits()),
+          .subscribe(() => this.loadToolCredits())
       );
     }
   }
@@ -573,7 +573,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.creditsService.getWorkflowCredits().subscribe({
         next: (response) => {
           const config = response.workflows.find(
-            (w) => w.category === "de-novo-design",
+            (w) => w.category === "de-novo-design"
           );
           if (!config) return;
           this.toolMultipliers.set(config.toolMultipliers);
@@ -587,7 +587,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.warn("Failed to load workflow credits", error);
         },
-      }),
+      })
     );
     this.subscription.add(
       this.creditsService.getMyCredit().subscribe({
@@ -595,7 +595,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.warn("Failed to load credit balance", error);
         },
-      }),
+      })
     );
   }
 
@@ -639,17 +639,17 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_filters",
-              defaultValues.settings_filters,
+              defaultValues.settings_filters
             );
             this.schemaLoader.updateRowValue(
               firstRowId,
               "settings_advanced",
-              defaultValues.settings_advanced,
+              defaultValues.settings_advanced
             );
             this.schemaLoader.updateRowValue(
               firstRowId,
               "number_of_final_designs",
-              1,
+              1
             );
           }
 
@@ -660,7 +660,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       },
       (error) => {
         console.error("Failed to load schema:", error);
-      },
+      }
     );
   }
 
@@ -713,10 +713,10 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
               this.workflowSubmission.isSubmitting.set(false);
               const msg = getErrorMessage(error);
               this.showError(
-                `Failed to upload PDB file: ${msg}. Please try again.`,
+                `Failed to upload PDB file: ${msg}. Please try again.`
               );
             },
-          }),
+          })
       );
       return;
     }
@@ -748,7 +748,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
             console.error("Dataset upload succeeded but no datasetId returned");
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned.",
+              "Dataset upload succeeded but no dataset ID was returned."
             );
             return;
           }
@@ -765,15 +765,15 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
             (error) => {
               console.error(
                 "Workflow launch failed after dataset upload",
-                error,
+                error
               );
               this.workflowSubmission.isSubmitting.set(false);
               this.showError(
                 `Workflow launch failed after dataset upload: ${
                   error.message || "Unknown error"
-                }`,
+                }`
               );
-            },
+            }
           );
         },
         error: (error) => {
@@ -1096,7 +1096,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   getRowNumberValue(
     rowId: string,
     fieldName: string,
-    defaultVal: number,
+    defaultVal: number
   ): number {
     const val = this.getRowValue(rowId, fieldName);
     if (typeof val === "number" && Number.isFinite(val)) return val;
@@ -1209,7 +1209,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   updateRowValueWithValidation(
     rowId: string,
     fieldName: string,
-    value: unknown,
+    value: unknown
   ): void {
     this.updateRowValue(rowId, fieldName, value);
     this.validateRowField(rowId, fieldName);
