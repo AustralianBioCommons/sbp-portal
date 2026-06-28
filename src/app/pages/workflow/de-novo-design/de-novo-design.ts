@@ -214,7 +214,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
    *  cannot shrink it below this; below it the panel can only be fully closed (0). */
   readonly minPanelWidth = 240;
   /** Maximum width (px) the config panel can be dragged to. */
-  readonly maxPanelWidth = 600;
+  readonly maxPanelWidth = 480;
 
   /** Width of the config panel in pixels. 0 = fully collapsed. */
   panelWidth = signal(this.defaultPanelWidth);
