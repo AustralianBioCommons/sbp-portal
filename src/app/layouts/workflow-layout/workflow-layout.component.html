@@ -83,55 +83,44 @@
           Execute this workflow
         </h1>
 
-        <div class="relative">
-          <!-- Lock overlay if user cannot execute workflows -->
-          @if ((auth.canExecuteWorkflows$ | async) === false) {
-          <div
-            class="absolute inset-0 z-10 bg-white/60 backdrop-blur-xs rounded-lg border flex items-center justify-center"
+        <!-- Hide form and show access restricted message if user cannot execute workflows -->
+        @if ((auth.canExecuteWorkflows$ | async) === false) {
+        <div class="rounded-lg bg-gray-50 border mt-4 text-center py-8 px-4">
+          <p class="text-base font-semibold text-gray-900">Access Restricted</p>
+          @if ((auth.isAuthenticated$ | async) === false) {
+          <p class="text-sm text-gray-500 mt-4 mb-6">
+            To use this tool, please log in or register for a BioCommons Access
+            account and add the
+            <span class="font-semibold">SBP Workflow Execution bundle</span> to
+            your profile.
+          </p>
+          <app-button
+            type="button"
+            variant="primary"
+            widthClass="w-auto"
+            (click)="loginWithReturnUrl()"
           >
-            <div class="text-center p-4">
-              <p class="text-base font-semibold text-gray-900 mb-2">
-                Access Restricted
-              </p>
-              @if ((auth.isAuthenticated$ | async) === false) {
-              <p class="text-sm text-gray-500">
-                To use this tool, please log in or register for a BioCommons
-                Access account and add the
-                <strong>SBP Workflow Execution bundle</strong> to your profile.
-              </p>
-              <div class="mt-4 flex justify-center">
-                <app-button
-                  type="button"
-                  variant="primary"
-                  widthClass="w-auto"
-                  (click)="loginWithReturnUrl()"
-                >
-                  Log in or Register
-                </app-button>
-              </div>
-              } @else {
-              <p class="text-sm text-gray-500">
-                You currently do not have access to this tool; please go to your
-                profile page to add the
-                <strong>SBP Workflow Execution</strong> bundle.
-              </p>
-              <div class="mt-4 flex justify-center">
-                <a
-                  [href]="profileUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
-                >
-                  Add bundle
-                </a>
-              </div>
-              }
-            </div>
-          </div>
+            Log in or Register
+          </app-button>
+          } @else {
+          <p class="text-sm text-gray-500 mt-4 mb-6">
+            You currently do not have access to this tool; please go to your
+            profile page to add the
+            <span class="font-semibold">SBP Workflow Execution</span> bundle.
+          </p>
+          <a
+            [href]="profileUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
+          >
+            Add bundle
+          </a>
           }
-
-          <ng-content></ng-content>
         </div>
+        } @else {
+        <ng-content></ng-content>
+        }
       </div>
       }
 
