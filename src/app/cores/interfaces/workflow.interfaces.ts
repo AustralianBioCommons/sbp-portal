@@ -73,8 +73,10 @@ export interface InteractionScreeningPayload extends DefaultWorkflowPayload {
   splitOutputDir: string;
 }
 
-// No extra fields currently required for bulk prediction
-export type BulkPredictionPayload = DefaultWorkflowPayload;
+export interface BulkPredictionPayload extends DefaultWorkflowPayload {
+  fastaS3Uri: string;
+  splitOutputDir: string;
+}
 
 export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   entities: EntityRow[];
