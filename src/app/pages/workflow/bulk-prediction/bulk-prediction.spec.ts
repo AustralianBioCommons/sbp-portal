@@ -306,7 +306,7 @@ describe("BulkPredictionComponent", () => {
       workflowSubmissionService.submitWorkflowWithDataset
     ).toHaveBeenCalledWith(
       jasmine.objectContaining({ runName: "bulk-job" }),
-      "dataset-456",
+      "inputs/samplesheets/dataset-456.csv",
       jasmine.any(Function)
     );
   });
