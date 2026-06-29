@@ -14,7 +14,7 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
-  div {
+  body {
     @apply text-gray-900;
   }
 

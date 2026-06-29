@@ -12,6 +12,13 @@ import {
   untracked,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import {
+  heroArrowPath,
+  heroArrowUpTray,
+  heroExclamationCircle,
+  heroFolder,
+} from "@ng-icons/heroicons/outline";
 import { Viewer } from "molstar/lib/apps/viewer/app";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { StructureSelectionManager } from "molstar/lib/mol-plugin-state/manager/structure/selection";
@@ -28,7 +35,15 @@ import { OrderedSet } from "molstar/lib/mol-data/int";
 
 @Component({
   selector: "app-molstar-viewer",
-  imports: [CommonModule],
+  imports: [CommonModule, NgIconComponent],
+  providers: [
+    provideIcons({
+      heroArrowPath,
+      heroArrowUpTray,
+      heroExclamationCircle,
+      heroFolder,
+    }),
+  ],
   encapsulation: ViewEncapsulation.None,
   templateUrl: "./molstar-viewer.component.html",
   styleUrl: "./molstar-viewer.component.scss",
@@ -42,6 +57,10 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
    *  Accepts the same comma-separated token format the viewer emits:
    *  "A56,B12" or ranges "A12-A14". Set to "" to clear the selection. */
   externalSelection = input("");
+  /** Round the viewport's bottom-right corner. Set when the viewer meets the
+   *  container's right edge (e.g. the config panel is collapsed); the WebGL
+   *  canvas must be rounded on its own container, not by an ancestor clip. */
+  roundBottomRight = input(false);
 
   /** Emits a comma-separated residue string (e.g. "A42,A43,B11") on each selection change. */
   residuesSelected = output<string>();

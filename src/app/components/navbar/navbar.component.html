@@ -1,4 +1,9 @@
-<nav class="block sticky top-0 z-50 bg-white shadow shrink-0">
+<div #topSentinel aria-hidden="true" class="h-px -mb-px"></div>
+
+<nav
+  class="block sticky top-0 z-50 bg-white shrink-0 transition-shadow"
+  [class.shadow]="scrolled()"
+>
   <div
     class="px-6 border-b mx-auto relative flex items-center justify-between min-h-22 gap-4"
   >
@@ -28,38 +33,38 @@
 
       <!-- Nav Links -->
       <nav
-        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-sky-900 transition-all text-sm"
+        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-biocommons-primary transition-all text-sm"
         aria-label="Main navigation"
       >
         <a
           routerLink="/binder-design"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
             currentRoute() === '/binder-design'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
+              ? 'border-biocommons-primary'
+              : 'border-transparent hover:border-biocommons-primary/20'
           "
         >
           Binder Design
         </a>
         <a
           routerLink="/structure-prediction"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
             currentRoute() === '/structure-prediction'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
+              ? 'border-biocommons-primary'
+              : 'border-transparent hover:border-biocommons-primary/20'
           "
         >
           Structure Prediction
         </a>
         <a
           routerLink="/jobs"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-sky-900"
+          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
             currentRoute() === '/jobs'
-              ? 'border-sky-900'
-              : 'border-transparent hover:border-sky-900/20'
+              ? 'border-biocommons-primary'
+              : 'border-transparent hover:border-biocommons-primary/20'
           "
         >
           Jobs
@@ -100,7 +105,7 @@
                 ></div>
               </div>
               <span
-                class="text-xs font-mono leading-none text-gray-400 shrink-0"
+                class="text-xs font-mono leading-none text-gray-500 shrink-0"
               >
                 {{ creditsRemaining() ?? "—" }}/{{ creditsTotal }}
               </span>
@@ -109,7 +114,7 @@
           <ng-icon
             name="heroInformationCircle"
             size="18"
-            class="text-gray-400"
+            class="text-gray-500"
           ></ng-icon>
         </div>
       </app-tooltip>
@@ -147,12 +152,14 @@
           </button>
         </ng-template>
         <ng-template #menu>
-          <div class="truncate px-4 py-3 text-sm text-sky-900 border-b">
+          <div
+            class="truncate px-4 py-3 text-sm text-biocommons-primary border-b"
+          >
             {{ user?.email || "" }}
           </div>
           <button
             type="button"
-            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900"
+            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
             role="menuitem"
             tabindex="-1"
             (click)="userMenuOpen.set(false); openProfile()"
@@ -162,7 +169,7 @@
           </button>
           <button
             type="button"
-            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-700 transition-all hover:bg-gray-100 hover:text-gray-900"
+            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
             role="menuitem"
             tabindex="-1"
             (click)="logout()"
@@ -235,7 +242,9 @@
       <div>
         <div class="flex items-center gap-2 p-2 text-gray-900">
           @if (item.icon) {
-          <div class="text-sky-900 flex items-center justify-center shrink-0">
+          <div
+            class="text-biocommons-primary flex items-center justify-center shrink-0"
+          >
             <ng-icon [name]="item.icon" size="18" class="shrink-0" />
           </div>
           }
@@ -247,7 +256,7 @@
           <a
             [routerLink]="child.path"
             (click)="closeMobileMenu()"
-            class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
+            class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-biocommons-primary"
             [class]="
               isNavItemActive(child) ? 'bg-sky-50 ' : ' hover:bg-gray-50'
             "
@@ -261,7 +270,7 @@
       <a
         [routerLink]="item.path"
         (click)="closeMobileMenu()"
-        class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-sky-900"
+        class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-biocommons-primary"
         [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
       >
         @if (item.icon) {
@@ -272,23 +281,23 @@
       } }
     </div>
   </div>
-
-  <!-- Breadcrumb (only show on workflow pages) -->
-  @if (showBreadcrumb() && breadcrumb(); as crumb) {
-  <div
-    class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
-    aria-label="Breadcrumb"
-  >
-    <a
-      [routerLink]="'/' + crumb.themeTab"
-      class="text-sky-900 hover:text-sky-800 transition-all hover:underline no-underline"
-    >
-      {{ crumb.themeLabel }}
-    </a>
-    <ng-icon name="heroChevronRight" size="16"></ng-icon>
-    <span class="text-gray-600">
-      {{ crumb.workflowLabel }}
-    </span>
-  </div>
-  }
 </nav>
+
+<!-- Breadcrumb (only show on workflow pages) — non-sticky, scrolls with content -->
+@if (showBreadcrumb() && breadcrumb(); as crumb) {
+<div
+  class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
+  aria-label="Breadcrumb"
+>
+  <a
+    [routerLink]="'/' + crumb.themeTab"
+    class="text-biocommons-primary hover:text-sky-800 transition-all hover:underline no-underline"
+  >
+    {{ crumb.themeLabel }}
+  </a>
+  <ng-icon name="heroChevronRight" size="16"></ng-icon>
+  <span class="text-gray-600">
+    {{ crumb.workflowLabel }}
+  </span>
+</div>
+}

@@ -8,7 +8,7 @@ describe("ConfigurationSummaryComponent", () => {
   let component: ConfigurationSummaryComponent;
   let fixture: ComponentFixture<ConfigurationSummaryComponent>;
 
-  const mockSummaryItems: SummaryItem[] = [
+  const mockInputItems: SummaryItem[] = [
     { label: "Tool Name", value: "Test Tool", fieldName: "toolName" },
     { label: "Input File", value: "test.txt", fieldName: "inputFile" },
   ];
@@ -22,9 +22,9 @@ describe("ConfigurationSummaryComponent", () => {
     component = fixture.componentInstance;
 
     // Set required inputs
+    fixture.componentRef.setInput("workflowName", "Test Workflow");
     fixture.componentRef.setInput("selectedTool", "Test Tool");
-    fixture.componentRef.setInput("summaryItems", mockSummaryItems);
-    fixture.componentRef.setInput("requiredFieldCount", 2);
+    fixture.componentRef.setInput("inputItems", mockInputItems);
     fixture.componentRef.setInput("isValid", true);
   });
 
@@ -70,10 +70,20 @@ describe("ConfigurationSummaryComponent", () => {
     expect(compiled.textContent).toContain("No Parameters");
   });
 
-  it("should handle empty summary items", () => {
-    fixture.componentRef.setInput("summaryItems", []);
+  it("should handle empty input items", () => {
+    fixture.componentRef.setInput("inputItems", []);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("No input configuration provided");
+  });
+
+  it("should display workflow name and tool settings", () => {
+    fixture.componentRef.setInput("toolSettingItems", [
+      { label: "num_recycles", value: "3", fieldName: "num_recycles" },
+    ]);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain("Test Workflow");
+    expect(compiled.textContent).toContain("num_recycles");
   });
 });

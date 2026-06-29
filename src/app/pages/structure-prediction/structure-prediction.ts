@@ -1,10 +1,10 @@
 import { Component } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import { ThemeLayoutComponent } from "../../layouts/theme-layout/theme-layout.component";
 import { THEMES } from "../../cores/config/themes.config";
 
 @Component({
   selector: "app-structure-prediction",
-  imports: [RouterLink],
+  imports: [ThemeLayoutComponent],
   templateUrl: "./structure-prediction.html",
   styleUrl: "./structure-prediction.scss",
 })

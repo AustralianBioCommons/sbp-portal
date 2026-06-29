@@ -1,4 +1,13 @@
-import { CommonModule } from "@angular/common";
+import { CommonModule, DOCUMENT } from "@angular/common";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import {
+  heroArrowUpTray,
+  heroChevronDoubleLeft,
+  heroChevronDoubleRight,
+  heroEllipsisVertical,
+  heroXMark,
+} from "@ng-icons/heroicons/outline";
+import { heroXCircleSolid } from "@ng-icons/heroicons/solid";
 import {
   Component,
   computed,
@@ -7,34 +16,31 @@ import {
   OnInit,
   Signal,
   signal,
+  viewChild,
 } from "@angular/core";
 import { FormControl, FormsModule } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { Router } from "@angular/router";
+import { ButtonComponent } from "../../../components/button/button.component";
 import { MolstarViewerComponent } from "../../../components/workflow/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
 
 import { filter, Subscription, take } from "rxjs";
-import { AlertComponent } from "../../../components/alert/alert.component";
-import { ButtonComponent } from "../../../components/button/button.component";
-import { DialogComponent } from "../../../components/dialog/dialog.component";
-import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { FormFieldComponent } from "../../../components/workflow/form-field/form-field.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
+import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
-  Step,
-  StepNavigationComponent,
-} from "../../../components/workflow/step-navigation/step-navigation.component";
+  WorkflowFormComponent,
+  WorkflowSection,
+} from "../../../components/workflow/workflow-form/workflow-form.component";
 import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
-import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
   CreditsService,
@@ -51,34 +57,36 @@ import {
   WorkflowTool,
 } from "../../../cores/interfaces/workflow.interfaces";
 
-interface TabItem {
-  id: "overview" | "output" | "papers";
-  label: string;
-}
-
 interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
 }
-
-type StepItem = Step;
 
 @Component({
   selector: "app-de-novo-design",
   imports: [
     CommonModule,
     FormsModule,
-    AlertComponent,
     ButtonComponent,
-    DialogComponent,
-    LoadingComponent,
     ToolSelectionComponent,
-    StepNavigationComponent,
+    WorkflowFormComponent,
+    WorkflowLayoutComponent,
     StepContentComponent,
     FormFieldComponent,
     ConfigurationSummaryComponent,
     MolstarViewerComponent,
     LengthRangeSliderComponent,
     CreditSummaryComponent,
+    NgIconComponent,
+  ],
+  providers: [
+    provideIcons({
+      heroArrowUpTray,
+      heroChevronDoubleLeft,
+      heroChevronDoubleRight,
+      heroEllipsisVertical,
+      heroXCircleSolid,
+      heroXMark,
+    }),
   ],
   templateUrl: "./de-novo-design.html",
   styleUrl: "./de-novo-design.scss",
@@ -89,11 +97,10 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   // // Make Object available in template
   Object = Object;
 
+  // Document reference (SSR-safe; avoids touching the global directly)
+  private readonly document = inject(DOCUMENT);
   // Auth
   public auth = inject(AuthService);
-  readonly profileUrl = environment.profileUrl;
-  // Router for navigation
-  private router = inject(Router);
   // Schema loader service
   public schemaLoader = inject(SchemaLoaderService);
   // Workflow submission service
@@ -127,17 +134,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   formData = signal<Record<string, unknown>>({});
   formErrors = signal<{ [key: string]: string }>({});
   isFormValid = signal<boolean>(false);
-  // Tabs
-  readonly tabs: TabItem[] = [
-    { id: "overview", label: "Overview" },
-    { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
-  ];
-  activeTab = signal<TabItem["id"]>("overview");
-  isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
-  switchTab(id: TabItem["id"]) {
-    this.activeTab.set(id);
-  }
 
   // Tools
   readonly tools: ToolChip[] = [
@@ -211,6 +207,76 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   /** True while the PDB file is being uploaded to S3 on Next click. */
   isPdbUploading = signal(false);
+
+  /** Default width (px) of the config panel when opened. */
+  readonly defaultPanelWidth = 300;
+  /** Minimum width (px) of the config panel while open — the divider drag
+   *  cannot shrink it below this; below it the panel can only be fully closed (0). */
+  readonly minPanelWidth = 240;
+  /** Maximum width (px) the config panel can be dragged to. */
+  readonly maxPanelWidth = 480;
+
+  /** Width of the config panel in pixels. 0 = fully collapsed. */
+  panelWidth = signal(this.defaultPanelWidth);
+  /** True during an active divider drag — suppresses CSS transition for smooth tracking. */
+  isDragging = signal(false);
+
+  private _dragStartX = 0;
+  private _dragStartPanelWidth = 0;
+  /** Step (px) the divider moves per arrow-key press for keyboard resizing. */
+  private readonly keyboardResizeStep = 12;
+
+  /** Clamp a width to the open panel's allowed range. */
+  private clampPanelWidth(width: number): number {
+    return Math.max(this.minPanelWidth, Math.min(this.maxPanelWidth, width));
+  }
+
+  onDividerMouseDown(event: MouseEvent): void {
+    if (this.panelWidth() === 0) return;
+    this.isDragging.set(true);
+    this._dragStartX = event.clientX;
+    this._dragStartPanelWidth = this.panelWidth();
+    event.preventDefault();
+
+    this.document.addEventListener("mousemove", this.onDocumentMouseMove);
+    this.document.addEventListener("mouseup", this.onDocumentMouseUp);
+  }
+
+  private onDocumentMouseMove = (event: MouseEvent): void => {
+    const delta = this._dragStartX - event.clientX;
+    this.panelWidth.set(
+      this.clampPanelWidth(this._dragStartPanelWidth + delta)
+    );
+  };
+
+  private onDocumentMouseUp = (): void => {
+    this.isDragging.set(false);
+    this.document.removeEventListener("mousemove", this.onDocumentMouseMove);
+    this.document.removeEventListener("mouseup", this.onDocumentMouseUp);
+  };
+
+  onDividerKeydown(event: KeyboardEvent): void {
+    if (this.panelWidth() === 0) return;
+    let next: number;
+    switch (event.key) {
+      case "ArrowLeft":
+        next = this.panelWidth() + this.keyboardResizeStep;
+        break;
+      case "ArrowRight":
+        next = this.panelWidth() - this.keyboardResizeStep;
+        break;
+      case "Home":
+        next = this.maxPanelWidth;
+        break;
+      case "End":
+        next = this.minPanelWidth;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    this.panelWidth.set(this.clampPanelWidth(next));
+  }
 
   /** Called when user picks a .pdb file via the custom picker.
    *  Sets the local viewer file and marks the form field value with the
@@ -410,121 +476,34 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
-  // Steps marked complete only when user presses Next on that step
-  completedSteps = signal<number[]>([]);
-  visitedSteps = signal<number[]>([1]);
-  isStepVisited = (id: number) => this.visitedSteps().includes(id);
-
-  // Check if a step has validation errors
-  isStepInvalid = (id: number) => {
-    if (id === 1) {
-      // Step 1 is invalid if form is not valid
-      return !this.isFormValid();
-    }
-    return false;
-  };
-
-  // Track if user has attempted to complete step 1
-  private attemptedStep1 = signal<boolean>(false);
-  hasAttemptedStep1 = () => this.attemptedStep1();
-
-  isStepCompleted = (id: number) => {
-    // Step 2 is automatically completed if the selected tool has no parameters
-    if (id === 2 && !this.selectedToolHasParams()) {
-      return true;
-    }
-    return this.completedSteps().includes(id);
-  };
-
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input?.files?.[0];
     this.inputFileName.set(file ? file.name : "");
   }
 
-  // Stepper
-  readonly steps: StepItem[] = [
-    {
-      id: 1,
-      title: "Input Configuration",
-      description: "Provide sequence or structure inputs",
-    },
-    {
-      id: 2,
-      title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool",
-    },
-    {
-      id: 3,
-      title: "Review & Submit",
-      description: "Review all settings and run the job",
-    },
+  // Single-page form sections (rendered + tracked by app-workflow-form)
+  readonly sections: WorkflowSection[] = [
+    { id: "select-tool", label: "Select a Tool", mobileLabel: "Tool" },
+    { id: "input-config", label: "Input Configuration", mobileLabel: "Input" },
+    { id: "tool-settings", label: "Tool Settings", mobileLabel: "Settings" },
+    { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
-  currentStep = signal<number>(1);
-  canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
-  canGoNext: Signal<boolean> = computed(() => {
-    if (this.currentStep() < this.steps.length) {
-      // If on step 1, check if form is valid
-      if (this.currentStep() === 1) {
+
+  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
+  private readonly workflowForm = viewChild(WorkflowFormComponent);
+
+  /** Per-section validity — drives the progress-bar colours. */
+  isSectionValid = (id: string): boolean => {
+    switch (id) {
+      case "input-config":
+      case "review":
         return this.isFormValid();
-      }
-      return true;
+      default:
+        // select-tool (a tool is always selected) and tool-settings (no params).
+        return true;
     }
-    return false;
-  });
-
-  previousStep() {
-    if (this.currentStep() > 1) this.currentStep.update((v) => v - 1);
-  }
-  nextStep() {
-    if (this.currentStep() >= this.steps.length) return;
-    const current = this.currentStep();
-
-    if (current === 1) {
-      this.attemptedStep1.set(true);
-      this.validateAllRequiredFields();
-      // Ensure row-level validation (including PDB-based hotspot checks) runs.
-      for (const row of this.schemaLoader.inputRows()) {
-        this.validateRowField(row.id, "target_hotspot_residues");
-        this.validateRowField(row.id, "chains");
-      }
-      this.validateForm();
-
-      if (!this.isFormValid()) {
-        return;
-      }
-    }
-
-    this.advanceStep(current);
-  }
-
-  private advanceStep(current: number): void {
-    this.completedSteps.update((arr) =>
-      arr.includes(current) ? arr : [...arr, current]
-    );
-    this.currentStep.update((v) => v + 1);
-    this.visitedSteps.update((arr) => {
-      const next = current + 1;
-      return arr.includes(next) ? arr : [...arr, next];
-    });
-  }
-  goToStep(step: number) {
-    if (step >= 1 && step <= this.steps.length) {
-      this.currentStep.set(step);
-      this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
-      );
-    }
-  }
-
-  constructor() {
-    console.log("DeNovoDesignComponent constructor called");
-
-    // Ensure all signals are properly initialized
-    this.formData.set({});
-    this.formErrors.set({});
-    this.isFormValid.set(false);
-  }
+  };
 
   private subscription = new Subscription();
 
@@ -622,6 +601,9 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    // Defensive: remove drag listeners if destroyed mid-drag.
+    this.document.removeEventListener("mousemove", this.onDocumentMouseMove);
+    this.document.removeEventListener("mouseup", this.onDocumentMouseUp);
   }
 
   loadInputSchema() {
@@ -636,6 +618,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
           "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_filters.json";
         defaultValues.settings_advanced =
           "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_4stage_multimer.json";
+        defaultValues["number_of_final_designs"] = 1;
 
         this.initializeFormData(defaultValues);
 
@@ -663,6 +646,11 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
               "settings_advanced",
               defaultValues.settings_advanced
             );
+            this.schemaLoader.updateRowValue(
+              firstRowId,
+              "number_of_final_designs",
+              1
+            );
           }
 
           // After row is created, sync to form data
@@ -677,8 +665,17 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   }
 
   submitWorkflow() {
+    // Run full validation (previously triggered by Next on the input step).
+    this.jobNameTouched.set(true);
+    this.validateAllRequiredFields();
+    for (const row of this.schemaLoader.inputRows()) {
+      this.validateRowField(row.id, "target_hotspot_residues");
+      this.validateRowField(row.id, "chains");
+    }
+    this.validateForm();
+
     if (!this.isFormValid()) {
-      console.error("Cannot submit: Form validation failed");
+      this.workflowForm()?.scrollToFirstInvalidSection();
       return;
     }
 
@@ -785,22 +782,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
           this.showError(`Failed to upload dataset: ${getErrorMessage(error)}`);
         },
       });
-  }
-
-  // Refresh the page to submit a new job
-  submitNewJob() {
-    window.location.reload();
-  }
-
-  // Navigate to jobs page (delegates to service)
-  goToJobs() {
-    this.workflowSubmission.goToJobs();
-  }
-
-  // Login with return URL to come back to this page
-  loginWithReturnUrl() {
-    const currentUrl = window.location.pathname + window.location.search;
-    this.auth.login(currentUrl);
   }
 
   closeAlert(): void {
@@ -1019,9 +1000,12 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       }
 
       const value = data[field.name];
-      if (value !== undefined && value !== null && value !== "") {
-        let displayValue = String(value);
-        let downloadUrl: string | undefined;
+      const isEmpty = value === undefined || value === null || value === "";
+      let displayValue = "";
+      let downloadUrl: string | undefined;
+
+      if (!isEmpty) {
+        displayValue = String(value);
 
         if (field.name === "starting_pdb") {
           // Show only the filename; optionally link to the file if it's an HTTP URL.
@@ -1037,31 +1021,24 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         } else if (typeof value === "object") {
           displayValue = JSON.stringify(value);
         }
-
-        summary.push({
-          label: field.label || field.name,
-          value: displayValue,
-          fieldName: field.name,
-          ...(downloadUrl ? { url: downloadUrl } : {}),
-        });
+      } else if (localPdb && field.name === "starting_pdb") {
+        // A file is staged locally but not yet reflected in the form data.
+        displayValue = localPdb.name;
       }
+
+      summary.push({
+        label: field.label || field.name,
+        value: displayValue,
+        fieldName: field.name,
+        ...(downloadUrl ? { url: downloadUrl } : {}),
+      });
     });
 
-    if (this.selectedToolLabel()) {
-      summary.unshift({
-        label: "Mode",
-        value: this.selectedToolLabel(),
-        fieldName: "tool",
-      });
-    }
-
-    if (this.jobName()) {
-      summary.unshift({
-        label: "Job Name",
-        value: this.jobName(),
-        fieldName: "id",
-      });
-    }
+    summary.unshift({
+      label: "Job Name",
+      value: this.jobName(),
+      fieldName: "id",
+    });
 
     return summary;
   });
@@ -1088,6 +1065,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   resetForm(): void {
     const defaultValues = this.schemaLoader.generateDefaultValues();
     if (Object.keys(defaultValues).length > 0) {
+      defaultValues["number_of_final_designs"] = 1;
       this.initializeFormData(defaultValues);
     }
   }
@@ -1214,6 +1192,17 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
   // Check if a specific cell has an error
   hasRowFieldError(rowId: string, fieldName: string): boolean {
     return this.getRowFieldError(rowId, fieldName) !== null;
+  }
+
+  /** Returns true when any field inside the collapsible config section has a validation error. */
+  hasConfigSectionErrors(rowId: string): boolean {
+    if (this.jobNameTouched() && !!this.jobNameError()) return true;
+    return [
+      "target_hotspot_residues",
+      "chains",
+      "min_length",
+      "max_length",
+    ].some((f) => this.hasRowFieldError(rowId, f));
   }
 
   // Update row value with validation

@@ -10,7 +10,7 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { SafeResourceUrl } from "@angular/platform-browser";
 import { DatePipe } from "@angular/common";
 import { EMPTY } from "rxjs";
-import { catchError } from "rxjs/operators";
+import { catchError, finalize } from "rxjs/operators";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDownTray,
@@ -28,6 +28,7 @@ import { LoadingComponent } from "../../components/loading/loading.component";
 import { DialogComponent } from "../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../components/button/button.component";
 import { JobListItem, JobsService } from "../../cores/services/jobs.service";
+import { HealthService } from "../../cores/services/health.service";
 import {
   ResultLogsResponse,
   ResultsService,
@@ -74,13 +75,18 @@ export default class JobDetailsComponent implements OnInit {
   private router = inject(Router);
   private jobsService = inject(JobsService);
   private resultsService = inject(ResultsService);
+  private healthService = inject(HealthService);
   private datePipe = inject(DatePipe);
 
   // Page state
   job = signal<JobListItem | null>(null);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
-  seqeraUnavailable = signal<boolean>(false);
+  // Driven by the system health API (GET /api/health/components): true when any
+  // monitored component is not healthy, so we can warn that job status / logs may
+  // be stale. The accompanying message comes from the backend.
+  systemUnhealthy = signal<boolean>(false);
+  healthMessage = signal<string | null>(null);
   showDeleteDialog = signal<boolean>(false);
   deleting = signal<boolean>(false);
 
@@ -100,16 +106,11 @@ export default class JobDetailsComponent implements OnInit {
   logsItems = signal<string[]>([]);
   logsLoading = signal(false);
   logsError = signal<string | null>(null);
+  downloadingAllFiles = signal(false);
   canDownloadAllFiles = computed(
     () =>
       !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
   );
-  downloadAllUrl = computed(() => {
-    const job = this.job();
-    return job && this.canDownloadAllFiles()
-      ? this.resultsService.getDownloadAllUrl(job.id)
-      : null;
-  });
 
   readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
     { id: "results", label: "Results", icon: "heroChartBarSquare" },
@@ -126,9 +127,6 @@ export default class JobDetailsComponent implements OnInit {
     const navigatedJob = navState?.["job"] as JobListItem | undefined;
     if (navigatedJob) {
       this.job.set(this.jobsService.normalizeJob(navigatedJob));
-      this.seqeraUnavailable.set(
-        (navState?.["seqeraUnavailable"] as boolean) ?? false
-      );
     }
 
     // Reset and reload the results whenever the selected job changes.
@@ -143,6 +141,8 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.checkSystemHealth();
+
     const id = this.route.snapshot.paramMap.get("id");
     if (!id) {
       this.error.set("Job not found.");
@@ -155,6 +155,27 @@ export default class JobDetailsComponent implements OnInit {
     }
 
     this.loadJob(id);
+  }
+
+  /**
+   * Check overall system health and surface a warning when any monitored
+   * component is not healthy. Best-effort: a failed health check leaves the
+   * page untouched.
+   */
+  private checkSystemHealth(): void {
+    this.healthService
+      .getComponentsHealth()
+      .pipe(
+        catchError((err) => {
+          console.error("Error checking system health:", err);
+          return EMPTY;
+        })
+      )
+      .subscribe((health) => {
+        const unhealthy = health.overallStatus !== "healthy";
+        this.systemUnhealthy.set(unhealthy);
+        this.healthMessage.set(unhealthy ? health.message : null);
+      });
   }
 
   private loadJob(id: string): void {
@@ -170,13 +191,12 @@ export default class JobDetailsComponent implements OnInit {
           return EMPTY;
         })
       )
-      .subscribe(({ job, seqeraUnavailable }) => {
+      .subscribe((job) => {
         if (!job) {
           this.error.set("Job not found.");
         } else {
           this.job.set(job);
         }
-        this.seqeraUnavailable.set(seqeraUnavailable);
         this.loading.set(false);
       });
   }
@@ -212,6 +232,35 @@ export default class JobDetailsComponent implements OnInit {
         this.deleting.set(false);
         this.closeDeleteDialog();
         this.router.navigate(["/jobs"]);
+      });
+  }
+
+  downloadAllFiles(): void {
+    const job = this.job();
+    if (!job || !this.canDownloadAllFiles() || this.downloadingAllFiles()) {
+      return;
+    }
+
+    this.downloadingAllFiles.set(true);
+    this.resultsService
+      .downloadAll(job.id)
+      .pipe(
+        catchError((err) => {
+          console.error("Error downloading all files:", err);
+          return EMPTY;
+        }),
+        finalize(() => this.downloadingAllFiles.set(false))
+      )
+      .subscribe((response) => {
+        if (!response.body) {
+          return;
+        }
+
+        const filename =
+          this.getDownloadFilename(
+            response.headers.get("content-disposition")
+          ) ?? `${job.id}_results.zip`;
+        this.startBrowserDownload(response.body, filename);
       });
   }
 
@@ -310,6 +359,41 @@ export default class JobDetailsComponent implements OnInit {
     this.reportLoading.set(false);
     this.reportUrl.set(null);
     this.reportError.set("Failed to load report.");
+  }
+
+  private getDownloadFilename(
+    contentDisposition: string | null
+  ): string | null {
+    if (!contentDisposition) {
+      return null;
+    }
+
+    const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (encodedMatch?.[1]) {
+      try {
+        return decodeURIComponent(encodedMatch[1].trim());
+      } catch {
+        return encodedMatch[1].trim();
+      }
+    }
+
+    return (
+      contentDisposition.match(/filename="([^"]+)"/i)?.[1]?.trim() ??
+      contentDisposition.match(/filename=([^;]+)/i)?.[1]?.trim() ??
+      null
+    );
+  }
+
+  private startBrowserDownload(blob: Blob, filename: string): void {
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
   }
 
   private loadReport(): void {

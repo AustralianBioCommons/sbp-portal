@@ -7,8 +7,10 @@ export const routes: Routes = [
     children: [
       {
         path: "",
-        loadComponent: () => import("./pages/home/home"),
-        data: { tab: "binder-design" },
+        loadComponent: () =>
+          import("./pages/binder-design/binder-design").then(
+            (m) => m.BinderDesignComponent
+          ),
       },
       {
         path: "de-novo-design",
@@ -22,8 +24,10 @@ export const routes: Routes = [
     children: [
       {
         path: "",
-        loadComponent: () => import("./pages/home/home"),
-        data: { tab: "structure-prediction" },
+        loadComponent: () =>
+          import("./pages/structure-prediction/structure-prediction").then(
+            (m) => m.StructurePredictionComponent
+          ),
       },
       {
         path: "single-prediction",

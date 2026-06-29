@@ -1,11 +1,12 @@
 import {
-  AfterViewInit,
+  afterNextRender,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   signal,
-  ViewChild,
+  viewChild,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { NavigationEnd, Router, RouterLink } from "@angular/router";
@@ -49,12 +50,6 @@ export interface NavItem {
   requiresAuth?: boolean;
 }
 
-export interface TabItem {
-  id: string;
-  label: string;
-  description: string;
-}
-
 export interface BreadcrumbInfo {
   themeLabel: string;
   themeTab: string;
@@ -90,12 +85,18 @@ export interface BreadcrumbInfo {
   ],
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.scss",
+  host: { class: "contents" },
 })
-export class Navbar implements AfterViewInit {
+export class Navbar {
   private auth = inject(AuthService);
   private credits = inject(CreditsService);
   private router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly profileUrl = environment.profileUrl;
+
+  private readonly topSentinel =
+    viewChild<ElementRef<HTMLElement>>("topSentinel");
+  private scrollObserver?: IntersectionObserver;
 
   // Login state
   isAuthenticated$ = this.auth.isAuthenticated$;
@@ -120,11 +121,10 @@ export class Navbar implements AfterViewInit {
   userMenuOpen = signal(false);
   profileImageLoaded = signal(false);
 
-  // Header/tabs state
-  activeTab = signal("binder-design");
-  showTabs = signal(false);
+  // Header/breadcrumb state
   showBreadcrumb = signal(false);
   breadcrumb = signal<BreadcrumbInfo | null>(null);
+  scrolled = signal(false);
 
   private readonly workflowBreadcrumbs: Record<string, BreadcrumbInfo> =
     THEMES.reduce((acc, theme) => {
@@ -137,24 +137,6 @@ export class Navbar implements AfterViewInit {
       }
       return acc;
     }, {} as Record<string, BreadcrumbInfo>);
-
-  canScrollLeft = signal(false);
-  canScrollRight = signal(false);
-
-  @ViewChild("tabsContainer") tabsContainer!: ElementRef<HTMLElement>;
-
-  tabs: TabItem[] = [
-    {
-      id: "binder-design",
-      label: "Binder Design",
-      description: "Design and optimize protein binders for specific targets",
-    },
-    {
-      id: "structure-prediction",
-      label: "Structure Prediction",
-      description: "Predict protein structures using advanced algorithms",
-    },
-  ];
 
   navItems: NavItem[] = [
     {
@@ -218,11 +200,6 @@ export class Navbar implements AfterViewInit {
   ];
 
   constructor() {
-    setTimeout(() => {
-      this.checkRoute(this.router.url);
-      this.updateRouteState();
-    }, 0);
-
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
@@ -244,7 +221,7 @@ export class Navbar implements AfterViewInit {
         });
     }
 
-    document.addEventListener("click", (event) => {
+    const onDocumentClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (
         !target.closest(".compact-menu") &&
@@ -254,11 +231,33 @@ export class Navbar implements AfterViewInit {
           this.isMobileMenuOpen.set(false);
         }
       }
-    });
+    };
 
-    document.addEventListener("keydown", (event) => {
+    const onDocumentKeydown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && this.isMobileMenuOpen()) {
         this.isMobileMenuOpen.set(false);
+      }
+    };
+
+    document.addEventListener("click", onDocumentClick);
+    document.addEventListener("keydown", onDocumentKeydown);
+
+    this.destroyRef.onDestroy(() => {
+      document.removeEventListener("click", onDocumentClick);
+      document.removeEventListener("keydown", onDocumentKeydown);
+      this.scrollObserver?.disconnect();
+    });
+
+    afterNextRender(() => {
+      this.checkRoute(this.router.url);
+      this.updateRouteState();
+
+      const sentinel = this.topSentinel()?.nativeElement;
+      if (sentinel) {
+        this.scrollObserver = new IntersectionObserver(([entry]) =>
+          this.scrolled.set(!entry.isIntersecting)
+        );
+        this.scrollObserver.observe(sentinel);
       }
     });
   }
@@ -268,10 +267,7 @@ export class Navbar implements AfterViewInit {
     const isHomePage =
       basePath === "/binder-design" || basePath === "/structure-prediction";
 
-    this.showTabs.set(isHomePage);
-
     if (isHomePage) {
-      this.activeTab.set(basePath.slice(1));
       this.showBreadcrumb.set(false);
       this.breadcrumb.set(null);
     } else {
@@ -279,12 +275,6 @@ export class Navbar implements AfterViewInit {
       this.showBreadcrumb.set(crumb !== null);
       this.breadcrumb.set(crumb);
     }
-  }
-
-  ngAfterViewInit() {
-    setTimeout(() => {
-      this.updateScrollState();
-    }, 100);
   }
 
   // Auth methods
@@ -371,48 +361,5 @@ export class Navbar implements AfterViewInit {
 
   private updateRouteState(): void {
     this.currentRoute.set(this.router.url.split("?")[0]);
-  }
-
-  // Header tab methods
-
-  selectTab(tabId: string) {
-    this.activeTab.set(tabId);
-    this.router.navigate(["/" + tabId]);
-  }
-
-  isActiveTab(tabId: string): boolean {
-    return this.activeTab() === tabId;
-  }
-
-  navigateToTheme(themeTab: string): void {
-    this.router.navigate(["/" + themeTab]);
-  }
-
-  scrollLeft(): void {
-    const container = this.tabsContainer?.nativeElement;
-    if (container) {
-      container.scrollBy({ left: -200, behavior: "smooth" });
-    }
-  }
-
-  scrollRight(): void {
-    const container = this.tabsContainer?.nativeElement;
-    if (container) {
-      container.scrollBy({ left: 200, behavior: "smooth" });
-    }
-  }
-
-  onScroll(): void {
-    this.updateScrollState();
-  }
-
-  private updateScrollState(): void {
-    const container = this.tabsContainer?.nativeElement;
-    if (!container) return;
-
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-
-    this.canScrollLeft.set(scrollLeft > 0);
-    this.canScrollRight.set(scrollLeft < scrollWidth - clientWidth - 1);
   }
 }

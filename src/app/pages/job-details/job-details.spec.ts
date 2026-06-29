@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { HttpHeaders, HttpResponse } from "@angular/common/http";
 import { DomSanitizer } from "@angular/platform-browser";
 import { ActivatedRoute, provideRouter, Router } from "@angular/router";
 import { of, throwError } from "rxjs";
@@ -9,6 +10,7 @@ import {
   ResultsService,
 } from "../../cores/services/results.service";
 import { JobListItem, JobsService } from "../../cores/services/jobs.service";
+import { HealthService } from "../../cores/services/health.service";
 import { environment } from "../../../environments/environment";
 
 type JobDetailsPrivateApi = {
@@ -31,6 +33,7 @@ describe("JobDetailsComponent", () => {
   let fixture: ComponentFixture<JobDetailsComponent>;
   let mockJobsService: jasmine.SpyObj<JobsService>;
   let resultsService: jasmine.SpyObj<ResultsService>;
+  let mockHealthService: jasmine.SpyObj<HealthService>;
   let sanitizer: DomSanitizer;
   let routeId: string | null;
 
@@ -68,9 +71,7 @@ describe("JobDetailsComponent", () => {
       "listJobs",
     ]);
     mockJobsService.normalizeJob.and.callFake((job) => job);
-    mockJobsService.getJob.and.returnValue(
-      of({ job: mockJob, seqeraUnavailable: false })
-    );
+    mockJobsService.getJob.and.returnValue(of(mockJob));
     mockJobsService.deleteJob.and.returnValue(
       of({
         runId: mockJob.id,
@@ -83,10 +84,21 @@ describe("JobDetailsComponent", () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getJobReport",
       "getJobDownloads",
-      "getDownloadAllUrl",
+      "downloadAll",
       "getJobSettingParams",
       "getJobLogs",
     ]);
+
+    mockHealthService = jasmine.createSpyObj("HealthService", [
+      "getComponentsHealth",
+    ]);
+    mockHealthService.getComponentsHealth.and.returnValue(
+      of({
+        overallStatus: "healthy",
+        checkedAt: "2026-06-25T03:12:55Z",
+        message: null,
+      })
+    );
 
     await TestBed.configureTestingModule({
       imports: [JobDetailsComponent],
@@ -94,6 +106,7 @@ describe("JobDetailsComponent", () => {
         provideRouter([]),
         { provide: JobsService, useValue: mockJobsService },
         { provide: ResultsService, useValue: resultsService },
+        { provide: HealthService, useValue: mockHealthService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -114,8 +127,15 @@ describe("JobDetailsComponent", () => {
     resultsService.getJobDownloads.and.returnValue(
       of({ runId: mockJob.id, downloads: [] })
     );
-    resultsService.getDownloadAllUrl.and.returnValue(
-      `${environment.apiBaseUrl}/api/results/${mockJob.id}/download-all`
+    resultsService.downloadAll.and.returnValue(
+      of(
+        new HttpResponse({
+          body: new Blob(["zip"], { type: "application/zip" }),
+          headers: new HttpHeaders({
+            "content-disposition": 'attachment; filename="results.zip"',
+          }),
+        })
+      )
     );
     resultsService.getJobSettingParams.and.returnValue(
       of({
@@ -189,9 +209,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should show an error when the job cannot be found", () => {
-    mockJobsService.getJob.and.returnValue(
-      of({ job: null, seqeraUnavailable: false })
-    );
+    mockJobsService.getJob.and.returnValue(of(null));
     render();
 
     expect(component.error()).toBe("Job not found.");
@@ -221,7 +239,7 @@ describe("JobDetailsComponent", () => {
     expect(component.showDeleteDialog()).toBeFalse();
   });
 
-  it("should render the download all files link for the selected job", () => {
+  it("should render an enabled download all files button for the selected job", () => {
     resultsService.getJobDownloads.and.returnValue(
       of({
         runId: mockJob.id,
@@ -240,12 +258,42 @@ describe("JobDetailsComponent", () => {
     const downloadLink = fixture.nativeElement.querySelector(
       'a[title="Download all files"]'
     ) as HTMLAnchorElement;
+    const downloadButton = fixture.nativeElement.querySelector(
+      'app-button[title="Download all files"] button'
+    ) as HTMLButtonElement;
 
-    expect(resultsService.getDownloadAllUrl).toHaveBeenCalledWith(mockJob.id);
-    expect(downloadLink.href).toBe(
-      `${environment.apiBaseUrl}/api/results/${mockJob.id}/download-all`
+    expect(downloadLink).toBeNull();
+    expect(downloadButton.disabled).toBeFalse();
+  });
+
+  it("should download all files through the results service", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: mockJob.id,
+        downloads: [
+          {
+            label: "Results CSV",
+            key: "results_csv",
+            url: "https://cdn.test/results.csv",
+            category: "stat_csv",
+          },
+        ],
+      })
     );
-    expect(downloadLink.download).toBe("");
+    const createObjectUrlSpy = spyOn(URL, "createObjectURL").and.returnValue(
+      "blob:results"
+    );
+    const revokeObjectUrlSpy = spyOn(URL, "revokeObjectURL");
+    const clickSpy = spyOn(HTMLAnchorElement.prototype, "click");
+    render();
+
+    component.downloadAllFiles();
+
+    expect(resultsService.downloadAll).toHaveBeenCalledWith(mockJob.id);
+    expect(createObjectUrlSpy).toHaveBeenCalledWith(jasmine.any(Blob));
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:results");
+    expect(component.downloadingAllFiles()).toBeFalse();
   });
 
   it("should render a disabled download all files button when no files are available", () => {
@@ -260,7 +308,6 @@ describe("JobDetailsComponent", () => {
 
     expect(downloadLink).toBeNull();
     expect(downloadButton.disabled).toBeTrue();
-    expect(resultsService.getDownloadAllUrl).not.toHaveBeenCalled();
   });
 
   // --- Results panel --------------------------------------------------------

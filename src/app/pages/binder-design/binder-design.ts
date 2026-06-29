@@ -1,10 +1,10 @@
 import { Component, signal } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import { ThemeLayoutComponent } from "../../layouts/theme-layout/theme-layout.component";
 import { THEMES } from "../../cores/config/themes.config";
 
 @Component({
   selector: "app-binder-design",
-  imports: [RouterLink],
+  imports: [ThemeLayoutComponent],
   templateUrl: "./binder-design.html",
   styleUrl: "./binder-design.scss",
 })

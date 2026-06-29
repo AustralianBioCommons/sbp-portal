@@ -1,9 +1,9 @@
-<!-- Seqera Unavailable Warning -->
-@if (seqeraUnavailable()) {
+<!-- System Health Warning -->
+@if (systemUnhealthy()) {
 <app-alert
   type="warning"
   position="fixed"
-  message="Seqera services are currently unavailable. Job status and logs may not be up to date."
+  [message]="healthMessage() ?? 'Some workflow services are currently unavailable. Job status and logs may not be up to date until the service is restored.'"
 ></app-alert>
 }
 
@@ -47,32 +47,20 @@
             Delete
           </span>
         </app-button>
-        @if (downloadAllUrl(); as downloadUrl) {
-        <a
-          [href]="downloadUrl"
-          download
-          class="rounded-md px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap overflow-hidden text-white bg-biocommons-primary hover:bg-sky-900 inline-flex items-center"
-          title="Download all files"
-        >
-          <span class="flex items-center gap-2">
-            <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
-            Download all files
-          </span>
-        </a>
-        } @else {
         <app-button
           type="button"
           variant="primary"
           widthClass="w-auto"
-          [disabled]="true"
+          [disabled]="!canDownloadAllFiles()"
+          [loading]="downloadingAllFiles()"
           title="Download all files"
+          (click)="downloadAllFiles()"
         >
           <span class="flex items-center gap-2">
             <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
             Download all files
           </span>
         </app-button>
-        }
       </div>
       }
     </div>
@@ -123,7 +111,7 @@
             [class.border-sky-500]="activeTab() === tab.id"
             [class.text-sky-600]="activeTab() === tab.id"
             [class.border-transparent]="activeTab() !== tab.id"
-            [class.text-gray-600]="activeTab() !== tab.id"
+            [class.text-gray-500]="activeTab() !== tab.id"
             [class.hover:border-gray-600]="activeTab() !== tab.id"
           >
             <ng-icon [name]="tab.icon" size="20"></ng-icon>
@@ -169,7 +157,7 @@
           } } @case ("files") {
           <div class="space-y-2">
             <div class="font-semibold text-gray-900">Available files</div>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-500">
               Download individual result files from this workflow run.
             </p>
           </div>
@@ -295,7 +283,7 @@
           } } @case ("citations") {
           <div class="space-y-2">
             <div class="font-semibold text-gray-900">Citations</div>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-gray-500">
               Cite the workflow and platform used to produce the results from
               this run.
             </p>

@@ -1,5 +1,12 @@
 import { CommonModule } from "@angular/common";
-import { Component, computed, inject, Signal, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  Signal,
+  signal,
+  viewChild,
+} from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
@@ -13,17 +20,14 @@ import {
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
 import { filter, map, startWith, switchMap, take } from "rxjs/operators";
-import { AlertComponent } from "../../../components/alert/alert.component";
-import { ButtonComponent } from "../../../components/button/button.component";
-import { DialogComponent } from "../../../components/dialog/dialog.component";
-import { LoadingComponent } from "../../../components/loading/loading.component";
 import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
+import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
-  Step,
-  StepNavigationComponent,
-} from "../../../components/workflow/step-navigation/step-navigation.component";
+  WorkflowFormComponent,
+  WorkflowSection,
+} from "../../../components/workflow/workflow-form/workflow-form.component";
 import {
   ToolOption,
   ToolSelectionComponent,
@@ -33,7 +37,6 @@ import {
   parseMultiFasta,
   validateMultiFastaProtein,
 } from "../../../cores/utils/fasta.utils";
-import { environment } from "../../../../environments/environment";
 import { AuthService } from "../../../cores/auth.service";
 import {
   CreditsService,
@@ -82,28 +85,18 @@ function uniqueSequencesValidator(
   return result.valid ? null : { duplicateSequences: result.errorMessage };
 }
 
-interface TabItem {
-  id: "overview" | "output" | "papers";
-  label: string;
-}
-
 interface ToolChip extends ToolOption {
   id: "boltz" | "colabfold";
 }
-
-type StepItem = Step;
 
 @Component({
   selector: "app-interaction-screening",
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    AlertComponent,
-    ButtonComponent,
-    DialogComponent,
-    LoadingComponent,
     ToolSelectionComponent,
-    StepNavigationComponent,
+    WorkflowFormComponent,
+    WorkflowLayoutComponent,
     StepContentComponent,
     ConfigurationSummaryComponent,
     CreditSummaryComponent,
@@ -117,7 +110,6 @@ type StepItem = Step;
 export default class InteractionScreeningComponent {
   // Auth
   public auth = inject(AuthService);
-  readonly profileUrl = environment.profileUrl;
   // Workflow submission service
   public workflowSubmission = inject(WorkflowSubmissionService);
   // FASTA upload service
@@ -229,18 +221,6 @@ export default class InteractionScreeningComponent {
   showAlert = signal(false);
   alertMessage = signal("");
 
-  // Tabs
-  readonly tabs: TabItem[] = [
-    { id: "overview", label: "Overview" },
-    { id: "output", label: "Output" },
-    { id: "papers", label: "Papers" },
-  ];
-  activeTab = signal<TabItem["id"]>("overview");
-  isActiveTab = (id: TabItem["id"]) => this.activeTab() === id;
-  switchTab(id: TabItem["id"]) {
-    this.activeTab.set(id);
-  }
-
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
     { id: "colabfold", label: "ColabFold" },
@@ -253,48 +233,30 @@ export default class InteractionScreeningComponent {
     () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
   );
 
-  // ─── Steps ───────────────────────────────────────────────────────────────
-  readonly steps: StepItem[] = [
-    {
-      id: 1,
-      title: "Input Configuration",
-      description: "Add query and target protein sequences in FASTA format",
-    },
-    {
-      id: 2,
-      title: "Tool Settings",
-      description: "Configure parameters specific to the selected tool",
-    },
-    {
-      id: 3,
-      title: "Review & Submit",
-      description: "Review all settings and run the job",
-    },
+  // ─── Sections ────────────────────────────────────────────────────────────
+  // Single-page form sections (rendered + tracked by app-workflow-form)
+  readonly sections: WorkflowSection[] = [
+    { id: "select-tool", label: "Select a Tool", mobileLabel: "Tool" },
+    { id: "input-config", label: "Input Configuration", mobileLabel: "Input" },
+    { id: "tool-settings", label: "Tool Settings", mobileLabel: "Settings" },
+    { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
-  currentStep = signal<number>(1);
-  completedSteps = signal<number[]>([]);
-  visitedSteps = signal<number[]>([1]);
-  isStepVisited = (id: number) => this.visitedSteps().includes(id);
+
+  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
+  private readonly workflowForm = viewChild(WorkflowFormComponent);
+
   isFormValid = computed(() => this.formStatus() === "VALID");
 
-  canGoPrev: Signal<boolean> = computed(() => this.currentStep() > 1);
-  canGoNext: Signal<boolean> = computed(() => {
-    if (this.currentStep() < this.steps.length) {
-      if (this.currentStep() === 1) return this.isFormValid();
-      return true;
+  /** Per-section validity — drives the progress-bar colours. */
+  isSectionValid = (id: string): boolean => {
+    switch (id) {
+      case "input-config":
+      case "review":
+        return this.isFormValid();
+      default:
+        // select-tool (a tool is always selected) and tool-settings (no params).
+        return true;
     }
-    return false;
-  });
-
-  isStepInvalid = (id: number) => {
-    if (id === 1) return !this.isFormValid();
-    return false;
-  };
-
-  // Step 2 auto-completes — no tool parameters for now
-  isStepCompleted = (id: number) => {
-    if (id === 2) return true;
-    return this.completedSteps().includes(id);
   };
 
   // Review step summary
@@ -302,33 +264,31 @@ export default class InteractionScreeningComponent {
     const val = this.formValue();
     const queryResult = validateMultiFastaProtein(val?.queryFasta ?? "");
     const targetResult = validateMultiFastaProtein(val?.targetFasta ?? "");
-    const items: { label: string; value: string; fieldName: string }[] = [];
-    if (val?.jobName) {
-      items.push({
+    return [
+      {
         label: "Job Name",
-        value: val.jobName,
+        value: val?.jobName ?? "",
         fieldName: "job_id",
-      });
-    }
-    if (queryResult.valid) {
-      items.push({
+      },
+      {
         label: "Query Sequences",
-        value: `${queryResult.sequenceCount} sequence${
-          queryResult.sequenceCount !== 1 ? "s" : ""
-        }`,
+        value: queryResult.valid
+          ? `${queryResult.sequenceCount} sequence${
+              queryResult.sequenceCount !== 1 ? "s" : ""
+            }`
+          : "",
         fieldName: "query_sequences",
-      });
-    }
-    if (targetResult.valid) {
-      items.push({
+      },
+      {
         label: "Target Sequences",
-        value: `${targetResult.sequenceCount} sequence${
-          targetResult.sequenceCount !== 1 ? "s" : ""
-        }`,
+        value: targetResult.valid
+          ? `${targetResult.sequenceCount} sequence${
+              targetResult.sequenceCount !== 1 ? "s" : ""
+            }`
+          : "",
         fieldName: "target_sequences",
-      });
-    }
-    return items;
+      },
+    ];
   });
 
   // Form validation summary for FormStatusComponent
@@ -344,37 +304,6 @@ export default class InteractionScreeningComponent {
       (this.form.controls.targetFasta.valid ? 0 : 1) +
       (productError ? 1 : 0);
     return { valid: this.isFormValid(), errorCount, rowCount: 3 };
-  }
-
-  previousStep() {
-    if (this.currentStep() > 1) this.currentStep.update((v) => v - 1);
-  }
-
-  nextStep() {
-    if (this.currentStep() < this.steps.length) {
-      const current = this.currentStep();
-      if (current === 1) {
-        this.touchAll();
-        if (!this.isFormValid()) return;
-      }
-      this.completedSteps.update((arr) =>
-        arr.includes(current) ? arr : [...arr, current]
-      );
-      this.currentStep.update((v) => v + 1);
-      this.visitedSteps.update((arr) => {
-        const next = current + 1;
-        return arr.includes(next) ? arr : [...arr, next];
-      });
-    }
-  }
-
-  goToStep(step: number) {
-    if (step >= 1 && step <= this.steps.length) {
-      this.currentStep.set(step);
-      this.visitedSteps.update((arr) =>
-        arr.includes(step) ? arr : [...arr, step]
-      );
-    }
   }
 
   // ─── Field error helpers ──────────────────────────────────────────────────
@@ -454,8 +383,9 @@ export default class InteractionScreeningComponent {
   }
 
   submitWorkflow() {
+    this.touchAll();
     if (!this.isFormValid()) {
-      console.error("Cannot submit: Form validation failed");
+      this.workflowForm()?.scrollToFirstInvalidSection();
       return;
     }
 
@@ -530,16 +460,6 @@ export default class InteractionScreeningComponent {
       });
   }
 
-  submitNewJob() {
-    window.location.reload();
-  }
-  goToJobs() {
-    this.workflowSubmission.goToJobs();
-  }
-  loginWithReturnUrl() {
-    const currentUrl = window.location.pathname + window.location.search;
-    this.auth.login(currentUrl);
-  }
   closeAlert(): void {
     this.showAlert.set(false);
     this.alertMessage.set("");
