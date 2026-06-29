@@ -1,66 +1,98 @@
-<div class="mt-4 space-y-4">
-  <!-- Selected Tool -->
-  <div class="bg-sky-50 border border-sky-200 rounded-lg p-4">
-    <div class="text-sm font-semibold text-sky-900 mb-2">Selected Tool</div>
-    <p class="text-sm text-sky-800">
-      <span class="font-medium">{{ selectedTool() }}</span>
-      @if (hasParameters()) {
-      <span class="ml-2 text-xs bg-sky-200 text-sky-900 px-2 py-1 rounded-full">
-        Has Parameters
-      </span>
-      } @else {
-      <span
-        class="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full"
-      >
-        No Parameters
-      </span>
-      }
-    </p>
-  </div>
-
-  <!-- Input Configuration Summary -->
-  <div class="bg-gray-50 border rounded-lg p-4">
-    <div class="text-sm font-semibold text-gray-900 mb-3">
-      Input Configuration
+<div class="space-y-4">
+  <!-- Configuration Summary -->
+  <div class="bg-gray-50 border rounded-lg p-4 space-y-4 text-sm">
+    <!-- Workflow & Tool -->
+    <div class="space-y-4">
+      <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+        <div class="space-y-1">
+          <p class="font-medium">Workflow</p>
+          @if (workflowName()) {
+          <p class="text-gray-600 wrap-break-word">
+            {{ workflowName() }}
+          </p>
+          } @else {
+          <p class="text-gray-400 italic">Not provided</p>
+          }
+        </div>
+        <div class="space-y-1">
+          <p class="font-medium">Tool</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <p class="text-gray-600 wrap-break-word">
+              {{ selectedTool() || "—" }}
+            </p>
+            @if (hasParameters()) {
+            <span
+              class="inline-block shrink-0 text-xs bg-sky-200 text-biocommons-primary px-2 py-1 rounded-full"
+            >
+              Has Parameters
+            </span>
+            } @else {
+            <span
+              class="inline-block shrink-0 text-xs bg-gray-200 px-2 py-1 rounded-full"
+            >
+              No Parameters
+            </span>
+            }
+          </div>
+        </div>
+      </div>
     </div>
-    @if (summaryItems().length > 0) {
-    <div class="space-y-3">
-      @for (item of summaryItems(); track item.fieldName) {
-      <div
-        class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-4"
-      >
-        <span class="text-sm font-medium text-gray-700 sm:w-1/3">
-          {{ item.label }}:
-        </span>
-        @if (item.url) {
-        <a
-          [href]="item.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          download
-          class="text-sm text-sky-700 underline hover:text-sky-900 sm:w-2/3 break-all"
-        >
-          {{ item.value }}
-        </a>
-        } @else {
-        <span class="text-sm text-gray-600 sm:w-2/3 wrap-break-word">{{
-          item.value
-        }}</span>
+
+    <hr class="border-t border-gray-200" />
+
+    <!-- Input Configuration -->
+    <div class="space-y-4">
+      <div class="font-semibold">Input Configuration</div>
+      @if (inputItems().length > 0) {
+      <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+        @for (item of inputItems(); track item.fieldName) {
+        <div class="space-y-1">
+          <p class="font-medium">{{ item.label }}</p>
+          @if (item.url && item.value) {
+          <a
+            [href]="item.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+            class="text-sky-700 underline wrap-break-word hover:text-biocommons-primary"
+          >
+            {{ item.value }}
+          </a>
+          } @else if (item.value) {
+          <p class="text-gray-600 wrap-break-word">{{ item.value }}</p>
+          } @else {
+          <p class="text-red-600">Not provided</p>
+          }
+        </div>
         }
       </div>
+      } @else {
+      <p class="text-red-600">No input configuration provided</p>
       }
     </div>
 
-    <!-- Summary Stats -->
-    <div class="mt-4 pt-3 border-t">
-      <div class="flex flex-wrap gap-4 text-xs text-gray-600">
-        <span>{{ summaryItems().length }} field(s) configured</span>
-        <span>{{ requiredFieldCount() }} required field(s)</span>
+    <hr class="border-t border-gray-200" />
+
+    <!-- Tool Settings -->
+    <div class="space-y-4">
+      <div class="font-semibold">Tool Settings</div>
+      @if (toolSettingItems().length > 0) {
+      <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+        @for (item of toolSettingItems(); track item.fieldName) {
+        <div class="space-y-1">
+          <p class="font-medium">{{ item.label }}</p>
+          @if (item.value) {
+          <p class="text-gray-600 wrap-break-word">{{ item.value }}</p>
+          } @else {
+          <p class="text-red-600">Not provided</p>
+          }
+        </div>
+        }
       </div>
+      } @else {
+      <p class="text-gray-600">No tool settings</p>
+      }
     </div>
-    } @else {
-    <p class="text-sm text-gray-500 italic">No input configuration provided</p>
-    }
   </div>
 
   <!-- Validation Status -->
@@ -86,11 +118,11 @@
         class="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs"
         >!</span
       >
-      <span class="text-sm font-medium text-red-900"
-        >Configuration Incomplete</span
-      >
+      <span class="text-sm font-medium text-red-800">
+        Configuration Incomplete
+      </span>
     </div>
-    <p class="text-sm text-red-700 mt-1">
+    <p class="text-sm text-red-600 mt-1">
       Please complete all required fields in the Input Configuration step.
     </p>
   </div>

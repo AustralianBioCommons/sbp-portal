@@ -1,66 +1,21 @@
-<!-- Binder Design Content -->
-<div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
-  <!-- Page Title -->
-  <div class="text-center space-y-6">
-    <h1 class="text-4xl font-semibold text-gray-900">Protein Binder Design</h1>
-    <p class="text-gray-600 max-w-3xl mx-auto">
-      Synthetic protein binders are emerging as powerful tools in therapeutics,
-      diagnostics, and fundamental research, offering a highly tunable
-      alternative to traditional antibody development. This platform has been
-      developed to support the design and optimization of synthetic protein
-      binders through state-of-the-art AI workflows. By integrating modern
-      protein modeling, sequence design, and quality control methods, it enables
-      reproducible and efficient in silico experimentation for academic
-      research. Researchers can investigate new binding modalities, benchmark
-      computational protocols, and accelerate the progression from sequence
-      design to structural insight.
-    </p>
-  </div>
+<app-theme-layout
+  title="Protein Binder Design"
+  [workflows]="workflows()"
+  [tools]="tools()"
+>
+  <p description class="text-gray-500 max-w-3xl mx-auto">
+    Synthetic protein binders are emerging as powerful tools in therapeutics,
+    diagnostics, and fundamental research, offering a highly tunable alternative
+    to traditional antibody development. This platform has been developed to
+    support the design and optimization of synthetic protein binders through
+    state-of-the-art AI workflows. By integrating modern protein modeling,
+    sequence design, and quality control methods, it enables reproducible and
+    efficient in silico experimentation for academic research. Researchers can
+    investigate new binding modalities, benchmark computational protocols, and
+    accelerate the progression from sequence design to structural insight.
+  </p>
 
-  <!-- Preconfig Workflows Section -->
-  <div class="space-y-6">
-    <h2 class="text-2xl font-semibold text-gray-900">Workflows</h2>
-    <div class="flex flex-wrap gap-4">
-      @for (workflow of workflows(); track workflow.id) { @if
-      (workflow.disabled) {
-      <span
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-sky-900 opacity-50 cursor-not-allowed"
-      >
-        {{ workflow.label }}
-      </span>
-      } @else {
-      <a
-        [routerLink]="workflow.href"
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-sky-900 hover:text-sky-700 transition-all no-underline"
-      >
-        {{ workflow.label }}
-      </a>
-      } }
-    </div>
-  </div>
-
-  <!-- Tools Section -->
-  <div class="space-y-6">
-    <h2 class="text-2xl font-semibold text-gray-900">Tools</h2>
-    <div class="flex flex-wrap gap-4">
-      @for (tool of tools(); track tool.id) { @if (tool.disabled) {
-      <span
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-sky-900 opacity-50 cursor-not-allowed"
-      >
-        {{ tool.label }}
-      </span>
-      } @else {
-      <a
-        [routerLink]="tool.href"
-        class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-sky-900 hover:text-sky-700 transition-all no-underline"
-      >
-        {{ tool.label }}
-      </a>
-      } }
-    </div>
-  </div>
-
-  <!-- Community Resources Section -->
+  <!-- Community Resources -->
   <div class="space-y-6">
     <h2 class="text-2xl font-semibold text-gray-900">Community Resources</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -72,9 +27,9 @@
         <h3 class="text-lg font-semibold text-gray-900">
           {{ resource.title }}
         </h3>
-        <p class="text-gray-600 text-sm">{{ resource.description }}</p>
+        <p class="text-gray-500 text-sm">{{ resource.description }}</p>
       </a>
       }
     </div>
   </div>
-</div>
+</app-theme-layout>

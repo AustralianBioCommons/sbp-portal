@@ -59,7 +59,7 @@ describe("StepContentComponent", () => {
 
   it("should have proper container structure", () => {
     fixture.detectChanges();
-    const container = fixture.nativeElement.querySelector(".border");
+    const container = fixture.nativeElement.querySelector(".p-4");
     expect(container).toBeTruthy();
   });
 

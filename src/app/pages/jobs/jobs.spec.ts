@@ -365,10 +365,10 @@ describe("JobsComponent", () => {
     );
     expect(component.getStatusClass("Failed")).toBe("bg-red-600 text-white");
     expect(component.getStatusClass("Stopped")).toBe(
-      "bg-yellow-100 text-red-700"
+      "bg-amber-100 text-red-700"
     );
     expect(component.getStatusClass("Unknown")).toBe(
-      "bg-gray-100 text-gray-800"
+      "bg-gray-100 text-gray-900"
     );
     expect(component.isInProgress("In progress")).toBeTrue();
   });

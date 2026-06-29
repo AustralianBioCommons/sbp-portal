@@ -1,23 +1,17 @@
 <div [class]="rootClasses()" [class.pr-8]="!dismissible()">
   <!-- Icon -->
   @if (type() === "success") {
-  <ng-icon
-    name="heroCheckCircleSolid"
-    size="20"
-    class="shrink-0 text-emerald-500"
-  ></ng-icon>
+  <span class="inline-flex shrink-0 text-green-500">
+    <ng-icon name="heroCheckCircleSolid" size="20"></ng-icon>
+  </span>
   } @else if (type() === "warning") {
-  <ng-icon
-    name="heroExclamationTriangleSolid"
-    size="20"
-    class="shrink-0 text-yellow-600"
-  ></ng-icon>
+  <span class="inline-flex shrink-0 text-amber-600">
+    <ng-icon name="heroExclamationTriangleSolid" size="20"></ng-icon>
+  </span>
   } @else {
-  <ng-icon
-    name="heroXCircleSolid"
-    size="20"
-    class="shrink-0 text-red-500"
-  ></ng-icon>
+  <span class="inline-flex shrink-0 text-red-500">
+    <ng-icon name="heroXCircleSolid" size="20"></ng-icon>
+  </span>
   }
 
   <!-- Content -->
@@ -25,9 +19,9 @@
     class="text-md flex-1"
     [class]="
       type() === 'success'
-        ? 'text-emerald-500'
+        ? 'text-green-500'
         : type() === 'warning'
-        ? 'text-yellow-800'
+        ? 'text-amber-800'
         : 'text-red-500'
     "
   >
@@ -39,12 +33,12 @@
   <button
     (click)="onDismiss()"
     aria-label="close"
-    class="shrink-0 rounded-md p-1"
+    class="inline-flex shrink-0 items-center justify-center rounded-md p-1"
     [class]="
       type() === 'success'
-        ? 'text-emerald-500 hover:bg-green-100'
+        ? 'text-green-500 hover:bg-green-100'
         : type() === 'warning'
-        ? 'text-yellow-700 hover:bg-yellow-100'
+        ? 'text-amber-700 hover:bg-amber-100'
         : 'text-red-500 hover:bg-red-100'
     "
   >

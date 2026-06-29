@@ -195,62 +195,31 @@ describe("InteractionScreeningComponent", () => {
     expect(component.alertMessage()).toContain("upload failed");
   });
 
-  // ── 4. nextStep ────────────────────────────────────────────────────────
+  // ── 4. Sections / isSectionValid ─────────────────────────────────────────
 
-  it("should not advance from step 1 when form is invalid", () => {
-    component.nextStep();
-    expect(component.currentStep()).toBe(1);
+  it("should define the four uniform workflow sections", () => {
+    expect(component.sections.map((s) => s.id)).toEqual([
+      "select-tool",
+      "input-config",
+      "tool-settings",
+      "review",
+    ]);
   });
 
-  it("should advance from step 1 when form is valid", () => {
+  it("should treat select-tool and tool-settings as always valid", () => {
+    expect(component.isSectionValid("select-tool")).toBe(true);
+    expect(component.isSectionValid("tool-settings")).toBe(true);
+  });
+
+  it("should mark input-config and review invalid until the form is valid", () => {
+    expect(component.isSectionValid("input-config")).toBe(false);
+    expect(component.isSectionValid("review")).toBe(false);
+
     fillValidForm();
     fixture.detectChanges();
 
-    component.nextStep();
-
-    expect(component.currentStep()).toBe(2);
-  });
-
-  // ── 5. previousStep ────────────────────────────────────────────────────
-
-  it("should decrement the step when step > 1", () => {
-    component.currentStep.set(2);
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
-  });
-
-  it("should not decrement below step 1", () => {
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
-  });
-
-  // ── 6. goToStep ────────────────────────────────────────────────────────
-
-  it("should set the current step via goToStep", () => {
-    component.goToStep(3);
-    expect(component.currentStep()).toBe(3);
-  });
-
-  it("should ignore out-of-range values in goToStep", () => {
-    component.goToStep(0);
-    expect(component.currentStep()).toBe(1);
-
-    component.goToStep(99);
-    expect(component.currentStep()).toBe(1);
-  });
-
-  // ── 7. switchTab ───────────────────────────────────────────────────────
-
-  it("should update activeTab when switchTab is called", () => {
-    expect(component.activeTab()).toBe("overview");
-
-    component.switchTab("papers");
-    expect(component.activeTab()).toBe("papers");
-    expect(component.isActiveTab("papers")).toBe(true);
-    expect(component.isActiveTab("overview")).toBe(false);
-
-    component.switchTab("output");
-    expect(component.activeTab()).toBe("output");
+    expect(component.isSectionValid("input-config")).toBe(true);
+    expect(component.isSectionValid("review")).toBe(true);
   });
 
   // ── 8. selectTool ──────────────────────────────────────────────────────
@@ -390,23 +359,6 @@ describe("InteractionScreeningComponent", () => {
     expect(component.selectedToolLabel()).toBe("Boltz");
   });
 
-  // ── 15. canGoNext ─────────────────────────────────────────────────────────
-
-  it("should be true when on an intermediate step", () => {
-    fillValidForm();
-    fixture.detectChanges();
-    component.nextStep();
-    expect(component.canGoNext()).toBe(true);
-  });
-
-  it("should be false when on the last step", () => {
-    fillValidForm();
-    fixture.detectChanges();
-    component.nextStep();
-    component.nextStep();
-    expect(component.canGoNext()).toBe(false);
-  });
-
   // ── 16. formSummary computed ──────────────────────────────────────────────
 
   it("should list job name and both sequence counts when form is valid", () => {
@@ -422,8 +374,14 @@ describe("InteractionScreeningComponent", () => {
     ).toContain("1");
   });
 
-  it("should return empty summary when form is empty", () => {
-    expect(component.formSummary()).toEqual([]);
+  it("should list all input fields with empty values when form is empty", () => {
+    const summary = component.formSummary();
+    expect(summary.map((i) => i.fieldName)).toEqual([
+      "job_id",
+      "query_sequences",
+      "target_sequences",
+    ]);
+    expect(summary.every((i) => i.value === "")).toBe(true);
   });
 
   // ── 17. getFormValidationSummary ──────────────────────────────────────────
@@ -455,34 +413,6 @@ describe("InteractionScreeningComponent", () => {
     component.form.setValue({ jobName: "job", queryFasta, targetFasta });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
-  });
-
-  // ── 18. goToJobs ──────────────────────────────────────────────────────────
-
-  it("should delegate to workflowSubmission.goToJobs()", () => {
-    component.goToJobs();
-    expect(workflowSubmissionService.goToJobs).toHaveBeenCalled();
-  });
-
-  // ── 19. loginWithReturnUrl ────────────────────────────────────────────────
-
-  it("should call auth.login with the current URL", () => {
-    component.loginWithReturnUrl();
-    expect(authService.login).toHaveBeenCalledWith(
-      window.location.pathname + window.location.search
-    );
-  });
-
-  // ── 21. step dedup — completedSteps / visitedSteps ternary branches ───────
-
-  it("should not duplicate completed or visited steps on re-navigation", () => {
-    fillValidForm();
-    fixture.detectChanges();
-    component.nextStep(); // → 2; completedSteps=[1], visitedSteps=[1,2]
-    component.goToStep(1); // → 1; visitedSteps stays [1,2]
-    component.nextStep(); // → 2 again; no duplication
-    expect(component.completedSteps()).toEqual([1]);
-    expect(component.visitedSteps()).toEqual([1, 2]);
   });
 
   // ── 22. submitWorkflow — "Unknown error" fallback ─────────────────────────

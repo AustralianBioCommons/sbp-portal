@@ -7,6 +7,7 @@ import { Component, input } from "@angular/core";
   styleUrl: "./step-content.component.scss",
 })
 export class StepContentComponent {
+  readonly step = input<number>();
   readonly title = input("");
   readonly description = input("");
   readonly contentClass = input("");

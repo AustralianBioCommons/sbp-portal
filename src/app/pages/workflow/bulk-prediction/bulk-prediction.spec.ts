@@ -13,6 +13,7 @@ import {
   DatasetUploadService,
 } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+import { CreditsService } from "../../../cores/services/credits.service";
 import BulkPredictionComponent from "./bulk-prediction";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -57,6 +58,10 @@ describe("BulkPredictionComponent", () => {
     profileUrl: string;
     login: jasmine.Spy;
   };
+  let creditsService: {
+    getWorkflowCredits: jasmine.Spy;
+    getMyCredit: jasmine.Spy;
+  };
 
   beforeEach(async () => {
     fastaUploadService = jasmine.createSpyObj<FastaUploadService>(
@@ -92,6 +97,26 @@ describe("BulkPredictionComponent", () => {
       login: jasmine.createSpy("login"),
     };
 
+    creditsService = {
+      getWorkflowCredits: jasmine
+        .createSpy("getWorkflowCredits")
+        .and.returnValue(
+          of({
+            workflows: [
+              {
+                category: "bulk-prediction",
+                displayName: "Bulk Prediction",
+                basis: "sequence",
+                toolMultipliers: { boltz: 2, colabfold: 3 },
+              },
+            ],
+          })
+        ),
+      getMyCredit: jasmine
+        .createSpy("getMyCredit")
+        .and.returnValue(of({ userId: "u1", credit: 100 })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [BulkPredictionComponent],
       providers: [
@@ -104,6 +129,7 @@ describe("BulkPredictionComponent", () => {
           provide: WorkflowSubmissionService,
           useValue: workflowSubmissionService,
         },
+        { provide: CreditsService, useValue: creditsService },
       ],
     }).compileComponents();
 
@@ -227,28 +253,29 @@ describe("BulkPredictionComponent", () => {
     );
   });
 
-  // ── 9. Step navigation ─────────────────────────────────────────────────
+  // ── 9. Sections / isSectionValid ───────────────────────────────────────
 
-  it("should start on step 1", () => {
-    expect(component.currentStep()).toBe(1);
+  it("should define the four uniform workflow sections", () => {
+    expect(component.sections.map((s) => s.id)).toEqual([
+      "select-tool",
+      "input-config",
+      "tool-settings",
+      "review",
+    ]);
   });
 
-  it("should not advance to step 2 when form is invalid", () => {
-    component.nextStep();
-    expect(component.currentStep()).toBe(1);
+  it("should treat select-tool and tool-settings as always valid", () => {
+    expect(component.isSectionValid("select-tool")).toBe(true);
+    expect(component.isSectionValid("tool-settings")).toBe(true);
   });
 
-  it("should advance to step 2 when form is valid", () => {
+  it("should mark input-config and review invalid until the form is valid", () => {
+    expect(component.isSectionValid("input-config")).toBe(false);
+    expect(component.isSectionValid("review")).toBe(false);
+
     fillValidForm();
-    component.nextStep();
-    expect(component.currentStep()).toBe(2);
-  });
-
-  it("should go back to step 1 from step 2", () => {
-    fillValidForm();
-    component.goToStep(2);
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
+    expect(component.isSectionValid("input-config")).toBe(true);
+    expect(component.isSectionValid("review")).toBe(true);
   });
 
   // ── 10. Submission ─────────────────────────────────────────────────────
@@ -313,20 +340,20 @@ describe("BulkPredictionComponent", () => {
 
   // ── 12. formSummary ────────────────────────────────────────────────────
 
-  it("should include job name, tool, and entry count in formSummary", () => {
+  it("should include job name and entry count in formSummary", () => {
     fillValidForm();
     const summary = component.formSummary();
     expect(summary.some((item) => item.fieldName === "job_id")).toBe(true);
-    expect(summary.some((item) => item.fieldName === "tool")).toBe(true);
     expect(summary.some((item) => item.fieldName === "fasta_entries")).toBe(
       true
     );
   });
 
-  it("should omit job name from formSummary when jobName is empty", () => {
+  it("should leave job name value empty in formSummary when jobName is empty", () => {
     component.form.setValue({ jobName: "", fasta: VALID_FASTA });
     const summary = component.formSummary();
-    expect(summary.some((item) => item.fieldName === "job_id")).toBe(false);
+    const jobItem = summary.find((item) => item.fieldName === "job_id");
+    expect(jobItem?.value).toBe("");
   });
 
   it("should use singular 'sequence' when FASTA has exactly one entry", () => {
@@ -349,35 +376,6 @@ describe("BulkPredictionComponent", () => {
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("no dataset ID");
-  });
-
-  // ── 14. isStepCompleted ────────────────────────────────────────────────
-
-  it("should mark step 2 as always completed", () => {
-    expect(component.isStepCompleted(2)).toBe(true);
-  });
-
-  it("should reflect completedSteps for non-step-2 ids", () => {
-    expect(component.isStepCompleted(1)).toBe(false);
-    component.completedSteps.set([1]);
-    expect(component.isStepCompleted(1)).toBe(true);
-  });
-
-  // ── 15. goToStep out-of-range ─────────────────────────────────────────
-
-  it("should not change step when goToStep called with out-of-range value", () => {
-    component.goToStep(0);
-    expect(component.currentStep()).toBe(1);
-
-    component.goToStep(99);
-    expect(component.currentStep()).toBe(1);
-  });
-
-  // ── 16. loginWithReturnUrl ────────────────────────────────────────────
-
-  it("should call auth.login with current url when loginWithReturnUrl is called", () => {
-    component.loginWithReturnUrl();
-    expect(authService.login).toHaveBeenCalled();
   });
 
   // ── 17. submitWorkflowWithDataset error callback ──────────────────────
@@ -425,61 +423,13 @@ describe("BulkPredictionComponent", () => {
     expect(fastaItem?.value).toBe("2 sequences");
   });
 
-  it("should omit fasta_entries from formSummary when FASTA is invalid", () => {
+  it("should leave fasta_entries value empty in formSummary when FASTA is invalid", () => {
     component.form.setValue({ jobName: "bulk-job", fasta: "" });
     const summary = component.formSummary();
-    expect(summary.some((item) => item.fieldName === "fasta_entries")).toBe(
-      false
+    const fastaItem = summary.find(
+      (item) => item.fieldName === "fasta_entries"
     );
-  });
-
-  // ── 19. Step navigation — boundary cases ─────────────────────────────
-
-  it("should not go below step 1 from previousStep", () => {
-    expect(component.currentStep()).toBe(1);
-    component.previousStep();
-    expect(component.currentStep()).toBe(1);
-  });
-
-  it("should not advance past the last step", () => {
-    fillValidForm();
-    component.goToStep(3);
-    component.nextStep();
-    expect(component.currentStep()).toBe(3);
-  });
-
-  it("should not add step to completedSteps if already present", () => {
-    fillValidForm();
-    component.completedSteps.set([1]);
-    component.nextStep();
-    expect(component.completedSteps().filter((s) => s === 1).length).toBe(1);
-  });
-
-  it("should not add step to visitedSteps if already visited", () => {
-    fillValidForm();
-    component.visitedSteps.set([1, 2]);
-    component.goToStep(2);
-    expect(component.visitedSteps().filter((s) => s === 2).length).toBe(1);
-  });
-
-  // ── 20. isStepInvalid — non-step-1 ───────────────────────────────────
-
-  it("should return false for isStepInvalid when id is not 1", () => {
-    expect(component.isStepInvalid(2)).toBe(false);
-    expect(component.isStepInvalid(3)).toBe(false);
-  });
-
-  // ── 21. canGoNext ─────────────────────────────────────────────────────
-
-  it("should return true for canGoNext on step 2", () => {
-    fillValidForm();
-    component.goToStep(2);
-    expect(component.canGoNext()).toBe(true);
-  });
-
-  it("should return false for canGoNext on last step", () => {
-    component.goToStep(3);
-    expect(component.canGoNext()).toBe(false);
+    expect(fastaItem?.value).toBe("");
   });
 
   // ── 22. hasJobNameError / hasFastaError ───────────────────────────────
@@ -505,21 +455,6 @@ describe("BulkPredictionComponent", () => {
   it("should return a non-empty string for getFastaError when FASTA is invalid", () => {
     component.form.controls.fasta.setValue(">bad\nXXX123");
     expect(component.getFastaError()).toBeTruthy();
-  });
-
-  // ── 23. switchTab / isActiveTab ───────────────────────────────────────
-
-  it("should switch active tab", () => {
-    component.switchTab("output");
-    expect(component.isActiveTab("output")).toBe(true);
-    expect(component.isActiveTab("overview")).toBe(false);
-  });
-
-  // ── 24. submitNewJob / goToJobs ───────────────────────────────────────
-
-  it("should call goToJobs on workflowSubmission", () => {
-    component.goToJobs();
-    expect(workflowSubmissionService.goToJobs).toHaveBeenCalled();
   });
 
   // ── 25. creditCost ───────────────────────────────────────────────────
@@ -567,6 +502,41 @@ describe("BulkPredictionComponent", () => {
       fixture.detectChanges();
 
       expect(component.creditsInsufficient()).toBe(false);
+    });
+  });
+
+  // ── 26. loadToolCredits ────────────────────────────────────────────────
+
+  describe("loadToolCredits", () => {
+    it("applies tool multipliers and the remaining balance when authenticated", () => {
+      expect(creditsService.getWorkflowCredits).toHaveBeenCalled();
+      expect(creditsService.getMyCredit).toHaveBeenCalled();
+      expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(2);
+      expect(component.creditsRemaining()).toBe(100);
+    });
+
+    it("ignores the response when no matching workflow config is returned", () => {
+      creditsService.getWorkflowCredits.and.returnValue(of({ workflows: [] }));
+      const fresh = TestBed.createComponent(BulkPredictionComponent);
+      fresh.detectChanges();
+      expect(
+        fresh.componentInstance.tools.find((t) => t.id === "boltz")?.credits
+      ).toBeUndefined();
+    });
+
+    it("warns and continues when the credit requests fail", () => {
+      const warnSpy = spyOn(console, "warn");
+      creditsService.getWorkflowCredits.and.returnValue(
+        throwError(() => new Error("credits down"))
+      );
+      creditsService.getMyCredit.and.returnValue(
+        throwError(() => new Error("balance down"))
+      );
+
+      const fresh = TestBed.createComponent(BulkPredictionComponent);
+      fresh.detectChanges();
+
+      expect(warnSpy).toHaveBeenCalled();
     });
   });
 });
