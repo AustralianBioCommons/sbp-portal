@@ -36,7 +36,7 @@ const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
 const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
   success: true,
   message: "Dataset uploaded successfully",
-  datasetId: "dataset-1",
+  s3Key: "inputs/samplesheets/dataset-1.csv",
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -555,7 +555,7 @@ describe("SinglePredictionComponent", () => {
     component.submitWorkflow();
 
     expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("no dataset ID");
+    expect(component.alertMessage()).toContain("no S3 key was returned");
   });
 
   it("should show an error when dataset upload fails", () => {

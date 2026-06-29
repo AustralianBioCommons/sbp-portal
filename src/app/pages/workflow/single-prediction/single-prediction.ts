@@ -198,7 +198,7 @@ export default class SinglePredictionComponent {
   ccdLookupErrors = signal<Record<number, string>>({}); // validation error message produced by the local CCD dictionary lookup
   private preparedFastaContent = signal<string | null>(null);
   private preparedFastaUrl = signal<string | null>(null);
-  private preparedSamplesheetDatasetId = signal<string | null>(null);
+  private preparedSamplesheetS3Key = signal<string | null>(null);
 
   showAlert = signal(false);
   alertMessage = signal("");
@@ -551,8 +551,8 @@ export default class SinglePredictionComponent {
 
     this.workflowSubmission.isSubmitting.set(true);
 
-    this.prepareSinglePredictionInput((fastaUrl, datasetId) => {
-      this.submitPreparedWorkflow(datasetId, fastaUrl);
+    this.prepareSinglePredictionInput((fastaUrl, s3InputKey) => {
+      this.submitPreparedWorkflow(s3InputKey, fastaUrl);
     });
   }
 
@@ -757,17 +757,17 @@ export default class SinglePredictionComponent {
   }
 
   private prepareSinglePredictionInput(
-    onPrepared: (fastaUrl: string, datasetId: string) => void
+    onPrepared: (fastaUrl: string, s3InputKey: string) => void
   ): void {
     const fastaContent = this.generatedFastaContent();
-    const cachedDatasetId = this.preparedSamplesheetDatasetId();
+    const cachedS3InputKey = this.preparedSamplesheetS3Key();
     const cachedFastaUrl = this.preparedFastaUrl();
     if (
-      cachedDatasetId &&
+      cachedS3InputKey &&
       cachedFastaUrl &&
       this.preparedFastaContent() === fastaContent
     ) {
-      onPrepared(cachedFastaUrl, cachedDatasetId);
+      onPrepared(cachedFastaUrl, cachedS3InputKey);
       return;
     }
 
@@ -801,18 +801,18 @@ export default class SinglePredictionComponent {
       )
       .subscribe({
         next: ({ fastaUrl, datasetResponse }) => {
-          const datasetId = datasetResponse.datasetId;
-          if (!datasetId) {
+          const s3InputKey = datasetResponse.s3Key;
+          if (!s3InputKey) {
             this.workflowSubmission.isSubmitting.set(false);
             this.showError(
-              "Dataset upload succeeded but no dataset ID was returned."
+              "Dataset upload succeeded but no S3 key was returned."
             );
             return;
           }
           this.preparedFastaContent.set(fastaContent);
           this.preparedFastaUrl.set(fastaUrl);
-          this.preparedSamplesheetDatasetId.set(datasetId);
-          onPrepared(fastaUrl, datasetId);
+          this.preparedSamplesheetS3Key.set(s3InputKey);
+          onPrepared(fastaUrl, s3InputKey);
         },
         error: (error: unknown) => {
           this.workflowSubmission.isSubmitting.set(false);
@@ -821,14 +821,14 @@ export default class SinglePredictionComponent {
       });
   }
 
-  private submitPreparedWorkflow(datasetId: string, fastaUrl: string): void {
+  private submitPreparedWorkflow(s3InputKey: string, fastaUrl: string): void {
     this.workflowSubmission.submitWorkflowWithDataset(
       {
         ...this.buildWorkflowPayload(),
         fastaFileUrl: fastaUrl,
         sample_id: this.samplesheetId,
       },
-      datasetId,
+      s3InputKey,
       (error) => {
         this.workflowSubmission.isSubmitting.set(false);
         this.showError(

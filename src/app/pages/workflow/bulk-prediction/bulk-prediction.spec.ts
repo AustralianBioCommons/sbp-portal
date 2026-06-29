@@ -33,7 +33,7 @@ const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
 const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
   success: true,
   message: "ok",
-  datasetId: "dataset-456",
+  s3Key: "inputs/samplesheets/dataset-456.csv",
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -306,7 +306,7 @@ describe("BulkPredictionComponent", () => {
       workflowSubmissionService.submitWorkflowWithDataset
     ).toHaveBeenCalledWith(
       jasmine.objectContaining({ runName: "bulk-job" }),
-      "dataset-456",
+      "inputs/samplesheets/dataset-456.csv",
       jasmine.any(Function)
     );
   });
@@ -365,9 +365,9 @@ describe("BulkPredictionComponent", () => {
     expect(fastaItem?.value).toBe("1 sequence");
   });
 
-  // ── 13. Submission — missing datasetId branch ──────────────────────────
+  // ── 13. Submission — missing s3Key branch ─────────────────────────────
 
-  it("should show error when dataset upload returns no datasetId", () => {
+  it("should show error when dataset upload returns no s3Key", () => {
     fillValidForm();
     datasetUploadService.uploadBulkPredictionDataset.and.returnValue(
       of({ success: true, message: "ok" })
@@ -375,7 +375,7 @@ describe("BulkPredictionComponent", () => {
     component.submitWorkflow();
 
     expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("no dataset ID");
+    expect(component.alertMessage()).toContain("no S3 key");
   });
 
   // ── 17. submitWorkflowWithDataset error callback ──────────────────────

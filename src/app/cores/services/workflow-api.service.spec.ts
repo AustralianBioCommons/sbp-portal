@@ -52,7 +52,7 @@ describe("WorkflowApiService", () => {
     };
 
     service
-      .launchWorkflow(launch, formData, "dataset-1")
+      .launchWorkflow(launch, formData, "inputs/samplesheets/dataset-1.csv")
       .subscribe((response) => {
         expect(response.runId).toBe("run-1");
         expect(response.status).toBe("SUBMITTED");
@@ -64,7 +64,7 @@ describe("WorkflowApiService", () => {
     expect(req.request.method).toBe("POST");
     expect(req.request.body).toEqual({
       launch,
-      datasetId: "dataset-1",
+      s3InputKey: "inputs/samplesheets/dataset-1.csv",
       formData,
     });
     req.flush({

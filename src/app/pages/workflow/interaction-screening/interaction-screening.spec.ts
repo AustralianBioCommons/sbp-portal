@@ -29,7 +29,7 @@ const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
 const MOCK_DATASET_RESPONSE = {
   success: true,
   message: "ok",
-  datasetId: "dataset-123",
+  s3Key: "inputs/samplesheets/dataset-123.csv",
   splitOutputDir: "/g/data/yz52/sbp-service/input/interaction_screening/my-job",
 };
 
@@ -445,9 +445,9 @@ describe("InteractionScreeningComponent", () => {
     expect(component.getDuplicateSequencesError()).toBeTruthy();
   });
 
-  // ── 23. submitWorkflow — missing datasetId ────────────────────────────────
+  // ── 23. submitWorkflow — missing s3Key ───────────────────────────────────
 
-  it("should show error and set isSubmitting false when dataset upload returns no datasetId", () => {
+  it("should show error and set isSubmitting false when dataset upload returns no s3Key", () => {
     fillValidForm();
     fixture.detectChanges();
     datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
@@ -458,7 +458,7 @@ describe("InteractionScreeningComponent", () => {
 
     expect(workflowSubmissionService.isSubmitting()).toBe(false);
     expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("no dataset ID");
+    expect(component.alertMessage()).toContain("no S3 key");
   });
 
   // ── 23b. submitWorkflow — missing splitOutputDir ─────────────────────────
@@ -467,7 +467,11 @@ describe("InteractionScreeningComponent", () => {
     fillValidForm();
     fixture.detectChanges();
     datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
-      of({ success: true, message: "ok", datasetId: "dataset-123" })
+      of({
+        success: true,
+        message: "ok",
+        s3Key: "inputs/samplesheets/dataset-123.csv",
+      })
     );
 
     component.submitWorkflow();
@@ -485,7 +489,7 @@ describe("InteractionScreeningComponent", () => {
     workflowSubmissionService.submitWorkflowWithDataset.and.callFake(
       (
         _options: unknown,
-        _datasetId: string,
+        _s3InputKey: string,
         errorCallback: (err: Error) => void
       ) => {
         errorCallback(new Error("launch failed"));
@@ -505,7 +509,7 @@ describe("InteractionScreeningComponent", () => {
     workflowSubmissionService.submitWorkflowWithDataset.and.callFake(
       (
         _options: unknown,
-        _datasetId: string,
+        _s3InputKey: string,
         errorCallback: (err: Error) => void
       ) => {
         errorCallback({} as Error);

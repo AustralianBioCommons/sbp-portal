@@ -41,7 +41,7 @@ describe("DatasetUploadService", () => {
 
     service.uploadDataset(requestBody).subscribe((response) => {
       expect(response.success).toBeTrue();
-      expect(response.datasetId).toBe("dataset-123");
+      expect(response.s3Key).toBe("dataset-123");
     });
 
     const req = httpMock.expectOne(
@@ -52,7 +52,7 @@ describe("DatasetUploadService", () => {
     req.flush({
       success: true,
       message: "uploaded",
-      datasetId: "dataset-123",
+      s3Key: "dataset-123",
     });
   });
 
@@ -69,7 +69,7 @@ describe("DatasetUploadService", () => {
       .uploadInteractionScreeningDataset(requestBody)
       .subscribe((response) => {
         expect(response.success).toBeTrue();
-        expect(response.datasetId).toBe("dataset-456");
+        expect(response.s3Key).toBe("dataset-456");
       });
 
     const req = httpMock.expectOne(
@@ -80,7 +80,7 @@ describe("DatasetUploadService", () => {
     req.flush({
       success: true,
       message: "uploaded",
-      datasetId: "dataset-456",
+      s3Key: "dataset-456",
     });
   });
 
@@ -95,7 +95,7 @@ describe("DatasetUploadService", () => {
 
     service.uploadBulkPredictionDataset(requestBody).subscribe((response) => {
       expect(response.success).toBeTrue();
-      expect(response.datasetId).toBe("dataset-789");
+      expect(response.s3Key).toBe("dataset-789");
     });
 
     const req = httpMock.expectOne(
@@ -106,7 +106,7 @@ describe("DatasetUploadService", () => {
     req.flush({
       success: true,
       message: "uploaded",
-      datasetId: "dataset-789",
+      s3Key: "dataset-789",
     });
   });
 });
