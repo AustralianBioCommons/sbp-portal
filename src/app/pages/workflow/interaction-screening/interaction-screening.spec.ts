@@ -467,7 +467,11 @@ describe("InteractionScreeningComponent", () => {
     fillValidForm();
     fixture.detectChanges();
     datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
-      of({ success: true, message: "ok", s3Key: "inputs/samplesheets/dataset-123.csv" })
+      of({
+        success: true,
+        message: "ok",
+        s3Key: "inputs/samplesheets/dataset-123.csv",
+      })
     );
 
     component.submitWorkflow();

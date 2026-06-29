@@ -555,7 +555,7 @@ describe("SinglePredictionComponent", () => {
     component.submitWorkflow();
 
     expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("no dataset ID");
+    expect(component.alertMessage()).toContain("no S3 key was returned");
   });
 
   it("should show an error when dataset upload fails", () => {
