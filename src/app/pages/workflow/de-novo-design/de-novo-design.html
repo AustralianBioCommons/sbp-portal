@@ -198,7 +198,7 @@
                 @if (panelWidth() === 0) {
                 <button
                   type="button"
-                  class="absolute top-4 right-0 z-50 bg-white flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 p-2 text-sm font-medium shadow-md transition-colors focus:outline-none"
+                  class="absolute top-4 right-0 z-10 bg-white flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 p-2 text-sm font-medium shadow-md transition-colors focus:outline-none"
                   [class]="hasConfigSectionErrors(row.id) ? 'border-red-500 text-red-600 hover:bg-red-50' : 'border-gray-300  hover:bg-gray-50'"
                   (click)="panelWidth.set(defaultPanelWidth)"
                   title="Open Input Configuration"
