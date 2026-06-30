@@ -2,6 +2,7 @@ import { Component, inject, OnDestroy, OnInit, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { AlertComponent } from "../../components/alert/alert.component";
+import { ButtonComponent } from "../../components/button/button.component";
 import { LoadingComponent } from "../../components/loading/loading.component";
 import { DropdownMenuComponent } from "../../components/dropdown-menu/dropdown-menu.component";
 import { DialogComponent } from "../../components/dialog/dialog.component";
@@ -11,8 +12,10 @@ import {
   JobsService,
 } from "../../cores/services/jobs.service";
 import { HealthService } from "../../cores/services/health.service";
+import { AuthService } from "../../cores/auth.service";
+import { environment } from "../../../environments/environment";
 import { DatePipe } from "@angular/common";
-import { EMPTY } from "rxjs";
+import { combineLatest, EMPTY, Subscription } from "rxjs";
 import { catchError } from "rxjs/operators";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
@@ -31,6 +34,7 @@ import {
   selector: "app-jobs",
   imports: [
     AlertComponent,
+    ButtonComponent,
     DatePipe,
     FormsModule,
     LoadingComponent,
@@ -57,10 +61,19 @@ import {
 export default class JobsComponent implements OnInit, OnDestroy {
   private jobsService = inject(JobsService);
   private healthService = inject(HealthService);
+  private auth = inject(AuthService);
   private router = inject(Router);
 
   // Expose Math to template
   Math = Math;
+
+  // Authentication gating
+  authLoading = signal<boolean>(true);
+  isAuthenticated = signal<boolean>(false);
+  canExecuteWorkflows = signal<boolean>(false);
+  readonly profileUrl = environment.profileUrl;
+  private authSubscription?: Subscription;
+  private hasLoadedJobs = false;
 
   // State signals
   jobs = signal<JobListItem[]>([]);
@@ -94,14 +107,36 @@ export default class JobsComponent implements OnInit, OnDestroy {
   private readonly searchDebounceMs = 300;
 
   ngOnInit(): void {
-    this.loadJobs();
-    this.checkSystemHealth();
+    this.authSubscription = combineLatest([
+      this.auth.isLoading$,
+      this.auth.isAuthenticated$,
+      this.auth.canExecuteWorkflows$,
+    ]).subscribe(([isLoading, isAuthenticated, canExecuteWorkflows]) => {
+      if (isLoading) return;
+      this.authLoading.set(false);
+      this.isAuthenticated.set(isAuthenticated);
+      this.canExecuteWorkflows.set(canExecuteWorkflows);
+      if (canExecuteWorkflows && !this.hasLoadedJobs) {
+        this.hasLoadedJobs = true;
+        this.loadJobs();
+        this.checkSystemHealth();
+      }
+    });
   }
 
   ngOnDestroy(): void {
     if (this.searchDebounce) {
       clearTimeout(this.searchDebounce);
     }
+    this.authSubscription?.unsubscribe();
+  }
+
+  /**
+   * Send the user to Auth0 login, returning to the jobs page afterwards.
+   */
+  loginWithReturnUrl(): void {
+    const currentUrl = window.location.pathname + window.location.search;
+    this.auth.login(currentUrl);
   }
 
   /**

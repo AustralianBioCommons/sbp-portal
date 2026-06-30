@@ -6,8 +6,9 @@ import {
 } from "@angular/core/testing";
 import { DomSanitizer } from "@angular/platform-browser";
 import { provideRouter, Router } from "@angular/router";
-import { of, throwError } from "rxjs";
+import { Observable, of, throwError } from "rxjs";
 import { ResultsService } from "../../cores/services/results.service";
+import { AuthService } from "../../cores/auth.service";
 import JobsComponent from "./jobs";
 import {
   JobListItem,
@@ -25,6 +26,12 @@ describe("JobsComponent", () => {
   let mockJobsService: jasmine.SpyObj<JobsService>;
   let mockResultsService: jasmine.SpyObj<ResultsService>;
   let mockHealthService: jasmine.SpyObj<HealthService>;
+  let mockAuthService: {
+    isLoading$: Observable<boolean>;
+    isAuthenticated$: Observable<boolean>;
+    canExecuteWorkflows$: Observable<boolean>;
+    login: jasmine.Spy;
+  };
 
   const healthyResponse: ComponentsHealthResponse = {
     overallStatus: "healthy",
@@ -84,6 +91,12 @@ describe("JobsComponent", () => {
       "getComponentsHealth",
     ]);
     mockHealthService.getComponentsHealth.and.returnValue(of(healthyResponse));
+    mockAuthService = {
+      isLoading$: of(false),
+      isAuthenticated$: of(true),
+      canExecuteWorkflows$: of(true),
+      login: jasmine.createSpy("login"),
+    };
     mockJobsService.listJobs.and.returnValue(of(mockResponse));
     mockJobsService.cancelJob.and.returnValue(
       of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" })
@@ -97,6 +110,7 @@ describe("JobsComponent", () => {
         { provide: JobsService, useValue: mockJobsService },
         { provide: ResultsService, useValue: mockResultsService },
         { provide: HealthService, useValue: mockHealthService },
+        { provide: AuthService, useValue: mockAuthService },
         provideRouter([]),
       ],
     }).compileComponents();

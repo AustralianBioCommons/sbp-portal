@@ -25,6 +25,50 @@
       <p class="text-gray-600">View and manage my submitted workflow runs</p>
     </div>
 
+    <!--
+      While Auth0 restores the session the app shell already shows a full-screen
+      loading overlay, so the page body stays empty to avoid stacking a second
+      loader. Once resolved we show either the access-restricted box or the jobs.
+    -->
+    @if (!authLoading()) { @if (!canExecuteWorkflows()) {
+    <!-- Access Restricted -->
+    <div
+      class="rounded-lg bg-white border mt-12 text-center py-8 px-4"
+      role="alert"
+    >
+      <p class="text-base font-semibold">Access Restricted</p>
+      @if (!isAuthenticated()) {
+      <p class="text-sm text-gray-500 mt-4 mb-6">
+        To view your jobs, please log in or register for a BioCommons Access
+        account and add the
+        <span class="font-semibold">SBP Workflow Execution bundle</span> to your
+        profile.
+      </p>
+      <app-button
+        type="button"
+        variant="primary"
+        widthClass="w-auto"
+        (click)="loginWithReturnUrl()"
+      >
+        Log in or Register
+      </app-button>
+      } @else {
+      <p class="text-sm text-gray-500 mt-4 mb-6">
+        You currently do not have access to view jobs; please go to your profile
+        page to add the
+        <span class="font-semibold">SBP Workflow Execution</span> bundle.
+      </p>
+      <a
+        [href]="profileUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
+      >
+        Add bundle
+      </a>
+      }
+    </div>
+    } @else {
     <!-- Search and Filter Bar -->
     <div class="pt-4 bg-gray-50 sticky top-10 z-20 -mx-6 px-6">
       <div class="bg-white mt-12 mb-6 shadow-sm rounded-lg border p-4">
@@ -410,6 +454,6 @@
       </div>
       }
     </div>
-    }
+    } } }
   </div>
 </div>
