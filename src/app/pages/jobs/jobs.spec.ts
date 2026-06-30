@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import {
+  ComponentFixture,
+  fakeAsync,
+  TestBed,
+  tick,
+} from "@angular/core/testing";
 import { DomSanitizer } from "@angular/platform-browser";
 import { provideRouter, Router } from "@angular/router";
 import { of, throwError } from "rxjs";
@@ -221,16 +226,37 @@ describe("JobsComponent", () => {
     expect(component.selectedJobs()).toEqual([]);
   });
 
-  it("should search from page one and reload jobs", () => {
+  it("should search from page one and reload jobs after debounce", fakeAsync(() => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
     component.currentPage.set(3);
 
     component.onSearch("binder");
 
     expect(component.searchQuery()).toBe("binder");
+    expect(loadJobsSpy).not.toHaveBeenCalled();
+
+    tick(300);
+
     expect(component.currentPage()).toBe(1);
     expect(loadJobsSpy).toHaveBeenCalled();
-  });
+  }));
+
+  it("should debounce rapid search input into a single reload", fakeAsync(() => {
+    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
+
+    component.onSearch("b");
+    tick(100);
+    component.onSearch("bi");
+    tick(100);
+    component.onSearch("bind");
+
+    expect(loadJobsSpy).not.toHaveBeenCalled();
+
+    tick(300);
+
+    expect(component.searchQuery()).toBe("bind");
+    expect(loadJobsSpy).toHaveBeenCalledTimes(1);
+  }));
 
   it("should include search and selected statuses when loading jobs", () => {
     component.searchQuery.set("binder");
@@ -299,7 +325,7 @@ describe("JobsComponent", () => {
     expect(loadJobsSpy).toHaveBeenCalledTimes(2);
   });
 
-  it("should sort scores through desc, asc, and none states", () => {
+  it("should sort scores through desc and asc when score sort is active", () => {
     component.jobs.set([
       { ...mockJob, id: "a", score: 0.4 },
       { ...secondJob, id: "b", score: null },
@@ -307,6 +333,7 @@ describe("JobsComponent", () => {
     ]);
 
     component.toggleScoreSort();
+    expect(component.activeSort()).toBe("score");
     expect(component.scoreSortDirection()).toBe("desc");
     expect(component.jobs().map((job) => job.id)).toEqual(["c", "a", "b"]);
 
@@ -315,8 +342,29 @@ describe("JobsComponent", () => {
     expect(component.jobs().map((job) => job.id)).toEqual(["a", "c", "b"]);
 
     component.toggleScoreSort();
-    expect(component.scoreSortDirection()).toBe("none");
-    expect(component.jobs().map((job) => job.id)).toEqual(["c", "b", "a"]);
+    expect(component.scoreSortDirection()).toBe("desc");
+    expect(component.jobs().map((job) => job.id)).toEqual(["c", "a", "b"]);
+  });
+
+  it("should let activating one sort override the other", () => {
+    component.jobs.set([
+      { ...mockJob, id: "a", score: 0.4, submittedAt: "2026-03-12T10:00:00Z" },
+      {
+        ...secondJob,
+        id: "b",
+        score: 0.9,
+        submittedAt: "2026-03-12T12:00:00Z",
+      },
+    ]);
+
+    component.toggleScoreSort();
+    expect(component.activeSort()).toBe("score");
+    expect(component.jobs().map((job) => job.id)).toEqual(["b", "a"]);
+
+    component.toggleSubmittedSort();
+    expect(component.activeSort()).toBe("submitted");
+    // submitted desc → most recent first
+    expect(component.jobs().map((job) => job.id)).toEqual(["b", "a"]);
   });
 
   it("should fall back to submittedAt order when both scores are null during score sort", () => {

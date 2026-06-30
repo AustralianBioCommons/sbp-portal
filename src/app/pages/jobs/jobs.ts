@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from "@angular/core";
+import { Component, inject, OnDestroy, OnInit, signal } from "@angular/core";
 import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { AlertComponent } from "../../components/alert/alert.component";
@@ -54,7 +54,7 @@ import {
   templateUrl: "./jobs.html",
   styleUrl: "./jobs.scss",
 })
-export default class JobsComponent implements OnInit {
+export default class JobsComponent implements OnInit, OnDestroy {
   private jobsService = inject(JobsService);
   private healthService = inject(HealthService);
   private router = inject(Router);
@@ -82,15 +82,26 @@ export default class JobsComponent implements OnInit {
   selectedStatuses = signal<string[]>([]);
   currentPage = signal<number>(1);
   pageSize = signal<number>(50);
-  scoreSortDirection = signal<"none" | "asc" | "desc">("none");
+  scoreSortDirection = signal<"asc" | "desc">("desc");
   submittedSortDirection = signal<"asc" | "desc">("desc");
+  activeSort = signal<"score" | "submitted">("submitted");
 
   // Available status options
   statusOptions = ["Completed", "Failed", "Stopped", "In progress", "In queue"];
 
+  // Debounce timer for the search input
+  private searchDebounce?: ReturnType<typeof setTimeout>;
+  private readonly searchDebounceMs = 300;
+
   ngOnInit(): void {
     this.loadJobs();
     this.checkSystemHealth();
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchDebounce) {
+      clearTimeout(this.searchDebounce);
+    }
   }
 
   /**
@@ -169,8 +180,13 @@ export default class JobsComponent implements OnInit {
    */
   onSearch(query: string): void {
     this.searchQuery.set(query);
-    this.currentPage.set(1); // Reset to first page
-    this.loadJobs();
+    if (this.searchDebounce) {
+      clearTimeout(this.searchDebounce);
+    }
+    this.searchDebounce = setTimeout(() => {
+      this.currentPage.set(1);
+      this.loadJobs();
+    }, this.searchDebounceMs);
   }
 
   /**
@@ -198,6 +214,9 @@ export default class JobsComponent implements OnInit {
    * Clear all filters
    */
   clearFilters(): void {
+    if (this.searchDebounce) {
+      clearTimeout(this.searchDebounce);
+    }
     this.searchQuery.set("");
     this.selectedStatuses.set([]);
     this.currentPage.set(1);
@@ -254,22 +273,28 @@ export default class JobsComponent implements OnInit {
   }
 
   toggleScoreSort(): void {
-    const current = this.scoreSortDirection();
-    const next =
-      current === "none" ? "desc" : current === "desc" ? "asc" : "none";
-    this.scoreSortDirection.set(next);
+    if (this.activeSort() === "score") {
+      this.scoreSortDirection.update((d) => (d === "desc" ? "asc" : "desc"));
+    } else {
+      this.activeSort.set("score");
+    }
     this.jobs.set(this.sortJobs(this.jobs()));
   }
 
   toggleSubmittedSort(): void {
-    const current = this.submittedSortDirection();
-    this.submittedSortDirection.set(current === "desc" ? "asc" : "desc");
+    if (this.activeSort() === "submitted") {
+      this.submittedSortDirection.update((d) =>
+        d === "desc" ? "asc" : "desc"
+      );
+    } else {
+      this.activeSort.set("submitted");
+    }
     this.jobs.set(this.sortJobs(this.jobs()));
   }
 
   private sortJobs(jobs: JobListItem[]): JobListItem[] {
-    const direction = this.scoreSortDirection();
-    if (direction !== "none") {
+    if (this.activeSort() === "score") {
+      const direction = this.scoreSortDirection();
       return [...jobs].sort((a, b) => {
         const aScore = a.score;
         const bScore = b.score;
