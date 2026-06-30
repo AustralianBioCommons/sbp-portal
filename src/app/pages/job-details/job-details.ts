@@ -568,13 +568,27 @@ export default class JobDetailsComponent implements OnInit {
       return [];
     }
 
-    return Object.entries(settingParams)
-      .filter(
-        ([key]) => !key.startsWith("_") && !this.shouldHideSettingKey(key)
-      )
-      .map(([key, value]) => ({
-        ...this.normalizeSettingItem(key, value),
-      }));
+    const items: JobSettingItem[] = [];
+    for (const [key, value] of Object.entries(settingParams)) {
+      if (key.startsWith("_") || this.shouldHideSettingKey(key)) continue;
+
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        !this.isSchemaSettingParam(value)
+      ) {
+        // Flat-object value (e.g. paramsText dict): expand each sub-key as its own row.
+        for (const [subKey, subValue] of Object.entries(
+          value as Record<string, unknown>
+        )) {
+          items.push(this.normalizeSettingItem(subKey, subValue));
+        }
+      } else {
+        items.push(this.normalizeSettingItem(key, value));
+      }
+    }
+    return items;
   }
 
   private static readonly HIDDEN_SETTING_KEYS = new Set([

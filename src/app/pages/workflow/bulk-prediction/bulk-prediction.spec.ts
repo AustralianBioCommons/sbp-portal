@@ -34,6 +34,8 @@ const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
   success: true,
   message: "ok",
   s3Key: "inputs/samplesheets/dataset-456.csv",
+  splitOutputDir:
+    "/g/data/yz52/sbp-service/input/bulk_prediction/bulk-job_20240101-120000_ab3x",
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -376,6 +378,29 @@ describe("BulkPredictionComponent", () => {
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("no S3 key");
+  });
+
+  it("should show error when dataset upload returns s3Key but no splitOutputDir", () => {
+    fillValidForm();
+    datasetUploadService.uploadBulkPredictionDataset.and.returnValue(
+      of({
+        success: true,
+        message: "ok",
+        s3Key: "inputs/samplesheets/dataset-456.csv",
+      })
+    );
+    component.submitWorkflow();
+
+    expect(component.showAlert()).toBe(true);
+    expect(component.alertMessage()).toContain("split output directory");
+  });
+
+  // ── 14. getJobNameError ───────────────────────────────────────────────
+
+  it("should return a non-empty string for getJobNameError when jobName is invalid", () => {
+    component.form.controls.jobName.setValue("");
+    component.form.controls.jobName.markAsTouched();
+    expect(component.getJobNameError()).toBeTruthy();
   });
 
   // ── 17. submitWorkflowWithDataset error callback ──────────────────────
