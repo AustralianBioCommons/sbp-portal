@@ -300,7 +300,7 @@ export default class SinglePredictionComponent {
         value: sequence
           ? `${this.getMoleculeTypeLabel(
               row.moleculeType
-            )} x${this.getParsedCopyNumber(row.copyNumber)} • ${sequence}`
+            )} x${this.getParsedCopyNumber(row.copyNumber)} – ${sequence}`
           : "",
         fieldName: `entity_${row.id}`,
       };
@@ -654,7 +654,13 @@ export default class SinglePredictionComponent {
     const errors: EntityRowErrors = {};
     const normalizedSequence = this.getNormalizedSequence(row);
 
-    if (!normalizedSequence) {
+    if (
+      row.moleculeType !== "ccd" &&
+      row.moleculeType !== "ligand" &&
+      /\s/.test(row.sequence)
+    ) {
+      errors.sequence = "Sequence must not contain spaces or line breaks.";
+    } else if (!normalizedSequence) {
       errors.sequence = "Sequence is required.";
     } else {
       const sequenceValidation = this.validateSequenceByMoleculeType(

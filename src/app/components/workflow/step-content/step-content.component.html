@@ -1,7 +1,7 @@
 <div class="p-4">
   @if (title()) {
   <div class="text-lg font-semibold text-gray-900">
-    @if (step() !== undefined) { Step {{ step() }} &mdash; } {{ title() }}
+    @if (step() !== undefined) { Step {{ step() }} — } {{ title() }}
   </div>
   } @if (description()) {
   <p class="text-sm text-gray-500 mt-2 mb-4">{{ description() }}</p>

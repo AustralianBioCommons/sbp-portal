@@ -88,7 +88,7 @@
         >
           @for (row of entityRows(); track row.id; let i = $index) {
           <div
-            class="entity-row rounded-lg border bg-white p-4 transition-colors hover:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
+            class="entity-row rounded-lg border bg-white p-4 transition-colors has-[.drag-handle:hover]:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
             cdkDrag
             cdkDragLockAxis="y"
             cdkDragBoundary=".sequence-list"
@@ -102,7 +102,7 @@
                   #{{ i + 1 }}
                 </span>
                 <div
-                  class="flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
+                  class="drag-handle flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
                   cdkDragHandle
                   title="Drag to reorder"
                   [attr.aria-label]="'Drag to reorder entity ' + (i + 1)"
@@ -179,9 +179,9 @@
                   (blurred)="touchRowField(row.id, 'sequence')"
                 ></app-listbox-select>
                 } @else {
-                <input
+                <textarea
                   [id]="'sequence-' + row.id"
-                  type="text"
+                  rows="1"
                   spellcheck="false"
                   autocomplete="off"
                   autocorrect="off"
@@ -194,7 +194,7 @@
                       ? 'border-red-500 focus:ring-red-100'
                       : 'focus:ring-sky-100'
                   "
-                  class="block h-10 w-full rounded-md border bg-white px-4 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                  class="block min-h-10 max-h-40 w-full resize-none rounded-md border bg-white px-4 py-2 text-sm font-mono break-all text-gray-900 focus:outline-none focus:ring-2 transition-colors field-sizing-content"
                   [placeholder]="
                     row.moleculeType === 'ligand'
                       ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
@@ -204,7 +204,7 @@
                           ? 'AUGCGU'
                           : 'ACDEFGHIKLMNPQRSTVWY'
                   "
-                />
+                ></textarea>
                 } @if (shouldShowRowFieldError(row, 'sequence') &&
                 getRowErrors(i).sequence) {
                 <p class="mt-1 text-xs text-red-600" role="alert">
@@ -219,13 +219,13 @@
 
               <div class="flex flex-col items-center">
                 <span
-                  class="mb-1 block text-xs font-semibold opacity-0 select-none"
+                  class="mb-2 block text-xs font-semibold opacity-0 select-none"
                   aria-hidden="true"
                   >&middot;</span
                 >
                 <button
                   type="button"
-                  class="flex h-10 w-10 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex h-10 w-10 items-center border justify-center rounded-lg text-biocommons-primary transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
                   [disabled]="entityRows().length === 1"
                   (click)="removeEntityRow(row.id)"
                   [attr.aria-label]="'Delete entity ' + (i + 1)"
