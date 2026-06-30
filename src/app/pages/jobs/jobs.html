@@ -25,11 +25,6 @@
       <p class="text-gray-600">View and manage my submitted workflow runs</p>
     </div>
 
-    <!--
-      While Auth0 restores the session the app shell already shows a full-screen
-      loading overlay, so the page body stays empty to avoid stacking a second
-      loader. Once resolved we show either the access-restricted box or the jobs.
-    -->
     @if (!authLoading()) { @if (!canExecuteWorkflows()) {
     <!-- Access Restricted -->
     <div
