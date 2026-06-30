@@ -34,7 +34,8 @@ const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
   success: true,
   message: "ok",
   s3Key: "inputs/samplesheets/dataset-456.csv",
-  splitOutputDir: "/g/data/yz52/sbp-service/input/bulk_prediction/bulk-job_20240101-120000_ab3x",
+  splitOutputDir:
+    "/g/data/yz52/sbp-service/input/bulk_prediction/bulk-job_20240101-120000_ab3x",
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -382,7 +383,11 @@ describe("BulkPredictionComponent", () => {
   it("should show error when dataset upload returns s3Key but no splitOutputDir", () => {
     fillValidForm();
     datasetUploadService.uploadBulkPredictionDataset.and.returnValue(
-      of({ success: true, message: "ok", s3Key: "inputs/samplesheets/dataset-456.csv" })
+      of({
+        success: true,
+        message: "ok",
+        s3Key: "inputs/samplesheets/dataset-456.csv",
+      })
     );
     component.submitWorkflow();
 
