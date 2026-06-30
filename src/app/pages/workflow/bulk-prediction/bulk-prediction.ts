@@ -287,14 +287,17 @@ export default class BulkPredictionComponent {
       folder: WORKFLOW_INPUT_DIRS.BULK_PREDICTION,
     });
 
+    let fastaS3Uri = "";
+
     upload$
       .pipe(
-        switchMap(() =>
-          this.datasetUploadService.uploadBulkPredictionDataset({
+        switchMap((uploadResp) => {
+          fastaS3Uri = uploadResp.s3Uri;
+          return this.datasetUploadService.uploadBulkPredictionDataset({
             sequences,
             runId: jobName,
-          })
-        )
+          });
+        })
       )
       .subscribe({
         next: (datasetResponse) => {
@@ -306,11 +309,21 @@ export default class BulkPredictionComponent {
             );
             return;
           }
+          const splitOutputDir = datasetResponse.splitOutputDir;
+          if (!splitOutputDir) {
+            this.workflowSubmission.isSubmitting.set(false);
+            this.showError(
+              "Dataset upload did not return a split output directory."
+            );
+            return;
+          }
           const formData: BulkPredictionPayload = {
             workflow: "bulk-prediction",
             tool: this.selectedTool(),
             runName: jobName,
             sample_id: jobName,
+            fastaS3Uri,
+            splitOutputDir,
           };
           this.workflowSubmission.submitWorkflowWithDataset(
             formData,
