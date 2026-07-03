@@ -1,18 +1,11 @@
-import { switchMap, map, filter, take } from "rxjs";
+import { switchMap, map } from "rxjs";
 import { CommonModule } from "@angular/common";
 import {
   CdkDragDrop,
   DragDropModule,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import {
-  Component,
-  computed,
-  inject,
-  Signal,
-  signal,
-  viewChild,
-} from "@angular/core";
+import { Component, computed, inject, Signal, signal } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { bootstrapGripVertical } from "@ng-icons/bootstrap-icons";
@@ -38,14 +31,8 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
-import { AuthService } from "../../../cores/auth.service";
-import {
-  CreditsService,
-  USER_CREDITS_ENABLED,
-} from "../../../cores/services/credits.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
-import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
 import {
@@ -61,6 +48,7 @@ import {
   SinglePredictionToolSettingsPayload,
   WorkflowTool,
 } from "../../../cores/interfaces/workflow.interfaces";
+import { WorkflowPageBase } from "../workflow-page-base";
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
 type SinglePredictionTool = Extract<
@@ -117,77 +105,17 @@ interface ToolSettingErrors {
   templateUrl: "./single-prediction.html",
   styleUrl: "./single-prediction.scss",
 })
-export default class SinglePredictionComponent {
-  public auth = inject(AuthService);
-  public workflowSubmission = inject(WorkflowSubmissionService);
+export default class SinglePredictionComponent extends WorkflowPageBase {
   private datasetUploadService = inject(DatasetUploadService);
   private fastaUploadService = inject(FastaUploadService);
-  private creditsService = inject(CreditsService);
-  readonly creditsEnabled = USER_CREDITS_ENABLED;
 
-  constructor() {
-    if (this.creditsEnabled) {
-      // Only call the credit service once the user is authenticated; the
-      // /api/* requests require a bearer token and otherwise fail, blocking
-      // the page from rendering.
-      this.auth.isAuthenticated$
-        .pipe(filter(Boolean), take(1))
-        .subscribe(() => this.loadToolCredits());
-    }
-  }
-
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<
-    Partial<Record<SinglePredictionTool, number>>
-  >({});
-  /**
-   * Remaining credit balance for the current user. Starts at 0 until the real
-   * balance from getMyCredit() loads.
-   */
-  creditsRemaining = signal<number | null>(0);
-
-  showPreview = signal(false);
+  protected readonly workflowCategory = "single-prediction" as const;
 
   /** Credit cost of the run: tool multiplier × 1 (a single prediction). */
-  creditCost = computed<number | null>(() => {
+  readonly creditCost = computed<number | null>(() => {
     const multiplier = this.toolMultipliers()[this.selectedTool()];
     return multiplier == null ? null : multiplier;
   });
-
-  /** True when the run's cost is known to exceed the user's remaining balance. */
-  creditsInsufficient = computed<boolean>(() => {
-    const cost = this.creditCost();
-    const remaining = this.creditsRemaining();
-    return cost !== null && remaining !== null && cost > remaining;
-  });
-
-  /** Fetch per-tool credit multipliers and the user's remaining balance. */
-  private loadToolCredits(): void {
-    this.creditsService.getWorkflowCredits().subscribe({
-      next: (response) => {
-        const config = response.workflows.find(
-          (w) => w.category === "single-prediction"
-        );
-        if (!config) return;
-        this.toolMultipliers.set(config.toolMultipliers);
-        for (const tool of this.tools) {
-          const multiplier = config.toolMultipliers[tool.id];
-          if (multiplier != null) {
-            tool.credits = multiplier;
-          }
-        }
-      },
-      error: (error) => {
-        console.warn("Failed to load workflow credits", error);
-      },
-    });
-    this.creditsService.getMyCredit().subscribe({
-      next: (response) => this.creditsRemaining.set(response.credit),
-      error: (error) => {
-        console.warn("Failed to load credit balance", error);
-      },
-    });
-  }
 
   readonly ccdOptions: ListboxSelectOption[] = Object.entries(
     CCD_COMPOUNDS
@@ -201,9 +129,6 @@ export default class SinglePredictionComponent {
   private preparedFastaContent = signal<string | null>(null);
   private preparedFastaUrl = signal<string | null>(null);
   private preparedSamplesheetS3Key = signal<string | null>(null);
-
-  showAlert = signal(false);
-  alertMessage = signal("");
 
   readonly tools: ToolChip[] = [
     { id: "colabfold", label: "ColabFold" },
@@ -255,9 +180,6 @@ export default class SinglePredictionComponent {
     { id: "tool-settings", label: "Tool Settings", mobileLabel: "Settings" },
     { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
-
-  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
-  private readonly workflowForm = viewChild(WorkflowFormComponent);
 
   readonly entityValidationResults = computed(() =>
     this.entityRows().map((row) => this.validateEntityRow(row))
@@ -534,56 +456,27 @@ export default class SinglePredictionComponent {
     this.colabfoldNumRecyclesTouched.set(true);
   }
 
-  onContinueToPreview(): void {
+  protected override guardSubmission(): boolean {
     if (!this.isToolAvailable()) {
       this.showError(
         "Tools are currently not available. Submission is disabled."
       );
-      return;
+      return false;
     }
-
-    this.touchAllEntityRows();
-    this.touchToolSettings();
-
-    if (!this.isFormValid()) {
-      this.workflowForm()?.focusFirstInvalidField();
-      return;
-    }
-
-    this.showPreview.set(true);
+    return true;
   }
 
-  onPreviewConfirmed(): void {
-    this.showPreview.set(false);
-    this.submitWorkflow();
-  }
-
-  submitWorkflow() {
-    if (!this.isToolAvailable()) {
-      this.showError(
-        "Tools are currently not available. Submission is disabled."
-      );
-      return;
-    }
-
+  protected validateAll(): void {
     this.touchAllEntityRows();
     this.touchToolSettings();
+  }
 
-    if (!this.isFormValid()) {
-      this.workflowForm()?.scrollToFirstInvalidSection();
-      return;
-    }
-
+  protected performSubmit(): void {
     this.workflowSubmission.isSubmitting.set(true);
 
     this.prepareSinglePredictionInput((fastaUrl, s3InputKey) => {
       this.submitPreparedWorkflow(s3InputKey, fastaUrl);
     });
-  }
-
-  closeAlert(): void {
-    this.showAlert.set(false);
-    this.alertMessage.set("");
   }
 
   getMoleculeTypeLabel(type: MoleculeType): string {
@@ -935,10 +828,5 @@ export default class SinglePredictionComponent {
       valid: false,
       errorMessage: "Sequence format is invalid.",
     };
-  }
-
-  private showError(message: string): void {
-    this.alertMessage.set(message);
-    this.showAlert.set(true);
   }
 }

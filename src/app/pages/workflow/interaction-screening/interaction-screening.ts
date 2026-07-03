@@ -1,12 +1,5 @@
 import { CommonModule } from "@angular/common";
-import {
-  Component,
-  computed,
-  inject,
-  Signal,
-  signal,
-  viewChild,
-} from "@angular/core";
+import { Component, computed, inject, Signal, signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
@@ -19,7 +12,7 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { filter, map, startWith, switchMap, take } from "rxjs/operators";
+import { map, startWith, switchMap } from "rxjs/operators";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
 import { WorkflowPreviewModalComponent } from "../../../components/workflow/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
@@ -37,17 +30,12 @@ import {
   parseMultiFasta,
   validateMultiFastaProtein,
 } from "../../../cores/utils/fasta.utils";
-import { AuthService } from "../../../cores/auth.service";
-import {
-  CreditsService,
-  USER_CREDITS_ENABLED,
-} from "../../../cores/services/credits.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
-import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
 import { InteractionScreeningPayload } from "../../../cores/interfaces/workflow.interfaces";
+import { WorkflowPageBase } from "../workflow-page-base";
 
 function multiFastaValidator(
   control: AbstractControl
@@ -107,46 +95,20 @@ interface ToolChip extends ToolOption {
   templateUrl: "./interaction-screening.html",
   styleUrl: "./interaction-screening.scss",
 })
-export default class InteractionScreeningComponent {
-  // Auth
-  public auth = inject(AuthService);
-  // Workflow submission service
-  public workflowSubmission = inject(WorkflowSubmissionService);
+export default class InteractionScreeningComponent extends WorkflowPageBase {
   // FASTA upload service
   private fastaUploadService = inject(FastaUploadService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
-  // Credits service (per-tool credit multipliers)
-  private creditsService = inject(CreditsService);
-  readonly creditsEnabled = USER_CREDITS_ENABLED;
   // Form
   private fb = inject(NonNullableFormBuilder);
 
-  constructor() {
-    if (this.creditsEnabled) {
-      // Only call the credit service once the user is authenticated; the
-      // /api/* requests require a bearer token and otherwise fail, blocking
-      // the page from rendering.
-      this.auth.isAuthenticated$
-        .pipe(filter(Boolean), take(1))
-        .subscribe(() => this.loadToolCredits());
-    }
-  }
-
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
-  /**
-   * Remaining credit balance for the current user. Starts at 0 until the real
-   * balance from getMyCredit() loads.
-   */
-  creditsRemaining = signal<number | null>(0);
-
-  showPreview = signal(false);
+  protected readonly workflowCategory = "interaction-screening" as const;
 
   /**
    * Credit cost of the run: tool multiplier × (query entries × target entries).
    */
-  creditCost = computed<number | null>(() => {
+  readonly creditCost = computed<number | null>(() => {
     const multiplier = this.toolMultipliers()[this.selectedTool()];
     if (multiplier == null) return null;
     const val = this.formValue();
@@ -158,40 +120,6 @@ export default class InteractionScreeningComponent {
     return multiplier * product;
   });
 
-  /** True when the run's cost is known to exceed the user's remaining balance. */
-  creditsInsufficient = computed<boolean>(() => {
-    const cost = this.creditCost();
-    const remaining = this.creditsRemaining();
-    return cost !== null && remaining !== null && cost > remaining;
-  });
-
-  /** Fetch per-tool credit multipliers and the user's remaining balance. */
-  private loadToolCredits(): void {
-    this.creditsService.getWorkflowCredits().subscribe({
-      next: (response) => {
-        const config = response.workflows.find(
-          (w) => w.category === "interaction-screening"
-        );
-        if (!config) return;
-        this.toolMultipliers.set(config.toolMultipliers);
-        for (const tool of this.tools) {
-          const multiplier = config.toolMultipliers[tool.id];
-          if (multiplier != null) {
-            tool.credits = multiplier;
-          }
-        }
-      },
-      error: (error) => {
-        console.warn("Failed to load workflow credits", error);
-      },
-    });
-    this.creditsService.getMyCredit().subscribe({
-      next: (response) => this.creditsRemaining.set(response.credit),
-      error: (error) => {
-        console.warn("Failed to load credit balance", error);
-      },
-    });
-  }
   readonly form = this.fb.group(
     {
       jobName: ["", JOB_NAME_VALIDATORS],
@@ -219,9 +147,6 @@ export default class InteractionScreeningComponent {
     ),
     { initialValue: this.form.getRawValue() }
   );
-  // Alert state
-  showAlert = signal(false);
-  alertMessage = signal("");
 
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
@@ -244,10 +169,7 @@ export default class InteractionScreeningComponent {
     { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
 
-  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
-  private readonly workflowForm = viewChild(WorkflowFormComponent);
-
-  isFormValid = computed(() => this.formStatus() === "VALID");
+  readonly isFormValid = computed(() => this.formStatus() === "VALID");
 
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
@@ -357,7 +279,7 @@ export default class InteractionScreeningComponent {
     return this.form.errors?.["duplicateSequences"] ?? "";
   }
 
-  private touchAll(): void {
+  protected validateAll(): void {
     this.form.markAllAsTouched();
   }
 
@@ -384,27 +306,7 @@ export default class InteractionScreeningComponent {
     ];
   }
 
-  onContinueToPreview(): void {
-    this.touchAll();
-    if (!this.isFormValid()) {
-      this.workflowForm()?.focusFirstInvalidField();
-      return;
-    }
-    this.showPreview.set(true);
-  }
-
-  onPreviewConfirmed(): void {
-    this.showPreview.set(false);
-    this.submitWorkflow();
-  }
-
-  submitWorkflow() {
-    this.touchAll();
-    if (!this.isFormValid()) {
-      this.workflowForm()?.scrollToFirstInvalidSection();
-      return;
-    }
-
+  protected performSubmit(): void {
     const jobName = this.form.value.jobName ?? "";
     const sequences = this.buildWispsPayload();
 
@@ -474,14 +376,5 @@ export default class InteractionScreeningComponent {
           this.showError(getErrorMessage(error));
         },
       });
-  }
-
-  closeAlert(): void {
-    this.showAlert.set(false);
-    this.alertMessage.set("");
-  }
-  private showError(message: string): void {
-    this.alertMessage.set(message);
-    this.showAlert.set(true);
   }
 }
