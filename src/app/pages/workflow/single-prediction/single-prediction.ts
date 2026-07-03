@@ -22,8 +22,8 @@ import {
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
 import { ButtonComponent } from "../../../components/button/button.component";
-import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
+import { WorkflowPreviewModalComponent } from "../../../components/workflow/workflow-preview-modal/workflow-preview-modal.component";
 import {
   ListboxSelectComponent,
   ListboxSelectOption,
@@ -106,9 +106,9 @@ interface ToolSettingErrors {
     WorkflowFormComponent,
     WorkflowLayoutComponent,
     StepContentComponent,
-    ConfigurationSummaryComponent,
     NgIconComponent,
     CreditSummaryComponent,
+    WorkflowPreviewModalComponent,
   ],
   providers: [provideIcons({ bootstrapGripVertical, heroTrash })],
   host: {
@@ -145,6 +145,8 @@ export default class SinglePredictionComponent {
    * balance from getMyCredit() loads.
    */
   creditsRemaining = signal<number | null>(0);
+
+  showPreview = signal(false);
 
   /** Credit cost of the run: tool multiplier × 1 (a single prediction). */
   creditCost = computed<number | null>(() => {
@@ -532,6 +534,30 @@ export default class SinglePredictionComponent {
     this.colabfoldNumRecyclesTouched.set(true);
   }
 
+  onContinueToPreview(): void {
+    if (!this.isToolAvailable()) {
+      this.showError(
+        "Tools are currently not available. Submission is disabled."
+      );
+      return;
+    }
+
+    this.touchAllEntityRows();
+    this.touchToolSettings();
+
+    if (!this.isFormValid()) {
+      this.workflowForm()?.focusFirstInvalidField();
+      return;
+    }
+
+    this.showPreview.set(true);
+  }
+
+  onPreviewConfirmed(): void {
+    this.showPreview.set(false);
+    this.submitWorkflow();
+  }
+
   submitWorkflow() {
     if (!this.isToolAvailable()) {
       this.showError(
@@ -544,7 +570,6 @@ export default class SinglePredictionComponent {
     this.touchToolSettings();
 
     if (!this.isFormValid()) {
-      this.showError("Please fix the validation errors before submitting.");
       this.workflowForm()?.scrollToFirstInvalidSection();
       return;
     }

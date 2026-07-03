@@ -20,9 +20,8 @@
     [isSectionValid]="isSectionValid"
     [disabled]="(auth.canExecuteWorkflows$ | async) === false"
     [submitDisabled]="creditsEnabled && creditsInsufficient()"
-    [credits]="creditsEnabled ? creditCost() : null"
     [isSubmitting]="workflowSubmission.isSubmitting()"
-    (submitted)="submitWorkflow()"
+    (continued)="onContinueToPreview()"
   >
     <!-- Section 1: Select a Tool -->
     <div id="select-tool" class="scroll-mt-44">
@@ -207,29 +206,17 @@
         </div>
       </app-step-content>
     </div>
-
-    <!-- Section 4: Review & Submit -->
-    <div id="review" class="scroll-mt-44">
-      <app-step-content
-        [step]="4"
-        title="Review & Submit"
-        description="Confirm your selections before submitting this job."
-        contentClass="space-y-4"
-      >
-        <app-configuration-summary
-          workflowName="Interaction Screening"
-          [selectedTool]="selectedToolLabel()"
-          [hasParameters]="false"
-          [inputItems]="formSummary()"
-          [isValid]="isFormValid()"
-        ></app-configuration-summary>
-        @if (creditsEnabled) {
-        <app-credit-summary
-          [total]="creditCost()"
-          [remaining]="creditsRemaining()"
-        ></app-credit-summary>
-        }
-      </app-step-content>
-    </div>
   </app-workflow-form>
+
+  <app-workflow-preview-modal
+    [isOpen]="showPreview()"
+    [credits]="creditsEnabled ? creditCost() : null"
+    [isSubmitting]="workflowSubmission.isSubmitting()"
+    workflowName="Interaction Screening"
+    [selectedTool]="selectedToolLabel()"
+    [hasParameters]="false"
+    [inputItems]="formSummary()"
+    (confirmed)="onPreviewConfirmed()"
+    (cancelled)="showPreview.set(false)"
+  ></app-workflow-preview-modal>
 </app-workflow-layout>

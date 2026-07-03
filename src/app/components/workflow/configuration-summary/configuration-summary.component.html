@@ -6,13 +6,9 @@
       <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
         <div class="space-y-1">
           <p class="font-medium">Workflow</p>
-          @if (workflowName()) {
           <p class="text-gray-600 wrap-break-word">
-            {{ workflowName() }}
+            {{ workflowName() || "—" }}
           </p>
-          } @else {
-          <p class="text-gray-400 italic">Not provided</p>
-          }
         </div>
         <div class="space-y-1">
           <p class="font-medium">Tool</p>
@@ -43,7 +39,6 @@
     <!-- Input Configuration -->
     <div class="space-y-4">
       <div class="font-semibold">Input Configuration</div>
-      @if (inputItems().length > 0) {
       <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
         @for (item of inputItems(); track item.fieldName) {
         <div class="space-y-1">
@@ -58,17 +53,12 @@
           >
             {{ item.value }}
           </a>
-          } @else if (item.value) {
-          <p class="text-gray-600 wrap-break-word">{{ item.value }}</p>
           } @else {
-          <p class="text-red-600">Not provided</p>
+          <p class="text-gray-600 wrap-break-word">{{ item.value || "—" }}</p>
           }
         </div>
         }
       </div>
-      } @else {
-      <p class="text-red-600">No input configuration provided</p>
-      }
     </div>
 
     <hr class="border-t border-gray-200" />
@@ -81,11 +71,7 @@
         @for (item of toolSettingItems(); track item.fieldName) {
         <div class="space-y-1">
           <p class="font-medium">{{ item.label }}</p>
-          @if (item.value) {
-          <p class="text-gray-600 wrap-break-word">{{ item.value }}</p>
-          } @else {
-          <p class="text-red-600">Not provided</p>
-          }
+          <p class="text-gray-600 wrap-break-word">{{ item.value || "—" }}</p>
         </div>
         }
       </div>
@@ -93,39 +79,5 @@
       <p class="text-gray-600">No tool settings</p>
       }
     </div>
-  </div>
-
-  <!-- Validation Status -->
-  @let valid = isValid();
-
-  <div
-    class="rounded-lg border p-4"
-    [class]="
-      valid ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
-    "
-  >
-    <div class="flex items-center gap-2">
-      <span
-        class="flex h-4 w-4 items-center justify-center rounded-full text-xs text-white"
-        [class]="valid ? 'bg-green-500' : 'bg-red-500'"
-      >
-        {{ valid ? "✓" : "!" }}
-      </span>
-
-      <span
-        class="text-sm font-medium"
-        [class]="valid ? 'text-green-800' : 'text-red-800'"
-      >
-        {{ valid ? "Configuration Valid" : "Configuration Incomplete" }}
-      </span>
-    </div>
-
-    <p class="mt-1 text-sm" [class]="valid ? 'text-green-600' : 'text-red-600'">
-      {{
-        valid
-          ? "All required fields are properly configured and ready to submit."
-          : "Please complete all required fields in the Input Configuration step."
-      }}
-    </p>
   </div>
 </div>

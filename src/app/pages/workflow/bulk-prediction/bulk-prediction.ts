@@ -21,8 +21,8 @@ import {
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
 import { filter, map, startWith, switchMap, take } from "rxjs/operators";
-import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
+import { WorkflowPreviewModalComponent } from "../../../components/workflow/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
@@ -68,8 +68,8 @@ interface ToolChip extends ToolOption {
     WorkflowFormComponent,
     WorkflowLayoutComponent,
     StepContentComponent,
-    ConfigurationSummaryComponent,
     CreditSummaryComponent,
+    WorkflowPreviewModalComponent,
   ],
   host: {
     class: "block w-full bulk-prediction-bg",
@@ -112,6 +112,8 @@ export default class BulkPredictionComponent {
    * balance from getMyCredit() loads.
    */
   creditsRemaining = signal<number | null>(0);
+
+  showPreview = signal(false);
 
   /** Credit cost of the run: tool multiplier × number of FASTA entries. */
   creditCost = computed<number | null>(() => {
@@ -262,6 +264,20 @@ export default class BulkPredictionComponent {
   private buildBulkPayload(): { id: string; sequence: string }[] {
     const entries = parseMultiFasta(this.form.value.fasta ?? "");
     return entries.map((e) => ({ id: e.header, sequence: e.sequence }));
+  }
+
+  onContinueToPreview(): void {
+    if (!this.isFormValid()) {
+      this.form.markAllAsTouched();
+      this.workflowForm()?.focusFirstInvalidField();
+      return;
+    }
+    this.showPreview.set(true);
+  }
+
+  onPreviewConfirmed(): void {
+    this.showPreview.set(false);
+    this.submitWorkflow();
   }
 
   submitWorkflow(): void {

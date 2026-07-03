@@ -20,8 +20,8 @@ import {
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
 import { filter, map, startWith, switchMap, take } from "rxjs/operators";
-import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
+import { WorkflowPreviewModalComponent } from "../../../components/workflow/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
@@ -98,8 +98,8 @@ interface ToolChip extends ToolOption {
     WorkflowFormComponent,
     WorkflowLayoutComponent,
     StepContentComponent,
-    ConfigurationSummaryComponent,
     CreditSummaryComponent,
+    WorkflowPreviewModalComponent,
   ],
   host: {
     class: "block w-full interaction-screening-bg",
@@ -140,6 +140,8 @@ export default class InteractionScreeningComponent {
    * balance from getMyCredit() loads.
    */
   creditsRemaining = signal<number | null>(0);
+
+  showPreview = signal(false);
 
   /**
    * Credit cost of the run: tool multiplier × (query entries × target entries).
@@ -380,6 +382,20 @@ export default class InteractionScreeningComponent {
         group: "target" as const,
       })),
     ];
+  }
+
+  onContinueToPreview(): void {
+    this.touchAll();
+    if (!this.isFormValid()) {
+      this.workflowForm()?.focusFirstInvalidField();
+      return;
+    }
+    this.showPreview.set(true);
+  }
+
+  onPreviewConfirmed(): void {
+    this.showPreview.set(false);
+    this.submitWorkflow();
   }
 
   submitWorkflow() {

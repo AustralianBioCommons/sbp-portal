@@ -28,7 +28,6 @@ import { MolstarViewerComponent } from "../../../components/workflow/molstar-vie
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
 
 import { filter, Subscription, take } from "rxjs";
-import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { FormFieldComponent } from "../../../components/workflow/form-field/form-field.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
@@ -41,6 +40,7 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
+import { WorkflowPreviewModalComponent } from "../../../components/workflow/workflow-preview-modal/workflow-preview-modal.component";
 import { AuthService } from "../../../cores/auth.service";
 import {
   CreditsService,
@@ -72,10 +72,10 @@ interface ToolChip extends ToolOption {
     WorkflowLayoutComponent,
     StepContentComponent,
     FormFieldComponent,
-    ConfigurationSummaryComponent,
     MolstarViewerComponent,
     LengthRangeSliderComponent,
     CreditSummaryComponent,
+    WorkflowPreviewModalComponent,
     NgIconComponent,
   ],
   providers: [
@@ -207,6 +207,8 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   /** True while the PDB file is being uploaded to S3 on Next click. */
   isPdbUploading = signal(false);
+
+  showPreview = signal(false);
 
   /** Default width (px) of the config panel when opened. */
   readonly defaultPanelWidth = 300;
@@ -664,8 +666,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     );
   }
 
-  submitWorkflow() {
-    // Run full validation (previously triggered by Next on the input step).
+  private validateAll(): void {
     this.jobNameTouched.set(true);
     this.validateAllRequiredFields();
     for (const row of this.schemaLoader.inputRows()) {
@@ -673,6 +674,24 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.validateRowField(row.id, "chains");
     }
     this.validateForm();
+  }
+
+  onContinueToPreview(): void {
+    this.validateAll();
+    if (!this.isFormValid()) {
+      this.workflowForm()?.focusFirstInvalidField();
+      return;
+    }
+    this.showPreview.set(true);
+  }
+
+  onPreviewConfirmed(): void {
+    this.showPreview.set(false);
+    this.submitWorkflow();
+  }
+
+  submitWorkflow() {
+    this.validateAll();
 
     if (!this.isFormValid()) {
       this.workflowForm()?.scrollToFirstInvalidSection();
