@@ -10,6 +10,7 @@ import {
 } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
+import { CreditsService } from "../../../cores/services/credits.service";
 import InteractionScreeningComponent from "./interaction-screening";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ describe("InteractionScreeningComponent", () => {
   let fixture: ComponentFixture<InteractionScreeningComponent>;
   let fastaUploadService: jasmine.SpyObj<FastaUploadService>;
   let datasetUploadService: jasmine.SpyObj<DatasetUploadService>;
+  let creditsService: jasmine.SpyObj<CreditsService>;
   let workflowSubmissionService: {
     isSubmitting: ReturnType<typeof signal<boolean>>;
     showSuccessDialog: ReturnType<typeof signal<boolean>>;
@@ -69,6 +71,27 @@ describe("InteractionScreeningComponent", () => {
     );
     datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
       of(MOCK_DATASET_RESPONSE)
+    );
+
+    creditsService = jasmine.createSpyObj<CreditsService>("CreditsService", [
+      "getWorkflowCredits",
+      "getMyCredit",
+    ]);
+
+    creditsService.getWorkflowCredits.and.returnValue(
+      of({
+        workflows: [
+          {
+            category: "interaction-screening",
+            displayName: "Interaction Screening",
+            basis: "per-pair",
+            toolMultipliers: { boltz: 2 },
+          },
+        ],
+      })
+    );
+    creditsService.getMyCredit.and.returnValue(
+      of({ userId: "u", credit: 500 })
     );
 
     workflowSubmissionService = {
@@ -102,6 +125,7 @@ describe("InteractionScreeningComponent", () => {
           provide: WorkflowSubmissionService,
           useValue: workflowSubmissionService,
         },
+        { provide: CreditsService, useValue: creditsService },
       ],
     }).compileComponents();
 
@@ -571,6 +595,50 @@ describe("InteractionScreeningComponent", () => {
       fixture.detectChanges();
 
       expect(component.creditsInsufficient()).toBe(false);
+    });
+  });
+
+  // ── loadToolCredits (runs on construction via isAuthenticated$) ────────────
+
+  describe("loadToolCredits", () => {
+    it("applies the fetched multipliers and remaining balance", () => {
+      // getWorkflowCredits / getMyCredit resolve synchronously in beforeEach.
+      expect(component["toolMultipliers"]()["boltz"]).toBe(2);
+      expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(2);
+      // colabfold has no multiplier, so its credits stay unset.
+      expect(component.tools.find((t) => t.id === "colabfold")?.credits).toBe(
+        undefined
+      );
+      expect(component.creditsRemaining()).toBe(500);
+    });
+  });
+
+  // ── onContinueToPreview / onPreviewConfirmed ───────────────────────────────
+
+  describe("preview flow", () => {
+    it("does not open the preview when the form is invalid", () => {
+      component.onContinueToPreview();
+      expect(component.showPreview()).toBe(false);
+    });
+
+    it("opens the preview when the form is valid", () => {
+      fillValidForm();
+      fixture.detectChanges();
+
+      component.onContinueToPreview();
+
+      expect(component.showPreview()).toBe(true);
+    });
+
+    it("closes the preview and submits when confirmed", () => {
+      fillValidForm();
+      fixture.detectChanges();
+      component.showPreview.set(true);
+
+      component.onPreviewConfirmed();
+
+      expect(component.showPreview()).toBe(false);
+      expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
     });
   });
 });
