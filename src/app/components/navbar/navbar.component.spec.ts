@@ -10,7 +10,7 @@ import {
   UrlTree,
 } from "@angular/router";
 import { of, Subject } from "rxjs";
-import { AuthService } from "../../cores/auth.service";
+import { AuthService } from "../../core/services/auth.service";
 
 import { Navbar, NavItem } from "./navbar.component";
 
