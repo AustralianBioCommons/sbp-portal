@@ -32,7 +32,6 @@ import {
 } from "../fasta.utils";
 import { FastaUploadService } from "../services/fasta-upload.service";
 import { DatasetUploadService } from "../services/dataset-upload.service";
-import { WORKFLOW_INPUT_DIRS } from "../workflow-paths";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import { InteractionScreeningPayload } from "../workflow.interfaces";
 import { WorkflowPageBase } from "../workflow-page-base";
@@ -319,7 +318,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     const file = new File([blob], `sequences.fasta`, { type: "text/plain" });
     const upload$ = this.fastaUploadService.uploadFastaFile({
       file,
-      folder: WORKFLOW_INPUT_DIRS.INTERACTION_SCREENING,
+      folder: this.workflowInputDir,
     });
 
     let fastaS3Uri = "";

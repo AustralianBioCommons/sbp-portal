@@ -20,6 +20,7 @@ import {
 } from "../../core/services/credits.service";
 import { WorkflowSubmissionService } from "./services/workflow-submission.service";
 import { WorkflowName, WorkflowTool } from "./workflow.interfaces";
+import { WORKFLOW_INPUT_DIRS } from "./workflow-paths";
 
 /**
  * Shared base for the workflow pages: owns the validate → preview → submit
@@ -45,6 +46,11 @@ export abstract class WorkflowPageBase implements OnInit {
   protected readonly workflowFormShell = viewChild(WorkflowFormComponent);
 
   protected abstract readonly workflowCategory: WorkflowName;
+
+  protected get workflowInputDir(): string {
+    return WORKFLOW_INPUT_DIRS[this.workflowCategory];
+  }
+
   protected abstract readonly tools: ToolOption<WorkflowTool>[];
   protected abstract readonly selectedTool: Signal<WorkflowTool>;
   abstract readonly creditCost: Signal<number | null>;
@@ -117,7 +123,7 @@ export abstract class WorkflowPageBase implements OnInit {
       .subscribe({
         next: (response) => {
           const config = response.workflows.find(
-            (w) => w.category === this.workflowCategory
+            (w) => w.category === this.workflowCategory,
           );
           if (!config) return;
           this.toolMultipliers.set(config.toolMultipliers);

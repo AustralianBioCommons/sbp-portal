@@ -34,7 +34,6 @@ import {
 import { parseMultiFasta, validateBulkFastaProtein } from "../fasta.utils";
 import { FastaUploadService } from "../services/fasta-upload.service";
 import { DatasetUploadService } from "../services/dataset-upload.service";
-import { WORKFLOW_INPUT_DIRS } from "../workflow-paths";
 import { BulkPredictionPayload } from "../workflow.interfaces";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import { WorkflowPageBase } from "../workflow-page-base";
@@ -201,7 +200,7 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
 
     const upload$ = this.fastaUploadService.uploadFastaFile({
       file,
-      folder: WORKFLOW_INPUT_DIRS.BULK_PREDICTION,
+      folder: this.workflowInputDir,
     });
 
     let fastaS3Uri = "";

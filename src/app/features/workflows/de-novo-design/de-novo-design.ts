@@ -43,7 +43,6 @@ import { WorkflowPreviewModalComponent } from "../components/workflow-preview-mo
 import { DatasetUploadService } from "../services/dataset-upload.service";
 import { PdbUploadService } from "../services/pdb-upload.service";
 import { SchemaLoaderService } from "../services/schema-loader.service";
-import { WORKFLOW_INPUT_DIRS } from "../workflow-paths";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import { DeNovoDesignPayload, WorkflowTool } from "../workflow.interfaces";
 import { WorkflowPageBase } from "../workflow-page-base";
@@ -612,7 +611,7 @@ export default class DeNovoDesignComponent
         this.pdbUploadService
           .uploadPdbFile({
             file,
-            folder: WORKFLOW_INPUT_DIRS.DE_NOVO_DESIGN,
+            folder: this.workflowInputDir,
             metadata: {
               fieldName: "starting_pdb",
               uploadedAt: new Date().toISOString(),

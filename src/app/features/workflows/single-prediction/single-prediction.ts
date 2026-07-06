@@ -33,7 +33,6 @@ import {
 } from "../components/tool-selection/tool-selection.component";
 import { DatasetUploadService } from "../services/dataset-upload.service";
 import { FastaUploadService } from "../services/fasta-upload.service";
-import { WORKFLOW_INPUT_DIRS } from "../workflow-paths";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import {
   CCD_COMPOUNDS,
@@ -702,7 +701,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     this.fastaUploadService
       .uploadFastaFile({
         file: fastaFile,
-        folder: WORKFLOW_INPUT_DIRS.SINGLE_PREDICTION,
+        folder: this.workflowInputDir,
       })
       .pipe(
         switchMap((response) => {
