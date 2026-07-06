@@ -123,7 +123,7 @@ export abstract class WorkflowPageBase implements OnInit {
       .subscribe({
         next: (response) => {
           const config = response.workflows.find(
-            (w) => w.category === this.workflowCategory,
+            (w) => w.category === this.workflowCategory
           );
           if (!config) return;
           this.toolMultipliers.set(config.toolMultipliers);
