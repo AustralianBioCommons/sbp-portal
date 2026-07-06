@@ -6,7 +6,7 @@ import { of, Subject, throwError } from "rxjs";
 import {
   WorkflowFormData,
   WorkflowLaunchResponse,
-} from "../workflow.interfaces";
+} from "../shared/workflow.interfaces";
 import { WorkflowApiService } from "./workflow-api.service";
 import { WorkflowSubmissionService } from "./workflow-submission.service";
 import { INSUFFICIENT_CREDITS_MESSAGE } from "../../../core/services/credits.service";

@@ -17,7 +17,7 @@ import {
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
-} from "../job-name.validators";
+} from "../shared/job-name.validators";
 import { map, startWith, switchMap } from "rxjs/operators";
 import { CreditSummaryComponent } from "../components/credit-summary/credit-summary.component";
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
@@ -31,12 +31,15 @@ import {
   ToolOption,
   ToolSelectionComponent,
 } from "../components/tool-selection/tool-selection.component";
-import { parseMultiFasta, validateBulkFastaProtein } from "../fasta.utils";
+import {
+  parseMultiFasta,
+  validateBulkFastaProtein,
+} from "../shared/fasta.utils";
 import { FastaUploadService } from "../services/fasta-upload.service";
 import { DatasetUploadService } from "../services/dataset-upload.service";
-import { BulkPredictionPayload } from "../workflow.interfaces";
+import { BulkPredictionPayload } from "../shared/workflow.interfaces";
 import { getErrorMessage } from "../../../core/utils/error.utils";
-import { WorkflowPageBase } from "../workflow-page-base";
+import { WorkflowPageBase } from "../shared/workflow-page-base";
 
 function bulkFastaValidator(control: AbstractControl): ValidationErrors | null {
   const result = validateBulkFastaProtein(control.value ?? "");

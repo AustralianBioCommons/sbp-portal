@@ -5,7 +5,7 @@ import { environment } from "../../../environments/environment";
 import {
   WorkflowName,
   WorkflowTool,
-} from "../../features/workflows/workflow.interfaces";
+} from "../../features/workflows/shared/workflow.interfaces";
 
 /** Total credit allowance per user (no per-user total is stored server-side). */
 export const TOTAL_CREDITS = 1000;

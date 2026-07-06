@@ -5,7 +5,7 @@ import {
   WorkflowLaunchForm,
   WorkflowLaunchPayload,
   WorkflowLaunchResponse,
-} from "../workflow.interfaces";
+} from "../shared/workflow.interfaces";
 import { environment } from "../../../../environments/environment";
 
 /**

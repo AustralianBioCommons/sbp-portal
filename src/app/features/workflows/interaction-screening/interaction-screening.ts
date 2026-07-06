@@ -11,7 +11,7 @@ import {
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
-} from "../job-name.validators";
+} from "../shared/job-name.validators";
 import { map, startWith, switchMap } from "rxjs/operators";
 import { CreditSummaryComponent } from "../components/credit-summary/credit-summary.component";
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
@@ -29,12 +29,12 @@ import {
   validateUniqueHeadersAcrossInputs,
   parseMultiFasta,
   validateMultiFastaProtein,
-} from "../fasta.utils";
+} from "../shared/fasta.utils";
 import { FastaUploadService } from "../services/fasta-upload.service";
 import { DatasetUploadService } from "../services/dataset-upload.service";
 import { getErrorMessage } from "../../../core/utils/error.utils";
-import { InteractionScreeningPayload } from "../workflow.interfaces";
-import { WorkflowPageBase } from "../workflow-page-base";
+import { InteractionScreeningPayload } from "../shared/workflow.interfaces";
+import { WorkflowPageBase } from "../shared/workflow-page-base";
 
 function multiFastaValidator(
   control: AbstractControl

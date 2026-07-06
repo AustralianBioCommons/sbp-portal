@@ -7,7 +7,10 @@ import {
   INSUFFICIENT_CREDITS_MESSAGE,
   USER_CREDITS_ENABLED,
 } from "../../../core/services/credits.service";
-import { WorkflowFormData, WorkflowLaunchForm } from "../workflow.interfaces";
+import {
+  WorkflowFormData,
+  WorkflowLaunchForm,
+} from "../shared/workflow.interfaces";
 
 @Injectable({
   providedIn: "root",

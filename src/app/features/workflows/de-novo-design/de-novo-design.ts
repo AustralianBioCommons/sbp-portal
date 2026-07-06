@@ -21,7 +21,7 @@ import { FormControl, FormsModule } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
-} from "../job-name.validators";
+} from "../shared/job-name.validators";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { MolstarViewerComponent } from "../components/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../components/length-range-slider/length-range-slider.component";
@@ -44,8 +44,11 @@ import { DatasetUploadService } from "../services/dataset-upload.service";
 import { PdbUploadService } from "../services/pdb-upload.service";
 import { SchemaLoaderService } from "../services/schema-loader.service";
 import { getErrorMessage } from "../../../core/utils/error.utils";
-import { DeNovoDesignPayload, WorkflowTool } from "../workflow.interfaces";
-import { WorkflowPageBase } from "../workflow-page-base";
+import {
+  DeNovoDesignPayload,
+  WorkflowTool,
+} from "../shared/workflow.interfaces";
+import { WorkflowPageBase } from "../shared/workflow-page-base";
 
 interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;

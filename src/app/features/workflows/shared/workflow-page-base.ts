@@ -11,14 +11,14 @@ import {
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { filter, take } from "rxjs";
-import { ToolOption } from "./components/tool-selection/tool-selection.component";
-import { WorkflowFormComponent } from "./components/workflow-form/workflow-form.component";
-import { AuthService } from "../../core/services/auth.service";
+import { ToolOption } from "../components/tool-selection/tool-selection.component";
+import { WorkflowFormComponent } from "../components/workflow-form/workflow-form.component";
+import { AuthService } from "../../../core/services/auth.service";
 import {
   CreditsService,
   USER_CREDITS_ENABLED,
-} from "../../core/services/credits.service";
-import { WorkflowSubmissionService } from "./services/workflow-submission.service";
+} from "../../../core/services/credits.service";
+import { WorkflowSubmissionService } from "../services/workflow-submission.service";
 import { WorkflowName, WorkflowTool } from "./workflow.interfaces";
 import { WORKFLOW_INPUT_DIRS } from "./workflow-paths";
 

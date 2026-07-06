@@ -13,7 +13,7 @@ import { heroTrash } from "@ng-icons/heroicons/outline";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
-} from "../job-name.validators";
+} from "../shared/job-name.validators";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { CreditSummaryComponent } from "../components/credit-summary/credit-summary.component";
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
@@ -41,13 +41,13 @@ import {
   validateDnaSequence,
   validateProteinSequence,
   validateRnaSequence,
-} from "../fasta.utils";
+} from "../shared/fasta.utils";
 import {
   SinglePredictionPayload,
   SinglePredictionToolSettingsPayload,
   WorkflowTool,
-} from "../workflow.interfaces";
-import { WorkflowPageBase } from "../workflow-page-base";
+} from "../shared/workflow.interfaces";
+import { WorkflowPageBase } from "../shared/workflow-page-base";
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
 type SinglePredictionTool = Extract<
