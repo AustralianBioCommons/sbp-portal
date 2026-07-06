@@ -251,10 +251,11 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       const copies = this.getParsedCopyNumber(row.copyNumber);
       const sequence = this.getNormalizedSequence(row);
       const name = row.name.trim();
+      const type = this.getFastaMoleculeType(row.moleculeType);
 
       for (let copyIndex = 0; copyIndex < copies; copyIndex += 1) {
         const headerId = copies > 1 ? `${name}_${copyIndex + 1}` : name;
-        fastaRecords.push(`>${headerId}\n${sequence}`);
+        fastaRecords.push(`>${headerId}|${type}\n${sequence}`);
       }
     }
 
@@ -486,6 +487,11 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return (
       this.moleculeTypes.find((item) => item.value === type)?.label ?? type
     );
+  }
+
+  /** Maps an entity's molecule type to the FASTA header type tag (e.g. `>name|protein`). */
+  private getFastaMoleculeType(type: MoleculeType): string {
+    return type === "ligand" ? "smiles" : type;
   }
 
   private createEntityRow(): EntityRow {
