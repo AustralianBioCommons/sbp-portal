@@ -8,14 +8,14 @@ export const routes: Routes = [
       {
         path: "",
         loadComponent: () =>
-          import("./pages/binder-design/binder-design").then(
+          import("./features/themes/binder-design/binder-design").then(
             (m) => m.BinderDesignComponent
           ),
       },
       {
         path: "de-novo-design",
         loadComponent: () =>
-          import("./pages/workflow/de-novo-design/de-novo-design"),
+          import("./features/workflows/de-novo-design/de-novo-design"),
       },
     ],
   },
@@ -25,25 +25,25 @@ export const routes: Routes = [
       {
         path: "",
         loadComponent: () =>
-          import("./pages/structure-prediction/structure-prediction").then(
-            (m) => m.StructurePredictionComponent
-          ),
+          import(
+            "./features/themes/structure-prediction/structure-prediction"
+          ).then((m) => m.StructurePredictionComponent),
       },
       {
         path: "single-prediction",
         loadComponent: () =>
-          import("./pages/workflow/single-prediction/single-prediction"),
+          import("./features/workflows/single-prediction/single-prediction"),
       },
       {
         path: "bulk-prediction",
         loadComponent: () =>
-          import("./pages/workflow/bulk-prediction/bulk-prediction"),
+          import("./features/workflows/bulk-prediction/bulk-prediction"),
       },
       {
         path: "interaction-screening",
         loadComponent: () =>
           import(
-            "./pages/workflow/interaction-screening/interaction-screening"
+            "./features/workflows/interaction-screening/interaction-screening"
           ),
       },
     ],
@@ -53,16 +53,16 @@ export const routes: Routes = [
     children: [
       {
         path: "",
-        loadComponent: () => import("./pages/jobs/jobs"),
+        loadComponent: () => import("./features/jobs/jobs-list/jobs-list"),
       },
       {
         path: ":id",
-        loadComponent: () => import("./pages/job-details/job-details"),
+        loadComponent: () => import("./features/jobs/job-details/job-details"),
       },
     ],
   },
   {
     path: "**",
-    loadComponent: () => import("./pages/not-found/not-found"),
+    loadComponent: () => import("./features/not-found/not-found"),
   },
 ];

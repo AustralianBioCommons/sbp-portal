@@ -4,7 +4,7 @@ import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { ActivatedRoute } from "@angular/router";
 import { of } from "rxjs";
 import { App } from "./app";
-import { AuthService } from "./cores/auth.service";
+import { AuthService } from "./core/services/auth.service";
 
 describe("App", () => {
   let fixture: ComponentFixture<App>;

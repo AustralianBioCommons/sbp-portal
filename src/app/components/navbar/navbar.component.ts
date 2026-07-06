@@ -28,13 +28,13 @@ import {
 } from "@ng-icons/heroicons/outline";
 import { distinctUntilChanged, filter } from "rxjs";
 import { environment } from "../../../environments/environment";
-import { AuthService } from "../../cores/auth.service";
+import { AuthService } from "../../core/services/auth.service";
 import {
   CreditsService,
   TOTAL_CREDITS,
   USER_CREDITS_ENABLED,
-} from "../../cores/services/credits.service";
-import { THEMES } from "../../cores/config/themes.config";
+} from "../../core/services/credits.service";
+import { THEMES } from "../../core/configs/themes.config";
 import { DropdownMenuComponent } from "../dropdown-menu/dropdown-menu.component";
 import { ButtonComponent } from "../button/button.component";
 import { TooltipComponent } from "../tooltip/tooltip.component";
