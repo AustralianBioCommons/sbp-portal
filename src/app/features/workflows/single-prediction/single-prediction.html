@@ -168,9 +168,8 @@
                   Sequence
                 </label>
 
-                <!-- FASTA card wrapper: pt-2 pushes inner card down so floating label bisects its top border -->
-                <div class="relative pt-2">
-                  <!-- Floating label: sits on the inner card's top border -->
+                <!-- FASTA card wrapper -->
+                <div class="relative">
                   <div
                     class="absolute top-0 left-3 z-10 flex items-center gap-0.5 bg-white px-1"
                   >
@@ -205,16 +204,14 @@
                     />
                   </div>
 
-                  <!-- Card body (overflow-hidden keeps border-radius on footer) -->
                   <div
                     class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
                     [class]="
-                      !row.name.trim()
+                      shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
                         ? 'border-red-300 focus-within:ring-red-100'
                         : 'border-gray-200 focus-within:ring-sky-100'
                     "
                   >
-                    <!-- Sequence body -->
                     @if (row.moleculeType === 'ccd') {
                     <div class="px-3 pt-4 pb-3">
                       <app-listbox-select
@@ -237,7 +234,7 @@
                       [value]="row.sequence"
                       (input)="updateRowSequence(row.id, $any($event.target).value)"
                       (blur)="touchRowField(row.id, 'sequence')"
-                      class="block w-full resize-none bg-white px-3 pt-4 pb-3 font-mono text-sm text-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-20 max-h-48 break-all"
+                      class="block w-full resize-none bg-white px-3 pt-4 pb-3 font-mono text-sm text-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-10 max-h-40 break-all"
                       [placeholder]="
                         row.moleculeType === 'ligand'
                           ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
@@ -267,18 +264,20 @@
                       } @else {
                       <span></span>
                       }
-                      <span
-                        class="flex items-center gap-1 font-medium"
-                        [class]="
-                          !getRowErrors(i).sequence && !getRowErrors(i).name
-                            ? 'text-emerald-600'
-                            : 'text-red-500'
-                        "
-                      >
-                        {{ !getRowErrors(i).sequence && !getRowErrors(i).name ? "✓" : "✗" }}
-                        {{ !getRowErrors(i).sequence && !getRowErrors(i).name ? "Valid" : "Invalid" }}
-                        {{ getMoleculeTypeLabel(row.moleculeType) }}
+                      @if (getRowErrors(i).name || getRowErrors(i).sequence) {
+                      <span class="flex items-center gap-1 font-medium text-red-500">
+                        ✗
+                        @if (getRowErrors(i).name && getRowErrors(i).sequence) {
+                          Header &amp; sequence invalid
+                        } @else if (getRowErrors(i).name) {
+                          Header {{ !row.name.trim() ? 'missing' : 'invalid' }}
+                        } @else {
+                          Sequence {{ !getNormalizedSequence(row) ? 'missing' : 'invalid' }}
+                        }
                       </span>
+                      } @else {
+                      <span></span>
+                      }
                     </div>
                     }
 
