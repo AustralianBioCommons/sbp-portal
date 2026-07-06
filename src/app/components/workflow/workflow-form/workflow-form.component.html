@@ -81,18 +81,16 @@
 >
   <ng-content></ng-content>
 
-  <div class="flex items-center justify-end p-4 pt-0">
+  <div #submitArea class="flex items-center justify-end p-4">
     <app-button
       type="button"
       variant="primary"
       widthClass="w-auto"
-      [disabled]="
-        disabled() || submitDisabled() || isSubmitting() || !allSectionsValid()
-      "
+      [disabled]="disabled() || submitDisabled() || isSubmitting()"
       [loading]="isSubmitting()"
-      (click)="onSubmit()"
+      (click)="onContinue()"
     >
-      {{ buttonLabel() }}
+      Review & Submit
     </app-button>
   </div>
 </div>

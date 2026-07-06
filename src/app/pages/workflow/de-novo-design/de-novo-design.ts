@@ -16,7 +16,6 @@ import {
   OnInit,
   Signal,
   signal,
-  viewChild,
 } from "@angular/core";
 import { FormControl, FormsModule } from "@angular/forms";
 import {
@@ -28,7 +27,6 @@ import { MolstarViewerComponent } from "../../../components/workflow/molstar-vie
 import { LengthRangeSliderComponent } from "../../../components/workflow/length-range-slider/length-range-slider.component";
 
 import { filter, Subscription, take } from "rxjs";
-import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
 import { FormFieldComponent } from "../../../components/workflow/form-field/form-field.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
@@ -41,21 +39,17 @@ import {
   ToolSelectionComponent,
 } from "../../../components/workflow/tool-selection/tool-selection.component";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
-import { AuthService } from "../../../cores/auth.service";
-import {
-  CreditsService,
-  USER_CREDITS_ENABLED,
-} from "../../../cores/services/credits.service";
+import { WorkflowPreviewModalComponent } from "../../../components/workflow/workflow-preview-modal/workflow-preview-modal.component";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
 import { PdbUploadService } from "../../../cores/services/pdb-upload.service";
 import { SchemaLoaderService } from "../../../cores/services/schema-loader.service";
-import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
 import {
   DeNovoDesignPayload,
   WorkflowTool,
 } from "../../../cores/interfaces/workflow.interfaces";
+import { WorkflowPageBase } from "../workflow-page-base";
 
 interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
@@ -72,10 +66,10 @@ interface ToolChip extends ToolOption {
     WorkflowLayoutComponent,
     StepContentComponent,
     FormFieldComponent,
-    ConfigurationSummaryComponent,
     MolstarViewerComponent,
     LengthRangeSliderComponent,
     CreditSummaryComponent,
+    WorkflowPreviewModalComponent,
     NgIconComponent,
   ],
   providers: [
@@ -91,7 +85,10 @@ interface ToolChip extends ToolOption {
   templateUrl: "./de-novo-design.html",
   styleUrl: "./de-novo-design.scss",
 })
-export default class DeNovoDesignComponent implements OnInit, OnDestroy {
+export default class DeNovoDesignComponent
+  extends WorkflowPageBase
+  implements OnInit, OnDestroy
+{
   private readonly availableToolId: ToolChip["id"] = "bindcraft";
 
   // // Make Object available in template
@@ -99,23 +96,14 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   // Document reference (SSR-safe; avoids touching the global directly)
   private readonly document = inject(DOCUMENT);
-  // Auth
-  public auth = inject(AuthService);
   // Schema loader service
   public schemaLoader = inject(SchemaLoaderService);
-  // Workflow submission service
-  public workflowSubmission = inject(WorkflowSubmissionService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
   // PDB upload service
   private pdbUploadService = inject(PdbUploadService);
-  // Credits service (per-tool credit multipliers)
-  private creditsService = inject(CreditsService);
-  readonly creditsEnabled = USER_CREDITS_ENABLED;
 
-  // Alert state
-  showAlert = signal(false);
-  alertMessage = signal("");
+  protected readonly workflowCategory = "de-novo-design" as const;
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
@@ -490,9 +478,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
 
-  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
-  private readonly workflowForm = viewChild(WorkflowFormComponent);
-
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
     switch (id) {
@@ -507,7 +492,10 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
 
   private subscription = new Subscription();
 
-  ngOnInit() {
+  override ngOnInit() {
+    // Credit bootstrap lives in the base class.
+    super.ngOnInit();
+
     // Wait for Auth0 to initialize before making HTTP requests
     // Use take(1) and filter to only react once when loading is complete
     this.subscription.add(
@@ -528,29 +516,10 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
         this.loadInputSchema();
       }
     }, 5000);
-
-    if (this.creditsEnabled) {
-      // Only call the credit service once the user is authenticated; the
-      // /api/* requests require a bearer token and otherwise fail, blocking
-      // the page from rendering.
-      this.subscription.add(
-        this.auth.isAuthenticated$
-          .pipe(filter(Boolean), take(1))
-          .subscribe(() => this.loadToolCredits())
-      );
-    }
   }
 
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
-  /**
-   * Remaining credit balance for the current user. Starts at 0 until the real
-   * balance from getMyCredit() loads.
-   */
-  creditsRemaining = signal<number | null>(0);
-
   /** Credit cost of the run: tool multiplier × number of final designs. */
-  creditCost = computed<number | null>(() => {
+  readonly creditCost = computed<number | null>(() => {
     const multiplier = this.toolMultipliers()[this.selectedTool()];
     if (multiplier == null) return null;
     const rowId = this.schemaLoader.inputRows()[0]?.id;
@@ -559,45 +528,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     if (!Number.isFinite(count) || count < 1) return null;
     return multiplier * count;
   });
-
-  /** True when the run's cost is known to exceed the user's remaining balance. */
-  creditsInsufficient = computed<boolean>(() => {
-    const cost = this.creditCost();
-    const remaining = this.creditsRemaining();
-    return cost !== null && remaining !== null && cost > remaining;
-  });
-
-  /** Fetch per-tool credit multipliers and the user's remaining balance. */
-  private loadToolCredits(): void {
-    this.subscription.add(
-      this.creditsService.getWorkflowCredits().subscribe({
-        next: (response) => {
-          const config = response.workflows.find(
-            (w) => w.category === "de-novo-design"
-          );
-          if (!config) return;
-          this.toolMultipliers.set(config.toolMultipliers);
-          for (const tool of this.tools) {
-            const multiplier = config.toolMultipliers[tool.id];
-            if (multiplier != null) {
-              tool.credits = multiplier;
-            }
-          }
-        },
-        error: (error) => {
-          console.warn("Failed to load workflow credits", error);
-        },
-      })
-    );
-    this.subscription.add(
-      this.creditsService.getMyCredit().subscribe({
-        next: (response) => this.creditsRemaining.set(response.credit),
-        error: (error) => {
-          console.warn("Failed to load credit balance", error);
-        },
-      })
-    );
-  }
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
@@ -664,8 +594,7 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
     );
   }
 
-  submitWorkflow() {
-    // Run full validation (previously triggered by Next on the input step).
+  protected validateAll(): void {
     this.jobNameTouched.set(true);
     this.validateAllRequiredFields();
     for (const row of this.schemaLoader.inputRows()) {
@@ -673,12 +602,9 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
       this.validateRowField(row.id, "chains");
     }
     this.validateForm();
+  }
 
-    if (!this.isFormValid()) {
-      this.workflowForm()?.scrollToFirstInvalidSection();
-      return;
-    }
-
+  protected performSubmit(): void {
     const file = this.localPdbFile();
     const rowId = this.schemaLoader.inputRows()[0]?.id;
 
@@ -782,16 +708,6 @@ export default class DeNovoDesignComponent implements OnInit, OnDestroy {
           this.showError(`Failed to upload dataset: ${getErrorMessage(error)}`);
         },
       });
-  }
-
-  closeAlert(): void {
-    this.showAlert.set(false);
-    this.alertMessage.set("");
-  }
-
-  private showError(message: string): void {
-    this.alertMessage.set(message);
-    this.showAlert.set(true);
   }
 
   // Initialize form data with default values from schema

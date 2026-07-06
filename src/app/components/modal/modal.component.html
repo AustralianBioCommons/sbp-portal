@@ -1,0 +1,16 @@
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<dialog
+  #dialog
+  [class]="
+    'm-auto rounded-lg border-0 bg-white p-0 shadow-xl overflow-hidden backdrop:bg-black/50 ' +
+    panelClass()
+  "
+  [attr.aria-labelledby]="ariaLabelledby()"
+  [attr.aria-label]="ariaLabel()"
+  (cancel)="onCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <ng-content select="[modalHeader]"></ng-content>
+  <ng-content select="[modalBody]"></ng-content>
+  <ng-content select="[modalActions]"></ng-content>
+</dialog>

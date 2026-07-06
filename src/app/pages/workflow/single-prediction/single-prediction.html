@@ -21,9 +21,8 @@
     [isSectionValid]="isSectionValid"
     [disabled]="(auth.canExecuteWorkflows$ | async) === false"
     [submitDisabled]="creditsEnabled && creditsInsufficient()"
-    [credits]="creditsEnabled ? creditCost() : null"
     [isSubmitting]="workflowSubmission.isSubmitting()"
-    (submitted)="submitWorkflow()"
+    (continued)="onContinueToPreview()"
   >
     <!-- Section 1: Select a Tool -->
     <div id="select-tool" class="scroll-mt-44">
@@ -225,7 +224,7 @@
                 >
                 <button
                   type="button"
-                  class="flex h-10 w-10 items-center border justify-center rounded-lg text-biocommons-primary transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex h-10 w-10 items-center border justify-center rounded-lg text-biocommons-primary transition not-disabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
                   [disabled]="entityRows().length === 1"
                   (click)="removeEntityRow(row.id)"
                   [attr.aria-label]="'Delete entity ' + (i + 1)"
@@ -258,6 +257,14 @@
             </app-button>
           </div>
         </div>
+
+        @if (creditsEnabled) {
+        <app-credit-summary
+          class="mt-4 block"
+          [total]="creditCost()"
+          [remaining]="creditsRemaining()"
+        ></app-credit-summary>
+        }
       </app-step-content>
     </div>
 
@@ -355,30 +362,18 @@
         </div>
       </app-step-content>
     </div>
-
-    <!-- Section 4: Review & Submit -->
-    <div id="review" class="scroll-mt-44">
-      <app-step-content
-        [step]="4"
-        title="Review & Submit"
-        description="Confirm the entity rows, selected tool, generated FASTA content, and tool-specific settings."
-        contentClass="space-y-4"
-      >
-        <app-configuration-summary
-          workflowName="Single Prediction"
-          [selectedTool]="selectedToolLabel()"
-          [hasParameters]="true"
-          [inputItems]="formSummary()"
-          [toolSettingItems]="getToolSettingsSummaryItems()"
-          [isValid]="isFormValid()"
-        ></app-configuration-summary>
-        @if (creditsEnabled) {
-        <app-credit-summary
-          [total]="creditCost()"
-          [remaining]="creditsRemaining()"
-        ></app-credit-summary>
-        }
-      </app-step-content>
-    </div>
   </app-workflow-form>
+
+  <app-workflow-preview-modal
+    [isOpen]="showPreview()"
+    [credits]="creditsEnabled ? creditCost() : null"
+    [isSubmitting]="workflowSubmission.isSubmitting()"
+    workflowName="Single Prediction"
+    [selectedTool]="selectedToolLabel()"
+    [hasParameters]="true"
+    [inputItems]="formSummary()"
+    [toolSettingItems]="getToolSettingsSummaryItems()"
+    (confirmed)="onPreviewConfirmed()"
+    (cancelled)="showPreview.set(false)"
+  ></app-workflow-preview-modal>
 </app-workflow-layout>

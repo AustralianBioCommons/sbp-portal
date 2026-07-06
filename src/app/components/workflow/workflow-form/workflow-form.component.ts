@@ -30,20 +30,9 @@ export class WorkflowFormComponent {
   readonly isSectionValid = input<(id: string) => boolean>(() => true);
   readonly disabled = input(false);
   readonly submitDisabled = input(false);
-  readonly credits = input<number | null>(null);
   readonly isSubmitting = input(false);
-  readonly submitted = output<void>();
+  readonly continued = output<void>();
 
-  readonly allSectionsValid = computed(() =>
-    this.sections().every((s) => this.isSectionValid()(s.id))
-  );
-
-  readonly buttonLabel = computed(() => {
-    const credits = this.credits();
-    if (credits == null) return "Submit";
-    const unit = credits === 1 ? "credit" : "credits";
-    return `Use ${credits} ${unit} and submit`;
-  });
   readonly activeSection = signal<string>("");
   readonly visitedSections = signal<Set<string>>(new Set());
 
@@ -52,8 +41,11 @@ export class WorkflowFormComponent {
   );
 
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly bottomSentinel =
     viewChild<ElementRef<HTMLElement>>("bottomSentinel");
+  private readonly submitArea =
+    viewChild<ElementRef<HTMLElement>>("submitArea");
 
   /** Ids of sections currently crossing the activation line. */
   private readonly intersecting = new Set<string>();
@@ -148,10 +140,29 @@ export class WorkflowFormComponent {
     if (invalid) this.scrollTo(invalid.id);
   }
 
+  focusFirstInvalidField(): void {
+    const invalid = this.host.nativeElement.querySelector<HTMLElement>(
+      'input.border-red-500, textarea.border-red-500, select.border-red-500, [aria-invalid="true"]'
+    );
+    if (invalid) {
+      invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+      invalid.focus({ preventScroll: true });
+      return;
+    }
+    this.scrollToFirstInvalidSection();
+  }
+
   private scrollTo(sectionId: string): void {
-    document
-      .getElementById(sectionId)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    this.submitArea()?.nativeElement.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
   }
 
   isSectionActive(id: string): boolean {
@@ -211,7 +222,7 @@ export class WorkflowFormComponent {
       : "bg-gray-300";
   }
 
-  onSubmit(): void {
-    this.submitted.emit();
+  onContinue(): void {
+    this.continued.emit();
   }
 }

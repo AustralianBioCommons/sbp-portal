@@ -175,6 +175,11 @@ describe("BulkPredictionComponent", () => {
     expect(component.selectedToolLabel()).toBe("ColabFold");
   });
 
+  it("should fall back to an empty label when the selected tool is unknown", () => {
+    component.selectedTool.set("unknown" as never);
+    expect(component.selectedToolLabel()).toBe("");
+  });
+
   // ── 4. FASTA validation — unique headers ───────────────────────────────
 
   it("should be invalid when FASTA has duplicate headers", () => {
@@ -480,6 +485,11 @@ describe("BulkPredictionComponent", () => {
   it("should return a non-empty string for getFastaError when FASTA is invalid", () => {
     component.form.controls.fasta.setValue(">bad\nXXX123");
     expect(component.getFastaError()).toBeTruthy();
+  });
+
+  it("should return an empty string for getFastaError when FASTA is valid", () => {
+    component.form.controls.fasta.setValue(VALID_FASTA);
+    expect(component.getFastaError()).toBe("");
   });
 
   // ── 25. creditCost ───────────────────────────────────────────────────

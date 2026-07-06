@@ -25,7 +25,6 @@ describe("ConfigurationSummaryComponent", () => {
     fixture.componentRef.setInput("workflowName", "Test Workflow");
     fixture.componentRef.setInput("selectedTool", "Test Tool");
     fixture.componentRef.setInput("inputItems", mockInputItems);
-    fixture.componentRef.setInput("isValid", true);
   });
 
   it("should create", () => {
@@ -45,18 +44,11 @@ describe("ConfigurationSummaryComponent", () => {
     expect(compiled.textContent).toContain("test.txt");
   });
 
-  it("should show valid status when configuration is valid", () => {
-    fixture.componentRef.setInput("isValid", true);
+  it("should not render a validation status (form is validated before preview)", () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("Configuration Valid");
-  });
-
-  it("should show invalid status when configuration is invalid", () => {
-    fixture.componentRef.setInput("isValid", false);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("Configuration Incomplete");
+    expect(compiled.textContent).not.toContain("Configuration Valid");
+    expect(compiled.textContent).not.toContain("Configuration Incomplete");
   });
 
   it("should display parameter status correctly", () => {
@@ -70,11 +62,14 @@ describe("ConfigurationSummaryComponent", () => {
     expect(compiled.textContent).toContain("No Parameters");
   });
 
-  it("should handle empty input items", () => {
-    fixture.componentRef.setInput("inputItems", []);
+  it("should not render a 'Not provided' fallback for empty values", () => {
+    fixture.componentRef.setInput("inputItems", [
+      { label: "Optional Field", value: "", fieldName: "optional" },
+    ]);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain("No input configuration provided");
+    expect(compiled.textContent).not.toContain("Not provided");
+    expect(compiled.textContent).toContain("Optional Field");
   });
 
   it("should display workflow name and tool settings", () => {

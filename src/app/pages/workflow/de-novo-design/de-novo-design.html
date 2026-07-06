@@ -19,9 +19,8 @@
     [isSectionValid]="isSectionValid"
     [disabled]="(auth.canExecuteWorkflows$ | async) === false"
     [submitDisabled]="creditsEnabled && creditsInsufficient()"
-    [credits]="creditsEnabled ? creditCost() : null"
     [isSubmitting]="workflowSubmission.isSubmitting()"
-    (submitted)="submitWorkflow()"
+    (continued)="onContinueToPreview()"
   >
     <!-- Section 1: Select a Tool -->
     <div id="select-tool" class="scroll-mt-44">
@@ -126,7 +125,7 @@
             </div>
 
             <!-- Viewer + config panel — side by side with draggable divider -->
-            <div class="flex min-h-80 max-h-[60vh]">
+            <div class="flex min-h-80 max-h-[65vh]">
               <!-- Viewer column -->
               <div class="relative flex-1 min-w-0 overflow-hidden">
                 <app-molstar-viewer
@@ -232,14 +231,14 @@
                       </span>
                       <button
                         type="button"
-                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
+                        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
                         (click)="panelWidth.set(0)"
                         title="Close"
                       >
                         <ng-icon
                           name="heroXMark"
-                          class="h-4 w-4"
                           aria-hidden="true"
+                          size="18"
                         ></ng-icon>
                       </button>
                     </div>
@@ -255,7 +254,7 @@
                       'number_of_final_designs') {
                       <!-- skip -->
                       } @else if (field.name === 'min_length') {
-                      <div class="rounded-lg border p-4">
+                      <div>
                         <p class="block text-sm font-medium mb-1">
                           Binder Length Range
                           <span class="text-red-500">*</span>
@@ -301,9 +300,7 @@
                       } }
 
                       <!-- Number of designs + credits -->
-                      <div
-                        class="flex flex-col gap-4 rounded-lg border bg-gray-50 p-4"
-                      >
+                      <div class="flex flex-col gap-4">
                         @for (field of schemaLoader.requiredInputFields(); track
                         field.name) { @if (field.name ===
                         'number_of_final_designs') {
@@ -377,31 +374,19 @@
         }
       </app-step-content>
     </div>
-
-    <!-- Section 4: Review & Submit -->
-    <div id="review" class="scroll-mt-44">
-      <app-step-content
-        [step]="4"
-        title="Review & Submit"
-        description="Confirm your selections before submitting this job."
-        contentClass="space-y-4"
-      >
-        <app-configuration-summary
-          workflowName="De Novo Design"
-          [selectedTool]="selectedToolLabel()"
-          [hasParameters]="selectedToolHasParams()"
-          [inputItems]="formSummary()"
-          [isValid]="isFormValid()"
-        ></app-configuration-summary>
-        @if (creditsEnabled) {
-        <app-credit-summary
-          [total]="creditCost()"
-          [remaining]="creditsRemaining()"
-        ></app-credit-summary>
-        }
-      </app-step-content>
-    </div>
   </app-workflow-form>
+
+  <app-workflow-preview-modal
+    [isOpen]="showPreview()"
+    [credits]="creditsEnabled ? creditCost() : null"
+    [isSubmitting]="workflowSubmission.isSubmitting()"
+    workflowName="De Novo Design"
+    [selectedTool]="selectedToolLabel()"
+    [hasParameters]="selectedToolHasParams()"
+    [inputItems]="formSummary()"
+    (confirmed)="onPreviewConfirmed()"
+    (cancelled)="showPreview.set(false)"
+  ></app-workflow-preview-modal>
 
   <ul papers class="list-disc list-inside text-sm text-gray-600">
     <li>AlphaFold: Jumper et al., 2021</li>

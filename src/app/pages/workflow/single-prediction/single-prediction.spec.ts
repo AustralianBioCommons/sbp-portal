@@ -521,12 +521,11 @@ describe("SinglePredictionComponent", () => {
     expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
   });
 
-  it("should show an error when submitting invalid input", () => {
+  it("should not submit or show a validation banner when input is invalid", () => {
     component.isToolAvailable.set(true);
     component.submitWorkflow();
 
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("Please fix");
+    expect(component.showAlert()).toBe(false);
     expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
     expect(datasetUploadService.uploadDataset).not.toHaveBeenCalled();
   });

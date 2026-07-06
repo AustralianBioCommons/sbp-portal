@@ -19,5 +19,4 @@ export class ConfigurationSummaryComponent {
   readonly hasParameters = input(false);
   readonly inputItems = input.required<SummaryItem[]>();
   readonly toolSettingItems = input<SummaryItem[]>([]);
-  readonly isValid = input.required<boolean>();
 }

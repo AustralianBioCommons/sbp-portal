@@ -1,3 +1,4 @@
+import { Component, viewChild } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import {
   WorkflowFormComponent,
@@ -41,11 +42,17 @@ describe("WorkflowFormComponent", () => {
     expect(text).toContain("Section C");
   });
 
-  it("should emit submit when onSubmit is called", () => {
+  it("should emit continued when onContinue is called", () => {
     let emitted = false;
-    component.submitted.subscribe(() => (emitted = true));
-    component.onSubmit();
+    component.continued.subscribe(() => (emitted = true));
+    component.onContinue();
     expect(emitted).toBe(true);
+  });
+
+  it("should label the primary button 'Review & Submit'", () => {
+    const buttons = fixture.nativeElement.querySelectorAll("button");
+    const primary = buttons[buttons.length - 1] as HTMLButtonElement;
+    expect(primary.textContent?.trim()).toBe("Review & Submit");
   });
 
   it("should scroll to the first invalid section", () => {
@@ -71,7 +78,7 @@ describe("WorkflowFormComponent", () => {
     expect(button).toBeTruthy();
   });
 
-  it("should disable submit when disabled input is set", () => {
+  it("should disable the button when disabled input is set", () => {
     fixture.componentRef.setInput("disabled", true);
     fixture.detectChanges();
     const buttons = fixture.nativeElement.querySelectorAll("button");
@@ -79,13 +86,31 @@ describe("WorkflowFormComponent", () => {
     expect(submitButton.disabled).toBe(true);
   });
 
-  it("should disable submit when a section is invalid", () => {
-    fixture.componentRef.setInput("isSectionValid", (id: string) => id !== "b");
+  it("should disable the button when submitDisabled (insufficient credits) is set", () => {
+    fixture.componentRef.setInput("submitDisabled", true);
     fixture.detectChanges();
-    expect(component.allSectionsValid()).toBe(false);
     const buttons = fixture.nativeElement.querySelectorAll("button");
     const submitButton = buttons[buttons.length - 1] as HTMLButtonElement;
     expect(submitButton.disabled).toBe(true);
+  });
+
+  it("should NOT disable the button when a section is invalid (validation runs on click)", () => {
+    fixture.componentRef.setInput("isSectionValid", (id: string) => id !== "b");
+    fixture.detectChanges();
+    const buttons = fixture.nativeElement.querySelectorAll("button");
+    const submitButton = buttons[buttons.length - 1] as HTMLButtonElement;
+    expect(submitButton.disabled).toBe(false);
+  });
+
+  it("should fall back to scrolling the first invalid section when no invalid field is present", () => {
+    const element = document.createElement("div");
+    const scrollSpy = spyOn(element, "scrollIntoView");
+    spyOn(document, "getElementById").and.returnValue(element);
+    fixture.componentRef.setInput("isSectionValid", (id: string) => id !== "b");
+
+    component.focusFirstInvalidField();
+
+    expect(scrollSpy).toHaveBeenCalled();
   });
 
   it("should style completed, active and last sections", () => {
@@ -134,6 +159,16 @@ describe("WorkflowFormComponent", () => {
     component.scrollToSection(event, "b");
 
     expect(preventSpy).toHaveBeenCalled();
+    expect(scrollSpy).toHaveBeenCalled();
+  });
+
+  it("should scroll to the submit area when the target section has no element", () => {
+    const submitArea: HTMLElement = fixture.nativeElement.querySelector(
+      "div.justify-end.p-4"
+    );
+    const scrollSpy = spyOn(submitArea, "scrollIntoView");
+    component.scrollToSection(new Event("click"), "review");
+
     expect(scrollSpy).toHaveBeenCalled();
   });
 
@@ -203,5 +238,41 @@ describe("WorkflowFormComponent", () => {
       expect(component.isSectionVisited("a")).toBe(true);
       expect(component.isSectionVisited("c")).toBe(true);
     });
+  });
+});
+
+@Component({
+  imports: [WorkflowFormComponent],
+  template: `
+    <app-workflow-form [sections]="sections">
+      <div id="input-config">
+        <input class="focus:ring-sky-100" />
+        <input class="border-red-500 focus:ring-red-100" />
+      </div>
+    </app-workflow-form>
+  `,
+})
+class FocusHostComponent {
+  readonly sections: WorkflowSection[] = SECTIONS;
+  readonly form = viewChild.required(WorkflowFormComponent);
+}
+
+describe("WorkflowFormComponent focusFirstInvalidField", () => {
+  it("focuses the first field marked invalid in the projected form", () => {
+    const fixture = TestBed.configureTestingModule({
+      imports: [FocusHostComponent],
+    }).createComponent(FocusHostComponent);
+    fixture.detectChanges();
+
+    const invalidInput: HTMLInputElement = fixture.nativeElement.querySelector(
+      "input.border-red-500"
+    );
+    const scrollSpy = spyOn(invalidInput, "scrollIntoView");
+    const focusSpy = spyOn(invalidInput, "focus");
+
+    fixture.componentInstance.form().focusFirstInvalidField();
+
+    expect(scrollSpy).toHaveBeenCalled();
+    expect(focusSpy).toHaveBeenCalled();
   });
 });

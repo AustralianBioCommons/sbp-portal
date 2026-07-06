@@ -1,13 +1,11 @@
 import { CommonModule } from "@angular/common";
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   computed,
   inject,
   Signal,
   signal,
-  viewChild,
 } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
@@ -20,9 +18,9 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../../../cores/utils/job-name.utils";
-import { filter, map, startWith, switchMap, take } from "rxjs/operators";
-import { ConfigurationSummaryComponent } from "../../../components/workflow/configuration-summary/configuration-summary.component";
+import { map, startWith, switchMap } from "rxjs/operators";
 import { CreditSummaryComponent } from "../../../components/workflow/credit-summary/credit-summary.component";
+import { WorkflowPreviewModalComponent } from "../../../components/workflow/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../../../components/workflow/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../../../layouts/workflow-layout/workflow-layout.component";
 import {
@@ -37,17 +35,12 @@ import {
   parseMultiFasta,
   validateBulkFastaProtein,
 } from "../../../cores/utils/fasta.utils";
-import { AuthService } from "../../../cores/auth.service";
-import {
-  CreditsService,
-  USER_CREDITS_ENABLED,
-} from "../../../cores/services/credits.service";
 import { FastaUploadService } from "../../../cores/services/fasta-upload.service";
 import { DatasetUploadService } from "../../../cores/services/dataset-upload.service";
-import { WorkflowSubmissionService } from "../../../cores/services/workflow-submission.service";
 import { WORKFLOW_INPUT_DIRS } from "../../../cores/config/workflow-paths";
 import { BulkPredictionPayload } from "../../../cores/interfaces/workflow.interfaces";
 import { getErrorMessage } from "../../../cores/utils/error.utils";
+import { WorkflowPageBase } from "../workflow-page-base";
 
 function bulkFastaValidator(control: AbstractControl): ValidationErrors | null {
   const result = validateBulkFastaProtein(control.value ?? "");
@@ -68,8 +61,8 @@ interface ToolChip extends ToolOption {
     WorkflowFormComponent,
     WorkflowLayoutComponent,
     StepContentComponent,
-    ConfigurationSummaryComponent,
     CreditSummaryComponent,
+    WorkflowPreviewModalComponent,
   ],
   host: {
     class: "block w-full bulk-prediction-bg",
@@ -77,44 +70,18 @@ interface ToolChip extends ToolOption {
   templateUrl: "./bulk-prediction.html",
   styleUrl: "./bulk-prediction.scss",
 })
-export default class BulkPredictionComponent {
-  // Auth
-  public auth = inject(AuthService);
-  // Workflow submission service
-  public workflowSubmission = inject(WorkflowSubmissionService);
+export default class BulkPredictionComponent extends WorkflowPageBase {
   // FASTA upload service
   private fastaUploadService = inject(FastaUploadService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
-  // Credits service (per-tool credit multipliers)
-  private creditsService = inject(CreditsService);
-  readonly creditsEnabled = USER_CREDITS_ENABLED;
-  // OnPush component — credits arrive async, so mark for check when they do.
-  private cdr = inject(ChangeDetectorRef);
   // Form
   private fb = inject(NonNullableFormBuilder);
 
-  constructor() {
-    if (this.creditsEnabled) {
-      // Only call the credit service once the user is authenticated; the
-      // /api/* requests require a bearer token and otherwise fail, blocking
-      // the page from rendering.
-      this.auth.isAuthenticated$
-        .pipe(filter(Boolean), take(1))
-        .subscribe(() => this.loadToolCredits());
-    }
-  }
-
-  /** Per-tool credit multipliers for this workflow (from the backend). */
-  private toolMultipliers = signal<Partial<Record<ToolChip["id"], number>>>({});
-  /**
-   * Remaining credit balance for the current user. Starts at 0 until the real
-   * balance from getMyCredit() loads.
-   */
-  creditsRemaining = signal<number | null>(0);
+  protected readonly workflowCategory = "bulk-prediction" as const;
 
   /** Credit cost of the run: tool multiplier × number of FASTA entries. */
-  creditCost = computed<number | null>(() => {
+  readonly creditCost = computed<number | null>(() => {
     const multiplier = this.toolMultipliers()[this.selectedTool()];
     if (multiplier == null) return null;
     const result = validateBulkFastaProtein(this.formValue()?.fasta ?? "");
@@ -122,44 +89,6 @@ export default class BulkPredictionComponent {
     return multiplier * result.sequenceCount;
   });
 
-  /** True when the run's cost is known to exceed the user's remaining balance. */
-  creditsInsufficient = computed<boolean>(() => {
-    const cost = this.creditCost();
-    const remaining = this.creditsRemaining();
-    return cost !== null && remaining !== null && cost > remaining;
-  });
-
-  /** Fetch per-tool credit multipliers and the user's remaining balance. */
-  private loadToolCredits(): void {
-    this.creditsService.getWorkflowCredits().subscribe({
-      next: (response) => {
-        const config = response.workflows.find(
-          (w) => w.category === "bulk-prediction"
-        );
-        if (!config) return;
-        this.toolMultipliers.set(config.toolMultipliers);
-        for (const tool of this.tools) {
-          const multiplier = config.toolMultipliers[tool.id];
-          if (multiplier != null) {
-            tool.credits = multiplier;
-          }
-        }
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.warn("Failed to load workflow credits", error);
-      },
-    });
-    this.creditsService.getMyCredit().subscribe({
-      next: (response) => {
-        this.creditsRemaining.set(response.credit);
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.warn("Failed to load credit balance", error);
-      },
-    });
-  }
   readonly form = this.fb.group({
     jobName: ["", JOB_NAME_VALIDATORS],
     fasta: ["", bulkFastaValidator],
@@ -174,10 +103,6 @@ export default class BulkPredictionComponent {
     ),
     { initialValue: this.form.getRawValue() }
   );
-
-  // Alert state
-  showAlert = signal(false);
-  alertMessage = signal("");
 
   // Tools
   readonly tools: ToolChip[] = [
@@ -200,10 +125,7 @@ export default class BulkPredictionComponent {
     { id: "review", label: "Review & Submit", mobileLabel: "Review" },
   ];
 
-  /** Reference to the workflow-form shell, used to scroll to invalid sections. */
-  private readonly workflowForm = viewChild(WorkflowFormComponent);
-
-  isFormValid = computed(() => this.formStatus() === "VALID");
+  readonly isFormValid = computed(() => this.formStatus() === "VALID");
 
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
@@ -264,13 +186,11 @@ export default class BulkPredictionComponent {
     return entries.map((e) => ({ id: e.header, sequence: e.sequence }));
   }
 
-  submitWorkflow(): void {
-    if (!this.isFormValid()) {
-      this.form.markAllAsTouched();
-      this.workflowForm()?.scrollToFirstInvalidSection();
-      return;
-    }
+  protected validateAll(): void {
+    this.form.markAllAsTouched();
+  }
 
+  protected performSubmit(): void {
     const jobName = this.form.value.jobName ?? "";
     const sequences = this.buildBulkPayload();
 
@@ -341,15 +261,5 @@ export default class BulkPredictionComponent {
           this.showError(getErrorMessage(error));
         },
       });
-  }
-
-  closeAlert(): void {
-    this.showAlert.set(false);
-    this.alertMessage.set("");
-  }
-
-  private showError(message: string): void {
-    this.alertMessage.set(message);
-    this.showAlert.set(true);
   }
 }
