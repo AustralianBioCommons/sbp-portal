@@ -53,6 +53,7 @@ import {
   isValidSmiles,
   lookupCcdCompound,
   validateDnaSequence,
+  validateFastaHeader,
   validateProteinSequence,
   validateRnaSequence,
 } from "../../../cores/utils/fasta.utils";
@@ -74,10 +75,12 @@ interface ToolChip extends ToolOption {
 
 interface EntityRow {
   id: number;
+  name: string;
   sequence: string;
   copyNumber: string;
   moleculeType: MoleculeType;
   touched: {
+    name: boolean;
     sequence: boolean;
     copyNumber: boolean;
     moleculeType: boolean;
@@ -85,6 +88,7 @@ interface EntityRow {
 }
 
 interface EntityRowErrors {
+  name?: string;
   sequence?: string;
   copyNumber?: string;
   tool?: string;
@@ -266,7 +270,8 @@ export default class SinglePredictionComponent {
       !this.jobNameError() &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
-        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
+        (errors) =>
+          !errors.name && !errors.sequence && !errors.copyNumber && !errors.tool
       )
   );
   readonly isStep2Valid = computed(
@@ -296,7 +301,7 @@ export default class SinglePredictionComponent {
     const entityItems = this.entityRows().map((row, index) => {
       const sequence = this.getNormalizedSequence(row);
       return {
-        label: `Entity ${index + 1}`,
+        label: row.name.trim() || `Entity ${index + 1}`,
         value: sequence
           ? `${this.getMoleculeTypeLabel(
               row.moleculeType
@@ -318,20 +323,15 @@ export default class SinglePredictionComponent {
     }
 
     const fastaRecords: string[] = [];
-    let sequenceNumber = 1;
 
     for (const row of this.entityRows()) {
       const copies = this.getParsedCopyNumber(row.copyNumber);
       const sequence = this.getNormalizedSequence(row);
+      const name = row.name.trim();
 
       for (let copyIndex = 0; copyIndex < copies; copyIndex += 1) {
-        fastaRecords.push(
-          [
-            `>${this.getFastaSequenceId(row.moleculeType, sequenceNumber)}`,
-            sequence,
-          ].join("\n")
-        );
-        sequenceNumber += 1;
+        const headerId = copies > 1 ? `${name}_${copyIndex + 1}` : name;
+        fastaRecords.push(`>${headerId}\n${sequence}`);
       }
     }
 
@@ -392,6 +392,10 @@ export default class SinglePredictionComponent {
 
   updateRowCopyNumber(id: number, value: string): void {
     this.patchRow(id, { copyNumber: value });
+  }
+
+  updateRowName(id: number, value: string): void {
+    this.patchRow(id, { name: value });
   }
 
   updateRowMoleculeType(id: number, value: string): void {
@@ -568,12 +572,15 @@ export default class SinglePredictionComponent {
   }
 
   private createEntityRow(): EntityRow {
+    const id = this.nextRowId++;
     return {
-      id: this.nextRowId++,
+      id,
+      name: "",
       sequence: "",
       copyNumber: "1",
       moleculeType: "protein",
       touched: {
+        name: false,
         sequence: false,
         copyNumber: false,
         moleculeType: false,
@@ -636,6 +643,7 @@ export default class SinglePredictionComponent {
       rows.map((row) => ({
         ...row,
         touched: {
+          name: true,
           sequence: true,
           copyNumber: true,
           moleculeType: true,
@@ -652,6 +660,15 @@ export default class SinglePredictionComponent {
 
   private validateEntityRow(row: EntityRow): EntityRowErrors {
     const errors: EntityRowErrors = {};
+
+    const otherNames = this.entityRows()
+      .filter((r) => r.id !== row.id)
+      .map((r) => r.name);
+    const headerValidation = validateFastaHeader(row.name, otherNames);
+    if (!headerValidation.valid) {
+      errors.name = headerValidation.errorMessage;
+    }
+
     const normalizedSequence = this.getNormalizedSequence(row);
 
     if (
@@ -746,7 +763,7 @@ export default class SinglePredictionComponent {
     return {};
   }
 
-  private getNormalizedSequence(row: EntityRow): string {
+  getNormalizedSequence(row: EntityRow): string {
     if (row.moleculeType === "ligand") {
       return row.sequence.trim();
     }
@@ -859,8 +876,8 @@ export default class SinglePredictionComponent {
       workflow: "single-prediction",
       tool: this.selectedTool(),
       runName: this.jobName().trim(),
-      entities: this.entityRows().map((row, index) => ({
-        id: `entity_${index + 1}`,
+      entities: this.entityRows().map((row) => ({
+        id: row.name.trim(),
         moleculeType: row.moleculeType,
         copyNumber: this.getParsedCopyNumber(row.copyNumber),
         sequence: this.getNormalizedSequence(row),
@@ -868,20 +885,6 @@ export default class SinglePredictionComponent {
       fastaContent: this.generatedFastaContent(),
       ...this.buildToolSettingsPayload(),
     };
-  }
-
-  private getFastaSequenceId(
-    type: MoleculeType,
-    sequenceNumber: number
-  ): string {
-    const prefixes: Record<MoleculeType, string> = {
-      protein: "pro",
-      rna: "rna",
-      dna: "dna",
-      ligand: "ligand",
-      ccd: "ccd",
-    };
-    return `${prefixes[type]}_${sequenceNumber}`;
   }
 
   private validateSequenceByMoleculeType(
