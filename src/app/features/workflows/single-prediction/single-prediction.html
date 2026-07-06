@@ -162,58 +162,148 @@
 
               <div class="min-w-0">
                 <label
-                  [for]="'sequence-' + row.id"
+                  [for]="'sequence-name-' + row.id"
                   class="mb-1 block text-sm font-medium"
                 >
                   Sequence
                 </label>
-                @if (row.moleculeType === 'ccd') {
-                <app-listbox-select
-                  [inputId]="'sequence-' + row.id"
-                  [options]="ccdOptions"
-                  [value]="row.sequence"
-                  [placeholder]="'Select a ligand...'"
-                  [invalid]="!!(shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence)"
-                  (valueChange)="updateRowSequence(row.id, $event)"
-                  (blurred)="touchRowField(row.id, 'sequence')"
-                ></app-listbox-select>
-                } @else {
-                <textarea
-                  [id]="'sequence-' + row.id"
-                  rows="1"
-                  spellcheck="false"
-                  autocomplete="off"
-                  autocorrect="off"
-                  autocapitalize="off"
-                  [value]="row.sequence"
-                  (input)="updateRowSequence(row.id, $any($event.target).value)"
-                  (blur)="touchRowField(row.id, 'sequence')"
-                  [class]="
-                    shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence
-                      ? 'border-red-500 focus:ring-red-100'
-                      : 'focus:ring-sky-100'
-                  "
-                  class="block min-h-10 max-h-40 w-full resize-none rounded-md border bg-white px-4 py-2 text-sm font-mono break-all text-gray-900 focus:outline-none focus:ring-2 transition-colors field-sizing-content"
-                  [placeholder]="
-                    row.moleculeType === 'ligand'
-                      ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
-                      : row.moleculeType === 'dna'
-                        ? 'ATGCGT'
-                        : row.moleculeType === 'rna'
-                          ? 'AUGCGU'
-                          : 'ACDEFGHIKLMNPQRSTVWY'
-                  "
-                ></textarea>
-                } @if (shouldShowRowFieldError(row, 'sequence') &&
-                getRowErrors(i).sequence) {
-                <p class="mt-1 text-xs text-red-600" role="alert">
-                  {{ getRowErrors(i).sequence }}
-                </p>
-                } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
-                <p class="mt-1 text-xs text-red-600" role="alert">
-                  {{ getRowErrors(i).tool }}
-                </p>
-                }
+
+                <!-- FASTA card wrapper: pt-2 pushes inner card down so floating label bisects its top border -->
+                <div class="relative pt-2">
+                  <!-- Floating label: sits on the inner card's top border -->
+                  <div
+                    class="absolute top-0 left-3 z-10 flex items-center gap-0.5 bg-white px-1"
+                  >
+                    <span
+                      class="shrink-0 select-none font-mono text-xs"
+                      [class]="
+                        shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
+                          ? 'text-red-400'
+                          : 'text-gray-400'
+                      "
+                      aria-hidden="true"
+                      >&gt;</span
+                    >
+                    <input
+                      type="text"
+                      [id]="'sequence-name-' + row.id"
+                      [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
+                      [value]="row.name"
+                      (input)="updateRowName(row.id, $any($event.target).value)"
+                      (blur)="touchRowField(row.id, 'name')"
+                      placeholder="sequence-name"
+                      [class]="
+                        shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
+                          ? 'text-red-500 placeholder-red-300'
+                          : 'text-gray-700'
+                      "
+                      class="bg-transparent font-mono text-xs field-sizing-content min-w-16 max-w-48 placeholder-gray-400 focus:outline-none"
+                      autocomplete="off"
+                      spellcheck="false"
+                      autocorrect="off"
+                      autocapitalize="off"
+                    />
+                  </div>
+
+                  <!-- Card body (overflow-hidden keeps border-radius on footer) -->
+                  <div
+                    class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
+                    [class]="
+                      !row.name.trim()
+                        ? 'border-red-300 focus-within:ring-red-100'
+                        : 'border-gray-200 focus-within:ring-sky-100'
+                    "
+                  >
+                    <!-- Sequence body -->
+                    @if (row.moleculeType === 'ccd') {
+                    <div class="px-3 pt-4 pb-3">
+                      <app-listbox-select
+                        [inputId]="'sequence-' + row.id"
+                        [options]="ccdOptions"
+                        [value]="row.sequence"
+                        [placeholder]="'Select a ligand...'"
+                        [invalid]="!!(shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence)"
+                        (valueChange)="updateRowSequence(row.id, $event)"
+                        (blurred)="touchRowField(row.id, 'sequence')"
+                      ></app-listbox-select>
+                    </div>
+                    } @else {
+                    <textarea
+                      [id]="'sequence-' + row.id"
+                      spellcheck="false"
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      [value]="row.sequence"
+                      (input)="updateRowSequence(row.id, $any($event.target).value)"
+                      (blur)="touchRowField(row.id, 'sequence')"
+                      class="block w-full resize-none bg-white px-3 pt-4 pb-3 font-mono text-sm text-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-20 max-h-48 break-all"
+                      [placeholder]="
+                        row.moleculeType === 'ligand'
+                          ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
+                          : row.moleculeType === 'dna'
+                            ? 'ATGCGT'
+                            : row.moleculeType === 'rna'
+                              ? 'AUGCGU'
+                              : 'ACDEFGHIKLMNPQRSTVWY'
+                      "
+                    ></textarea>
+                    }
+
+                    <!-- Stats footer — shown only when there is a sequence -->
+                    @if (getNormalizedSequence(row)) {
+                    <div
+                      class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-3 py-2 text-xs"
+                    >
+                      @if (row.moleculeType !== 'ligand' && row.moleculeType !== 'ccd') {
+                      <span class="text-gray-500">
+                        Length:
+                        {{ getNormalizedSequence(row).length.toLocaleString() }} bp
+                      </span>
+                      } @else if (row.moleculeType === 'ccd' && ccdLookupNames()[row.id]) {
+                      <span class="font-medium text-gray-600">{{
+                        ccdLookupNames()[row.id]
+                      }}</span>
+                      } @else {
+                      <span></span>
+                      }
+                      <span
+                        class="flex items-center gap-1 font-medium"
+                        [class]="
+                          !getRowErrors(i).sequence && !getRowErrors(i).name
+                            ? 'text-emerald-600'
+                            : 'text-red-500'
+                        "
+                      >
+                        {{ !getRowErrors(i).sequence && !getRowErrors(i).name ? "✓" : "✗" }}
+                        {{ !getRowErrors(i).sequence && !getRowErrors(i).name ? "Valid" : "Invalid" }}
+                        {{ getMoleculeTypeLabel(row.moleculeType) }}
+                      </span>
+                    </div>
+                    }
+
+                    <!-- Sequence error -->
+                    @if (shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence) {
+                    <p
+                      class="border-t border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600"
+                      role="alert"
+                    >
+                      {{ getRowErrors(i).sequence }}
+                    </p>
+                    }
+                  </div>
+
+                  @if (shouldShowRowFieldError(row, 'name') && getRowErrors(i).name) {
+                  <p class="mt-1 text-xs text-red-500" role="alert">
+                    {{ getRowErrors(i).name }}
+                  </p>
+                  }
+                  @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
+                  <p class="mt-1 text-xs text-red-600" role="alert">
+                    {{ getRowErrors(i).tool }}
+                  </p>
+                  }
+                </div>
               </div>
 
               <div class="flex flex-col items-center">
