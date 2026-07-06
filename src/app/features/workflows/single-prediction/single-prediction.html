@@ -165,7 +165,7 @@
                   [for]="'sequence-name-' + row.id"
                   class="mb-1 block text-sm font-medium"
                 >
-                  Sequence
+                  Sequence <span class="text-red-500">*</span>
                 </label>
 
                 <!-- FASTA card wrapper -->
@@ -202,6 +202,9 @@
                       autocorrect="off"
                       autocapitalize="off"
                     />
+                    <span class="shrink-0 select-none text-xs text-red-500" aria-hidden="true"
+                      >*</span
+                    >
                   </div>
 
                   <div
