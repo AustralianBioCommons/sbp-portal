@@ -100,7 +100,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   activeSort = signal<"score" | "submitted">("submitted");
 
   // Available status options
-  statusOptions = ["Completed", "Failed", "Stopped", "In progress", "In queue"];
+  statusOptions = ["Completed", "Failed", "Stopped", "In progress", "In queue", "Pending"];
 
   // Debounce timer for the search input
   private searchDebounce?: ReturnType<typeof setTimeout>;
@@ -379,6 +379,8 @@ export default class JobsListComponent implements OnInit, OnDestroy {
         return "bg-red-600 text-white";
       case "Stopped":
         return "bg-amber-100 text-amber-700";
+      case "Pending":
+        return "bg-blue-600 text-white"
       default:
         return "bg-gray-100 text-gray-900";
     }
