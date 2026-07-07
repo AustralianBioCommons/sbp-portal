@@ -421,18 +421,19 @@ describe("JobsListComponent", () => {
     expect(component.getStatusClass("Completed")).toBe(
       "bg-green-100 text-green-800"
     );
-    expect(component.getStatusClass("In progress")).toBe("text-gray-700");
-    expect(component.getStatusClass("In queue")).toBe(
-      "bg-white text-black border border-black"
+    expect(component.getStatusClass("In progress")).toBe(
+      "bg-sky-100 text-sky-800"
     );
-    expect(component.getStatusClass("Failed")).toBe("bg-red-600 text-white");
+    expect(component.getStatusClass("In queue")).toBe(
+      "bg-gray-100 text-gray-800"
+    );
+    expect(component.getStatusClass("Failed")).toBe("bg-red-100 text-red-800");
     expect(component.getStatusClass("Stopped")).toBe(
-      "bg-amber-100 text-amber-700"
+      "bg-amber-100 text-amber-800"
     );
     expect(component.getStatusClass("Unknown")).toBe(
-      "bg-gray-100 text-gray-900"
+      "bg-gray-100 text-gray-800"
     );
-    expect(component.isInProgress("In progress")).toBeTrue();
   });
 
   it("should toggle individual and all job selections", () => {

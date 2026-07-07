@@ -120,7 +120,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     CCD_COMPOUNDS
   ).map(([code, name]) => ({ value: code, label: `${code} - ${name}` }));
 
-  private readonly samplesheetId = `single-prediction-${this.generateRandomSuffix()}`;
   private nextRowId = 1;
   ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
   ccdLookupNames = signal<Record<number, string>>({}); // compound name resolved from the local CCD dictionary via lookupCcdCompound()
@@ -128,6 +127,10 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   private preparedFastaContent = signal<string | null>(null);
   private preparedFastaUrl = signal<string | null>(null);
   private preparedSamplesheetS3Key = signal<string | null>(null);
+  private preparedSamplesheetId = signal<string | null>(null);
+  private get samplesheetId(): string {
+    return this.jobName().trim();
+  }
 
   readonly tools: ToolChip[] = [
     { id: "colabfold", label: "ColabFold" },
@@ -683,18 +686,20 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     onPrepared: (fastaUrl: string, s3InputKey: string) => void
   ): void {
     const fastaContent = this.generatedFastaContent();
+    const samplesheetId = this.samplesheetId;
     const cachedS3InputKey = this.preparedSamplesheetS3Key();
     const cachedFastaUrl = this.preparedFastaUrl();
     if (
       cachedS3InputKey &&
       cachedFastaUrl &&
-      this.preparedFastaContent() === fastaContent
+      this.preparedFastaContent() === fastaContent &&
+      this.preparedSamplesheetId() === samplesheetId
     ) {
       onPrepared(cachedFastaUrl, cachedS3InputKey);
       return;
     }
 
-    const fastaFile = new File([fastaContent], `${this.samplesheetId}.fasta`, {
+    const fastaFile = new File([fastaContent], `${samplesheetId}.fasta`, {
       type: "text/plain",
     });
 
@@ -712,7 +717,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           }
           return this.datasetUploadService
             .uploadDataset({
-              formData: { id: this.samplesheetId, fasta: response.s3Uri },
+              formData: { id: samplesheetId, fasta: response.s3Uri },
             })
             .pipe(
               map((datasetResponse) => ({
@@ -735,6 +740,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           this.preparedFastaContent.set(fastaContent);
           this.preparedFastaUrl.set(fastaUrl);
           this.preparedSamplesheetS3Key.set(s3InputKey);
+          this.preparedSamplesheetId.set(samplesheetId);
           onPrepared(fastaUrl, s3InputKey);
         },
         error: (error: unknown) => {
@@ -759,13 +765,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         );
       }
     );
-  }
-
-  private generateRandomSuffix(): string {
-    return (
-      globalThis.crypto?.randomUUID?.().replace(/-/g, "") ??
-      Math.random().toString(36).slice(2)
-    ).slice(0, 8);
   }
 
   private buildWorkflowPayload(): Omit<

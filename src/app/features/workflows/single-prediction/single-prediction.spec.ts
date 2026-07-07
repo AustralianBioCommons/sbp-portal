@@ -488,7 +488,7 @@ describe("SinglePredictionComponent", () => {
     const datasetUploadRequest =
       datasetUploadService.uploadDataset.calls.mostRecent().args[0];
     const samplesheetId = datasetUploadRequest.formData["id"];
-    expect(samplesheetId).toMatch(/^single-prediction-[a-z0-9]{8}$/);
+    expect(samplesheetId).toBe("test-run");
     expect(datasetUploadRequest.formData["fasta"]).toBe(
       MOCK_FASTA_RESPONSE.s3Uri
     );
