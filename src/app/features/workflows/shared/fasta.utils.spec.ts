@@ -4,6 +4,7 @@ import {
   isValidSmiles,
   parseMultiFasta,
   validateDnaSequence,
+  validateFastaHeader,
   validateMultiFastaProtein,
   validateProteinSequence,
   validateRnaSequence,
@@ -11,6 +12,44 @@ import {
 } from "./fasta.utils";
 
 describe("fasta.utils", () => {
+  describe("validateFastaHeader", () => {
+    it("accepts a simple name", () => {
+      expect(validateFastaHeader("seq1")).toEqual({ valid: true });
+    });
+
+    it("rejects an empty name", () => {
+      expect(validateFastaHeader("   ")).toEqual({
+        valid: false,
+        errorMessage: "Sequence name is required.",
+      });
+    });
+
+    it("rejects names containing spaces", () => {
+      expect(validateFastaHeader("seq 1")).toEqual({
+        valid: false,
+        errorMessage: "Sequence name must not contain spaces.",
+      });
+    });
+
+    it("rejects names containing underscores", () => {
+      expect(validateFastaHeader("seq_1")).toEqual({
+        valid: false,
+        errorMessage: "Sequence name must not contain underscores.",
+      });
+    });
+
+    it("rejects a name that duplicates an existing name", () => {
+      expect(validateFastaHeader("seq1", ["seq1", "seq2"])).toEqual({
+        valid: false,
+        errorMessage: "Sequence name must be unique.",
+      });
+    });
+
+    it("trims surrounding whitespace before validating", () => {
+      expect(validateFastaHeader("  seq1  ")).toEqual({ valid: true });
+    });
+  });
+
   describe("validateProteinSequence", () => {
     it("accepts valid protein characters", () => {
       expect(validateProteinSequence("MKT AYI").valid).toBe(true);
