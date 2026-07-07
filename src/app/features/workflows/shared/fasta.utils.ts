@@ -29,6 +29,12 @@ export function validateFastaHeader(
       errorMessage: "Sequence name must not contain spaces.",
     };
   }
+  if (trimmed.includes("_")) {
+    return {
+      valid: false,
+      errorMessage: "Sequence name must not contain underscores.",
+    };
+  }
   if (existingNames?.some((n) => n.trim() === trimmed)) {
     return { valid: false, errorMessage: "Sequence name must be unique." };
   }

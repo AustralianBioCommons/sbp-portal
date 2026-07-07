@@ -208,11 +208,13 @@
                   </div>
 
                   <div
-                    class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
+                    class="rounded-md border transition-colors focus-within:ring-2"
                     [class]="
-                      shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
+                      (row.moleculeType === 'ccd' ? 'overflow-visible' : 'overflow-hidden') +
+                      ' ' +
+                      (shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
                         ? 'border-red-300 focus-within:ring-red-100'
-                        : 'border-gray-200 focus-within:ring-sky-100'
+                        : 'border-gray-200 focus-within:ring-sky-100')
                     "
                   >
                     @if (row.moleculeType === 'ccd') {
