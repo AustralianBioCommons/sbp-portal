@@ -202,7 +202,9 @@
                       autocorrect="off"
                       autocapitalize="off"
                     />
-                    <span class="shrink-0 select-none text-xs text-red-500" aria-hidden="true"
+                    <span
+                      class="shrink-0 select-none text-xs text-red-500"
+                      aria-hidden="true"
                       >*</span
                     >
                   </div>
@@ -257,28 +259,28 @@
                     <div
                       class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-3 py-2 text-xs"
                     >
-                      @if (row.moleculeType !== 'ligand' && row.moleculeType !== 'ccd') {
+                      @if (row.moleculeType !== 'ligand' && row.moleculeType !==
+                      'ccd') {
                       <span class="text-gray-500">
-                        Length:
-                        {{ getNormalizedSequence(row).length.toLocaleString() }} bp
+                        Length: {{
+                        getNormalizedSequence(row).length.toLocaleString() }} bp
                       </span>
-                      } @else if (row.moleculeType === 'ccd' && ccdLookupNames()[row.id]) {
-                      <span class="font-medium text-gray-600">{{
-                        ccdLookupNames()[row.id]
-                      }}</span>
+                      } @else if (row.moleculeType === 'ccd' &&
+                      ccdLookupNames()[row.id]) {
+                      <span class="font-medium text-gray-600"
+                        >{{ ccdLookupNames()[row.id] }}</span
+                      >
                       } @else {
                       <span></span>
-                      }
-                      @if (getRowErrors(i).name || getRowErrors(i).sequence) {
-                      <span class="flex items-center gap-1 font-medium text-red-500">
-                        ✗
-                        @if (getRowErrors(i).name && getRowErrors(i).sequence) {
-                          Header &amp; sequence invalid
-                        } @else if (getRowErrors(i).name) {
-                          Header {{ !row.name.trim() ? 'missing' : 'invalid' }}
-                        } @else {
-                          Sequence {{ !getNormalizedSequence(row) ? 'missing' : 'invalid' }}
-                        }
+                      } @if (getRowErrors(i).name || getRowErrors(i).sequence) {
+                      <span
+                        class="flex items-center gap-1 font-medium text-red-500"
+                      >
+                        ✗ @if (getRowErrors(i).name && getRowErrors(i).sequence)
+                        { Header &amp; sequence invalid } @else if
+                        (getRowErrors(i).name) { Header {{ !row.name.trim() ?
+                        'missing' : 'invalid' }} } @else { Sequence {{
+                        !getNormalizedSequence(row) ? 'missing' : 'invalid' }} }
                       </span>
                       } @else {
                       <span></span>
@@ -287,7 +289,8 @@
                     }
 
                     <!-- Sequence error -->
-                    @if (shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence) {
+                    @if (shouldShowRowFieldError(row, 'sequence') &&
+                    getRowErrors(i).sequence) {
                     <p
                       class="border-t border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600"
                       role="alert"
@@ -297,12 +300,12 @@
                     }
                   </div>
 
-                  @if (shouldShowRowFieldError(row, 'name') && getRowErrors(i).name) {
+                  @if (shouldShowRowFieldError(row, 'name') &&
+                  getRowErrors(i).name) {
                   <p class="mt-1 text-xs text-red-500" role="alert">
                     {{ getRowErrors(i).name }}
                   </p>
-                  }
-                  @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
+                  } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
                     {{ getRowErrors(i).tool }}
                   </p>
