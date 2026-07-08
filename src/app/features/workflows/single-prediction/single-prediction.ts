@@ -86,6 +86,11 @@ interface ToolSettingErrors {
   colabfoldNumRecycles?: string;
 }
 
+interface SequenceCell {
+  char: string;
+  label: string;
+}
+
 @Component({
   selector: "app-single-prediction",
   imports: [
@@ -684,6 +689,26 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     }
 
     return {};
+  }
+
+  /** 1-based position labels for the sequence ruler overlay: every 10th character and the last one. */
+  getSequenceCells(sequence: string): SequenceCell[] {
+    const length = sequence.length;
+    return Array.from(sequence, (char, index) => {
+      const position = index + 1;
+      const label =
+        position % 10 === 0 || position === length ? String(position) : "";
+      return { char, label };
+    });
+  }
+
+  /** Keeps the decorative position-ruler layer scrolled in sync with the real textarea beneath it. */
+  syncSequenceOverlayScroll(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    const overlay = textarea.previousElementSibling as HTMLElement | null;
+    if (overlay) {
+      overlay.scrollTop = textarea.scrollTop;
+    }
   }
 
   getNormalizedSequence(row: EntityRow): string {
