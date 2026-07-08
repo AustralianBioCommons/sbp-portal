@@ -163,9 +163,9 @@
                   [for]="'sequence-name-' + row.id"
                   class="mb-1 block text-sm font-medium"
                 >
-                  Sequence Name <span class="text-red-500">*</span>
+                  Sequence Name
+                  <span class="text-red-500" aria-hidden="true">*</span>
                 </label>
-
                 <input
                   type="text"
                   [id]="'sequence-name-' + row.id"
@@ -185,7 +185,6 @@
                   autocorrect="off"
                   autocapitalize="off"
                 />
-
                 @if (shouldShowRowFieldError(row, 'name') &&
                 getRowErrors(i).name) {
                 <p class="mt-1 text-xs text-red-600" role="alert">
@@ -201,7 +200,6 @@
                 >
                   Sequence <span class="text-red-500">*</span>
                 </label>
-
                 @if (row.moleculeType === 'ccd') {
                 <app-listbox-select
                   [inputId]="'sequence-' + row.id"
@@ -223,19 +221,20 @@
                 >
                   <div class="relative">
                     <div
-                      class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-2 font-mono text-sm text-gray-900"
+                      class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-1 font-mono text-sm text-gray-900"
                       aria-hidden="true"
                     >
                       @for (cell of getSequenceCells(row.sequence); track
                       $index) {<span
-                        class="inline-block w-[1ch] align-top text-center mr-0.5"
+                        class="relative inline-block w-[1ch] align-top text-center leading-7.5 mr-0.5"
                         ><span
-                          class="block h-2.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
-                          >{{ cell.label }}</span
-                        ><span class="block leading-5"
-                          >{{ cell.char }}</span
-                        ></span
-                      >}
+                          class="pointer-events-none absolute inset-x-0 -top-0.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
+                        >
+                          {{ cell.label }}
+                        </span>
+                        {{ cell.char }}
+                      </span>
+                      }
                     </div>
 
                     <textarea
@@ -249,7 +248,7 @@
                       (input)="updateRowSequence(row.id, $any($event.target).value)"
                       (scroll)="syncSequenceOverlayScroll($event)"
                       (blur)="touchRowField(row.id, 'sequence')"
-                      class="relative block w-full resize-none bg-transparent px-4 py-2 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-10 max-h-40 break-all"
+                      class="relative block w-full resize-none bg-transparent px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-9.5 max-h-40 break-all"
                       [placeholder]="
                         row.moleculeType === 'ligand'
                           ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
