@@ -127,7 +127,7 @@ describe("SinglePredictionComponent", () => {
     copyNumber = "1"
   ): number {
     const rowId = component.entityRows()[0].id;
-    component.jobName.set("test-run");
+    component.form.controls.jobName.setValue("test-run");
     component.updateRowSequence(rowId, sequence);
     component.updateRowCopyNumber(rowId, copyNumber);
     component.updateRowMoleculeType(rowId, "protein");
@@ -213,7 +213,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should validate DNA, RNA, and ligand formats", () => {
     const rowId = component.entityRows()[0].id;
-    component.jobName.set("test-run");
+    component.form.controls.jobName.setValue("test-run");
     component.selectTool("boltz");
 
     component.updateRowSequence(rowId, "ACGT");
@@ -244,7 +244,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
-    component.jobName.set("test-run");
+    component.form.controls.jobName.setValue("test-run");
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
@@ -355,7 +355,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should allow Boltz with non-protein molecules and generate FASTA-like content", () => {
     const rowId = component.entityRows()[0].id;
-    component.jobName.set("test-run");
+    component.form.controls.jobName.setValue("test-run");
 
     component.selectTool("boltz");
     component.updateRowSequence(rowId, "ACGT");
@@ -623,10 +623,10 @@ describe("SinglePredictionComponent", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
-    component.jobName.set("");
+    component.form.controls.jobName.setValue("");
     expect(component.isStep1Valid()).toBe(false);
 
-    component.jobName.set("my-job");
+    component.form.controls.jobName.setValue("my-job");
     expect(component.isStep1Valid()).toBe(true);
   });
 
@@ -634,45 +634,49 @@ describe("SinglePredictionComponent", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
-    component.jobName.set("1invalid");
+    component.form.controls.jobName.setValue("1invalid");
     expect(component.isStep1Valid()).toBe(false);
-    expect(component.jobNameError()).toContain("must not start with a number");
+    expect(component.getJobNameError()).toContain(
+      "must not start with a number"
+    );
   });
 
   it("should reject jobName with invalid characters", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
-    component.jobName.set("job@name!");
+    component.form.controls.jobName.setValue("job@name!");
     expect(component.isStep1Valid()).toBe(false);
-    expect(component.jobNameError()).toContain("must not start with a number");
+    expect(component.getJobNameError()).toContain(
+      "must not start with a number"
+    );
   });
 
   it("should reject jobName longer than 60 characters", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
-    component.jobName.set("a".repeat(61));
+    component.form.controls.jobName.setValue("a".repeat(61));
     expect(component.isStep1Valid()).toBe(false);
-    expect(component.jobNameError()).toContain("60 characters or fewer");
+    expect(component.getJobNameError()).toContain("60 characters or fewer");
   });
 
   it("should show job name required error after touching", () => {
-    component.jobNameTouched.set(true);
-    component.jobName.set("");
-    expect(component.jobNameTouched()).toBe(true);
+    component.form.controls.jobName.markAsTouched();
+    component.form.controls.jobName.setValue("");
+    expect(component.form.controls.jobName.touched).toBe(true);
 
     component.submitWorkflow();
-    expect(component.jobNameTouched()).toBe(true);
+    expect(component.form.controls.jobName.touched).toBe(true);
   });
 
   it("should keep input-config invalid until jobName is filled", () => {
     const rowId = component.entityRows()[0].id;
     component.updateRowSequence(rowId, "ACDEFGHIK");
-    component.jobName.set("");
+    component.form.controls.jobName.setValue("");
     expect(component.isSectionValid("input-config")).toBe(false);
 
-    component.jobName.set("valid-run");
+    component.form.controls.jobName.setValue("valid-run");
     expect(component.isSectionValid("input-config")).toBe(true);
   });
 

@@ -1,12 +1,5 @@
 import { CommonModule } from "@angular/common";
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  Signal,
-  signal,
-} from "@angular/core";
+import { Component, computed, inject, Signal, signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
@@ -52,7 +45,6 @@ interface ToolChip extends ToolOption {
 
 @Component({
   selector: "app-bulk-prediction",
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -93,7 +85,8 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
     fasta: ["", bulkFastaValidator],
   });
   private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status))
+    this.form.statusChanges.pipe(startWith(this.form.status)),
+    { requireSync: true }
   );
   private formValue: Signal<{ jobName: string; fasta: string }> = toSignal(
     this.form.valueChanges.pipe(
@@ -181,7 +174,7 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
 
   // Submission
   private buildBulkPayload(): { id: string; sequence: string }[] {
-    const entries = parseMultiFasta(this.form.value.fasta ?? "");
+    const entries = parseMultiFasta(this.form.getRawValue().fasta);
     return entries.map((e) => ({ id: e.header, sequence: e.sequence }));
   }
 
@@ -190,7 +183,7 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
   }
 
   protected performSubmit(): void {
-    const jobName = this.form.value.jobName ?? "";
+    const jobName = this.form.getRawValue().jobName;
     const sequences = this.buildBulkPayload();
 
     this.workflowSubmission.isSubmitting.set(true);

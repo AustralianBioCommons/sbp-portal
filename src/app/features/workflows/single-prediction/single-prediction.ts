@@ -1,4 +1,4 @@
-import { switchMap, map } from "rxjs";
+import { switchMap, map, startWith } from "rxjs";
 import { CommonModule } from "@angular/common";
 import {
   CdkDragDrop,
@@ -6,7 +6,8 @@ import {
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
 import { Component, computed, inject, Signal, signal } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { toSignal } from "@angular/core/rxjs-interop";
+import { NonNullableFormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { bootstrapGripVertical } from "@ng-icons/bootstrap-icons";
 import { heroTrash } from "@ng-icons/heroicons/outline";
@@ -87,6 +88,7 @@ interface ToolSettingErrors {
   imports: [
     CommonModule,
     DragDropModule,
+    ReactiveFormsModule,
     ButtonComponent,
     ToolSelectionComponent,
     ListboxSelectComponent,
@@ -159,13 +161,24 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   stepOneTouched = signal(false);
   stepTwoTouched = signal(false);
 
-  jobName = signal("");
-  jobNameTouched = signal(false);
-  readonly jobNameError = computed<string>(() =>
-    jobNameErrorMessage(
-      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
-    )
+  private readonly fb = inject(NonNullableFormBuilder);
+  readonly form = this.fb.group({
+    jobName: ["", JOB_NAME_VALIDATORS],
+  });
+  readonly jobName = toSignal(
+    this.form.controls.jobName.valueChanges.pipe(
+      startWith(this.form.controls.jobName.value)
+    ),
+    { initialValue: this.form.controls.jobName.value }
   );
+  hasJobNameError(): boolean {
+    const ctrl = this.form.controls.jobName;
+    return ctrl.touched && ctrl.invalid;
+  }
+
+  getJobNameError(): string {
+    return jobNameErrorMessage(this.form.controls.jobName.errors);
+  }
 
   alphafold2RandomSeed = signal("42");
   alphafold2FullDbs = signal(false);
@@ -187,14 +200,16 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     this.entityRows().map((row) => this.validateEntityRow(row))
   );
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
-  readonly isStep1Valid = computed(
-    () =>
-      !this.jobNameError() &&
+  readonly isStep1Valid = computed(() => {
+    this.jobName();
+    return (
+      this.form.controls.jobName.valid &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
         (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
       )
-  );
+    );
+  });
   readonly isStep2Valid = computed(
     () => Object.keys(this.toolSettingErrors()).length === 0
   );
@@ -551,7 +566,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   private touchAllEntityRows(): void {
     this.stepOneTouched.set(true);
-    this.jobNameTouched.set(true);
+    this.form.markAllAsTouched();
     this.entityRows.update((rows) =>
       rows.map((row) => ({
         ...row,
