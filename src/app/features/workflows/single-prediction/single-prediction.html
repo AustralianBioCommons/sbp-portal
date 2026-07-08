@@ -229,8 +229,7 @@
                 <p class="mt-1 text-xs text-red-600" role="alert">
                   {{ getRowErrors(i).sequence }}
                 </p>
-                }
-                } @else {
+                } } @else {
                 <div
                   class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
                   [class]="
@@ -254,9 +253,9 @@
                         ><span
                           class="block h-2.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
                           >{{ cell.label }}</span
-                        ><span class="block leading-5">{{
-                          cell.char
-                        }}</span></span
+                        ><span class="block leading-5"
+                          >{{ cell.char }}</span
+                        ></span
                       >}
                     </div>
 
@@ -291,10 +290,7 @@
                 <p class="mt-1 text-xs text-red-600" role="alert">
                   {{ getRowErrors(i).sequence }}
                 </p>
-                }
-                }
-
-                @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
+                } } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
                 <p class="mt-1 text-xs text-red-600" role="alert">
                   {{ getRowErrors(i).tool }}
                 </p>
