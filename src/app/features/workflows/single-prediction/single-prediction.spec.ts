@@ -128,6 +128,7 @@ describe("SinglePredictionComponent", () => {
   ): number {
     const rowId = component.entityRows()[0].id;
     component.jobName.set("test-run");
+    component.updateRowName(rowId, "pro");
     component.updateRowSequence(rowId, sequence);
     component.updateRowCopyNumber(rowId, copyNumber);
     component.updateRowMoleculeType(rowId, "protein");
@@ -214,6 +215,7 @@ describe("SinglePredictionComponent", () => {
   it("should validate DNA, RNA, and ligand formats", () => {
     const rowId = component.entityRows()[0].id;
     component.jobName.set("test-run");
+    component.updateRowName(rowId, "entity1");
     component.selectTool("boltz");
 
     component.updateRowSequence(rowId, "ACGT");
@@ -245,6 +247,7 @@ describe("SinglePredictionComponent", () => {
   it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
     component.jobName.set("test-run");
+    component.updateRowName(rowId, "ccdrow");
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
@@ -356,6 +359,7 @@ describe("SinglePredictionComponent", () => {
   it("should allow Boltz with non-protein molecules and generate FASTA-like content", () => {
     const rowId = component.entityRows()[0].id;
     component.jobName.set("test-run");
+    component.updateRowName(rowId, "dna");
 
     component.selectTool("boltz");
     component.updateRowSequence(rowId, "ACGT");
@@ -363,8 +367,27 @@ describe("SinglePredictionComponent", () => {
     component.updateRowCopyNumber(rowId, "2");
 
     expect(component.isStep1Valid()).toBe(true);
-    expect(component.generatedFastaContent()).toContain(">dna_1");
-    expect(component.generatedFastaContent()).toContain(">dna_2");
+    expect(component.generatedFastaContent()).toContain(">dna_1|dna");
+    expect(component.generatedFastaContent()).toContain(">dna_2|dna");
+  });
+
+  it("should tag generated FASTA headers with the molecule type", () => {
+    const rowId = component.entityRows()[0].id;
+    component.jobName.set("test-run");
+    component.selectTool("boltz");
+
+    component.updateRowName(rowId, "seq1");
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+    component.updateRowMoleculeType(rowId, "protein");
+    expect(component.generatedFastaContent()).toBe(">seq1|protein\nACDEFGHIK");
+
+    component.updateRowSequence(rowId, "CC(=O)O");
+    component.updateRowMoleculeType(rowId, "ligand");
+    expect(component.generatedFastaContent()).toBe(">seq1|smiles\nCC(=O)O");
+
+    component.updateRowSequence(rowId, "ATP");
+    component.updateRowMoleculeType(rowId, "ccd");
+    expect(component.generatedFastaContent()).toBe(">seq1|ccd\nATP");
   });
 
   it("should normalize protein sequence content in summary", () => {
@@ -619,8 +642,18 @@ describe("SinglePredictionComponent", () => {
     expect(errors["copyNumber"]).toContain("greater than or equal to 1");
   });
 
+  it("should reject sequence names containing underscores", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+    component.updateRowName(rowId, "seq_1");
+
+    const errors = component.entityValidationResults()[0];
+    expect(errors.name).toContain("underscore");
+  });
+
   it("should require jobName in step 1 validation", () => {
     const rowId = component.entityRows()[0].id;
+    component.updateRowName(rowId, "entity1");
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
     component.jobName.set("");
@@ -668,6 +701,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should keep input-config invalid until jobName is filled", () => {
     const rowId = component.entityRows()[0].id;
+    component.updateRowName(rowId, "entity1");
     component.updateRowSequence(rowId, "ACDEFGHIK");
     component.jobName.set("");
     expect(component.isSectionValid("input-config")).toBe(false);

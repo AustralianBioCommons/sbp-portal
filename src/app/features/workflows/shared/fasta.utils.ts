@@ -9,6 +9,38 @@ export interface MultiFastaValidationResult {
   sequenceCount: number;
 }
 
+/**
+ * Validates a single FASTA sequence name — the identifier text that follows
+ * the ">" character on a header line.  The same rules applied when parsing
+ * multi-FASTA blocks (non-empty, no surrounding whitespace, no embedded
+ * spaces that would split the ID from a description field).
+ */
+export function validateFastaHeader(
+  name: string,
+  existingNames?: string[]
+): SequenceValidationResult {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return { valid: false, errorMessage: "Sequence name is required." };
+  }
+  if (/\s/.test(trimmed)) {
+    return {
+      valid: false,
+      errorMessage: "Sequence name must not contain spaces.",
+    };
+  }
+  if (trimmed.includes("_")) {
+    return {
+      valid: false,
+      errorMessage: "Sequence name must not contain underscores.",
+    };
+  }
+  if (existingNames?.some((n) => n.trim() === trimmed)) {
+    return { valid: false, errorMessage: "Sequence name must be unique." };
+  }
+  return { valid: true };
+}
+
 export interface CcdLookupResult {
   valid: boolean;
   name?: string;
