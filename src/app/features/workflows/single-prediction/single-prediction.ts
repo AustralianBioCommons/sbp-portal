@@ -40,6 +40,7 @@ import {
   isValidSmiles,
   lookupCcdCompound,
   validateDnaSequence,
+  validateFastaHeader,
   validateProteinSequence,
   validateRnaSequence,
 } from "../shared/fasta.utils";
@@ -62,10 +63,12 @@ interface ToolChip extends ToolOption {
 
 interface EntityRow {
   id: number;
+  name: string;
   sequence: string;
   copyNumber: string;
   moleculeType: MoleculeType;
   touched: {
+    name: boolean;
     sequence: boolean;
     copyNumber: boolean;
     moleculeType: boolean;
@@ -73,6 +76,7 @@ interface EntityRow {
 }
 
 interface EntityRowErrors {
+  name?: string;
   sequence?: string;
   copyNumber?: string;
   tool?: string;
@@ -81,6 +85,11 @@ interface EntityRowErrors {
 interface ToolSettingErrors {
   alphafold2RandomSeed?: string;
   colabfoldNumRecycles?: string;
+}
+
+interface SequenceCell {
+  char: string;
+  label: string;
 }
 
 @Component({
@@ -206,7 +215,8 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       this.form.controls.jobName.valid &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
-        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
+        (errors) =>
+          !errors.name && !errors.sequence && !errors.copyNumber && !errors.tool
       )
     );
   });
@@ -237,7 +247,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     const entityItems = this.entityRows().map((row, index) => {
       const sequence = this.getNormalizedSequence(row);
       return {
-        label: `Entity ${index + 1}`,
+        label: row.name.trim() || `Entity ${index + 1}`,
         value: sequence
           ? `${this.getMoleculeTypeLabel(
               row.moleculeType
@@ -259,20 +269,16 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     }
 
     const fastaRecords: string[] = [];
-    let sequenceNumber = 1;
 
     for (const row of this.entityRows()) {
       const copies = this.getParsedCopyNumber(row.copyNumber);
       const sequence = this.getNormalizedSequence(row);
+      const name = row.name.trim();
+      const type = this.getFastaMoleculeType(row.moleculeType);
 
       for (let copyIndex = 0; copyIndex < copies; copyIndex += 1) {
-        fastaRecords.push(
-          [
-            `>${this.getFastaSequenceId(row.moleculeType, sequenceNumber)}`,
-            sequence,
-          ].join("\n")
-        );
-        sequenceNumber += 1;
+        const headerId = copies > 1 ? `${name}_${copyIndex + 1}` : name;
+        fastaRecords.push(`>${headerId}|${type}\n${sequence}`);
       }
     }
 
@@ -333,6 +339,10 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   updateRowCopyNumber(id: number, value: string): void {
     this.patchRow(id, { copyNumber: value });
+  }
+
+  updateRowName(id: number, value: string): void {
+    this.patchRow(id, { name: value });
   }
 
   updateRowMoleculeType(id: number, value: string): void {
@@ -502,13 +512,21 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     );
   }
 
+  /** Maps an entity's molecule type to the FASTA header type tag (e.g. `>name|protein`). */
+  private getFastaMoleculeType(type: MoleculeType): string {
+    return type === "ligand" ? "smiles" : type;
+  }
+
   private createEntityRow(): EntityRow {
+    const id = this.nextRowId++;
     return {
-      id: this.nextRowId++,
+      id,
+      name: "",
       sequence: "",
       copyNumber: "1",
       moleculeType: "protein",
       touched: {
+        name: false,
         sequence: false,
         copyNumber: false,
         moleculeType: false,
@@ -571,6 +589,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       rows.map((row) => ({
         ...row,
         touched: {
+          name: true,
           sequence: true,
           copyNumber: true,
           moleculeType: true,
@@ -587,6 +606,15 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   private validateEntityRow(row: EntityRow): EntityRowErrors {
     const errors: EntityRowErrors = {};
+
+    const otherNames = this.entityRows()
+      .filter((r) => r.id !== row.id)
+      .map((r) => r.name);
+    const headerValidation = validateFastaHeader(row.name, otherNames);
+    if (!headerValidation.valid) {
+      errors.name = headerValidation.errorMessage;
+    }
+
     const normalizedSequence = this.getNormalizedSequence(row);
 
     if (
@@ -594,9 +622,9 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       row.moleculeType !== "ligand" &&
       /\s/.test(row.sequence)
     ) {
-      errors.sequence = "Sequence must not contain spaces or line breaks.";
+      errors.sequence = "Sequence must not contain spaces or line breaks";
     } else if (!normalizedSequence) {
-      errors.sequence = "Sequence is required.";
+      errors.sequence = "Sequence is required";
     } else {
       const sequenceValidation = this.validateSequenceByMoleculeType(
         normalizedSequence,
@@ -608,7 +636,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         const lookupState = this.ccdLookupState()[row.id];
         if (lookupState === "invalid") {
           errors.sequence =
-            this.ccdLookupErrors()[row.id] ?? "CCD code is invalid.";
+            this.ccdLookupErrors()[row.id] ?? "CCD code is invalid";
         }
       }
     }
@@ -681,7 +709,27 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return {};
   }
 
-  private getNormalizedSequence(row: EntityRow): string {
+  /** 1-based position labels for the sequence ruler overlay: every 10th character and the last one. */
+  getSequenceCells(sequence: string): SequenceCell[] {
+    const length = sequence.length;
+    return Array.from(sequence, (char, index) => {
+      const position = index + 1;
+      const label =
+        position % 10 === 0 || position === length ? String(position) : "";
+      return { char, label };
+    });
+  }
+
+  /** Keeps the decorative position-ruler layer scrolled in sync with the real textarea beneath it. */
+  syncSequenceOverlayScroll(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    const overlay = textarea.previousElementSibling as HTMLElement | null;
+    if (overlay) {
+      overlay.scrollTop = textarea.scrollTop;
+    }
+  }
+
+  getNormalizedSequence(row: EntityRow): string {
     if (row.moleculeType === "ligand") {
       return row.sequence.trim();
     }
@@ -790,8 +838,8 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       workflow: "single-prediction",
       tool: this.selectedTool(),
       runName: this.jobName().trim(),
-      entities: this.entityRows().map((row, index) => ({
-        id: `entity_${index + 1}`,
+      entities: this.entityRows().map((row) => ({
+        id: row.name.trim(),
         moleculeType: row.moleculeType,
         copyNumber: this.getParsedCopyNumber(row.copyNumber),
         sequence: this.getNormalizedSequence(row),
@@ -799,20 +847,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       fastaContent: this.generatedFastaContent(),
       ...this.buildToolSettingsPayload(),
     };
-  }
-
-  private getFastaSequenceId(
-    type: MoleculeType,
-    sequenceNumber: number
-  ): string {
-    const prefixes: Record<MoleculeType, string> = {
-      protein: "pro",
-      rna: "rna",
-      dna: "dna",
-      ligand: "ligand",
-      ccd: "ccd",
-    };
-    return `${prefixes[type]}_${sequenceNumber}`;
   }
 
   private validateSequenceByMoleculeType(

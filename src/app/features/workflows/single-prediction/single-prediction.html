@@ -92,7 +92,7 @@
             cdkDragPreviewContainer="parent"
           >
             <div
-              class="grid gap-4 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
+              class="grid gap-4 lg:grid-cols-[40px_170px_110px_170px_minmax(0,1fr)_40px] lg:items-start"
             >
               <div class="flex shrink-0 cursor-grab flex-col items-center">
                 <span class="mb-1 block text-sm font-medium">
@@ -160,11 +160,48 @@
 
               <div class="min-w-0">
                 <label
+                  [for]="'sequence-name-' + row.id"
+                  class="mb-1 block text-sm font-medium"
+                >
+                  Sequence Name <span class="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  [id]="'sequence-name-' + row.id"
+                  [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
+                  [value]="row.name"
+                  (input)="updateRowName(row.id, $any($event.target).value)"
+                  (blur)="touchRowField(row.id, 'name')"
+                  [placeholder]="'seq' + (i + 1)"
+                  [class]="
+                    shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
+                      ? 'border-red-500 focus:ring-red-100'
+                      : 'focus:ring-sky-100'
+                  "
+                  class="block h-10 w-full rounded-md border bg-white px-4 font-mono text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+                  autocomplete="off"
+                  spellcheck="false"
+                  autocorrect="off"
+                  autocapitalize="off"
+                />
+
+                @if (shouldShowRowFieldError(row, 'name') &&
+                getRowErrors(i).name) {
+                <p class="mt-1 text-xs text-red-600" role="alert">
+                  {{ getRowErrors(i).name }}
+                </p>
+                }
+              </div>
+
+              <div class="min-w-0">
+                <label
                   [for]="'sequence-' + row.id"
                   class="mb-1 block text-sm font-medium"
                 >
-                  Sequence
+                  Sequence <span class="text-red-500">*</span>
                 </label>
+
                 @if (row.moleculeType === 'ccd') {
                 <app-listbox-select
                   [inputId]="'sequence-' + row.id"
@@ -176,32 +213,55 @@
                   (blurred)="touchRowField(row.id, 'sequence')"
                 ></app-listbox-select>
                 } @else {
-                <textarea
-                  [id]="'sequence-' + row.id"
-                  rows="1"
-                  spellcheck="false"
-                  autocomplete="off"
-                  autocorrect="off"
-                  autocapitalize="off"
-                  [value]="row.sequence"
-                  (input)="updateRowSequence(row.id, $any($event.target).value)"
-                  (blur)="touchRowField(row.id, 'sequence')"
+                <div
+                  class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
                   [class]="
                     shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence
-                      ? 'border-red-500 focus:ring-red-100'
-                      : 'focus:ring-sky-100'
+                      ? 'border-red-500 focus-within:ring-red-100'
+                      : 'border-gray-300 focus-within:ring-sky-100'
                   "
-                  class="block min-h-10 max-h-40 w-full resize-none rounded-md border bg-white px-4 py-2 text-sm font-mono break-all text-gray-900 focus:outline-none focus:ring-2 transition-colors field-sizing-content"
-                  [placeholder]="
-                    row.moleculeType === 'ligand'
-                      ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
-                      : row.moleculeType === 'dna'
-                        ? 'ATGCGT'
-                        : row.moleculeType === 'rna'
-                          ? 'AUGCGU'
-                          : 'ACDEFGHIKLMNPQRSTVWY'
-                  "
-                ></textarea>
+                >
+                  <div class="relative">
+                    <div
+                      class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-2 font-mono text-sm text-gray-900"
+                      aria-hidden="true"
+                    >
+                      @for (cell of getSequenceCells(row.sequence); track
+                      $index) {<span
+                        class="inline-block w-[1ch] align-top text-center mr-0.5"
+                        ><span
+                          class="block h-2.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
+                          >{{ cell.label }}</span
+                        ><span class="block leading-5"
+                          >{{ cell.char }}</span
+                        ></span
+                      >}
+                    </div>
+
+                    <textarea
+                      [id]="'sequence-' + row.id"
+                      [attr.aria-label]="'Sequence for entity ' + (i + 1)"
+                      spellcheck="false"
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      [value]="row.sequence"
+                      (input)="updateRowSequence(row.id, $any($event.target).value)"
+                      (scroll)="syncSequenceOverlayScroll($event)"
+                      (blur)="touchRowField(row.id, 'sequence')"
+                      class="relative block w-full resize-none bg-transparent px-4 py-2 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-10 max-h-40 break-all"
+                      [placeholder]="
+                        row.moleculeType === 'ligand'
+                          ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
+                          : row.moleculeType === 'dna'
+                            ? 'ATGCGT'
+                            : row.moleculeType === 'rna'
+                              ? 'AUGCGU'
+                              : 'ACDEFGHIKLMNPQRSTVWY'
+                      "
+                    ></textarea>
+                  </div>
+                </div>
                 } @if (shouldShowRowFieldError(row, 'sequence') &&
                 getRowErrors(i).sequence) {
                 <p class="mt-1 text-xs text-red-600" role="alert">
