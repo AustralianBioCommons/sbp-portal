@@ -268,7 +268,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     if (!err) return "";
     return `Too many sequence combinations: ${
       err.actual
-    } pairs (query × target). The maximum is ${err.max - 1}.`;
+    } pairs (query × target). The maximum is ${err.max - 1}`;
   }
 
   hasDuplicateSequencesError(): boolean {

@@ -644,7 +644,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     const copyNumber = Number.parseInt(row.copyNumber, 10);
     if (!Number.isInteger(copyNumber) || copyNumber < 1) {
       errors.copyNumber =
-        "Copy number must be a whole number greater than or equal to 1.";
+        "Copy number must be a whole number greater than or equal to 1";
     }
 
     if (
@@ -652,7 +652,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         this.selectedTool() === "alphafold2") &&
       row.moleculeType !== "protein"
     ) {
-      errors.tool = `${this.selectedToolLabel()} accepts protein-only input.`;
+      errors.tool = `${this.selectedToolLabel()} accepts protein-only input`;
     }
 
     return errors;
@@ -664,7 +664,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       if (!Number.isInteger(value) || value < 0) {
         return {
           alphafold2RandomSeed:
-            "alphafold2_random_seed must be a whole number greater than or equal to 0.",
+            "alphafold2_random_seed must be a whole number greater than or equal to 0",
         };
       }
     }
@@ -674,7 +674,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       if (!Number.isInteger(value) || value < 1) {
         return {
           colabfoldNumRecycles:
-            "colabfold_num_recycles must be a whole number greater than or equal to 1.",
+            "colabfold_num_recycles must be a whole number greater than or equal to 1",
         };
       }
     }
@@ -865,7 +865,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           ? { valid: true }
           : {
               valid: false,
-              errorMessage: "Ligand sequence must be a valid SMILES string.",
+              errorMessage: "Ligand sequence must be a valid SMILES string",
             };
       case "ccd":
         return { valid: true };
@@ -873,7 +873,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     return {
       valid: false,
-      errorMessage: "Sequence format is invalid.",
+      errorMessage: "Sequence format is invalid",
     };
   }
 }

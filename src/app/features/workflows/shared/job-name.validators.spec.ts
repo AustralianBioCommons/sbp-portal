@@ -59,7 +59,7 @@ describe("jobNameErrorMessage", () => {
 
   it("returns required message", () => {
     expect(jobNameErrorMessage({ required: true })).toBe(
-      "Job Name is required."
+      "Job Name is required"
     );
   });
 
@@ -68,14 +68,14 @@ describe("jobNameErrorMessage", () => {
       jobNameErrorMessage({
         maxlength: { requiredLength: 60, actualLength: 61 },
       })
-    ).toBe("Job Name must be 60 characters or fewer.");
+    ).toBe("Job Name must be 60 characters or fewer");
   });
 
   it("returns pattern message", () => {
     expect(
       jobNameErrorMessage({ pattern: { requiredPattern: "", actualValue: "" } })
     ).toBe(
-      "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number."
+      "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number"
     );
   });
 

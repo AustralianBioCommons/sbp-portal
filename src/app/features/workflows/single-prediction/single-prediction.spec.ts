@@ -325,7 +325,7 @@ describe("SinglePredictionComponent", () => {
       component["validateSequenceByMoleculeType"]("ABC", "other" as never)
     ).toEqual({
       valid: false,
-      errorMessage: "Sequence format is invalid.",
+      errorMessage: "Sequence format is invalid",
     });
   });
 

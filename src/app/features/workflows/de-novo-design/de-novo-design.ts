@@ -354,7 +354,7 @@ export default class DeNovoDesignComponent
 
     for (const token of tokens) {
       if (!/^[A-Za-z]+$/.test(token)) {
-        return `Invalid chain "${token}". Use letter identifiers only, e.g. "A" or "A,B".`;
+        return `Invalid chain "${token}". Use letter identifiers only, e.g. "A" or "A,B"`;
       }
     }
 
@@ -366,7 +366,7 @@ export default class DeNovoDesignComponent
             ...residueMap.keys(),
           ]
             .sort()
-            .join(", ")}.`;
+            .join(", ")}`;
         }
       }
     }
@@ -379,7 +379,7 @@ export default class DeNovoDesignComponent
         .split(",")
         .filter(Boolean)) {
         if (!chainsSet.has(hChain)) {
-          return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains.`;
+          return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains`;
         }
       }
     }
@@ -396,7 +396,7 @@ export default class DeNovoDesignComponent
       .filter(Boolean)) {
       const parsed = MolstarViewerComponent.parseResidueToken(token);
       if (!parsed) {
-        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14".`;
+        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14"`;
       }
       if (!residueMap) continue;
 
@@ -406,16 +406,16 @@ export default class DeNovoDesignComponent
           ...residueMap.keys(),
         ]
           .sort()
-          .join(", ")}.`;
+          .join(", ")}`;
       }
       if (!chainResidues.has(parsed.resStart)) {
-        return `Residue ${parsed.resStart} not found in chain "${parsed.chain}".`;
+        return `Residue ${parsed.resStart} not found in chain "${parsed.chain}"`;
       }
       if (
         parsed.resStart !== parsed.resEnd &&
         !chainResidues.has(parsed.resEnd)
       ) {
-        return `End residue ${parsed.resEnd} not found in chain "${parsed.chain}".`;
+        return `End residue ${parsed.resEnd} not found in chain "${parsed.chain}"`;
       }
     }
     return null;
@@ -453,12 +453,12 @@ export default class DeNovoDesignComponent
     if (count < 50) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required.`,
+        [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required`,
       });
     } else if (count > 300) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed.`,
+        [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed`,
       });
     } else {
       const updated = { ...currentErrors };

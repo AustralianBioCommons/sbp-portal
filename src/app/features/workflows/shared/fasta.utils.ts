@@ -21,22 +21,22 @@ export function validateFastaHeader(
 ): SequenceValidationResult {
   const trimmed = name.trim();
   if (!trimmed) {
-    return { valid: false, errorMessage: "Sequence name is required." };
+    return { valid: false, errorMessage: "Sequence name is required" };
   }
   if (/\s/.test(trimmed)) {
     return {
       valid: false,
-      errorMessage: "Sequence name must not contain spaces.",
+      errorMessage: "Sequence name must not contain spaces",
     };
   }
   if (trimmed.includes("_")) {
     return {
       valid: false,
-      errorMessage: "Sequence name must not contain underscores.",
+      errorMessage: "Sequence name must not contain underscores",
     };
   }
   if (existingNames?.some((n) => n.trim() === trimmed)) {
-    return { valid: false, errorMessage: "Sequence name must be unique." };
+    return { valid: false, errorMessage: "Sequence name must be unique" };
   }
   return { valid: true };
 }
@@ -106,8 +106,8 @@ const CANONICAL_AA_REGEX = /^[ARNDCQEGHILKMFPSTWYV]+$/;
  */
 export const validateProteinSequence = createSequenceValidator(
   CANONICAL_AA_REGEX,
-  "Protein sequence is required.",
-  "Protein sequence must contain only the 20 canonical amino acid letters."
+  "Protein sequence is required",
+  "Protein sequence must contain only the 20 canonical amino acid letters"
 );
 
 /**
@@ -125,7 +125,7 @@ export function validateMultiFastaProtein(
   if (!trimmed) {
     return {
       valid: false,
-      errorMessage: "At least one FASTA sequence is required.",
+      errorMessage: "At least one FASTA sequence is required",
       sequenceCount: 0,
     };
   }
@@ -168,7 +168,7 @@ export function validateMultiFastaProtein(
     if (headers.has(header)) {
       return {
         valid: false,
-        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique.`,
+        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique`,
         sequenceCount: 0,
       };
     }
@@ -184,7 +184,7 @@ export function validateMultiFastaProtein(
     if (!sequence) {
       return {
         valid: false,
-        errorMessage: `No sequence found for header "${header}".`,
+        errorMessage: `No sequence found for header "${header}"`,
         sequenceCount: 0,
       };
     }
@@ -192,7 +192,7 @@ export function validateMultiFastaProtein(
     if (sequenceLines.some((l) => /\s/.test(l))) {
       return {
         valid: false,
-        errorMessage: `Sequence for "${header}" must not contain spaces.`,
+        errorMessage: `Sequence for "${header}" must not contain spaces`,
         sequenceCount: 0,
       };
     }
@@ -200,7 +200,7 @@ export function validateMultiFastaProtein(
     if (!CANONICAL_AA_REGEX.test(sequence)) {
       return {
         valid: false,
-        errorMessage: `Sequence for "${header}" contains invalid characters. Only canonical amino acids (ARNDCQEGHILKMFPSTWYV) are allowed.`,
+        errorMessage: `Sequence for "${header}" contains invalid characters. Only canonical amino acids (ARNDCQEGHILKMFPSTWYV) are allowed`,
         sequenceCount: 0,
       };
     }
@@ -247,20 +247,20 @@ export function validateUniqueHeadersAcrossInputs(
       duplicates.length > 1 ? "s" : ""
     } must be unique across query and target. Duplicate${
       duplicates.length > 1 ? "s" : ""
-    }: ${duplicates.map((h) => `"${h}"`).join(", ")}.`,
+    }: ${duplicates.map((h) => `"${h}"`).join(", ")}`,
   };
 }
 
 export const validateDnaSequence = createSequenceValidator(
   /^[ATGC]+$/,
-  "DNA sequence is required.",
-  "DNA sequence must use valid DNA characters only (A, T, G, C)."
+  "DNA sequence is required",
+  "DNA sequence must use valid DNA characters only (A, T, G, C)"
 );
 
 export const validateRnaSequence = createSequenceValidator(
   /^[AUGC]+$/,
-  "RNA sequence is required.",
-  "RNA sequence must use valid RNA characters only (A, U, G, C)."
+  "RNA sequence is required",
+  "RNA sequence must use valid RNA characters only (A, U, G, C)"
 );
 
 export function lookupCcdCompound(code: string): CcdLookupResult {
@@ -270,7 +270,7 @@ export function lookupCcdCompound(code: string): CcdLookupResult {
     return {
       valid: false,
       errorMessage:
-        "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM).",
+        "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM)",
     };
   }
 
@@ -281,7 +281,7 @@ export function lookupCcdCompound(code: string): CcdLookupResult {
 
   return {
     valid: false,
-    errorMessage: `"${normalized}" is not in the supported CCD list.`,
+    errorMessage: `"${normalized}" is not in the supported CCD list`,
   };
 }
 
@@ -310,7 +310,7 @@ export function validateBulkFastaProtein(
   if (!trimmed) {
     return {
       valid: false,
-      errorMessage: "At least one FASTA sequence is required.",
+      errorMessage: "At least one FASTA sequence is required",
       sequenceCount: 0,
     };
   }
@@ -329,7 +329,7 @@ export function validateBulkFastaProtein(
   if (blocks.length > MAX_BULK_ENTRIES) {
     return {
       valid: false,
-      errorMessage: `Too many FASTA entries: ${blocks.length}. The maximum allowed is ${MAX_BULK_ENTRIES}.`,
+      errorMessage: `Too many FASTA entries: ${blocks.length}. The maximum allowed is ${MAX_BULK_ENTRIES}`,
       sequenceCount: blocks.length,
     };
   }
@@ -362,7 +362,7 @@ export function validateBulkFastaProtein(
     if (headers.has(header)) {
       return {
         valid: false,
-        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique.`,
+        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique`,
         sequenceCount: 0,
       };
     }
@@ -378,7 +378,7 @@ export function validateBulkFastaProtein(
     if (!rawSequence) {
       return {
         valid: false,
-        errorMessage: `No sequence found for header "${header}".`,
+        errorMessage: `No sequence found for header "${header}"`,
         sequenceCount: 0,
       };
     }
@@ -386,7 +386,7 @@ export function validateBulkFastaProtein(
     if (sequenceLines.some((l) => /\s/.test(l))) {
       return {
         valid: false,
-        errorMessage: `Sequence for "${header}" must not contain spaces.`,
+        errorMessage: `Sequence for "${header}" must not contain spaces`,
         sequenceCount: 0,
       };
     }
@@ -394,7 +394,7 @@ export function validateBulkFastaProtein(
     if (!BULK_FASTA_REGEX.test(rawSequence)) {
       return {
         valid: false,
-        errorMessage: `Sequence for "${header}" contains invalid characters. Only canonical amino acids (ARNDCQEGHILKMFPSTWYV) and the ":" multimer delimiter are allowed.`,
+        errorMessage: `Sequence for "${header}" contains invalid characters. Only canonical amino acids (ARNDCQEGHILKMFPSTWYV) and the ":" multimer delimiter are allowed`,
         sequenceCount: 0,
       };
     }
@@ -402,7 +402,7 @@ export function validateBulkFastaProtein(
     if (/^:|:$|::/.test(rawSequence)) {
       return {
         valid: false,
-        errorMessage: `Sequence for "${header}" has invalid ":" placement. The colon must separate chains and cannot appear at the start, end, or consecutively (e.g. SEQUENCE1:SEQUENCE2).`,
+        errorMessage: `Sequence for "${header}" has invalid ":" placement. The colon must separate chains and cannot appear at the start, end, or consecutively (e.g. SEQUENCE1:SEQUENCE2)`,
         sequenceCount: 0,
       };
     }
@@ -411,7 +411,7 @@ export function validateBulkFastaProtein(
     if (aaLength > MAX_AA_LENGTH) {
       return {
         valid: false,
-        errorMessage: `Sequence for "${header}" has ${aaLength} amino-acid characters, exceeding the maximum of ${MAX_AA_LENGTH}.`,
+        errorMessage: `Sequence for "${header}" has ${aaLength} amino-acid characters, exceeding the maximum of ${MAX_AA_LENGTH}`,
         sequenceCount: 0,
       };
     }

@@ -20,28 +20,28 @@ describe("fasta.utils", () => {
     it("rejects an empty name", () => {
       expect(validateFastaHeader("   ")).toEqual({
         valid: false,
-        errorMessage: "Sequence name is required.",
+        errorMessage: "Sequence name is required",
       });
     });
 
     it("rejects names containing spaces", () => {
       expect(validateFastaHeader("seq 1")).toEqual({
         valid: false,
-        errorMessage: "Sequence name must not contain spaces.",
+        errorMessage: "Sequence name must not contain spaces",
       });
     });
 
     it("rejects names containing underscores", () => {
       expect(validateFastaHeader("seq_1")).toEqual({
         valid: false,
-        errorMessage: "Sequence name must not contain underscores.",
+        errorMessage: "Sequence name must not contain underscores",
       });
     });
 
     it("rejects a name that duplicates an existing name", () => {
       expect(validateFastaHeader("seq1", ["seq1", "seq2"])).toEqual({
         valid: false,
-        errorMessage: "Sequence name must be unique.",
+        errorMessage: "Sequence name must be unique",
       });
     });
 
@@ -58,7 +58,7 @@ describe("fasta.utils", () => {
     it("rejects empty protein input", () => {
       expect(validateProteinSequence(" \n\t ")).toEqual({
         valid: false,
-        errorMessage: "Protein sequence is required.",
+        errorMessage: "Protein sequence is required",
       });
     });
 
@@ -66,7 +66,7 @@ describe("fasta.utils", () => {
       expect(validateProteinSequence("ATG123")).toEqual({
         valid: false,
         errorMessage:
-          "Protein sequence must contain only the 20 canonical amino acid letters.",
+          "Protein sequence must contain only the 20 canonical amino acid letters",
       });
     });
   });
@@ -79,7 +79,7 @@ describe("fasta.utils", () => {
     it("rejects empty DNA input", () => {
       expect(validateDnaSequence("")).toEqual({
         valid: false,
-        errorMessage: "DNA sequence is required.",
+        errorMessage: "DNA sequence is required",
       });
     });
 
@@ -87,7 +87,7 @@ describe("fasta.utils", () => {
       expect(validateDnaSequence("AUGC")).toEqual({
         valid: false,
         errorMessage:
-          "DNA sequence must use valid DNA characters only (A, T, G, C).",
+          "DNA sequence must use valid DNA characters only (A, T, G, C)",
       });
     });
   });
@@ -100,7 +100,7 @@ describe("fasta.utils", () => {
     it("rejects empty RNA input", () => {
       expect(validateRnaSequence("")).toEqual({
         valid: false,
-        errorMessage: "RNA sequence is required.",
+        errorMessage: "RNA sequence is required",
       });
     });
 
@@ -108,7 +108,7 @@ describe("fasta.utils", () => {
       expect(validateRnaSequence("ATGC")).toEqual({
         valid: false,
         errorMessage:
-          "RNA sequence must use valid RNA characters only (A, U, G, C).",
+          "RNA sequence must use valid RNA characters only (A, U, G, C)",
       });
     });
   });
@@ -131,7 +131,7 @@ describe("fasta.utils", () => {
     it("returns an error for an unsupported code", () => {
       expect(lookupCcdCompound("XYZ")).toEqual({
         valid: false,
-        errorMessage: '"XYZ" is not in the supported CCD list.',
+        errorMessage: '"XYZ" is not in the supported CCD list',
       });
     });
 
@@ -148,7 +148,7 @@ describe("fasta.utils", () => {
       expect(lookupCcdCompound("AT!")).toEqual({
         valid: false,
         errorMessage:
-          "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM).",
+          "Ligand CCD code must be 1–5 alphanumeric characters (e.g. ATP, HEM)",
       });
     });
 
@@ -222,7 +222,7 @@ describe("fasta.utils", () => {
     it("rejects empty input", () => {
       expect(validateMultiFastaProtein("")).toEqual({
         valid: false,
-        errorMessage: "At least one FASTA sequence is required.",
+        errorMessage: "At least one FASTA sequence is required",
         sequenceCount: 0,
       });
     });
@@ -230,7 +230,7 @@ describe("fasta.utils", () => {
     it("rejects whitespace-only input", () => {
       expect(validateMultiFastaProtein("  \n  ")).toEqual({
         valid: false,
-        errorMessage: "At least one FASTA sequence is required.",
+        errorMessage: "At least one FASTA sequence is required",
         sequenceCount: 0,
       });
     });
@@ -256,7 +256,7 @@ describe("fasta.utils", () => {
     it("rejects an entry with no sequence after the header", () => {
       expect(validateMultiFastaProtein(">seq1\n")).toEqual({
         valid: false,
-        errorMessage: 'No sequence found for header "seq1".',
+        errorMessage: 'No sequence found for header "seq1"',
         sequenceCount: 0,
       });
     });
@@ -306,7 +306,7 @@ describe("fasta.utils", () => {
     it("rejects spaces within sequence content", () => {
       expect(validateMultiFastaProtein(">seq1\nACD EFG HIK LMN")).toEqual({
         valid: false,
-        errorMessage: 'Sequence for "seq1" must not contain spaces.',
+        errorMessage: 'Sequence for "seq1" must not contain spaces',
         sequenceCount: 0,
       });
     });
