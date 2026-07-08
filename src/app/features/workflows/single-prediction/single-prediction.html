@@ -169,7 +169,7 @@
                 </label>
 
                 <div
-                  class="flex h-10 items-center gap-1 rounded-md border bg-white px-3 transition-colors focus-within:ring-2"
+                  class="flex h-10 items-center gap-1 rounded-md border bg-white px-4 transition-colors focus-within:ring-2"
                   [class]="
                     shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
                       ? 'border-red-500 focus-within:ring-red-100'
@@ -189,7 +189,7 @@
                         ? 'text-red-500 placeholder-red-300'
                         : 'text-gray-700'
                     "
-                    class="min-w-0 flex-1 bg-transparent font-mono text-xs placeholder-gray-400 focus:outline-none"
+                    class="min-w-0 flex-1 bg-transparent font-mono text-sm placeholder-gray-400 focus:outline-none"
                     autocomplete="off"
                     spellcheck="false"
                     autocorrect="off"
@@ -234,7 +234,7 @@
                 >
                   <div class="relative">
                     <div
-                      class="pointer-events-none absolute inset-0 overflow-hidden break-all px-3 py-2 font-mono text-sm text-gray-900"
+                      class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-2 font-mono text-sm text-gray-900"
                       aria-hidden="true"
                     >
                       @for (cell of getSequenceCells(row.sequence); track
@@ -260,7 +260,7 @@
                       (input)="updateRowSequence(row.id, $any($event.target).value)"
                       (scroll)="syncSequenceOverlayScroll($event)"
                       (blur)="touchRowField(row.id, 'sequence')"
-                      class="relative block w-full resize-none bg-transparent px-3 py-2 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-10 max-h-40 break-all"
+                      class="relative block w-full resize-none bg-transparent px-4 py-2 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-10 max-h-40 break-all"
                       [placeholder]="
                         row.moleculeType === 'ligand'
                           ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
