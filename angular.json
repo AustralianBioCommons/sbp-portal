@@ -108,6 +108,9 @@
           "options": {
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
+            "codeCoverageExclude": [
+              "src/app/features/workflows/components/molstar-viewer/molstar-viewer.component.ts"
+            ],
             "assets": [
               {
                 "glob": "**/*",

@@ -99,10 +99,10 @@ describe("JobsListComponent", () => {
     };
     mockJobsService.listJobs.and.returnValue(of(mockResponse));
     mockJobsService.cancelJob.and.returnValue(
-      of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" }),
+      of({ message: "Cancelled", runId: mockJob.id, status: "Stopped" })
     );
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      of({ deleted: [mockJob.id], failed: {} }),
+      of({ deleted: [mockJob.id], failed: {} })
     );
     await TestBed.configureTestingModule({
       imports: [JobsListComponent],
@@ -119,18 +119,18 @@ describe("JobsListComponent", () => {
     mockResultsService.getJobReport.and.returnValue(
       of(
         sanitizer.bypassSecurityTrustResourceUrl(
-          "https://example.test/report.html",
-        ),
-      ),
+          "https://example.test/report.html"
+        )
+      )
     );
     mockResultsService.getJobDownloads.and.returnValue(
-      of({ runId: mockJob.id, downloads: [] }),
+      of({ runId: mockJob.id, downloads: [] })
     );
     mockResultsService.getJobSettingParams.and.returnValue(
-      of({ runId: mockJob.id, settingParams: { binder_name: "PDL1" } }),
+      of({ runId: mockJob.id, settingParams: { binder_name: "PDL1" } })
     );
     mockResultsService.getJobLogs.and.returnValue(
-      of({ runId: mockJob.id, logs: [], entries: [], formattedEntries: [] }),
+      of({ runId: mockJob.id, logs: [], entries: [], formattedEntries: [] })
     );
 
     fixture = TestBed.createComponent(JobsListComponent);
@@ -154,7 +154,7 @@ describe("JobsListComponent", () => {
         overallStatus: "degraded",
         checkedAt: "2026-06-25T03:12:55Z",
         message: "Some workflow services are currently unavailable.",
-      }),
+      })
     );
 
     fixture = TestBed.createComponent(JobsListComponent);
@@ -163,13 +163,13 @@ describe("JobsListComponent", () => {
 
     expect(component.systemUnhealthy()).toBeTrue();
     expect(component.healthMessage()).toBe(
-      "Some workflow services are currently unavailable.",
+      "Some workflow services are currently unavailable."
     );
   });
 
   it("does not surface a warning when the health check fails", async () => {
     mockHealthService.getComponentsHealth.and.returnValue(
-      throwError(() => new Error("network error")),
+      throwError(() => new Error("network error"))
     );
 
     fixture = TestBed.createComponent(JobsListComponent);
@@ -195,7 +195,7 @@ describe("JobsListComponent", () => {
         total: 2,
         limit: 50,
         offset: 0,
-      }),
+      })
     );
 
     component.loadJobs();
@@ -219,7 +219,7 @@ describe("JobsListComponent", () => {
         total: 1,
         limit: 50,
         offset: 0,
-      }),
+      })
     );
 
     component.loadJobs();
@@ -230,7 +230,7 @@ describe("JobsListComponent", () => {
 
   it("should set an error when loading jobs fails", () => {
     mockJobsService.listJobs.and.returnValue(
-      throwError(() => new Error("load failed")),
+      throwError(() => new Error("load failed"))
     );
 
     component.loadJobs();
@@ -419,21 +419,21 @@ describe("JobsListComponent", () => {
 
   it("should return status classes and helpers", () => {
     expect(component.getStatusClass("Completed")).toBe(
-      "bg-green-100 text-green-800",
+      "bg-green-100 text-green-800"
     );
     expect(component.getStatusClass("Pending")).toBe("bg-sky-100 text-sky-800");
     expect(component.getStatusClass("In progress")).toBe(
-      "bg-blue-100 text-blue-800",
+      "bg-blue-100 text-blue-800"
     );
     expect(component.getStatusClass("In queue")).toBe(
-      "bg-gray-100 text-gray-800",
+      "bg-gray-100 text-gray-800"
     );
     expect(component.getStatusClass("Failed")).toBe("bg-red-100 text-red-800");
     expect(component.getStatusClass("Stopped")).toBe(
-      "bg-amber-100 text-amber-800",
+      "bg-amber-100 text-amber-800"
     );
     expect(component.getStatusClass("Unknown")).toBe(
-      "bg-gray-100 text-gray-800",
+      "bg-gray-100 text-gray-800"
     );
   });
 
@@ -493,7 +493,7 @@ describe("JobsListComponent", () => {
   it("should clear selection and close the delete dialog when no jobs are selected", () => {
     const closeDeleteDialogSpy = spyOn(
       component,
-      "closeDeleteDialog",
+      "closeDeleteDialog"
     ).and.callThrough();
 
     component.confirmDelete();
@@ -507,11 +507,11 @@ describe("JobsListComponent", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
     const closeDeleteDialogSpy = spyOn(
       component,
-      "closeDeleteDialog",
+      "closeDeleteDialog"
     ).and.callThrough();
     component.selectedJobs.set([mockJob.id, secondJob.id]);
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      of({ deleted: [mockJob.id], failed: {} }),
+      of({ deleted: [mockJob.id], failed: {} })
     );
 
     component.confirmDelete();
@@ -531,7 +531,7 @@ describe("JobsListComponent", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
     component.selectedJobs.set([mockJob.id, secondJob.id]);
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      of({ deleted: [mockJob.id], failed: { [secondJob.id]: "failed" } }),
+      of({ deleted: [mockJob.id], failed: { [secondJob.id]: "failed" } })
     );
 
     component.confirmDelete();
@@ -543,7 +543,7 @@ describe("JobsListComponent", () => {
 
   it("should handle delete request failures", () => {
     mockJobsService.bulkDeleteJobs.and.returnValue(
-      throwError(() => new Error("delete failed")),
+      throwError(() => new Error("delete failed"))
     );
     component.selectedJobs.set([mockJob.id]);
 
