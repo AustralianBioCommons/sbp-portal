@@ -151,7 +151,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
         catchError((err) => {
           console.error("Error checking system health:", err);
           return EMPTY;
-        })
+        }),
       )
       .subscribe((health) => {
         const unhealthy = health.overallStatus !== "healthy";
@@ -189,7 +189,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
           this.error.set("Failed to load jobs. Please try again.");
           this.loading.set(false);
           return EMPTY;
-        })
+        }),
       )
       .subscribe((response) => {
         const normalizedJobs = response.jobs.map((job) => {
@@ -303,7 +303,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   get totalFinalDesigns(): number {
     return this.jobs().reduce(
       (sum, job) => sum + (job.finalDesignCount ?? 0),
-      0
+      0,
     );
   }
 
@@ -319,7 +319,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   toggleSubmittedSort(): void {
     if (this.activeSort() === "submitted") {
       this.submittedSortDirection.update((d) =>
-        d === "desc" ? "asc" : "desc"
+        d === "desc" ? "asc" : "desc",
       );
     } else {
       this.activeSort.set("submitted");
@@ -372,9 +372,9 @@ export default class JobsListComponent implements OnInit, OnDestroy {
       case "Completed":
         return "bg-green-100 text-green-800";
       case "Pending":
-        return "bg-blue-100 text-blue-800";
-      case "In progress":
         return "bg-sky-100 text-sky-800";
+      case "In progress":
+        return "bg-blue-100 text-blue-800";
       case "In queue":
         return "bg-gray-100 text-gray-800";
       case "Failed":
@@ -473,7 +473,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
         if (Object.keys(response.failed || {}).length > 0) {
           const failedCount = Object.keys(response.failed).length;
           this.error.set(
-            `Failed to delete ${failedCount} job${failedCount > 1 ? "s" : ""}.`
+            `Failed to delete ${failedCount} job${failedCount > 1 ? "s" : ""}.`,
           );
         }
         this.selectedJobs.set([]);
