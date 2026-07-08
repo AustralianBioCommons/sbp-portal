@@ -168,34 +168,25 @@
                   Sequence Name <span class="text-red-500">*</span>
                 </label>
 
-                <div
-                  class="flex h-10 items-center gap-1 rounded-md border bg-white px-4 transition-colors focus-within:ring-2"
+                <input
+                  type="text"
+                  [id]="'sequence-name-' + row.id"
+                  [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
+                  [value]="row.name"
+                  (input)="updateRowName(row.id, $any($event.target).value)"
+                  (blur)="touchRowField(row.id, 'name')"
+                  [placeholder]="'seq' + (i + 1)"
                   [class]="
                     shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
-                      ? 'border-red-500 focus-within:ring-red-100'
-                      : 'border-gray-200 focus-within:ring-sky-100'
+                      ? 'border-red-500 focus:ring-red-100'
+                      : 'focus:ring-sky-100'
                   "
-                >
-                  <input
-                    type="text"
-                    [id]="'sequence-name-' + row.id"
-                    [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
-                    [value]="row.name"
-                    (input)="updateRowName(row.id, $any($event.target).value)"
-                    (blur)="touchRowField(row.id, 'name')"
-                    [placeholder]="'seq' + (i + 1)"
-                    [class]="
-                      shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
-                        ? 'text-red-500 placeholder-red-300'
-                        : 'text-gray-700'
-                    "
-                    class="min-w-0 flex-1 bg-transparent font-mono text-sm placeholder-gray-400 focus:outline-none"
-                    autocomplete="off"
-                    spellcheck="false"
-                    autocorrect="off"
-                    autocapitalize="off"
-                  />
-                </div>
+                  class="block h-10 w-full rounded-md border bg-white px-4 font-mono text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+                  autocomplete="off"
+                  spellcheck="false"
+                  autocorrect="off"
+                  autocapitalize="off"
+                />
 
                 @if (shouldShowRowFieldError(row, 'name') &&
                 getRowErrors(i).name) {
