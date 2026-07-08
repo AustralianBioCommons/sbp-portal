@@ -206,12 +206,20 @@
               </div>
 
               <div class="min-w-0">
-                <label
-                  [for]="'sequence-' + row.id"
-                  class="mb-1 block text-sm font-medium"
-                >
-                  Sequence <span class="text-red-500">*</span>
-                </label>
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <label
+                    [for]="'sequence-' + row.id"
+                    class="text-sm font-medium"
+                  >
+                    Sequence <span class="text-red-500">*</span>
+                  </label>
+                  @if (getNormalizedSequence(row) && row.moleculeType !== 'ligand' && row.moleculeType !== 'ccd') {
+                  <span class="text-xs text-gray-400">
+                    {{ getNormalizedSequence(row).length.toLocaleString() }}
+                    {{ row.moleculeType === 'protein' ? 'aa' : 'nt' }}
+                  </span>
+                  }
+                </div>
 
                 @if (row.moleculeType === 'ccd') {
                 <app-listbox-select
@@ -259,31 +267,6 @@
                             : 'ACDEFGHIKLMNPQRSTVWY'
                     "
                   ></textarea>
-
-                  <!-- Stats footer — shown only when there is a sequence and length applies -->
-                  @if (getNormalizedSequence(row) && row.moleculeType !== 'ligand') {
-                  <div
-                    class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-3 py-2 text-xs"
-                  >
-                    <span class="text-gray-500">
-                      Length: {{
-                      getNormalizedSequence(row).length.toLocaleString() }} bp
-                    </span>
-                    @if (getRowErrors(i).name || getRowErrors(i).sequence) {
-                    <span
-                      class="flex items-center gap-1 font-medium text-red-500"
-                    >
-                      ✗ @if (getRowErrors(i).name && getRowErrors(i).sequence)
-                      { Header &amp; sequence invalid } @else if
-                      (getRowErrors(i).name) { Header {{ !row.name.trim() ?
-                      'missing' : 'invalid' }} } @else { Sequence {{
-                      !getNormalizedSequence(row) ? 'missing' : 'invalid' }} }
-                    </span>
-                    } @else {
-                    <span></span>
-                    }
-                  </div>
-                  }
 
                   <!-- Sequence error -->
                   @if (shouldShowRowFieldError(row, 'sequence') &&
