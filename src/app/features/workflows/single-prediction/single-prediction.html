@@ -223,13 +223,7 @@
                   (valueChange)="updateRowSequence(row.id, $event)"
                   (blurred)="touchRowField(row.id, 'sequence')"
                 ></app-listbox-select>
-
-                @if (shouldShowRowFieldError(row, 'sequence') &&
-                getRowErrors(i).sequence) {
-                <p class="mt-1 text-xs text-red-600" role="alert">
-                  {{ getRowErrors(i).sequence }}
-                </p>
-                } } @else {
+                } @else {
                 <div
                   class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
                   [class]="
@@ -283,14 +277,12 @@
                     ></textarea>
                   </div>
                 </div>
-
-                <!-- Sequence error -->
-                @if (shouldShowRowFieldError(row, 'sequence') &&
+                } @if (shouldShowRowFieldError(row, 'sequence') &&
                 getRowErrors(i).sequence) {
                 <p class="mt-1 text-xs text-red-600" role="alert">
                   {{ getRowErrors(i).sequence }}
                 </p>
-                } } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
+                } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
                 <p class="mt-1 text-xs text-red-600" role="alert">
                   {{ getRowErrors(i).tool }}
                 </p>
