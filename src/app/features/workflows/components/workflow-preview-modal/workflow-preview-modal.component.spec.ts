@@ -25,13 +25,13 @@ describe("WorkflowPreviewModalComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  it("should default the title to 'Workflow Preview'", () => {
+  it("should default the title to 'Review & Submit'", () => {
     fixture.componentRef.setInput("isOpen", true);
     fixture.detectChanges();
     const heading = fixture.nativeElement.querySelector(
       "#workflow-preview-title"
     );
-    expect(heading?.textContent?.trim()).toBe("Workflow Preview");
+    expect(heading?.textContent?.trim()).toBe("Review & Submit");
   });
 
   it("should label the submit button with the credit cost", () => {

@@ -23,7 +23,7 @@ import {
 })
 export class WorkflowPreviewModalComponent {
   readonly isOpen = input(false);
-  readonly title = input("Workflow Preview");
+  readonly title = input("Review & Submit");
   readonly credits = input<number | null>(null);
   readonly isSubmitting = input(false);
 
