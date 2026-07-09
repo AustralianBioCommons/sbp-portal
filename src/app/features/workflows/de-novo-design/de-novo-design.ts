@@ -17,7 +17,8 @@ import {
   Signal,
   signal,
 } from "@angular/core";
-import { FormControl, FormsModule } from "@angular/forms";
+import { toSignal } from "@angular/core/rxjs-interop";
+import { NonNullableFormBuilder, ReactiveFormsModule } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
@@ -26,7 +27,7 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { MolstarViewerComponent } from "../components/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../components/length-range-slider/length-range-slider.component";
 
-import { filter, Subscription, take } from "rxjs";
+import { filter, startWith, Subscription, take } from "rxjs";
 import { FormFieldComponent } from "../components/form-field/form-field.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
@@ -58,7 +59,7 @@ interface ToolChip extends ToolOption {
   selector: "app-de-novo-design",
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     ButtonComponent,
     ToolSelectionComponent,
     WorkflowFormComponent,
@@ -108,19 +109,45 @@ export default class DeNovoDesignComponent
   private readonly inputSchemaUrl =
     "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/schema_input.json";
 
-  // Job Name (custom signal-based field, replaces schema 'id' field in UI)
-  jobName = signal("");
-  jobNameTouched = signal(false);
-  readonly jobNameError = computed<string>(() =>
-    jobNameErrorMessage(
-      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
-    )
+  // Job Name (reactive form field)
+  private readonly fb = inject(NonNullableFormBuilder);
+  readonly form = this.fb.group({
+    jobName: ["", JOB_NAME_VALIDATORS],
+  });
+  readonly jobName = toSignal(
+    this.form.controls.jobName.valueChanges.pipe(
+      startWith(this.form.controls.jobName.value)
+    ),
+    { initialValue: this.form.controls.jobName.value }
   );
+
+  hasJobNameError(): boolean {
+    const ctrl = this.form.controls.jobName;
+    return ctrl.touched && ctrl.invalid;
+  }
+
+  getJobNameError(): string {
+    return jobNameErrorMessage(this.form.controls.jobName.errors);
+  }
 
   // Form data and validation
   formData = signal<Record<string, unknown>>({});
   formErrors = signal<{ [key: string]: string }>({});
-  isFormValid = signal<boolean>(false);
+  readonly isFormValid = computed<boolean>(() => {
+    this.jobName();
+    if (this.form.controls.jobName.invalid) return false;
+    if (Object.keys(this.formErrors()).length > 0) return false;
+    const rows = this.schemaLoader.inputRows();
+    if (rows.length === 0) return false;
+    const requiredFields = this.schemaLoader.requiredInputFields();
+    return rows.every((row) =>
+      requiredFields.every((field) => {
+        if (field.name === "binder_name" || field.name === "id") return true;
+        const value = row.values[field.name];
+        return value !== undefined && value !== null && value !== "";
+      })
+    );
+  });
 
   // Tools
   readonly tools: ToolChip[] = [
@@ -327,7 +354,7 @@ export default class DeNovoDesignComponent
 
     for (const token of tokens) {
       if (!/^[A-Za-z]+$/.test(token)) {
-        return `Invalid chain "${token}". Use letter identifiers only, e.g. "A" or "A,B".`;
+        return `Invalid chain "${token}". Use letter identifiers only, e.g. "A" or "A,B"`;
       }
     }
 
@@ -339,7 +366,7 @@ export default class DeNovoDesignComponent
             ...residueMap.keys(),
           ]
             .sort()
-            .join(", ")}.`;
+            .join(", ")}`;
         }
       }
     }
@@ -352,7 +379,7 @@ export default class DeNovoDesignComponent
         .split(",")
         .filter(Boolean)) {
         if (!chainsSet.has(hChain)) {
-          return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains.`;
+          return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains`;
         }
       }
     }
@@ -369,7 +396,7 @@ export default class DeNovoDesignComponent
       .filter(Boolean)) {
       const parsed = MolstarViewerComponent.parseResidueToken(token);
       if (!parsed) {
-        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14".`;
+        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14"`;
       }
       if (!residueMap) continue;
 
@@ -379,16 +406,16 @@ export default class DeNovoDesignComponent
           ...residueMap.keys(),
         ]
           .sort()
-          .join(", ")}.`;
+          .join(", ")}`;
       }
       if (!chainResidues.has(parsed.resStart)) {
-        return `Residue ${parsed.resStart} not found in chain "${parsed.chain}".`;
+        return `Residue ${parsed.resStart} not found in chain "${parsed.chain}"`;
       }
       if (
         parsed.resStart !== parsed.resEnd &&
         !chainResidues.has(parsed.resEnd)
       ) {
-        return `End residue ${parsed.resEnd} not found in chain "${parsed.chain}".`;
+        return `End residue ${parsed.resEnd} not found in chain "${parsed.chain}"`;
       }
     }
     return null;
@@ -426,19 +453,18 @@ export default class DeNovoDesignComponent
     if (count < 50) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required.`,
+        [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required`,
       });
     } else if (count > 300) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed.`,
+        [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed`,
       });
     } else {
       const updated = { ...currentErrors };
       delete updated[errorKey];
       this.formErrors.set(updated);
     }
-    this.validateAllRows();
   }
 
   onLengthRangeChange(
@@ -584,7 +610,6 @@ export default class DeNovoDesignComponent
 
           // After row is created, sync to form data
           this.syncRowsToFormData();
-          this.validateAllRows();
         });
       },
       (error) => {
@@ -594,13 +619,12 @@ export default class DeNovoDesignComponent
   }
 
   protected validateAll(): void {
-    this.jobNameTouched.set(true);
+    this.form.markAllAsTouched();
     this.validateAllRequiredFields();
     for (const row of this.schemaLoader.inputRows()) {
       this.validateRowField(row.id, "target_hotspot_residues");
       this.validateRowField(row.id, "chains");
     }
-    this.validateForm();
   }
 
   protected performSubmit(): void {
@@ -712,7 +736,6 @@ export default class DeNovoDesignComponent
   // Initialize form data with default values from schema
   private initializeFormData(defaultValues: Record<string, unknown>): void {
     this.formData.set(defaultValues);
-    this.validateForm();
   }
 
   // Update form data for a specific field
@@ -721,12 +744,6 @@ export default class DeNovoDesignComponent
     const updatedData = { ...currentData, [fieldName]: value };
     this.formData.set(updatedData);
     this.validateField(fieldName, value);
-    this.validateForm();
-  }
-
-  onJobNameChange(value: string): void {
-    this.jobName.set(value);
-    this.validateAllRows();
   }
 
   // Handle input events
@@ -794,7 +811,6 @@ export default class DeNovoDesignComponent
     const currentData = this.formData();
     const value = currentData[fieldName];
     this.validateField(fieldName, value);
-    this.validateForm(); // Re-validate entire form after single field validation
   }
 
   // Validate all required fields and show errors
@@ -808,38 +824,7 @@ export default class DeNovoDesignComponent
       const value = currentData[field.name];
       this.validateField(field.name, value);
     }
-    this.jobNameTouched.set(true);
-  }
-
-  // Validate the entire form
-  private validateForm(): void {
-    const requiredFields = this.schemaLoader.requiredInputFields();
-    const currentData = this.formData();
-
-    let isValid = true;
-
-    // Check if all required fields have values
-    for (const field of requiredFields) {
-      if (field.name === "binder_name" || field.name === "id") continue;
-      const value = currentData[field.name];
-      if (value === undefined || value === null || value === "") {
-        isValid = false;
-        break;
-      }
-    }
-
-    // Check Job Name validity
-    if (this.jobNameError()) {
-      isValid = false;
-    }
-
-    // Check if there are any validation errors
-    const errors = this.formErrors();
-    if (Object.keys(errors).length > 0) {
-      isValid = false;
-    }
-
-    this.isFormValid.set(isValid);
+    this.form.markAllAsTouched();
   }
 
   // Get current form data for submission
@@ -992,7 +977,6 @@ export default class DeNovoDesignComponent
       // Preserve existing formData (like default URLs) and merge with row values
       const currentData = this.formData();
       this.formData.set({ ...currentData, ...rowValues });
-      this.validateForm();
     }
   }
 
@@ -1047,7 +1031,6 @@ export default class DeNovoDesignComponent
       }
       if (customError) {
         this.formErrors.set({ ...currentErrors, [errorKey]: customError });
-        this.validateAllRows();
         return;
       }
       // Remove error for this specific cell
@@ -1061,41 +1044,6 @@ export default class DeNovoDesignComponent
         [errorKey]: validationResult.errors[0] || "Invalid value",
       });
     }
-
-    this.validateAllRows();
-  }
-
-  // Validate all rows and update overall form validity
-  validateAllRows(): void {
-    const rows = this.schemaLoader.inputRows();
-    const requiredFields = this.schemaLoader.requiredInputFields();
-    let hasErrors = false;
-
-    // Check each row for required field completeness
-    for (const row of rows) {
-      for (const field of requiredFields) {
-        if (field.name === "binder_name" || field.name === "id") continue;
-        const value = row.values[field.name];
-        if (value === undefined || value === null || value === "") {
-          hasErrors = true;
-          break;
-        }
-      }
-      if (hasErrors) break;
-    }
-
-    // Check Job Name validity
-    if (this.jobNameError()) {
-      hasErrors = true;
-    }
-
-    // Check if there are validation errors
-    const errors = this.formErrors();
-    if (Object.keys(errors).length > 0) {
-      hasErrors = true;
-    }
-
-    this.isFormValid.set(!hasErrors && rows.length > 0);
   }
 
   // Get validation error for a specific cell
@@ -1111,7 +1059,7 @@ export default class DeNovoDesignComponent
 
   /** Returns true when any field inside the collapsible config section has a validation error. */
   hasConfigSectionErrors(rowId: string): boolean {
-    if (this.jobNameTouched() && !!this.jobNameError()) return true;
+    if (this.hasJobNameError()) return true;
     return [
       "target_hotspot_residues",
       "chains",

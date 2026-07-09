@@ -1,4 +1,4 @@
-import { switchMap, map } from "rxjs";
+import { switchMap, map, startWith } from "rxjs";
 import { CommonModule } from "@angular/common";
 import {
   CdkDragDrop,
@@ -6,7 +6,8 @@ import {
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
 import { Component, computed, inject, Signal, signal } from "@angular/core";
-import { FormControl } from "@angular/forms";
+import { toSignal } from "@angular/core/rxjs-interop";
+import { NonNullableFormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { bootstrapGripVertical } from "@ng-icons/bootstrap-icons";
 import { heroTrash } from "@ng-icons/heroicons/outline";
@@ -96,6 +97,7 @@ interface SequenceCell {
   imports: [
     CommonModule,
     DragDropModule,
+    ReactiveFormsModule,
     ButtonComponent,
     ToolSelectionComponent,
     ListboxSelectComponent,
@@ -129,7 +131,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     CCD_COMPOUNDS
   ).map(([code, name]) => ({ value: code, label: `${code} - ${name}` }));
 
-  private readonly samplesheetId = `single-prediction-${this.generateRandomSuffix()}`;
   private nextRowId = 1;
   ccdLookupState = signal<Record<number, "idle" | "valid" | "invalid">>({});
   ccdLookupNames = signal<Record<number, string>>({}); // compound name resolved from the local CCD dictionary via lookupCcdCompound()
@@ -137,6 +138,10 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   private preparedFastaContent = signal<string | null>(null);
   private preparedFastaUrl = signal<string | null>(null);
   private preparedSamplesheetS3Key = signal<string | null>(null);
+  private preparedSamplesheetId = signal<string | null>(null);
+  private get samplesheetId(): string {
+    return this.jobName().trim();
+  }
 
   readonly tools: ToolChip[] = [
     { id: "colabfold", label: "ColabFold" },
@@ -165,13 +170,24 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   stepOneTouched = signal(false);
   stepTwoTouched = signal(false);
 
-  jobName = signal("");
-  jobNameTouched = signal(false);
-  readonly jobNameError = computed<string>(() =>
-    jobNameErrorMessage(
-      new FormControl(this.jobName().trim(), JOB_NAME_VALIDATORS).errors
-    )
+  private readonly fb = inject(NonNullableFormBuilder);
+  readonly form = this.fb.group({
+    jobName: ["", JOB_NAME_VALIDATORS],
+  });
+  readonly jobName = toSignal(
+    this.form.controls.jobName.valueChanges.pipe(
+      startWith(this.form.controls.jobName.value)
+    ),
+    { initialValue: this.form.controls.jobName.value }
   );
+  hasJobNameError(): boolean {
+    const ctrl = this.form.controls.jobName;
+    return ctrl.touched && ctrl.invalid;
+  }
+
+  getJobNameError(): string {
+    return jobNameErrorMessage(this.form.controls.jobName.errors);
+  }
 
   alphafold2RandomSeed = signal("42");
   alphafold2FullDbs = signal(false);
@@ -193,15 +209,17 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     this.entityRows().map((row) => this.validateEntityRow(row))
   );
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
-  readonly isStep1Valid = computed(
-    () =>
-      !this.jobNameError() &&
+  readonly isStep1Valid = computed(() => {
+    this.jobName();
+    return (
+      this.form.controls.jobName.valid &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
         (errors) =>
           !errors.name && !errors.sequence && !errors.copyNumber && !errors.tool
       )
-  );
+    );
+  });
   readonly isStep2Valid = computed(
     () => Object.keys(this.toolSettingErrors()).length === 0
   );
@@ -566,7 +584,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   private touchAllEntityRows(): void {
     this.stepOneTouched.set(true);
-    this.jobNameTouched.set(true);
+    this.form.markAllAsTouched();
     this.entityRows.update((rows) =>
       rows.map((row) => ({
         ...row,
@@ -604,9 +622,9 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       row.moleculeType !== "ligand" &&
       /\s/.test(row.sequence)
     ) {
-      errors.sequence = "Sequence must not contain spaces or line breaks.";
+      errors.sequence = "Sequence must not contain spaces or line breaks";
     } else if (!normalizedSequence) {
-      errors.sequence = "Sequence is required.";
+      errors.sequence = "Sequence is required";
     } else {
       const sequenceValidation = this.validateSequenceByMoleculeType(
         normalizedSequence,
@@ -618,7 +636,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         const lookupState = this.ccdLookupState()[row.id];
         if (lookupState === "invalid") {
           errors.sequence =
-            this.ccdLookupErrors()[row.id] ?? "CCD code is invalid.";
+            this.ccdLookupErrors()[row.id] ?? "CCD code is invalid";
         }
       }
     }
@@ -626,7 +644,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     const copyNumber = Number.parseInt(row.copyNumber, 10);
     if (!Number.isInteger(copyNumber) || copyNumber < 1) {
       errors.copyNumber =
-        "Copy number must be a whole number greater than or equal to 1.";
+        "Copy number must be a whole number greater than or equal to 1";
     }
 
     if (
@@ -634,7 +652,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         this.selectedTool() === "alphafold2") &&
       row.moleculeType !== "protein"
     ) {
-      errors.tool = `${this.selectedToolLabel()} accepts protein-only input.`;
+      errors.tool = `${this.selectedToolLabel()} accepts protein-only input`;
     }
 
     return errors;
@@ -646,7 +664,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       if (!Number.isInteger(value) || value < 0) {
         return {
           alphafold2RandomSeed:
-            "alphafold2_random_seed must be a whole number greater than or equal to 0.",
+            "alphafold2_random_seed must be a whole number greater than or equal to 0",
         };
       }
     }
@@ -656,7 +674,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       if (!Number.isInteger(value) || value < 1) {
         return {
           colabfoldNumRecycles:
-            "colabfold_num_recycles must be a whole number greater than or equal to 1.",
+            "colabfold_num_recycles must be a whole number greater than or equal to 1",
         };
       }
     }
@@ -731,18 +749,20 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     onPrepared: (fastaUrl: string, s3InputKey: string) => void
   ): void {
     const fastaContent = this.generatedFastaContent();
+    const samplesheetId = this.samplesheetId;
     const cachedS3InputKey = this.preparedSamplesheetS3Key();
     const cachedFastaUrl = this.preparedFastaUrl();
     if (
       cachedS3InputKey &&
       cachedFastaUrl &&
-      this.preparedFastaContent() === fastaContent
+      this.preparedFastaContent() === fastaContent &&
+      this.preparedSamplesheetId() === samplesheetId
     ) {
       onPrepared(cachedFastaUrl, cachedS3InputKey);
       return;
     }
 
-    const fastaFile = new File([fastaContent], `${this.samplesheetId}.fasta`, {
+    const fastaFile = new File([fastaContent], `${samplesheetId}.fasta`, {
       type: "text/plain",
     });
 
@@ -760,7 +780,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           }
           return this.datasetUploadService
             .uploadDataset({
-              formData: { id: this.samplesheetId, fasta: response.s3Uri },
+              formData: { id: samplesheetId, fasta: response.s3Uri },
             })
             .pipe(
               map((datasetResponse) => ({
@@ -783,6 +803,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           this.preparedFastaContent.set(fastaContent);
           this.preparedFastaUrl.set(fastaUrl);
           this.preparedSamplesheetS3Key.set(s3InputKey);
+          this.preparedSamplesheetId.set(samplesheetId);
           onPrepared(fastaUrl, s3InputKey);
         },
         error: (error: unknown) => {
@@ -807,13 +828,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         );
       }
     );
-  }
-
-  private generateRandomSuffix(): string {
-    return (
-      globalThis.crypto?.randomUUID?.().replace(/-/g, "") ??
-      Math.random().toString(36).slice(2)
-    ).slice(0, 8);
   }
 
   private buildWorkflowPayload(): Omit<
@@ -851,7 +865,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           ? { valid: true }
           : {
               valid: false,
-              errorMessage: "Ligand sequence must be a valid SMILES string.",
+              errorMessage: "Ligand sequence must be a valid SMILES string",
             };
       case "ccd":
         return { valid: true };
@@ -859,7 +873,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     return {
       valid: false,
-      errorMessage: "Sequence format is invalid.",
+      errorMessage: "Sequence format is invalid",
     };
   }
 }

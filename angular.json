@@ -108,6 +108,9 @@
           "options": {
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
+            "codeCoverageExclude": [
+              "src/app/features/workflows/components/molstar-viewer/molstar-viewer.component.ts"
+            ],
             "assets": [
               {
                 "glob": "**/*",
@@ -117,7 +120,17 @@
             "styles": ["src/styles.scss"],
             "scripts": [],
             "karmaConfig": "karma.conf.js",
-            "watch": false
+            "watch": false,
+            "fileReplacements": [
+              {
+                "replace": "node_modules/h264-mp4-encoder/embuild/dist/h264-mp4-encoder.node.js",
+                "with": "src/stubs/h264-mp4-encoder.stub.js"
+              }
+            ],
+            "loader": {
+              ".jpg": "file",
+              ".png": "file"
+            }
           }
         },
         "lint": {

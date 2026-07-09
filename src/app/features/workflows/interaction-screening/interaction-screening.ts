@@ -133,7 +133,8 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     }
   );
   private formStatus = toSignal(
-    this.form.statusChanges.pipe(startWith(this.form.status))
+    this.form.statusChanges.pipe(startWith(this.form.status)),
+    { requireSync: true }
   );
   private formValue: Signal<{
     jobName: string;
@@ -267,7 +268,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     if (!err) return "";
     return `Too many sequence combinations: ${
       err.actual
-    } pairs (query × target). The maximum is ${err.max - 1}.`;
+    } pairs (query × target). The maximum is ${err.max - 1}`;
   }
 
   hasDuplicateSequencesError(): boolean {
@@ -289,8 +290,9 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     sequence: string;
     group: "query" | "target";
   }[] {
-    const queryEntries = parseMultiFasta(this.form.value.queryFasta ?? "");
-    const targetEntries = parseMultiFasta(this.form.value.targetFasta ?? "");
+    const raw = this.form.getRawValue();
+    const queryEntries = parseMultiFasta(raw.queryFasta);
+    const targetEntries = parseMultiFasta(raw.targetFasta);
     return [
       ...queryEntries.map((e) => ({
         id: e.header,
@@ -306,7 +308,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   }
 
   protected performSubmit(): void {
-    const jobName = this.form.value.jobName ?? "";
+    const jobName = this.form.getRawValue().jobName;
     const sequences = this.buildWispsPayload();
 
     this.workflowSubmission.isSubmitting.set(true);

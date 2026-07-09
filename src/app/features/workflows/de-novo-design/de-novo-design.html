@@ -69,15 +69,13 @@
               id="jobNameInput"
               type="text"
               class="mt-2 block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
-              [class.border-red-500]="jobNameTouched() && jobNameError()"
-              [value]="jobName()"
-              (input)="onJobNameChange($any($event.target).value)"
-              (blur)="jobNameTouched.set(true)"
+              [class.border-red-500]="hasJobNameError()"
+              [formControl]="form.controls.jobName"
               placeholder="e.g. my-binder-job"
               maxlength="60"
             />
-            @if (jobNameTouched() && jobNameError()) {
-            <p class="mt-1 text-xs text-red-600">{{ jobNameError() }}</p>
+            @if (hasJobNameError()) {
+            <p class="mt-1 text-xs text-red-600">{{ getJobNameError() }}</p>
             }
           </div>
 

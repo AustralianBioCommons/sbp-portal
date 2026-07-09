@@ -279,7 +279,7 @@ describe("InteractionScreeningComponent", () => {
     component.form.controls.jobName.setValue("");
 
     expect(component.hasJobNameError()).toBe(true);
-    expect(component.getJobNameError()).toBe("Job Name is required.");
+    expect(component.getJobNameError()).toBe("Job Name is required");
   });
 
   it("should show job name maxlength error when touched and too long", () => {

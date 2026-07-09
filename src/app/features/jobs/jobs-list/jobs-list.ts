@@ -371,21 +371,19 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     switch (status) {
       case "Completed":
         return "bg-green-100 text-green-800";
+      case "Pending":
+        return "bg-sky-100 text-sky-800";
       case "In progress":
-        return "text-gray-700";
+        return "bg-blue-100 text-blue-800";
       case "In queue":
-        return "bg-white text-black border border-black";
+        return "bg-gray-100 text-gray-800";
       case "Failed":
-        return "bg-red-600 text-white";
+        return "bg-red-100 text-red-800";
       case "Stopped":
-        return "bg-amber-100 text-amber-700";
+        return "bg-amber-100 text-amber-800";
       default:
-        return "bg-gray-100 text-gray-900";
+        return "bg-gray-100 text-gray-800";
     }
-  }
-
-  isInProgress(status: string): boolean {
-    return status === "In progress";
   }
 
   /**
