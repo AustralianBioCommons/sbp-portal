@@ -47,14 +47,10 @@
         description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
       >
         <div class="rounded-lg border p-4">
-          <label for="job-name" class="block text-sm font-medium">
+          <label for="job-name" class="block text-sm font-medium mb-1">
             Job Name
-            <span class="ml-1 text-red-500">*</span>
+            <span class="text-red-500" aria-hidden="true">*</span>
           </label>
-          <p class="mt-1 text-xs text-gray-500">
-            Required identifier for this job. Allowed characters: letters,
-            numbers, hyphens, and underscores. Must not start with a number.
-          </p>
           <input
             id="job-name"
             type="text"
@@ -66,9 +62,13 @@
                 ? 'border-red-500 focus:ring-red-100'
                 : 'focus:ring-sky-100'
             "
-            class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+            class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
             maxlength="60"
           />
+          <p class="mt-1 text-xs text-gray-500">
+            Required identifier for this job. Allowed characters: letters,
+            numbers, hyphens, and underscores. Must not start with a number.
+          </p>
           @if (hasJobNameError()) {
           <p class="mt-1 text-xs text-red-600" role="alert">
             {{ getJobNameError() }}
@@ -76,180 +76,186 @@
           }
         </div>
 
-        <div
-          class="sequence-list relative mt-4 flex flex-col gap-4"
-          cdkDropList
-          cdkDropListOrientation="vertical"
-          [cdkDropListData]="entityRows()"
-          (cdkDropListDropped)="dropEntityRow($event)"
-        >
-          @for (row of entityRows(); track row.id; let i = $index) {
+        <div class="rounded-lg border p-4 mt-4">
+          <div class="block text-sm font-medium mb-1">
+            Entities
+            <span class="text-red-500" aria-hidden="true">*</span>
+          </div>
           <div
-            class="entity-row rounded-lg border bg-white p-4 transition-colors has-[.drag-handle:hover]:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
-            cdkDrag
-            cdkDragLockAxis="y"
-            cdkDragBoundary=".sequence-list"
-            cdkDragPreviewContainer="parent"
+            class="sequence-list relative flex flex-col gap-4"
+            cdkDropList
+            cdkDropListOrientation="vertical"
+            [cdkDropListData]="entityRows()"
+            (cdkDropListDropped)="dropEntityRow($event)"
           >
+            @for (row of entityRows(); track row.id; let i = $index) {
             <div
-              class="grid gap-4 lg:grid-cols-[40px_170px_110px_170px_minmax(0,1fr)_40px] lg:items-start"
+              class="entity-row rounded-lg border bg-white p-4 transition-colors has-[.drag-handle:hover]:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
+              cdkDrag
+              cdkDragLockAxis="y"
+              cdkDragBoundary=".sequence-list"
+              cdkDragPreviewContainer="parent"
             >
-              <div class="flex shrink-0 cursor-grab flex-col items-center">
-                <span class="mb-1 block text-sm font-medium">
-                  #{{ i + 1 }}
-                </span>
-                <div
-                  class="drag-handle flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
-                  cdkDragHandle
-                  title="Drag to reorder"
-                  [attr.aria-label]="'Drag to reorder entity ' + (i + 1)"
-                >
-                  <ng-icon
-                    name="bootstrapGripVertical"
-                    size="18"
-                    aria-hidden="true"
-                  ></ng-icon>
+              <div
+                class="grid gap-4 lg:grid-cols-[40px_170px_110px_170px_minmax(0,1fr)_40px] lg:items-start"
+              >
+                <div class="flex shrink-0 cursor-grab flex-col items-center">
+                  <span class="mb-1 block text-sm font-medium">
+                    #{{ i + 1 }}
+                  </span>
+                  <div
+                    class="drag-handle flex h-10 w-8 cursor-grab items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing"
+                    cdkDragHandle
+                    title="Drag to reorder"
+                    [attr.aria-label]="'Drag to reorder entity ' + (i + 1)"
+                  >
+                    <ng-icon
+                      name="bootstrapGripVertical"
+                      size="18"
+                      aria-hidden="true"
+                    ></ng-icon>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label
-                  [for]="'molecule-type-' + row.id"
-                  class="mb-1 block text-sm font-medium"
-                >
-                  Type
-                </label>
-                <app-listbox-select
-                  [inputId]="'molecule-type-' + row.id"
-                  [options]="moleculeTypeOptions"
-                  [value]="row.moleculeType"
-                  (valueChange)="updateRowMoleculeType(row.id, $event)"
-                  (blurred)="touchRowField(row.id, 'moleculeType')"
-                ></app-listbox-select>
-              </div>
+                <div>
+                  <label
+                    [for]="'molecule-type-' + row.id"
+                    class="mb-1 block text-sm font-medium"
+                  >
+                    Type
+                  </label>
+                  <app-listbox-select
+                    [inputId]="'molecule-type-' + row.id"
+                    [options]="moleculeTypeOptions"
+                    [value]="row.moleculeType"
+                    (valueChange)="updateRowMoleculeType(row.id, $event)"
+                    (blurred)="touchRowField(row.id, 'moleculeType')"
+                  ></app-listbox-select>
+                </div>
 
-              <div>
-                <label
-                  [for]="'copy-number-' + row.id"
-                  class="mb-1 block text-sm font-medium"
-                >
-                  Copies
-                </label>
-                <input
-                  [id]="'copy-number-' + row.id"
-                  type="number"
-                  min="1"
-                  step="1"
-                  [value]="row.copyNumber"
-                  (input)="updateRowCopyNumber(row.id, $any($event.target).value)"
-                  (blur)="touchRowField(row.id, 'copyNumber')"
-                  [class]="
+                <div>
+                  <label
+                    [for]="'copy-number-' + row.id"
+                    class="mb-1 block text-sm font-medium"
+                  >
+                    Copies
+                  </label>
+                  <input
+                    [id]="'copy-number-' + row.id"
+                    type="number"
+                    min="1"
+                    step="1"
+                    [value]="row.copyNumber"
+                    (input)="updateRowCopyNumber(row.id, $any($event.target).value)"
+                    (blur)="touchRowField(row.id, 'copyNumber')"
+                    [class]="
                     shouldShowRowFieldError(row, 'copyNumber') && getRowErrors(i).copyNumber
                       ? 'border-red-500 focus:ring-red-100'
                       : 'focus:ring-sky-100'
                   "
-                  class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                />
-                @if (shouldShowRowFieldError(row, 'copyNumber') &&
-                getRowErrors(i).copyNumber) {
-                <p class="mt-1 text-xs text-red-600" role="alert">
-                  {{ getRowErrors(i).copyNumber }}
-                </p>
-                }
-              </div>
+                    class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                  />
+                  @if (shouldShowRowFieldError(row, 'copyNumber') &&
+                  getRowErrors(i).copyNumber) {
+                  <p class="mt-1 text-xs text-red-600" role="alert">
+                    {{ getRowErrors(i).copyNumber }}
+                  </p>
+                  }
+                </div>
 
-              <div class="min-w-0">
-                <label
-                  [for]="'sequence-name-' + row.id"
-                  class="mb-1 block text-sm font-medium"
-                >
-                  Sequence Name
-                  <span class="text-red-500" aria-hidden="true">*</span>
-                </label>
-                <input
-                  type="text"
-                  [id]="'sequence-name-' + row.id"
-                  [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
-                  [value]="row.name"
-                  (input)="updateRowName(row.id, $any($event.target).value)"
-                  (blur)="touchRowField(row.id, 'name')"
-                  [placeholder]="'seq' + (i + 1)"
-                  [class]="
+                <div class="min-w-0">
+                  <label
+                    [for]="'sequence-name-' + row.id"
+                    class="mb-1 block text-sm font-medium"
+                  >
+                    Sequence Name
+                    <span class="text-red-500" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    [id]="'sequence-name-' + row.id"
+                    [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
+                    [value]="row.name"
+                    (input)="updateRowName(row.id, $any($event.target).value)"
+                    (blur)="touchRowField(row.id, 'name')"
+                    [placeholder]="'seq' + (i + 1)"
+                    [class]="
                     shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
                       ? 'border-red-500 focus:ring-red-100'
                       : 'focus:ring-sky-100'
                   "
-                  class="block h-10 w-full rounded-md border bg-white px-4 font-mono text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
-                  autocomplete="off"
-                  spellcheck="false"
-                  autocorrect="off"
-                  autocapitalize="off"
-                />
-                @if (shouldShowRowFieldError(row, 'name') &&
-                getRowErrors(i).name) {
-                <p class="mt-1 text-xs text-red-600" role="alert">
-                  {{ getRowErrors(i).name }}
-                </p>
-                }
-              </div>
+                    class="block h-10 w-full rounded-md border bg-white px-4 font-mono text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+                    autocomplete="off"
+                    spellcheck="false"
+                    autocorrect="off"
+                    autocapitalize="off"
+                  />
+                  @if (shouldShowRowFieldError(row, 'name') &&
+                  getRowErrors(i).name) {
+                  <p class="mt-1 text-xs text-red-600" role="alert">
+                    {{ getRowErrors(i).name }}
+                  </p>
+                  }
+                </div>
 
-              <div class="min-w-0">
-                <label
-                  [for]="'sequence-' + row.id"
-                  class="mb-1 block text-sm font-medium"
-                >
-                  Sequence <span class="text-red-500">*</span>
-                </label>
-                @if (row.moleculeType === 'ccd') {
-                <app-listbox-select
-                  [inputId]="'sequence-' + row.id"
-                  [options]="ccdOptions"
-                  [value]="row.sequence"
-                  [placeholder]="'Select a ligand...'"
-                  [invalid]="!!(shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence)"
-                  (valueChange)="updateRowSequence(row.id, $event)"
-                  (blurred)="touchRowField(row.id, 'sequence')"
-                ></app-listbox-select>
-                } @else {
-                <div
-                  class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
-                  [class]="
-                    shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence
+                <div class="min-w-0">
+                  <label
+                    [for]="'sequence-' + row.id"
+                    class="mb-1 block text-sm font-medium"
+                  >
+                    Sequence <span class="text-red-500">*</span>
+                  </label>
+                  @if (row.moleculeType === 'ccd') {
+                  <app-listbox-select
+                    [inputId]="'sequence-' + row.id"
+                    [options]="ccdOptions"
+                    [value]="row.sequence"
+                    [placeholder]="'Select a ligand...'"
+                    [invalid]="!!((shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence) || (shouldShowRowToolError(row) && getRowErrors(i).tool))"
+                    (valueChange)="updateRowSequence(row.id, $event)"
+                    (blurred)="touchRowField(row.id, 'sequence')"
+                  ></app-listbox-select>
+                  } @else {
+                  <div
+                    class="overflow-hidden rounded-md border transition-colors focus-within:ring-2"
+                    [class]="
+                    (shouldShowRowFieldError(row, 'sequence') && getRowErrors(i).sequence) ||
+                    (shouldShowRowToolError(row) && getRowErrors(i).tool)
                       ? 'border-red-500 focus-within:ring-red-100'
                       : 'border-gray-300 focus-within:ring-sky-100'
                   "
-                >
-                  <div class="relative">
-                    <div
-                      class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-1 font-mono text-sm text-gray-900"
-                      aria-hidden="true"
-                    >
-                      @for (cell of getSequenceCells(row.sequence); track
-                      $index) {<span
-                        class="relative inline-block w-[1ch] align-top text-center leading-7.5 mr-0.5"
-                        ><span
-                          class="pointer-events-none absolute inset-x-0 -top-0.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
-                        >
-                          {{ cell.label }}
+                  >
+                    <div class="relative">
+                      <div
+                        class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-1 font-mono text-sm text-gray-900"
+                        aria-hidden="true"
+                      >
+                        @for (cell of getSequenceCells(row.sequence); track
+                        $index) {<span
+                          class="relative inline-block w-[1ch] align-top text-center leading-7.5 mr-0.5"
+                          ><span
+                            class="pointer-events-none absolute inset-x-0 -top-0.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
+                          >
+                            {{ cell.label }}
+                          </span>
+                          {{ cell.char }}
                         </span>
-                        {{ cell.char }}
-                      </span>
-                      }
-                    </div>
+                        }
+                      </div>
 
-                    <textarea
-                      [id]="'sequence-' + row.id"
-                      [attr.aria-label]="'Sequence for entity ' + (i + 1)"
-                      spellcheck="false"
-                      autocomplete="off"
-                      autocorrect="off"
-                      autocapitalize="off"
-                      [value]="row.sequence"
-                      (input)="updateRowSequence(row.id, $any($event.target).value)"
-                      (scroll)="syncSequenceOverlayScroll($event)"
-                      (blur)="touchRowField(row.id, 'sequence')"
-                      class="relative block w-full resize-none bg-transparent px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-9.5 max-h-40 break-all"
-                      [placeholder]="
+                      <textarea
+                        [id]="'sequence-' + row.id"
+                        [attr.aria-label]="'Sequence for entity ' + (i + 1)"
+                        spellcheck="false"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        [value]="row.sequence"
+                        (input)="updateRowSequence(row.id, $any($event.target).value)"
+                        (scroll)="syncSequenceOverlayScroll($event)"
+                        (blur)="touchRowField(row.id, 'sequence')"
+                        class="relative block w-full resize-none bg-transparent px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-9.5 max-h-40 break-all"
+                        [placeholder]="
                         row.moleculeType === 'ligand'
                           ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
                           : row.moleculeType === 'dna'
@@ -258,60 +264,61 @@
                               ? 'AUGCGU'
                               : 'ACDEFGHIKLMNPQRSTVWY'
                       "
-                    ></textarea>
+                      ></textarea>
+                    </div>
                   </div>
+                  } @if (shouldShowRowFieldError(row, 'sequence') &&
+                  getRowErrors(i).sequence) {
+                  <p class="mt-1 text-xs text-red-600" role="alert">
+                    {{ getRowErrors(i).sequence }}
+                  </p>
+                  } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
+                  <p class="mt-1 text-xs text-red-600" role="alert">
+                    {{ getRowErrors(i).tool }}
+                  </p>
+                  }
                 </div>
-                } @if (shouldShowRowFieldError(row, 'sequence') &&
-                getRowErrors(i).sequence) {
-                <p class="mt-1 text-xs text-red-600" role="alert">
-                  {{ getRowErrors(i).sequence }}
-                </p>
-                } @if (shouldShowRowToolError(row) && getRowErrors(i).tool) {
-                <p class="mt-1 text-xs text-red-600" role="alert">
-                  {{ getRowErrors(i).tool }}
-                </p>
-                }
-              </div>
 
-              <div class="flex flex-col items-center">
-                <span
-                  class="mb-2 block text-xs font-semibold opacity-0 select-none"
-                  aria-hidden="true"
-                  >&middot;</span
-                >
-                <button
-                  type="button"
-                  class="flex h-10 w-10 items-center border justify-center rounded-lg text-biocommons-primary transition not-disabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  [disabled]="entityRows().length === 1"
-                  (click)="removeEntityRow(row.id)"
-                  [attr.aria-label]="'Delete entity ' + (i + 1)"
-                  title="Delete row"
-                >
-                  <ng-icon
-                    name="heroTrash"
-                    size="18"
+                <div class="flex flex-col items-center">
+                  <span
+                    class="mb-2 block text-xs font-semibold opacity-0 select-none"
                     aria-hidden="true"
-                  ></ng-icon>
-                </button>
+                    >&middot;</span
+                  >
+                  <button
+                    type="button"
+                    class="flex h-10 w-10 items-center border justify-center rounded-lg text-biocommons-primary transition not-disabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    [disabled]="entityRows().length === 1"
+                    (click)="removeEntityRow(row.id)"
+                    [attr.aria-label]="'Delete entity ' + (i + 1)"
+                    title="Delete row"
+                  >
+                    <ng-icon
+                      name="heroTrash"
+                      size="18"
+                      aria-hidden="true"
+                    ></ng-icon>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          }
+            }
 
-          <div
-            class="flex items-center justify-between rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800"
-          >
-            <p>
-              Add another entity row to define a multicomponent prediction
-              input.
-            </p>
-            <app-button
-              type="button"
-              variant="primary"
-              (click)="addEntityRow()"
+            <div
+              class="flex items-center justify-between rounded-lg border bg-gray-50 p-4 text-sm"
             >
-              Add Entity
-            </app-button>
+              <p>
+                Add another entity row to define a multicomponent prediction
+                input
+              </p>
+              <app-button
+                type="button"
+                variant="secondary"
+                (click)="addEntityRow()"
+              >
+                Add Entity
+              </app-button>
+            </div>
           </div>
         </div>
 
