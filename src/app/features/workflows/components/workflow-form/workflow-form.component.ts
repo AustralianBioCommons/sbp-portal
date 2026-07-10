@@ -40,6 +40,18 @@ export class WorkflowFormComponent {
     this.sections().findIndex((s) => s.id === this.activeSection())
   );
 
+  readonly reviewDisabled = computed(() => {
+    const sections = this.sections();
+    const last = sections[sections.length - 1];
+    if (!last) return true;
+    return (
+      this.disabled() ||
+      this.submitDisabled() ||
+      this.isSubmitting() ||
+      !this.isSectionValid()(last.id)
+    );
+  });
+
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly bottomSentinel =
@@ -135,6 +147,12 @@ export class WorkflowFormComponent {
     this.scrollTo(sectionId);
   }
 
+  onReviewClick(event: Event): void {
+    event.preventDefault();
+    if (this.reviewDisabled()) return;
+    this.onContinue();
+  }
+
   scrollToFirstInvalidSection(): void {
     const invalid = this.sections().find((s) => !this.isSectionValid()(s.id));
     if (invalid) this.scrollTo(invalid.id);
@@ -188,11 +206,17 @@ export class WorkflowFormComponent {
   }
 
   circleClasses(id: string): string {
+    const last = this.isLast(id);
+    if (last && this.reviewDisabled()) {
+      return this.isSectionActive(id)
+        ? "border-gray-300 bg-gray-300"
+        : "border-gray-300 bg-white";
+    }
+
     const active = this.isSectionActive(id);
     const completed = this.isSectionCompleted(id);
     const visited = this.isSectionVisited(id);
     const valid = this.sectionValid(id);
-    const last = this.isLast(id);
     const classes: string[] = [];
 
     if (!visited) classes.push("border-gray-300");
@@ -211,6 +235,7 @@ export class WorkflowFormComponent {
   }
 
   labelClasses(id: string): string {
+    if (this.isLast(id) && this.reviewDisabled()) return "text-gray-400";
     return this.isSectionActive(id) || this.isSectionCompleted(id)
       ? "text-biocommons-primary"
       : "text-gray-900";

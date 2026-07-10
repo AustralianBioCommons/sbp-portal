@@ -59,6 +59,20 @@
         </div>
         }
       </div>
+      @if (inputEntities().length > 0) {
+      <div class="space-y-1">
+        <p class="font-medium">Entities</p>
+        <ul class="space-y-1">
+          @for (entity of inputEntities(); track $index) {
+          <li class="text-gray-600 wrap-break-word">
+            {{ entity.type }} — {{ entity.name }} @if (entity.sequence) { —
+            <span class="font-mono">{{ entity.sequence }}</span>
+            }
+          </li>
+          }
+        </ul>
+      </div>
+      }
     </div>
 
     <hr class="border-t border-gray-200" />

@@ -7,6 +7,12 @@ export interface SummaryItem {
   url?: string;
 }
 
+export interface EntitySummaryItem {
+  type: string;
+  name: string;
+  sequence: string;
+}
+
 @Component({
   selector: "app-configuration-summary",
   imports: [],
@@ -18,5 +24,6 @@ export class ConfigurationSummaryComponent {
   readonly selectedTool = input.required<string>();
   readonly hasParameters = input(false);
   readonly inputItems = input.required<SummaryItem[]>();
+  readonly inputEntities = input<EntitySummaryItem[]>([]);
   readonly toolSettingItems = input<SummaryItem[]>([]);
 }

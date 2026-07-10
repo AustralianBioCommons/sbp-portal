@@ -243,25 +243,19 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     }
   };
 
-  readonly formSummary = computed(() => {
-    const entityItems = this.entityRows().map((row, index) => {
-      const sequence = this.getNormalizedSequence(row);
-      return {
-        label: row.name.trim() || `Entity ${index + 1}`,
-        value: sequence
-          ? `${this.getMoleculeTypeLabel(
-              row.moleculeType
-            )} x${this.getParsedCopyNumber(row.copyNumber)} – ${sequence}`
-          : "",
-        fieldName: `entity_${row.id}`,
-      };
-    });
+  readonly formSummary = computed(() => [
+    { label: "Job Name", value: this.jobName().trim(), fieldName: "job_id" },
+  ]);
 
-    return [
-      { label: "Job Name", value: this.jobName().trim(), fieldName: "job_id" },
-      ...entityItems,
-    ];
-  });
+  readonly entitySummary = computed(() =>
+    this.entityRows().map((row, index) => ({
+      type: `${this.getMoleculeTypeLabel(
+        row.moleculeType
+      )} x${this.getParsedCopyNumber(row.copyNumber)}`,
+      name: row.name.trim() || `Entity ${index + 1}`,
+      sequence: this.getNormalizedSequence(row),
+    }))
+  );
 
   readonly generatedFastaContent = computed(() => {
     if (!this.isStep1Valid()) {
@@ -652,7 +646,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         this.selectedTool() === "alphafold2") &&
       row.moleculeType !== "protein"
     ) {
-      errors.tool = `${this.selectedToolLabel()} accepts protein-only input`;
+      errors.tool = `${this.selectedToolLabel()} tool only accepts protein input`;
     }
 
     return errors;
