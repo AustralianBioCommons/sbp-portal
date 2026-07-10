@@ -209,7 +209,9 @@ describe("SinglePredictionComponent", () => {
     component.updateRowMoleculeType(rowId, "rna");
 
     expect(component.isStep1Valid()).toBe(false);
-    expect(component.getRowErrors(0).tool).toContain("protein-only");
+    expect(component.getRowErrors(0).tool).toContain(
+      "only accepts protein input"
+    );
   });
 
   it("should validate DNA, RNA, and ligand formats", () => {
