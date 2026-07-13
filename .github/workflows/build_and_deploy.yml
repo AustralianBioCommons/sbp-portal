@@ -1,13 +1,21 @@
-name: Upload Portal Builds (Dev)
+name: Upload Portal Builds
 
+# Branch == environment. A push to `dev` publishes the portal to the shared dev
+# environment; a push to `staging` publishes to staging. The same build artefact
+# is used for every environment — environment-specific config (API URL, Auth0,
+# etc.) is injected at release time by the per-env SbpFrontend<Env>ReleaseDeployer
+# Lambda from that environment's frontend secret (owned by sbp-infrastructure).
+# The shared upload role (AWS_ROLE_FRONTEND) is trusted from both integration
+# branches; per-env isolation is enforced by the S3 prefix and the Lambda name.
 on:
   push:
     branches:
-      - main
+      - dev
+      - staging
 
 jobs:
   upload-builds:
-    name: Build and Deploy Dev Portal
+    name: Build and Deploy Portal
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -16,6 +24,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Resolve environment from branch
+        id: env
+        run: |
+          set -euo pipefail
+          ENV="${GITHUB_REF_NAME}"            # dev | staging
+          ENV_TITLE="$(tr '[:lower:]' '[:upper:]' <<< "${ENV:0:1}")${ENV:1}"
+          echo "name=${ENV}" >> "${GITHUB_OUTPUT}"
+          echo "lambda=SbpFrontend${ENV_TITLE}ReleaseDeployer" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Node.js 24
         uses: actions/setup-node@v6
@@ -31,7 +48,6 @@ jobs:
           AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
           AWS_ROLE_FRONTEND: ${{ secrets.AWS_ROLE_FRONTEND }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_DEV_FRONTEND_SECRET_NAME: ${{ secrets.AWS_DEV_FRONTEND_SECRET_NAME }}
         run: |
           set -euo pipefail
           if [ -z "${AWS_PORTAL_BUILD_BUCKET}" ]; then
@@ -46,13 +62,11 @@ jobs:
             echo "Missing required secret AWS_REGION" >&2
             exit 1
           fi
-          if [ -z "${AWS_DEV_FRONTEND_SECRET_NAME}" ]; then
-            echo "Missing required secret AWS_DEV_FRONTEND_SECRET_NAME" >&2
-            exit 1
-          fi
 
-      - name: Determine dev identifier
-        id: dev_version
+      - name: Determine release identifier
+        id: version
+        env:
+          ENV: ${{ steps.env.outputs.name }}
         run: |
           set -euo pipefail
           BASE_VERSION=$(node -p "require('./package.json').version")
@@ -61,10 +75,10 @@ jobs:
             exit 1
           fi
           SHORT_SHA=$(git rev-parse --short HEAD)
-          DEV_SUFFIX="dev_${SHORT_SHA}"
-          FULL_VERSION="${BASE_VERSION}-${DEV_SUFFIX}"
-          echo "Using dev release identifier ${FULL_VERSION}"
-          echo "suffix=${DEV_SUFFIX}" >> "${GITHUB_OUTPUT}"
+          SUFFIX="${ENV}_${SHORT_SHA}"
+          FULL_VERSION="${BASE_VERSION}-${SUFFIX}"
+          echo "Using release identifier ${FULL_VERSION}"
+          echo "suffix=${SUFFIX}" >> "${GITHUB_OUTPUT}"
           echo "full_version=${FULL_VERSION}" >> "${GITHUB_OUTPUT}"
 
       - name: Patch package.json version
@@ -75,15 +89,15 @@ jobs:
           const path = require('path');
           const pkgPath = path.resolve('package.json');
           const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-          pkg.version = `${pkg.version}-${process.env.DEV_SUFFIX}`;
+          pkg.version = `${pkg.version}-${process.env.RELEASE_SUFFIX}`;
           fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
           JS
         env:
-          DEV_SUFFIX: ${{ steps.dev_version.outputs.suffix }}
+          RELEASE_SUFFIX: ${{ steps.version.outputs.suffix }}
 
       - name: Write build version
         run: |
-          echo "export const buildVersion = '${{ steps.dev_version.outputs.full_version }}';" > src/environments/build-version.ts
+          echo "export const buildVersion = '${{ steps.version.outputs.full_version }}';" > src/environments/build-version.ts
 
       - name: Build production bundle
         run: npx ng build --configuration production --output-path dist/sbp-portal-prod
@@ -98,31 +112,34 @@ jobs:
           role-session-name: portal-build-upload
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Upload dev production bundle to shared bucket
+      - name: Upload production bundle to shared bucket
         env:
           AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
+          ENV: ${{ steps.env.outputs.name }}
         run: |
           set -euo pipefail
-          aws s3 sync dist/sbp-portal-prod/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/prod/dev/" --delete
+          aws s3 sync dist/sbp-portal-prod/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/prod/${ENV}/" --delete
 
-      - name: Upload dev debug bundle to shared bucket
+      - name: Upload debug bundle to shared bucket
         env:
           AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
+          ENV: ${{ steps.env.outputs.name }}
         run: |
           set -euo pipefail
-          aws s3 sync dist/sbp-portal-debug/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/debug/dev/" --delete
+          aws s3 sync dist/sbp-portal-debug/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/debug/${ENV}/" --delete
 
-      - name: Invoke dev frontend release Lambda
+      - name: Invoke frontend release Lambda
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          DEV_RELEASE_FUNCTION: SbpFrontendDevReleaseDeployer
+          RELEASE_FUNCTION: ${{ steps.env.outputs.lambda }}
+          ENV: ${{ steps.env.outputs.name }}
         run: |
           set -euo pipefail
-          PAYLOAD=$(jq -n --arg version "dev" '{version: $version, keepExisting: false, setProduction: false}')
+          PAYLOAD=$(jq -n --arg version "${ENV}" '{version: $version, keepExisting: false, setProduction: false}')
           RESPONSE_FILE=$(mktemp)
 
           INVOKE_METADATA=$(aws lambda invoke \
-            --function-name "${DEV_RELEASE_FUNCTION}" \
+            --function-name "${RELEASE_FUNCTION}" \
             --payload "${PAYLOAD}" \
             --cli-binary-format raw-in-base64-out \
             --cli-read-timeout 0 \
