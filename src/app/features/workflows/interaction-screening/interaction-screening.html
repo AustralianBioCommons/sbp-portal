@@ -48,14 +48,10 @@
         <div class="mt-6 space-y-6">
           <!-- Job Name -->
           <div class="rounded-lg border bg-white p-4">
-            <label for="job-id" class="block text-sm font-medium">
+            <label for="job-id" class="block text-sm font-medium mb-1">
               Job Name
               <span class="text-red-500" aria-hidden="true">*</span>
             </label>
-            <p class="mt-1 text-xs text-gray-500">
-              Required identifier for this job. Allowed characters: letters,
-              numbers, hyphens, and underscores. Must not start with a number.
-            </p>
             <input
               id="job-id"
               type="text"
@@ -66,10 +62,14 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-2 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
               placeholder="e.g. my-screening-job"
               maxlength="60"
             />
+            <p class="mt-1 text-xs text-gray-500">
+              Required identifier for this job. Allowed characters: letters,
+              numbers, hyphens, and underscores. Must not start with a number.
+            </p>
             @if (hasJobNameError()) {
             <p class="mt-1 text-xs text-red-600" role="alert">
               {{ getJobNameError() }}
@@ -79,17 +79,10 @@
 
           <!-- Query Sequence -->
           <div class="rounded-lg border bg-white p-4">
-            <label for="query-fasta" class="block text-sm font-medium">
+            <label for="query-fasta" class="mb-1 block text-sm font-medium">
               Query Sequences
               <span class="text-red-500" aria-hidden="true">*</span>
             </label>
-            <p class="mt-1 text-xs text-gray-500">
-              Enter one or more query protein sequences in FASTA format. Each
-              entry must have a unique header line starting with
-              <code class="font-mono">&#62;</code>, followed by the sequence on
-              the next line(s). Only canonical amino acids
-              (ARNDCQEGHILKMFPSTWYV) are accepted.
-            </p>
             <textarea
               id="query-fasta"
               rows="8"
@@ -103,9 +96,16 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-2 block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              class="block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
               placeholder=">seq1&#10;MKTAYIAKQRQISFVK&#10;>seq2&#10;ACDEFGHIKLMNPQRSTVWY"
             ></textarea>
+            <p class="mt-1 text-xs text-gray-500">
+              Enter one or more query protein sequences in FASTA format. Each
+              entry must have a unique header line starting with
+              <code class="font-mono">&#62;</code>, followed by the sequence on
+              the next line(s). Only canonical amino acids
+              (ARNDCQEGHILKMFPSTWYV) are accepted.
+            </p>
             @if (hasQueryError()) {
             <p class="mt-1 text-xs text-red-600" role="alert">
               {{ getQueryError() }}
@@ -115,17 +115,10 @@
 
           <!-- Target Sequence -->
           <div class="rounded-lg border bg-white p-4">
-            <label for="target-fasta" class="block text-sm font-medium">
+            <label for="target-fasta" class="mb-1 block text-sm font-medium">
               Target Sequences
               <span class="text-red-500" aria-hidden="true">*</span>
             </label>
-            <p class="mt-1 text-xs text-gray-500">
-              Enter one or more target protein sequences in FASTA format. The
-              pipeline will evaluate all pairwise interactions between these and
-              the query sequences above. Each entry needs a unique header line
-              starting with <code class="font-mono">&#62;</code>. Only canonical
-              amino acids (ARNDCQEGHILKMFPSTWYV) are accepted.
-            </p>
             <textarea
               id="target-fasta"
               rows="8"
@@ -139,9 +132,16 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-2 block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              class="block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
               placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY&#10;>target2&#10;MKTAYIAKQRQISFVK"
             ></textarea>
+            <p class="mt-1 text-xs text-gray-500">
+              Enter one or more target protein sequences in FASTA format. The
+              pipeline will evaluate all pairwise interactions between these and
+              the query sequences above. Each entry needs a unique header line
+              starting with <code class="font-mono">&#62;</code>. Only canonical
+              amino acids (ARNDCQEGHILKMFPSTWYV) are accepted.
+            </p>
             @if (hasTargetError()) {
             <p class="mt-1 text-xs text-red-600" role="alert">
               {{ getTargetError() }}

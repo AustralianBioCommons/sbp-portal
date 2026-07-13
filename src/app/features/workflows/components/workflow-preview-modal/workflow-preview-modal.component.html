@@ -26,14 +26,12 @@
       [selectedTool]="selectedTool()"
       [hasParameters]="hasParameters()"
       [inputItems]="inputItems()"
+      [inputEntities]="inputEntities()"
       [toolSettingItems]="toolSettingItems()"
     ></app-configuration-summary>
   </div>
 
-  <div
-    modalActions
-    class="flex justify-end gap-4 border-t bg-gray-50 p-4 text-sm"
-  >
+  <div modalActions class="flex justify-end gap-4 p-4 pt-0 text-sm">
     <app-button
       variant="secondary"
       widthClass="w-auto"

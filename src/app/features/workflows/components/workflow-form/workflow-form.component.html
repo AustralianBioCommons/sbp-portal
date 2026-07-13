@@ -15,15 +15,30 @@
             <div class="flex w-full justify-center">
               <button
                 type="button"
-                class="cursor-pointer appearance-none border-0 bg-transparent p-0"
-                [attr.aria-label]="'Go to ' + section.label"
-                (click)="scrollToSection($event, section.id)"
+                class="appearance-none border-0 bg-transparent p-0"
+                [class.cursor-pointer]="!(last && reviewDisabled())"
+                [class.cursor-not-allowed]="last && reviewDisabled()"
+                [disabled]="last && reviewDisabled()"
+                [attr.aria-label]="
+                  last ? 'Review and submit' : 'Go to ' + section.label
+                "
+                (click)="
+                  last
+                    ? onReviewClick($event)
+                    : scrollToSection($event, section.id)
+                "
               >
                 <div
                   class="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all"
                   [class]="circleClasses(section.id)"
                 >
-                  @if (last && active && !valid) {
+                  @if (last && reviewDisabled()) { @if (valid) {
+                  <span class="text-gray-400">✓</span>
+                  } @else if (active) {
+                  <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+                  } @else if (visited) {
+                  <span class="text-gray-400">!</span>
+                  } } @else if (last && active && !valid) {
                   <span
                     class="h-2 w-2 rounded-full bg-biocommons-primary"
                   ></span>
@@ -58,9 +73,14 @@
           <!-- Label -->
           <button
             type="button"
-            class="mt-2 cursor-pointer appearance-none border-0 bg-transparent p-0 text-center text-sm font-medium transition-all"
+            class="mt-2 appearance-none border-0 bg-transparent p-0 text-center text-sm font-medium transition-all"
+            [class.cursor-pointer]="!(last && reviewDisabled())"
+            [class.cursor-not-allowed]="last && reviewDisabled()"
             [class]="labelClasses(section.id)"
-            (click)="scrollToSection($event, section.id)"
+            [disabled]="last && reviewDisabled()"
+            (click)="
+              last ? onReviewClick($event) : scrollToSection($event, section.id)
+            "
           >
             <span class="hidden sm:inline">{{ section.label }}</span>
             <span class="inline sm:hidden">

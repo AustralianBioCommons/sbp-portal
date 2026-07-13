@@ -209,7 +209,9 @@ describe("SinglePredictionComponent", () => {
     component.updateRowMoleculeType(rowId, "rna");
 
     expect(component.isStep1Valid()).toBe(false);
-    expect(component.getRowErrors(0).tool).toContain("protein-only");
+    expect(component.getRowErrors(0).tool).toContain(
+      "only accepts protein input"
+    );
   });
 
   it("should validate DNA, RNA, and ligand formats", () => {
@@ -392,10 +394,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should normalize protein sequence content in summary", () => {
     fillValidProteinRow("ac de fg");
-    const entityItem = component
-      .formSummary()
-      .find((item) => item.fieldName.startsWith("entity_"));
-    expect(entityItem?.value).toContain("ACDEFG");
+    expect(component.entitySummary()[0].sequence).toContain("ACDEFG");
   });
 
   it("should expose tool-specific settings for all tools", () => {

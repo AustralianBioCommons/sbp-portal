@@ -172,6 +172,49 @@ describe("WorkflowFormComponent", () => {
     expect(scrollSpy).toHaveBeenCalled();
   });
 
+  describe("Review & Submit circle", () => {
+    function reviewCircle(): HTMLButtonElement {
+      return fixture.nativeElement.querySelector(
+        'button[aria-label="Review and submit"]'
+      );
+    }
+
+    it("is enabled and opens the preview (emits continued) when the form is valid", () => {
+      let emitted = false;
+      component.continued.subscribe(() => (emitted = true));
+      const circle = reviewCircle();
+      expect(circle.disabled).toBe(false);
+      circle.click();
+      expect(emitted).toBe(true);
+    });
+
+    it("is disabled and greyed out when credits are insufficient", () => {
+      fixture.componentRef.setInput("submitDisabled", true);
+      fixture.detectChanges();
+      expect(reviewCircle().disabled).toBe(true);
+      expect(component.circleClasses("c")).toContain("border-gray-300");
+      expect(component.labelClasses("c")).toContain("text-gray-400");
+    });
+
+    it("is disabled when the form is invalid", () => {
+      fixture.componentRef.setInput(
+        "isSectionValid",
+        (id: string) => id !== "c"
+      );
+      fixture.detectChanges();
+      expect(reviewCircle().disabled).toBe(true);
+    });
+
+    it("does not emit continued when disabled", () => {
+      fixture.componentRef.setInput("submitDisabled", true);
+      fixture.detectChanges();
+      let emitted = false;
+      component.continued.subscribe(() => (emitted = true));
+      component.onReviewClick(new Event("click"));
+      expect(emitted).toBe(false);
+    });
+  });
+
   describe("section tracking via IntersectionObserver", () => {
     let observers: IntersectionObserverCallback[];
     let originalObserver: typeof IntersectionObserver;

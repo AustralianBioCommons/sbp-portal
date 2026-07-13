@@ -6,6 +6,7 @@ import { ButtonComponent } from "../../../../components/button/button.component"
 import { ModalComponent } from "../../../../components/modal/modal.component";
 import {
   ConfigurationSummaryComponent,
+  EntitySummaryItem,
   SummaryItem,
 } from "../configuration-summary/configuration-summary.component";
 
@@ -31,6 +32,7 @@ export class WorkflowPreviewModalComponent {
   readonly selectedTool = input("");
   readonly hasParameters = input(false);
   readonly inputItems = input<SummaryItem[]>([]);
+  readonly inputEntities = input<EntitySummaryItem[]>([]);
   readonly toolSettingItems = input<SummaryItem[]>([]);
 
   readonly confirmed = output<void>();
