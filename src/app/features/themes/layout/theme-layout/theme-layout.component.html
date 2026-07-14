@@ -5,34 +5,61 @@
     <div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
       <!-- Title + projected intro copy -->
       <div class="space-y-6">
-        <h1 class="text-4xl font-semibold text-gray-900">{{ title() }}</h1>
+        <h1 class="text-4xl font-semibold">{{ title() }}</h1>
         <ng-content select="[description]"></ng-content>
       </div>
 
-      <!-- Workflows / Tools -->
-      @for (section of sections(); track section.heading) {
+      <!-- Workflows -->
       <div class="space-y-6">
-        <h2 class="text-2xl font-semibold text-gray-900">
-          {{ section.heading }}
-        </h2>
-        <div class="flex flex-wrap gap-4">
-          @for (item of section.items; track item.id) { @if (item.disabled) {
-          <span
-            class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow bg-white text-biocommons-primary opacity-50 cursor-not-allowed"
-          >
-            {{ item.label }}
-          </span>
-          } @else {
+        <h2 class="text-2xl font-semibold">Workflows</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (workflow of workflows(); track workflow.id) {
           <a
-            [routerLink]="item.href"
-            class="inline-flex items-center px-6 py-3 text-sm font-medium border rounded-full shadow hover:shadow-md hover:-translate-y-0.5 bg-white text-biocommons-primary hover:text-sky-700 transition-all no-underline"
+            [routerLink]="workflow.disabled ? null : workflow.href"
+            class="group rounded-xl border shadow-sm p-6 flex flex-col gap-4 no-underline text-inherit"
+            [class]="
+              workflow.disabled
+                ? 'bg-gray-100 opacity-50 cursor-not-allowed'
+                : 'bg-white hover:shadow-md hover:-translate-y-0.5 transition-all'
+            "
           >
-            {{ item.label }}
+            <h3 class="text-lg font-semibold">{{ workflow.label }}</h3>
+
+            @if (workflow.tools.length) {
+            <div class="space-y-2">
+              <p class="text-xs uppercase font-semibold text-gray-500">Tools</p>
+              <ul class="flex flex-wrap gap-2 list-none">
+                @for (tool of workflow.tools; track tool.id) {
+                <li>
+                  <span
+                    class="inline-flex items-center px-3 py-1 text-xs font-mono font-semibold border rounded-full"
+                    [class]="
+                      tool.disabled
+                        ? 'bg-gray-100 text-gray-400 border-gray-400'
+                        : 'text-gray-900 border-gray-900'
+                    "
+                    [attr.aria-label]="
+                      tool.disabled ? tool.label + ' (coming soon)' : null
+                    "
+                  >
+                    {{ tool.label }}
+                  </span>
+                </li>
+                }
+              </ul>
+            </div>
+            }
+
+            <div
+              class="flex justify-start items-center gap-1 text-sm font-semibold text-biocommons-primary transition-colors group-hover:text-sky-700"
+            >
+              Launch workflow
+              <ng-icon name="heroChevronRight" size="16" />
+            </div>
           </a>
-          } }
+          }
         </div>
       </div>
-      }
 
       <!-- Theme-specific extras (e.g. community resources) -->
       <ng-content></ng-content>

@@ -24,54 +24,45 @@ describe("StructurePredictionComponent", () => {
 
   it("should define workflows", () => {
     expect(component.workflows.length).toBe(3);
-    expect(component.workflows[0]).toEqual({
-      id: "single-prediction",
-      label: "Single Prediction",
-      href: "/structure-prediction/single-prediction",
-    });
-    expect(component.workflows[1]).toEqual({
-      id: "bulk-prediction",
-      label: "Bulk Prediction",
-      href: "/structure-prediction/bulk-prediction",
-    });
-    expect(component.workflows[2]).toEqual({
-      id: "interaction-screening",
-      label: "Interaction Screening",
-      href: "/structure-prediction/interaction-screening",
-    });
+    expect(component.workflows.map((w) => w.id)).toEqual([
+      "single-prediction",
+      "bulk-prediction",
+      "interaction-screening",
+    ]);
   });
 
-  it("should define tools", () => {
-    expect(component.tools.length).toBe(3);
-    expect(component.tools[0]).toEqual({
-      id: "boltz",
-      label: "Boltz",
-      href: "/structure-prediction/single-prediction",
-    });
-    expect(component.tools[1]).toEqual({
-      id: "colabfold",
-      label: "ColabFold",
-      href: "/structure-prediction/single-prediction",
-    });
-    expect(component.tools[2]).toEqual({
-      id: "alphafold2",
-      label: "AlphaFold2",
-      href: "/structure-prediction/single-prediction",
-    });
+  it("should map tools onto each workflow", () => {
+    const toolIds = (id: string) =>
+      component.workflows.find((w) => w.id === id)?.tools.map((t) => t.id);
+
+    expect(toolIds("single-prediction")).toEqual([
+      "colabfold",
+      "alphafold2",
+      "boltz",
+    ]);
+    expect(toolIds("bulk-prediction")).toEqual(["boltz", "colabfold"]);
+    expect(toolIds("interaction-screening")).toEqual(["boltz", "colabfold"]);
   });
 
-  it("should render enabled workflows and tools as routerLink anchors", () => {
-    const linkTexts = fixture.debugElement
+  it("should render an enabled card linking to each workflow", () => {
+    const hrefs = fixture.debugElement
       .queryAll(By.directive(RouterLink))
-      .map((link) => link.nativeElement.textContent.trim());
+      .map((link) => link.nativeElement.getAttribute("href"));
 
     [
-      "Single Prediction",
-      "Bulk Prediction",
-      "Interaction Screening",
-      "Boltz",
-      "ColabFold",
-      "AlphaFold2",
-    ].forEach((label) => expect(linkTexts).toContain(label));
+      "/structure-prediction/single-prediction",
+      "/structure-prediction/bulk-prediction",
+      "/structure-prediction/interaction-screening",
+    ].forEach((href) => expect(hrefs).toContain(href));
+  });
+
+  it("should render workflow tools as badges", () => {
+    const badgeTexts = fixture.debugElement
+      .queryAll(By.css("li span"))
+      .map((el) => el.nativeElement.textContent.trim());
+
+    ["Boltz", "ColabFold", "AlphaFold2"].forEach((label) =>
+      expect(badgeTexts).toContain(label)
+    );
   });
 });
