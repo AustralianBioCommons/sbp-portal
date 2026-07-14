@@ -1,15 +1,13 @@
-import { Component, computed, input } from "@angular/core";
+import { Component, input } from "@angular/core";
 import { RouterLink } from "@angular/router";
-import { ToolItem, WorkflowItem } from "../../../../core/configs/themes.config";
-
-interface ThemeSection {
-  heading: string;
-  items: (WorkflowItem | ToolItem)[];
-}
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { heroChevronRight } from "@ng-icons/heroicons/outline";
+import { WorkflowItem } from "../../../../core/configs/themes.config";
 
 @Component({
   selector: "app-theme-layout",
-  imports: [RouterLink],
+  imports: [RouterLink, NgIconComponent],
+  providers: [provideIcons({ heroChevronRight })],
   templateUrl: "./theme-layout.component.html",
   styleUrl: "./theme-layout.component.scss",
   host: { class: "block w-full" },
@@ -17,10 +15,4 @@ interface ThemeSection {
 export class ThemeLayoutComponent {
   readonly title = input.required<string>();
   readonly workflows = input.required<WorkflowItem[]>();
-  readonly tools = input.required<ToolItem[]>();
-
-  protected readonly sections = computed<ThemeSection[]>(() => [
-    { heading: "Workflows", items: this.workflows() },
-    { heading: "Tools", items: this.tools() },
-  ]);
 }

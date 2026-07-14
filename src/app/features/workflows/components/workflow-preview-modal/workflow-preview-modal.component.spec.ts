@@ -73,4 +73,23 @@ describe("WorkflowPreviewModalComponent", () => {
     expect(text).toContain("BindCraft");
     expect(text).toContain("my-job");
   });
+
+  it("should render the credit summary when credits are known", () => {
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("credits", 3);
+    fixture.componentRef.setInput("creditsRemaining", 10);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain("Total: 3 Credits");
+  });
+
+  it("should omit the credit summary when credits are unknown", () => {
+    fixture.componentRef.setInput("isOpen", true);
+    fixture.componentRef.setInput("credits", null);
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector("app-credit-summary")
+    ).toBeNull();
+  });
 });

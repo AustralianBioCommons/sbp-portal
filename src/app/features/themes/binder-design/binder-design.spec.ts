@@ -27,7 +27,7 @@ describe("BinderDesignComponent", () => {
   describe("workflows", () => {
     it("should have correct workflow structure", () => {
       expect(component.workflows()).toBeDefined();
-      expect(component.workflows().length).toBe(1);
+      expect(component.workflows().length).toBe(3);
     });
 
     it("workflows should contain de novo design workflow", () => {
@@ -37,6 +37,22 @@ describe("BinderDesignComponent", () => {
       expect(deNovoWorkflow).toBeDefined();
       expect(deNovoWorkflow?.label).toBe("De Novo Design");
       expect(deNovoWorkflow?.href).toBe("/binder-design/de-novo-design");
+    });
+
+    it("should contain disabled partial diffusion and motif scaffolding workflows", () => {
+      const partial = component
+        .workflows()
+        .find((w) => w.id === "partial-diffusion");
+      expect(partial?.label).toBe("Partial Diffusion");
+      expect(partial?.disabled).toBeTrue();
+      expect(partial?.tools.map((t) => t.id)).toEqual(["rfdiffusion"]);
+
+      const motif = component
+        .workflows()
+        .find((w) => w.id === "motif-scaffolding");
+      expect(motif?.label).toBe("Motif Scaffolding");
+      expect(motif?.disabled).toBeTrue();
+      expect(motif?.tools.map((t) => t.id)).toEqual(["rfdiffusion"]);
     });
 
     it("should have all workflows with required properties", () => {
@@ -52,32 +68,32 @@ describe("BinderDesignComponent", () => {
   });
 
   describe("tools", () => {
-    it("tools should have correct tools structure", () => {
-      expect(component.tools()).toBeDefined();
-      expect(component.tools().length).toBe(2);
+    const deNovoTools = () =>
+      component.workflows().find((w) => w.id === "de-novo-design")?.tools ?? [];
+
+    it("de novo design workflow should have correct tools structure", () => {
+      expect(deNovoTools().length).toBe(2);
     });
 
     it("tools should contain BindCraft tool", () => {
-      const bindCraftTool = component
-        .tools()
-        .find((t) => t.label === "BindCraft");
+      const bindCraftTool = deNovoTools().find((t) => t.label === "BindCraft");
       expect(bindCraftTool).toBeDefined();
       expect(bindCraftTool?.id).toBe("bindcraft");
       expect(bindCraftTool?.href).toBe("/binder-design/de-novo-design");
     });
 
     it("tools should contain RFdiffusion tool", () => {
-      const rfdiffusionTool = component
-        .tools()
-        .find((t) => t.label === "RFdiffusion");
+      const rfdiffusionTool = deNovoTools().find(
+        (t) => t.label === "RFdiffusion"
+      );
       expect(rfdiffusionTool).toBeDefined();
       expect(rfdiffusionTool?.id).toBe("rfdiffusion");
-      expect(rfdiffusionTool?.href).toBe("/tools/rfdiffusion");
+      expect(rfdiffusionTool?.href).toBe("/binder-design/de-novo-design");
       expect(rfdiffusionTool?.disabled).toBeTrue();
     });
 
     it("should have all tools with required properties", () => {
-      component.tools().forEach((tool) => {
+      deNovoTools().forEach((tool) => {
         expect(tool.id).toBeDefined();
         expect(tool.id).not.toBe("");
         expect(tool.label).toBeDefined();
@@ -86,7 +102,7 @@ describe("BinderDesignComponent", () => {
     });
 
     it("should have unique tool IDs", () => {
-      const ids = component.tools().map((tool) => tool.id);
+      const ids = deNovoTools().map((tool) => tool.id);
       const uniqueIds = [...new Set(ids)];
       expect(ids.length).toBe(uniqueIds.length);
     });
@@ -153,11 +169,11 @@ describe("BinderDesignComponent", () => {
       component.workflows().forEach((workflow) => {
         expect(typeof workflow.id).toBe("string");
         expect(typeof workflow.label).toBe("string");
-      });
 
-      component.tools().forEach((tool) => {
-        expect(typeof tool.id).toBe("string");
-        expect(typeof tool.label).toBe("string");
+        workflow.tools.forEach((tool) => {
+          expect(typeof tool.id).toBe("string");
+          expect(typeof tool.label).toBe("string");
+        });
       });
 
       component.communityResources().forEach((resource) => {
@@ -168,33 +184,26 @@ describe("BinderDesignComponent", () => {
 
     it("should have proper data types", () => {
       expect(Array.isArray(component.workflows())).toBe(true);
-      expect(Array.isArray(component.tools())).toBe(true);
       expect(Array.isArray(component.communityResources())).toBe(true);
     });
   });
 
   describe("link rendering", () => {
-    it("should render enabled workflows and tools as routerLink anchors", () => {
-      const linkTexts = fixture.debugElement
+    it("should render an enabled card linking to the workflow", () => {
+      const hrefs = fixture.debugElement
         .queryAll(By.directive(RouterLink))
-        .map((link) => link.nativeElement.textContent.trim());
+        .map((link) => link.nativeElement.getAttribute("href"));
 
-      expect(linkTexts).toContain("De Novo Design");
-      expect(linkTexts).toContain("BindCraft");
+      expect(hrefs).toContain("/binder-design/de-novo-design");
     });
 
-    it("should render disabled workflows and tools as non-clickable spans", () => {
-      const disabledText = fixture.debugElement
-        .queryAll(By.css("span.cursor-not-allowed"))
+    it("should render workflow tools as badges", () => {
+      const badgeTexts = fixture.debugElement
+        .queryAll(By.css("li span"))
         .map((el) => el.nativeElement.textContent.trim());
-      const linkTexts = fixture.debugElement
-        .queryAll(By.directive(RouterLink))
-        .map((link) => link.nativeElement.textContent.trim());
 
-      ["RFdiffusion"].forEach((label) => {
-        expect(disabledText).toContain(label);
-        expect(linkTexts).not.toContain(label);
-      });
+      expect(badgeTexts).toContain("BindCraft");
+      expect(badgeTexts).toContain("RFdiffusion");
     });
   });
 });

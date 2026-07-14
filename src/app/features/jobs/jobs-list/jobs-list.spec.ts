@@ -182,7 +182,7 @@ describe("JobsListComponent", () => {
 
   it("should load jobs on init", () => {
     expect(mockJobsService.listJobs).toHaveBeenCalledWith({
-      limit: 50,
+      limit: 10,
       offset: 0,
     });
     expect(component.jobs()).toEqual([mockJob]);
@@ -280,8 +280,8 @@ describe("JobsListComponent", () => {
     component.loadJobs();
 
     expect(mockJobsService.listJobs).toHaveBeenCalledWith({
-      limit: 50,
-      offset: 50,
+      limit: 10,
+      offset: 10,
       search: "binder",
       status: ["Completed", "Failed"],
     });

@@ -97,7 +97,7 @@
               cdkDragPreviewContainer="parent"
             >
               <div
-                class="grid gap-4 lg:grid-cols-[40px_170px_110px_170px_minmax(0,1fr)_40px] lg:items-start"
+                class="grid gap-4 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
               >
                 <div class="flex shrink-0 cursor-grab flex-col items-center">
                   <span class="mb-1 block text-sm font-medium">
@@ -159,41 +159,6 @@
                   getRowErrors(i).copyNumber) {
                   <p class="mt-1 text-xs text-red-600" role="alert">
                     {{ getRowErrors(i).copyNumber }}
-                  </p>
-                  }
-                </div>
-
-                <div class="min-w-0">
-                  <label
-                    [for]="'sequence-name-' + row.id"
-                    class="mb-1 block text-sm font-medium"
-                  >
-                    Sequence Name
-                    <span class="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    [id]="'sequence-name-' + row.id"
-                    [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
-                    [value]="row.name"
-                    (input)="updateRowName(row.id, $any($event.target).value)"
-                    (blur)="touchRowField(row.id, 'name')"
-                    [placeholder]="'seq' + (i + 1)"
-                    [class]="
-                    shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
-                      ? 'border-red-500 focus:ring-red-100'
-                      : 'focus:ring-sky-100'
-                  "
-                    class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
-                    autocomplete="off"
-                    spellcheck="false"
-                    autocorrect="off"
-                    autocapitalize="off"
-                  />
-                  @if (shouldShowRowFieldError(row, 'name') &&
-                  getRowErrors(i).name) {
-                  <p class="mt-1 text-xs text-red-600" role="alert">
-                    {{ getRowErrors(i).name }}
                   </p>
                   }
                 </div>
@@ -431,6 +396,7 @@
   <app-workflow-preview-modal
     [isOpen]="showPreview()"
     [credits]="creditsEnabled ? creditCost() : null"
+    [creditsRemaining]="creditsRemaining()"
     [isSubmitting]="workflowSubmission.isSubmitting()"
     workflowName="Single Prediction"
     [selectedTool]="selectedToolLabel()"
