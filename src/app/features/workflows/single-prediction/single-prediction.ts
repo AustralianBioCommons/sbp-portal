@@ -40,7 +40,6 @@ import {
   isValidSmiles,
   lookupCcdCompound,
   validateDnaSequence,
-  validateFastaHeader,
   validateProteinSequence,
   validateRnaSequence,
 } from "../shared/fasta.utils";
@@ -63,12 +62,10 @@ interface ToolChip extends ToolOption {
 
 interface EntityRow {
   id: number;
-  name: string;
   sequence: string;
   copyNumber: string;
   moleculeType: MoleculeType;
   touched: {
-    name: boolean;
     sequence: boolean;
     copyNumber: boolean;
     moleculeType: boolean;
@@ -76,7 +73,6 @@ interface EntityRow {
 }
 
 interface EntityRowErrors {
-  name?: string;
   sequence?: string;
   copyNumber?: string;
   tool?: string;
@@ -215,8 +211,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       this.form.controls.jobName.valid &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
-        (errors) =>
-          !errors.name && !errors.sequence && !errors.copyNumber && !errors.tool
+        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
       )
     );
   });
@@ -252,10 +247,14 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       type: `${this.getMoleculeTypeLabel(
         row.moleculeType
       )} x${this.getParsedCopyNumber(row.copyNumber)}`,
-      name: row.name.trim() || `Entity ${index + 1}`,
+      name: this.getEntityName(index),
       sequence: this.getNormalizedSequence(row),
     }))
   );
+
+  private getEntityName(index: number): string {
+    return `seq${index + 1}`;
+  }
 
   readonly generatedFastaContent = computed(() => {
     if (!this.isStep1Valid()) {
@@ -264,17 +263,17 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     const fastaRecords: string[] = [];
 
-    for (const row of this.entityRows()) {
+    this.entityRows().forEach((row, index) => {
       const copies = this.getParsedCopyNumber(row.copyNumber);
       const sequence = this.getNormalizedSequence(row);
-      const name = row.name.trim();
+      const name = this.getEntityName(index);
       const type = this.getFastaMoleculeType(row.moleculeType);
 
       for (let copyIndex = 0; copyIndex < copies; copyIndex += 1) {
         const headerId = copies > 1 ? `${name}_${copyIndex + 1}` : name;
         fastaRecords.push(`>${headerId}|${type}\n${sequence}`);
       }
-    }
+    });
 
     return fastaRecords.join("\n");
   });
@@ -333,10 +332,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   updateRowCopyNumber(id: number, value: string): void {
     this.patchRow(id, { copyNumber: value });
-  }
-
-  updateRowName(id: number, value: string): void {
-    this.patchRow(id, { name: value });
   }
 
   updateRowMoleculeType(id: number, value: string): void {
@@ -515,12 +510,10 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     const id = this.nextRowId++;
     return {
       id,
-      name: "",
       sequence: "",
       copyNumber: "1",
       moleculeType: "protein",
       touched: {
-        name: false,
         sequence: false,
         copyNumber: false,
         moleculeType: false,
@@ -583,7 +576,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       rows.map((row) => ({
         ...row,
         touched: {
-          name: true,
           sequence: true,
           copyNumber: true,
           moleculeType: true,
@@ -600,14 +592,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   private validateEntityRow(row: EntityRow): EntityRowErrors {
     const errors: EntityRowErrors = {};
-
-    const otherNames = this.entityRows()
-      .filter((r) => r.id !== row.id)
-      .map((r) => r.name);
-    const headerValidation = validateFastaHeader(row.name, otherNames);
-    if (!headerValidation.valid) {
-      errors.name = headerValidation.errorMessage;
-    }
 
     const normalizedSequence = this.getNormalizedSequence(row);
 
@@ -832,8 +816,8 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       workflow: "single-prediction",
       tool: this.selectedTool(),
       runName: this.jobName().trim(),
-      entities: this.entityRows().map((row) => ({
-        id: row.name.trim(),
+      entities: this.entityRows().map((row, index) => ({
+        id: this.getEntityName(index),
         moleculeType: row.moleculeType,
         copyNumber: this.getParsedCopyNumber(row.copyNumber),
         sequence: this.getNormalizedSequence(row),

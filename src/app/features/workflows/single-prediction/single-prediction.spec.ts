@@ -128,7 +128,6 @@ describe("SinglePredictionComponent", () => {
   ): number {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
-    component.updateRowName(rowId, "pro");
     component.updateRowSequence(rowId, sequence);
     component.updateRowCopyNumber(rowId, copyNumber);
     component.updateRowMoleculeType(rowId, "protein");
@@ -217,7 +216,6 @@ describe("SinglePredictionComponent", () => {
   it("should validate DNA, RNA, and ligand formats", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
-    component.updateRowName(rowId, "entity1");
     component.selectTool("boltz");
 
     component.updateRowSequence(rowId, "ACGT");
@@ -249,7 +247,6 @@ describe("SinglePredictionComponent", () => {
   it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
-    component.updateRowName(rowId, "ccdrow");
     component.selectTool("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
@@ -361,7 +358,6 @@ describe("SinglePredictionComponent", () => {
   it("should allow Boltz with non-protein molecules and generate FASTA-like content", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
-    component.updateRowName(rowId, "dna");
 
     component.selectTool("boltz");
     component.updateRowSequence(rowId, "ACGT");
@@ -369,8 +365,8 @@ describe("SinglePredictionComponent", () => {
     component.updateRowCopyNumber(rowId, "2");
 
     expect(component.isStep1Valid()).toBe(true);
-    expect(component.generatedFastaContent()).toContain(">dna_1|dna");
-    expect(component.generatedFastaContent()).toContain(">dna_2|dna");
+    expect(component.generatedFastaContent()).toContain(">seq1_1|dna");
+    expect(component.generatedFastaContent()).toContain(">seq1_2|dna");
   });
 
   it("should tag generated FASTA headers with the molecule type", () => {
@@ -378,7 +374,6 @@ describe("SinglePredictionComponent", () => {
     component.form.controls.jobName.setValue("test-run");
     component.selectTool("boltz");
 
-    component.updateRowName(rowId, "seq1");
     component.updateRowSequence(rowId, "ACDEFGHIK");
     component.updateRowMoleculeType(rowId, "protein");
     expect(component.generatedFastaContent()).toBe(">seq1|protein\nACDEFGHIK");
@@ -525,7 +520,7 @@ describe("SinglePredictionComponent", () => {
     expect(payload["tool"]).toBe("alphafold2");
     expect(payload["alphafold2_random_seed"]).toBe(42);
     expect(payload["alphafold2_full_dbs"]).toBe(true);
-    expect(payload["fastaContent"]).toContain(">pro_1");
+    expect(payload["fastaContent"]).toContain(">seq1_1");
     expect(payload["fastaFileUrl"]).toBe(MOCK_FASTA_RESPONSE.s3Uri);
     expect(payload["sample_id"]).toBe(samplesheetId);
     expect(component.isFormValid()).toBe(true);
@@ -641,18 +636,8 @@ describe("SinglePredictionComponent", () => {
     expect(errors["copyNumber"]).toContain("greater than or equal to 1");
   });
 
-  it("should reject sequence names containing underscores", () => {
-    const rowId = component.entityRows()[0].id;
-    component.updateRowSequence(rowId, "ACDEFGHIK");
-    component.updateRowName(rowId, "seq_1");
-
-    const errors = component.entityValidationResults()[0];
-    expect(errors.name).toContain("underscore");
-  });
-
   it("should require jobName in step 1 validation", () => {
     const rowId = component.entityRows()[0].id;
-    component.updateRowName(rowId, "entity1");
     component.updateRowSequence(rowId, "ACDEFGHIK");
 
     component.form.controls.jobName.setValue("");
@@ -704,7 +689,6 @@ describe("SinglePredictionComponent", () => {
 
   it("should keep input-config invalid until jobName is filled", () => {
     const rowId = component.entityRows()[0].id;
-    component.updateRowName(rowId, "entity1");
     component.updateRowSequence(rowId, "ACDEFGHIK");
     component.form.controls.jobName.setValue("");
     expect(component.isSectionValid("input-config")).toBe(false);

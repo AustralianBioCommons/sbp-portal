@@ -211,6 +211,7 @@
   <app-workflow-preview-modal
     [isOpen]="showPreview()"
     [credits]="creditsEnabled ? creditCost() : null"
+    [creditsRemaining]="creditsRemaining()"
     [isSubmitting]="workflowSubmission.isSubmitting()"
     workflowName="Interaction Screening"
     [selectedTool]="selectedToolLabel()"
