@@ -4,9 +4,9 @@ name: Coverage
 
 on:
   push:
-    branches: ["main", "test"]
+    branches: ["dev", "test"]
   pull_request:
-    branches: ["main", "test"]
+    branches: ["dev", "test"]
 
 jobs:
   build:
