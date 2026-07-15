@@ -32,7 +32,7 @@
                 @for (tool of workflow.tools; track tool.id) {
                 <li>
                   <span
-                    class="inline-flex items-center px-3 py-1 text-xs font-mono font-semibold border rounded-full"
+                    class="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold border rounded-full"
                     [class]="
                       tool.disabled
                         ? 'bg-gray-100 text-gray-400 border-gray-400'
@@ -51,10 +51,10 @@
             }
 
             <div
-              class="flex justify-start items-center gap-1 text-sm font-semibold text-biocommons-primary transition-colors group-hover:text-sky-700"
+              class="flex justify-start items-center gap-1 text-sm font-semibold text-sky-600 transition-colors group-hover:text-sky-700"
             >
-              Launch workflow
-              <ng-icon name="heroChevronRight" size="16" />
+              View workflow
+              <ng-icon name="heroChevronRight" size="12" class="mt-0.5" />
             </div>
           </a>
           }
