@@ -166,18 +166,14 @@ describe("DeNovoDesignComponent", () => {
       expect(component.selectedToolHasParams()).toBe(false);
     });
 
-    it("blocks selecting an unavailable tool and shows an error", () => {
+    it("allows selecting rfdiffusion", () => {
       component.selectTool("rfdiffusion");
-      expect(component.selectedTool()).toBe("bindcraft");
-      expect(component.showAlert()).toBe(true);
-      expect(component.alertMessage()).toContain("not available");
+      expect(component.selectedTool()).toBe("rfdiffusion");
     });
 
-    it("allows selecting the available tool", () => {
+    it("allows selecting bindcraft", () => {
       component.selectTool("bindcraft");
       expect(component.selectedTool()).toBe("bindcraft");
-      expect(component.isToolAvailable("bindcraft")).toBe(true);
-      expect(component.isToolAvailable("rfdiffusion")).toBe(false);
     });
   });
 
