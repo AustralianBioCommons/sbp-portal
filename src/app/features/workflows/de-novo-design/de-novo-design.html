@@ -35,12 +35,6 @@
           [selectedToolId]="selectedTool()"
           (toolSelect)="selectTool($event)"
         ></app-tool-selection>
-        <div
-          class="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
-        >
-          Only <strong>BindCraft</strong> is available right now. {{
-          unavailableToolLabels.join(" and ") }} are temporarily unavailable.
-        </div>
       </app-step-content>
     </div>
 
