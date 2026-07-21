@@ -673,6 +673,40 @@ export default class DeNovoDesignComponent
 
     this.workflowSubmission.isSubmitting.set(true);
 
+    // rfdiffusion has no samplesheet - it takes the PDB file directly, so skip
+    // the CSV-samplesheet-generating dataset upload and reuse the PDB's own S3
+    // URI (already synced into formData.starting_pdb) as the launch's s3InputKey.
+    if (this.selectedTool() === "rfdiffusion") {
+      const s3InputKey = (formData as Record<string, unknown>)[
+        "starting_pdb"
+      ] as string | undefined;
+      if (!s3InputKey) {
+        console.error("No PDB file uploaded for rfdiffusion submission");
+        this.workflowSubmission.isSubmitting.set(false);
+        this.showError("Please upload a PDB file before submitting.");
+        return;
+      }
+
+      const workflowFormData: DeNovoDesignPayload = {
+        ...formData,
+        workflow: "de-novo-design",
+        tool: this.selectedTool(),
+      };
+
+      this.workflowSubmission.submitWorkflowWithDataset(
+        workflowFormData,
+        s3InputKey,
+        (error) => {
+          console.error("Workflow launch failed", error);
+          this.workflowSubmission.isSubmitting.set(false);
+          this.showError(
+            `Workflow launch failed: ${error.message || "Unknown error"}`
+          );
+        }
+      );
+      return;
+    }
+
     this.datasetUploadService
       .uploadDataset({
         formData,
