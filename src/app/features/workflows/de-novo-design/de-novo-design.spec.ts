@@ -426,6 +426,39 @@ describe("DeNovoDesignComponent", () => {
       ).toContain("End residue 14");
     });
 
+    it("accepts exactly 8 hotspot residues", () => {
+      component.updateRowValueWithValidation(
+        "row1",
+        "target_hotspot_residues",
+        "A1,A2,A3,A4,A5,A6,A7,A8"
+      );
+      expect(
+        component.getRowFieldError("row1", "target_hotspot_residues")
+      ).toBeNull();
+    });
+
+    it("rejects more than 8 individual hotspot residues", () => {
+      component.updateRowValueWithValidation(
+        "row1",
+        "target_hotspot_residues",
+        "A1,A2,A3,A4,A5,A6,A7,A8,A9"
+      );
+      expect(
+        component.getRowFieldError("row1", "target_hotspot_residues")
+      ).toContain("Too many hotspot residues");
+    });
+
+    it("rejects a range that expands past 8 residues", () => {
+      component.updateRowValueWithValidation(
+        "row1",
+        "target_hotspot_residues",
+        "A1-A9"
+      );
+      expect(
+        component.getRowFieldError("row1", "target_hotspot_residues")
+      ).toContain("Too many hotspot residues");
+    });
+
     it("sets an error when the schema validator rejects the value", () => {
       schemaLoader.inputSchemaService.validateFieldValue.and.returnValue({
         valid: false,

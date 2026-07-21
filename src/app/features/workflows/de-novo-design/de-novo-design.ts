@@ -55,6 +55,9 @@ interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
 }
 
+/** Both bindcraft and rfdiffusion only support up to this many hotspot residues. */
+const MAX_HOTSPOT_RESIDUES = 8;
+
 @Component({
   selector: "app-de-novo-design",
   imports: [
@@ -313,7 +316,7 @@ export default class DeNovoDesignComponent
     this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
   }
 
-  /** Return sorted, deduplicated chain letters from a residue string like "A56,B12-B20". */
+  /** Return sorted, deduplicated chain letters from a residue string like "A56,B12,B13". */
   private chainsFromResidues(residues: string): string {
     return [
       ...new Set(
@@ -378,14 +381,21 @@ export default class DeNovoDesignComponent
     if (!value?.trim()) return null;
     const residueMap = this.pdbResidueMap();
 
+    let residueCount = 0;
     for (const token of value
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean)) {
       const parsed = MolstarViewerComponent.parseResidueToken(token);
       if (!parsed) {
-        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14"`;
+        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A56,A57"`;
       }
+
+      residueCount += Math.abs(parsed.resEnd - parsed.resStart) + 1;
+      if (residueCount > MAX_HOTSPOT_RESIDUES) {
+        return `Too many hotspot residues selected (${residueCount}). Only up to ${MAX_HOTSPOT_RESIDUES} are supported - remove some to continue.`;
+      }
+
       if (!residueMap) continue;
 
       const chainResidues = residueMap.get(parsed.chain);
@@ -399,6 +409,8 @@ export default class DeNovoDesignComponent
       if (!chainResidues.has(parsed.resStart)) {
         return `Residue ${parsed.resStart} not found in chain "${parsed.chain}"`;
       }
+
+      
       if (
         parsed.resStart !== parsed.resEnd &&
         !chainResidues.has(parsed.resEnd)

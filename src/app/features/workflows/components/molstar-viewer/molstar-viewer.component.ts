@@ -55,7 +55,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   disabled = input(false);
   /** Programmatically select residues from outside (e.g. manual form input).
    *  Accepts the same comma-separated token format the viewer emits:
-   *  "A56,B12" or ranges "A12-A14". Set to "" to clear the selection. */
+   *  "A56,B12". Set to "" to clear the selection. */
   externalSelection = input("");
   /** Round the viewport's bottom-right corner. Set when the viewer meets the
    *  container's right edge (e.g. the config panel is collapsed); the WebGL
@@ -252,7 +252,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   /** Programmatically select the residues described by a comma-separated token
-   *  string (e.g. "A56,B12" or ranges "A12-A14").  Suppresses the outgoing
+   *  string (e.g. "A56,B12").  Suppresses the outgoing
    *  residuesSelected event so the parent form is not overwritten. */
   private async applyExternalSelection(residueString: string): Promise<void> {
     if (!this.plugin || this.status() !== "loaded") return;
