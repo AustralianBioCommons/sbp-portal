@@ -195,8 +195,8 @@
                         class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-1 font-mono text-sm text-gray-900"
                         aria-hidden="true"
                       >
-                        @for (cell of getSequenceCells(row.sequence); track
-                        $index) {<span
+                        @for (cell of getSequenceCells(row.sequence,
+                        row.moleculeType); track $index) {<span
                           class="relative inline-block w-[1ch] align-top text-center leading-7.5 mr-0.5"
                           ><span
                             class="pointer-events-none absolute inset-x-0 -top-0.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
@@ -287,7 +287,18 @@
           </div>
         </div>
 
-        @if (creditsEnabled) {
+        @if (inputSummaryErrors().length > 0) {
+        <div
+          class="mt-4 rounded-lg border border-red-300 bg-red-50 p-4"
+          role="alert"
+        >
+          <ul class="list-none space-y-1 text-sm text-red-700">
+            @for (error of inputSummaryErrors(); track error) {
+            <li>{{ error }}</li>
+            }
+          </ul>
+        </div>
+        } @if (creditsEnabled) {
         <app-credit-summary
           class="mt-4 block"
           [total]="creditCost()"
