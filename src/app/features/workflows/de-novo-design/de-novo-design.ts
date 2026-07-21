@@ -410,7 +410,6 @@ export default class DeNovoDesignComponent
         return `Residue ${parsed.resStart} not found in chain "${parsed.chain}"`;
       }
 
-      
       if (
         parsed.resStart !== parsed.resEnd &&
         !chainResidues.has(parsed.resEnd)
