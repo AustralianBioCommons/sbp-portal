@@ -239,10 +239,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         // Suppress echo-back while we are applying an external selection.
         if (this._applyingExternalSelection) return;
         const residues = this.readCurrentSelection(selMgr);
-        const compressed = this.compressToRanges(residues);
         this.zone.run(() => {
-          this.selectedResidues.set(compressed);
-          this.residuesSelected.emit(compressed.join(","));
+          this.selectedResidues.set(residues);
+          this.residuesSelected.emit(residues.join(","));
         });
       });
     } catch {
@@ -456,48 +455,6 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     } catch {
       /* non-critical */
     }
-  }
-
-  /**
-   * Collapse runs of consecutive same-chain residues into range notation.
-   * e.g. ["A12","A13","A14","B5"] → ["A12-A14","B5"]
-   */
-  private compressToRanges(residues: string[]): string[] {
-    if (residues.length === 0) return [];
-
-    type Parsed = { chain: string; seq: number; label: string };
-    const parsed: (Parsed | null)[] = residues.map((label) => {
-      const p = this.parseResidueLabel(label);
-      return p ? { ...p, label } : null;
-    });
-
-    const result: string[] = [];
-    let i = 0;
-    while (i < parsed.length) {
-      const cur = parsed[i];
-      if (!cur) {
-        result.push(residues[i++]);
-        continue;
-      }
-
-      let j = i + 1;
-      while (j < parsed.length) {
-        const prev = parsed[j - 1] as Parsed;
-        const next = parsed[j];
-        if (!next || next.chain !== cur.chain || next.seq !== prev.seq + 1)
-          break;
-        j++;
-      }
-
-      const last = parsed[j - 1] as Parsed;
-      result.push(
-        j - i === 1
-          ? cur.label
-          : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`
-      );
-      i = j;
-    }
-    return result;
   }
 
   /** Prevent any <button> inside the viewer from submitting the parent form.
