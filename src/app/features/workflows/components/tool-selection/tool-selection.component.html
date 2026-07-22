@@ -2,7 +2,9 @@
   @for (tool of tools(); track tool.id) {
   <label
     class="flex items-center cursor-pointer gap-2 border rounded-full p-2 pr-3 transition-all hover:bg-gray-50"
-    [class.border-gray-900]="selectedToolId() === tool.id"
+    [class]="
+      selectedToolId() === tool.id ? 'border-gray-900' : 'border-gray-300'
+    "
   >
     <input
       type="radio"
