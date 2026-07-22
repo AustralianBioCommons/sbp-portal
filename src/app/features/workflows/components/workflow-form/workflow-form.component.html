@@ -29,11 +29,17 @@
                 "
               >
                 <div
-                  class="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all"
+                  class="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-medium transition-all"
                   [class]="circleClasses(section.id)"
                 >
                   @if (last && reviewDisabled()) { @if (valid) {
-                  <span class="text-gray-400">✓</span>
+                  <span class="text-gray-400">
+                    <ng-icon
+                      name="heroCheck"
+                      size="14"
+                      strokeWidth="2.5"
+                    ></ng-icon>
+                  </span>
                   } @else if (active) {
                   <span class="h-2 w-2 rounded-full bg-gray-400"></span>
                   } @else if (visited) {
@@ -43,17 +49,29 @@
                     class="h-2 w-2 rounded-full bg-biocommons-primary"
                   ></span>
                   } @else if (last && active && valid) {
-                  <ng-icon name="heroCheck" size="16" strokeWidth="2"></ng-icon>
+                  <ng-icon
+                    name="heroCheck"
+                    size="14"
+                    strokeWidth="2.5"
+                  ></ng-icon>
                   } @else if (active) {
                   <span
                     class="h-2 w-2 rounded-full bg-biocommons-primary"
                   ></span>
                   } @else if (completed && valid) {
-                  <ng-icon name="heroCheck" size="16" strokeWidth="2"></ng-icon>
+                  <ng-icon
+                    name="heroCheck"
+                    size="14"
+                    strokeWidth="2.5"
+                  ></ng-icon>
                   } @else if (completed && !valid) {
                   <span class="text-white leading-0">!</span>
                   } @else if (visited && valid) {
-                  <ng-icon name="heroCheck" size="16" strokeWidth="2"></ng-icon>
+                  <ng-icon
+                    name="heroCheck"
+                    size="14"
+                    strokeWidth="2.5"
+                  ></ng-icon>
                   } @else if (visited && !valid) {
                   <span class="text-red-600 leading-0">!</span>
                   }
