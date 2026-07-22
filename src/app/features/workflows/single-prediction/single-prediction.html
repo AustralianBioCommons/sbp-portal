@@ -320,9 +320,13 @@
           <div class="rounded-lg border p-4">
             <label
               for="alphafold2-random-seed"
-              class="block text-sm font-medium"
+              class="inline-flex items-center justify-center gap-1 text-sm font-medium"
             >
-              alphafold2_random_seed
+              Random Seed
+              <app-tooltip
+                message="Set a random seed to ensure the same output between multiple runs."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
             </label>
             <input
               id="alphafold2-random-seed"
@@ -345,24 +349,40 @@
               {{ toolSettingErrors().alphafold2RandomSeed }}
             </p>
             }
+          </div>
 
-            <label class="mt-4 flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-                [checked]="alphafold2FullDbs()"
-                (change)="alphafold2FullDbs.set($any($event.target).checked)"
-              />
-              <span>alphafold2_full_dbs</span>
+          <div
+            class="rounded-lg border p-4 flex items-center justify-start gap-2"
+          >
+            <label
+              for="alphafold2-full-dbs"
+              class="flex items-center gap-1 text-sm font-medium"
+            >
+              Full DBs
+              <app-tooltip
+                message="Use the full BFD database for MSA generation. Can improve search sensitivity but slows down the prediction."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
             </label>
+            <input
+              id="alphafold2-full-dbs"
+              type="checkbox"
+              class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+              [checked]="alphafold2FullDbs()"
+              (change)="alphafold2FullDbs.set($any($event.target).checked)"
+            />
           </div>
           } @if (selectedTool() === 'colabfold') {
           <div class="rounded-lg border p-4">
             <label
               for="colabfold-num-recycles"
-              class="block text-sm font-medium"
+              class="inline-flex items-center justify-center gap-1 text-sm font-medium"
             >
-              colabfold_num_recycles
+              Recycles
+              <app-tooltip
+                message="Increasing recycles can improve the prediction quality but slows down the prediction. Should be an integer between 1-10. Default value is 3."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
             </label>
             <input
               id="colabfold-num-recycles"
@@ -388,14 +408,18 @@
           </div>
           } @if (selectedTool() === 'boltz') {
           <div class="rounded-lg border p-4">
-            <label class="flex items-center gap-2 text-sm">
+            <label class="flex items-center gap-1 text-sm font-medium">
+              <span>Use Potentials</span>
+              <app-tooltip
+                message="Can reduce non-physical artifacts but slows down prediction and decreases maximum size limit."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
               <input
                 type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                class="h-4 w-4 rounded ml-1 border-gray-300 text-sky-600 focus:ring-sky-500"
                 [checked]="boltzUsePotentials()"
                 (change)="boltzUsePotentials.set($any($event.target).checked)"
               />
-              <span>boltz_use_potentials</span>
             </label>
           </div>
           }

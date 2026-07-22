@@ -49,6 +49,7 @@ import {
   WorkflowTool,
 } from "../shared/workflow.interfaces";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
+import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
 type SinglePredictionTool = Extract<
@@ -114,6 +115,7 @@ const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
     NgIconComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
+    TooltipComponent,
   ],
   providers: [provideIcons({ bootstrapGripVertical, heroTrash })],
   host: {
