@@ -259,7 +259,7 @@ describe("JobDetailsComponent", () => {
       'a[title="Download all files"]'
     ) as HTMLAnchorElement;
     const downloadButton = fixture.nativeElement.querySelector(
-      'app-button[title="Download all files"] button'
+      'app-button[data-testid="download-all-files"] button'
     ) as HTMLButtonElement;
 
     expect(downloadLink).toBeNull();
@@ -303,7 +303,7 @@ describe("JobDetailsComponent", () => {
       'a[title="Download all files"]'
     ) as HTMLAnchorElement | null;
     const downloadButton = fixture.nativeElement.querySelector(
-      'app-button[title="Download all files"] button'
+      'app-button[data-testid="download-all-files"] button'
     ) as HTMLButtonElement;
 
     expect(downloadLink).toBeNull();

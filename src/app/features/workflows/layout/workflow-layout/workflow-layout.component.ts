@@ -36,7 +36,7 @@ export interface WorkflowTabItem {
 })
 export class WorkflowLayoutComponent {
   /** Page heading shown above the tab content. */
-  readonly title = input.required<string>();
+  readonly heading = input.required<string>();
   /** Drives the error alert banner — owned by the page (set via showError). */
   readonly showAlert = input(false);
   readonly alertMessage = input("");

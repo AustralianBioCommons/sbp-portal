@@ -82,7 +82,7 @@ export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   entities: EntityRow[];
   fastaContent: string;
   fastaFileUrl: string;
-  alphafold2_random_seed?: number;
+  random_seed?: number;
   alphafold2_full_dbs?: boolean;
   colabfold_num_recycles?: number;
   colabfold_use_templates?: boolean;
@@ -92,7 +92,7 @@ export interface SinglePredictionPayload extends DefaultWorkflowPayload {
 export type SinglePredictionToolSettingsPayload = Partial<
   Pick<
     SinglePredictionPayload,
-    | "alphafold2_random_seed"
+    | "random_seed"
     | "alphafold2_full_dbs"
     | "colabfold_num_recycles"
     | "colabfold_use_templates"

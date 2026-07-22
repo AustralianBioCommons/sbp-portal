@@ -13,6 +13,6 @@ import { WorkflowItem } from "../../../../core/configs/themes.config";
   host: { class: "block w-full" },
 })
 export class ThemeLayoutComponent {
-  readonly title = input.required<string>();
+  readonly heading = input.required<string>();
   readonly workflows = input.required<WorkflowItem[]>();
 }
