@@ -134,6 +134,14 @@ describe("SinglePredictionComponent", () => {
     return rowId;
   }
 
+  function addProteinRow(sequence = "ACDEFGHIK"): number {
+    component.addEntityRow();
+    const rowId = component.entityRows()[component.entityRows().length - 1].id;
+    component.updateRowMoleculeType(rowId, "protein");
+    component.updateRowSequence(rowId, sequence);
+    return rowId;
+  }
+
   it("should create", () => {
     expect(component).toBeTruthy();
   });
@@ -217,6 +225,7 @@ describe("SinglePredictionComponent", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
     component.selectTool("boltz");
+    addProteinRow();
 
     component.updateRowSequence(rowId, "ACGT");
     component.updateRowMoleculeType(rowId, "dna");
@@ -248,6 +257,7 @@ describe("SinglePredictionComponent", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
     component.selectTool("boltz");
+    addProteinRow();
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
 
@@ -360,6 +370,7 @@ describe("SinglePredictionComponent", () => {
     component.form.controls.jobName.setValue("test-run");
 
     component.selectTool("boltz");
+    addProteinRow();
     component.updateRowSequence(rowId, "ACGT");
     component.updateRowMoleculeType(rowId, "dna");
     component.updateRowCopyNumber(rowId, "2");
@@ -378,13 +389,17 @@ describe("SinglePredictionComponent", () => {
     component.updateRowMoleculeType(rowId, "protein");
     expect(component.generatedFastaContent()).toBe(">seq1|protein\nACDEFGHIK");
 
-    component.updateRowSequence(rowId, "CC(=O)O");
-    component.updateRowMoleculeType(rowId, "ligand");
-    expect(component.generatedFastaContent()).toBe(">seq1|smiles\nCC(=O)O");
+    const secondRowId = addProteinRow();
 
-    component.updateRowSequence(rowId, "ATP");
-    component.updateRowMoleculeType(rowId, "ccd");
-    expect(component.generatedFastaContent()).toBe(">seq1|ccd\nATP");
+    component.updateRowSequence(secondRowId, "CC(=O)O");
+    component.updateRowMoleculeType(secondRowId, "ligand");
+    expect(component.generatedFastaContent()).toContain(
+      ">seq2|smiles\nCC(=O)O"
+    );
+
+    component.updateRowSequence(secondRowId, "ATP");
+    component.updateRowMoleculeType(secondRowId, "ccd");
+    expect(component.generatedFastaContent()).toContain(">seq2|ccd\nATP");
   });
 
   it("should normalize protein sequence content in summary", () => {
@@ -731,5 +746,105 @@ describe("SinglePredictionComponent", () => {
       workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
         .args[0];
     expect(payload["colabfold_use_templates"]).toBe(false);
+  });
+
+  it("should reject more than 52 entities counting copies", () => {
+    const rowId = fillValidProteinRow("ACDEFGHIK", "52");
+    expect(component.totalEntityCount()).toBe(52);
+    expect(component.isStep1Valid()).toBe(true);
+
+    component.updateRowCopyNumber(rowId, "53");
+    expect(component.totalEntityCount()).toBe(53);
+    expect(component.isStep1Valid()).toBe(false);
+    expect(component.inputSummaryErrors()).toContain(
+      jasmine.stringContaining("Too many entities")
+    );
+  });
+
+  it("should sum copies across rows toward the entity limit", () => {
+    fillValidProteinRow("ACDEFGHIK", "50");
+    const secondRowId = addProteinRow();
+    component.updateRowCopyNumber(secondRowId, "3");
+
+    expect(component.totalEntityCount()).toBe(53);
+    expect(component.inputSummaryErrors()).toContain(
+      jasmine.stringContaining("Too many entities")
+    );
+  });
+
+  it("should require at least one protein entity", () => {
+    const rowId = fillValidProteinRow("ACDEFGHIK");
+    component.selectTool("boltz");
+    expect(component.hasProteinInput()).toBe(true);
+    expect(component.isStep1Valid()).toBe(true);
+
+    component.updateRowSequence(rowId, "ACGT");
+    component.updateRowMoleculeType(rowId, "dna");
+
+    expect(component.hasProteinInput()).toBe(false);
+    expect(component.isStep1Valid()).toBe(false);
+    expect(component.inputSummaryErrors()).toContain(
+      jasmine.stringContaining("must be a protein")
+    );
+  });
+
+  it("should count ligand and CCD entities as a fixed size of 30 per copy", () => {
+    const rowId = fillValidProteinRow("ACDEFGHIK");
+    component.selectTool("boltz");
+    const ligandRowId = addProteinRow();
+    component.updateRowMoleculeType(ligandRowId, "ligand");
+    component.updateRowSequence(ligandRowId, "CC(=O)OC1=CC=CC=C1C(=O)O");
+    component.updateRowCopyNumber(ligandRowId, "2");
+
+    // protein (9) + ligand (30 * 2 copies) = 69
+    expect(component.totalPredictionSize()).toBe(69);
+    expect(rowId).toBeDefined();
+  });
+
+  it("should enforce the 2000 size limit for AlphaFold2", () => {
+    const rowId = fillValidProteinRow("A".repeat(1999));
+    component.selectTool("alphafold2");
+    expect(component.predictionSizeLimit()).toBe(2000);
+    expect(component.isStep1Valid()).toBe(true);
+
+    component.updateRowSequence(rowId, "A".repeat(2000));
+    expect(component.isStep1Valid()).toBe(false);
+    expect(component.inputSummaryErrors()).toContain(
+      jasmine.stringContaining("must be less than 2000")
+    );
+  });
+
+  it("should enforce the 4000 size limit for ColabFold and Boltz", () => {
+    const rowId = fillValidProteinRow("A".repeat(3999));
+    expect(component.selectedTool()).toBe("colabfold");
+    expect(component.predictionSizeLimit()).toBe(4000);
+    expect(component.isStep1Valid()).toBe(true);
+
+    component.updateRowSequence(rowId, "A".repeat(4000));
+    expect(component.isStep1Valid()).toBe(false);
+  });
+
+  it("should reduce the Boltz size limit to 2000 when boltz_use_potentials is set", () => {
+    const rowId = fillValidProteinRow("A".repeat(3000));
+    component.selectTool("boltz");
+    expect(component.predictionSizeLimit()).toBe(4000);
+    expect(component.isStep1Valid()).toBe(true);
+
+    component.boltzUsePotentials.set(true);
+    expect(component.predictionSizeLimit()).toBe(2000);
+    expect(component.isStep1Valid()).toBe(false);
+
+    component.selectTool("colabfold");
+    expect(component.predictionSizeLimit()).toBe(4000);
+    expect(component.isStep1Valid()).toBe(true);
+    expect(rowId).toBeDefined();
+  });
+
+  it("should omit position labels for SMILES (ligand) sequence cells", () => {
+    const proteinCells = component.getSequenceCells("A".repeat(10), "protein");
+    expect(proteinCells[9].label).toBe("10");
+
+    const ligandCells = component.getSequenceCells("A".repeat(10), "ligand");
+    expect(ligandCells.every((cell) => cell.label === "")).toBe(true);
   });
 });

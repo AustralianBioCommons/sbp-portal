@@ -49,6 +49,7 @@ import {
   WorkflowTool,
 } from "../shared/workflow.interfaces";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
+import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
 type SinglePredictionTool = Extract<
@@ -88,6 +89,17 @@ interface SequenceCell {
   label: string;
 }
 
+/** Maximum number of entities (copies included) Proteinfold can run. */
+const MAX_TOTAL_ENTITIES = 52;
+
+/** Fixed prediction size counted for every ligand copy (SMILES or CCD). */
+const LIGAND_FIXED_SIZE = 30;
+
+/** Total prediction size limits (exclusive upper bound) per tool. */
+const PREDICTION_SIZE_LIMIT_DEFAULT = 4000;
+const PREDICTION_SIZE_LIMIT_ALPHAFOLD2 = 2000;
+const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
+
 @Component({
   selector: "app-single-prediction",
   imports: [
@@ -103,6 +115,7 @@ interface SequenceCell {
     NgIconComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
+    TooltipComponent,
   ],
   providers: [provideIcons({ bootstrapGripVertical, heroTrash })],
   host: {
@@ -205,6 +218,66 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     this.entityRows().map((row) => this.validateEntityRow(row))
   );
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
+
+  /** Total number of entities to predict, counting copies. */
+  readonly totalEntityCount = computed(() =>
+    this.entityRows().reduce(
+      (sum, row) => sum + this.getParsedCopyNumber(row.copyNumber),
+      0
+    )
+  );
+
+  /** Combined prediction size (residues + fixed ligand size), counting copies. */
+  readonly totalPredictionSize = computed(() =>
+    this.entityRows().reduce(
+      (sum, row) => sum + this.getEntityPredictionSize(row),
+      0
+    )
+  );
+
+  /** Upper limit on the total prediction size for the selected tool. */
+  readonly predictionSizeLimit = computed(() => {
+    const tool = this.selectedTool();
+    if (tool === "boltz" && this.boltzUsePotentials()) {
+      return PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS;
+    }
+    if (tool === "alphafold2") {
+      return PREDICTION_SIZE_LIMIT_ALPHAFOLD2;
+    }
+    return PREDICTION_SIZE_LIMIT_DEFAULT;
+  });
+
+  readonly hasProteinInput = computed(() =>
+    this.entityRows().some((row) => row.moleculeType === "protein")
+  );
+
+  /** Form validation errors. */
+  readonly inputSummaryErrors = computed<string[]>(() => {
+    const errors: string[] = [];
+
+    const totalEntities = this.totalEntityCount();
+    if (totalEntities > MAX_TOTAL_ENTITIES) {
+      errors.push(
+        `Too many entities: ${totalEntities} including copies. The maximum allowed is ${MAX_TOTAL_ENTITIES}.`
+      );
+    }
+
+    if (!this.hasProteinInput()) {
+      errors.push(
+        "At least one entity must be a protein. This workflow cannot run without a protein input."
+      );
+    }
+
+    const limit = this.predictionSizeLimit();
+    const size = this.totalPredictionSize();
+    if (size >= limit) {
+      errors.push(
+        `Total prediction size (${size}) must be less than ${limit} for ${this.selectedToolLabel()}. Reduce sequence length or the number of copies.`
+      );
+    }
+
+    return errors;
+  });
   readonly isStep1Valid = computed(() => {
     this.jobName();
     return (
@@ -212,7 +285,8 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
         (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
-      )
+      ) &&
+      this.inputSummaryErrors().length === 0
     );
   });
   readonly isStep2Valid = computed(
@@ -687,13 +761,22 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return {};
   }
 
-  /** 1-based position labels for the sequence ruler overlay: every 10th character and the last one. */
-  getSequenceCells(sequence: string): SequenceCell[] {
+  /**
+   * 1-based position labels for the sequence ruler overlay: every 10th character
+   * and the last one. SMILES (ligand) is excleded.
+   */
+  getSequenceCells(
+    sequence: string,
+    moleculeType: MoleculeType
+  ): SequenceCell[] {
+    const showLabels = moleculeType !== "ligand";
     const length = sequence.length;
     return Array.from(sequence, (char, index) => {
       const position = index + 1;
       const label =
-        position % 10 === 0 || position === length ? String(position) : "";
+        showLabels && (position % 10 === 0 || position === length)
+          ? String(position)
+          : "";
       return { char, label };
     });
   }
@@ -721,6 +804,18 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   private getParsedCopyNumber(value: string): number {
     const parsed = Number.parseInt(value, 10);
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+  }
+
+  /**
+   * Prediction size an entity contributes, counting copies. Protein, RNA and DNA
+   * count one per residue; SMILES and CCD ligands use a fixed size per copy.
+   */
+  private getEntityPredictionSize(row: EntityRow): number {
+    const copies = this.getParsedCopyNumber(row.copyNumber);
+    if (row.moleculeType === "ligand" || row.moleculeType === "ccd") {
+      return LIGAND_FIXED_SIZE * copies;
+    }
+    return this.getNormalizedSequence(row).length * copies;
   }
 
   private prepareSinglePredictionInput(
