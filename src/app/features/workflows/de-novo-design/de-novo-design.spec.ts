@@ -166,18 +166,14 @@ describe("DeNovoDesignComponent", () => {
       expect(component.selectedToolHasParams()).toBe(false);
     });
 
-    it("blocks selecting an unavailable tool and shows an error", () => {
+    it("allows selecting rfdiffusion", () => {
       component.selectTool("rfdiffusion");
-      expect(component.selectedTool()).toBe("bindcraft");
-      expect(component.showAlert()).toBe(true);
-      expect(component.alertMessage()).toContain("not available");
+      expect(component.selectedTool()).toBe("rfdiffusion");
     });
 
-    it("allows selecting the available tool", () => {
+    it("allows selecting bindcraft", () => {
       component.selectTool("bindcraft");
       expect(component.selectedTool()).toBe("bindcraft");
-      expect(component.isToolAvailable("bindcraft")).toBe(true);
-      expect(component.isToolAvailable("rfdiffusion")).toBe(false);
     });
   });
 
@@ -428,6 +424,39 @@ describe("DeNovoDesignComponent", () => {
       expect(
         component.getRowFieldError("row1", "target_hotspot_residues")
       ).toContain("End residue 14");
+    });
+
+    it("accepts exactly 8 hotspot residues", () => {
+      component.updateRowValueWithValidation(
+        "row1",
+        "target_hotspot_residues",
+        "A1,A2,A3,A4,A5,A6,A7,A8"
+      );
+      expect(
+        component.getRowFieldError("row1", "target_hotspot_residues")
+      ).toBeNull();
+    });
+
+    it("rejects more than 8 individual hotspot residues", () => {
+      component.updateRowValueWithValidation(
+        "row1",
+        "target_hotspot_residues",
+        "A1,A2,A3,A4,A5,A6,A7,A8,A9"
+      );
+      expect(
+        component.getRowFieldError("row1", "target_hotspot_residues")
+      ).toContain("Too many hotspot residues");
+    });
+
+    it("rejects a range that expands past 8 residues", () => {
+      component.updateRowValueWithValidation(
+        "row1",
+        "target_hotspot_residues",
+        "A1-A9"
+      );
+      expect(
+        component.getRowFieldError("row1", "target_hotspot_residues")
+      ).toContain("Too many hotspot residues");
     });
 
     it("sets an error when the schema validator rejects the value", () => {

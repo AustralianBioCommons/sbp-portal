@@ -55,6 +55,9 @@ interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
 }
 
+/** Both bindcraft and rfdiffusion only support up to this many hotspot residues. */
+const MAX_HOTSPOT_RESIDUES = 8;
+
 @Component({
   selector: "app-de-novo-design",
   imports: [
@@ -89,8 +92,6 @@ export default class DeNovoDesignComponent
   extends WorkflowPageBase
   implements OnInit, OnDestroy
 {
-  private readonly availableToolId: ToolChip["id"] = "bindcraft";
-
   // // Make Object available in template
   Object = Object;
 
@@ -160,19 +161,9 @@ export default class DeNovoDesignComponent
       label: "BindCraft",
     },
   ];
-  readonly unavailableToolLabels: string[] = this.tools
-    .filter((tool) => tool.id !== this.availableToolId)
-    .map((tool) => tool.label);
   selectedTool = signal<ToolChip["id"]>("bindcraft");
   isToolSelected = (id: ToolChip["id"]) => this.selectedTool() === id;
-  isToolAvailable = (id: ToolChip["id"]) => id === this.availableToolId;
   selectTool(id: ToolChip["id"]) {
-    if (!this.isToolAvailable(id)) {
-      const label = this.tools.find((tool) => tool.id === id)?.label ?? id;
-      this.showError(`${label} is not available yet. Please use BindCraft.`);
-      this.selectedTool.set(this.availableToolId);
-      return;
-    }
     this.selectedTool.set(id);
   }
   selectedToolLabel: Signal<string> = computed(
@@ -325,7 +316,7 @@ export default class DeNovoDesignComponent
     this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
   }
 
-  /** Return sorted, deduplicated chain letters from a residue string like "A56,B12-B20". */
+  /** Return sorted, deduplicated chain letters from a residue string like "A56,B12,B13". */
   private chainsFromResidues(residues: string): string {
     return [
       ...new Set(
@@ -390,14 +381,21 @@ export default class DeNovoDesignComponent
     if (!value?.trim()) return null;
     const residueMap = this.pdbResidueMap();
 
+    let residueCount = 0;
     for (const token of value
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean)) {
       const parsed = MolstarViewerComponent.parseResidueToken(token);
       if (!parsed) {
-        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A12-A14"`;
+        return `Invalid format "${token}". Use chain+residue notation, e.g. "A56" or "A56,A57"`;
       }
+
+      residueCount += Math.abs(parsed.resEnd - parsed.resStart) + 1;
+      if (residueCount > MAX_HOTSPOT_RESIDUES) {
+        return `Too many hotspot residues selected (${residueCount}). Only up to ${MAX_HOTSPOT_RESIDUES} are supported - remove some to continue.`;
+      }
+
       if (!residueMap) continue;
 
       const chainResidues = residueMap.get(parsed.chain);
@@ -411,6 +409,7 @@ export default class DeNovoDesignComponent
       if (!chainResidues.has(parsed.resStart)) {
         return `Residue ${parsed.resStart} not found in chain "${parsed.chain}"`;
       }
+
       if (
         parsed.resStart !== parsed.resEnd &&
         !chainResidues.has(parsed.resEnd)
@@ -684,6 +683,40 @@ export default class DeNovoDesignComponent
     };
 
     this.workflowSubmission.isSubmitting.set(true);
+
+    // rfdiffusion has no samplesheet - it takes the PDB file directly, so skip
+    // the CSV-samplesheet-generating dataset upload and reuse the PDB's own S3
+    // URI (already synced into formData.starting_pdb) as the launch's s3InputKey.
+    if (this.selectedTool() === "rfdiffusion") {
+      const s3InputKey = (formData as Record<string, unknown>)[
+        "starting_pdb"
+      ] as string | undefined;
+      if (!s3InputKey) {
+        console.error("No PDB file uploaded for rfdiffusion submission");
+        this.workflowSubmission.isSubmitting.set(false);
+        this.showError("Please upload a PDB file before submitting.");
+        return;
+      }
+
+      const workflowFormData: DeNovoDesignPayload = {
+        ...formData,
+        workflow: "de-novo-design",
+        tool: this.selectedTool(),
+      };
+
+      this.workflowSubmission.submitWorkflowWithDataset(
+        workflowFormData,
+        s3InputKey,
+        (error) => {
+          console.error("Workflow launch failed", error);
+          this.workflowSubmission.isSubmitting.set(false);
+          this.showError(
+            `Workflow launch failed: ${error.message || "Unknown error"}`
+          );
+        }
+      );
+      return;
+    }
 
     this.datasetUploadService
       .uploadDataset({

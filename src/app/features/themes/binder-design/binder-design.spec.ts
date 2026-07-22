@@ -89,7 +89,7 @@ describe("BinderDesignComponent", () => {
       expect(rfdiffusionTool).toBeDefined();
       expect(rfdiffusionTool?.id).toBe("rfdiffusion");
       expect(rfdiffusionTool?.href).toBe("/binder-design/de-novo-design");
-      expect(rfdiffusionTool?.disabled).toBeTrue();
+      expect(rfdiffusionTool?.disabled).toBeFalsy();
     });
 
     it("should have all tools with required properties", () => {

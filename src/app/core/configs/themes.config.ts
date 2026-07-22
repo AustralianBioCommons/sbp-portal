@@ -38,7 +38,6 @@ export const THEMES: ThemeConfig[] = [
             id: "rfdiffusion",
             label: "RFdiffusion",
             href: "/binder-design/de-novo-design",
-            disabled: true,
           },
         ],
       },
