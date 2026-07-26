@@ -33,7 +33,7 @@ export interface EntitySummaryItem {
 })
 export class WorkflowPreviewModalComponent {
   readonly isOpen = input(false);
-  readonly title = input("Review & Submit");
+  readonly heading = input("Review & Submit");
   readonly credits = input<number | null>(null);
   readonly creditsRemaining = input<number | null>(null);
   readonly isSubmitting = input(false);

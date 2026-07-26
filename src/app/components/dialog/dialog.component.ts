@@ -16,7 +16,7 @@ export type DialogVariant = "default" | "danger";
 })
 export class DialogComponent {
   isOpen = input(false);
-  title = input("");
+  heading = input("");
   message = input("");
   confirmText = input("Confirm");
   cancelText = input("Cancel");

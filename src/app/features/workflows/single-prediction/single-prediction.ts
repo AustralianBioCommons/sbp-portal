@@ -80,7 +80,7 @@ interface EntityRowErrors {
 }
 
 interface ToolSettingErrors {
-  alphafold2RandomSeed?: string;
+  randomSeed?: string;
   colabfoldNumRecycles?: string;
 }
 
@@ -99,6 +99,14 @@ const LIGAND_FIXED_SIZE = 30;
 const PREDICTION_SIZE_LIMIT_DEFAULT = 4000;
 const PREDICTION_SIZE_LIMIT_ALPHAFOLD2 = 2000;
 const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
+
+/** Exclusive upper bound for the random seed (enforces a maximum of 8 digits). */
+const MAX_RANDOM_SEED = 99999999;
+
+/** Generates a random 8-digit integer to pre-fill the Random Seed field. */
+function generateRandomSeed(): string {
+  return String(Math.floor(Math.random() * 90000000) + 10000000);
+}
 
 @Component({
   selector: "app-single-prediction",
@@ -198,12 +206,12 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return jobNameErrorMessage(this.form.controls.jobName.errors);
   }
 
-  alphafold2RandomSeed = signal("42");
+  randomSeed = signal(generateRandomSeed());
   alphafold2FullDbs = signal(false);
   colabfoldNumRecycles = signal("3");
   colabfoldUseTemplates = signal(false);
   boltzUsePotentials = signal(false);
-  alphafold2RandomSeedTouched = signal(false);
+  randomSeedTouched = signal(false);
   colabfoldNumRecyclesTouched = signal(false);
 
   // Single-page form sections (rendered + tracked by app-workflow-form)
@@ -473,14 +481,16 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     value: string;
     fieldName: string;
   }[] {
+    const randomSeedItem = {
+      label: "random_seed",
+      value: this.randomSeed(),
+      fieldName: "random_seed",
+    };
+
     switch (this.selectedTool()) {
       case "alphafold2":
         return [
-          {
-            label: "alphafold2_random_seed",
-            value: this.alphafold2RandomSeed(),
-            fieldName: "alphafold2_random_seed",
-          },
+          randomSeedItem,
           {
             label: "alphafold2_full_dbs",
             value: this.alphafold2FullDbs() ? "true" : "false",
@@ -489,6 +499,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         ];
       case "colabfold":
         return [
+          randomSeedItem,
           {
             label: "colabfold_num_recycles",
             value: this.colabfoldNumRecycles(),
@@ -497,6 +508,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         ];
       case "boltz":
         return [
+          randomSeedItem,
           {
             label: "boltz_use_potentials",
             value: this.boltzUsePotentials() ? "true" : "false",
@@ -530,16 +542,16 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     };
   }
 
-  updateAlphafold2RandomSeed(value: string): void {
-    this.alphafold2RandomSeed.set(value);
+  updateRandomSeed(value: string): void {
+    this.randomSeed.set(value);
   }
 
   updateColabfoldNumRecycles(value: string): void {
     this.colabfoldNumRecycles.set(value);
   }
 
-  setAlphafold2RandomSeedTouched(): void {
-    this.alphafold2RandomSeedTouched.set(true);
+  setRandomSeedTouched(): void {
+    this.randomSeedTouched.set(true);
   }
 
   setColabfoldNumRecyclesTouched(): void {
@@ -660,7 +672,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   private touchToolSettings(): void {
     this.stepTwoTouched.set(true);
-    this.alphafold2RandomSeedTouched.set(true);
+    this.randomSeedTouched.set(true);
     this.colabfoldNumRecyclesTouched.set(true);
   }
 
@@ -711,41 +723,37 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   }
 
   private validateToolSettings(): ToolSettingErrors {
-    if (this.selectedTool() === "alphafold2") {
-      const value = Number.parseInt(this.alphafold2RandomSeed(), 10);
-      if (!Number.isInteger(value) || value < 0) {
-        return {
-          alphafold2RandomSeed:
-            "alphafold2_random_seed must be a whole number greater than or equal to 0",
-        };
-      }
+    const errors: ToolSettingErrors = {};
+
+    const seed = Number.parseInt(this.randomSeed(), 10);
+    if (!Number.isInteger(seed) || seed < 0 || seed > MAX_RANDOM_SEED) {
+      errors.randomSeed =
+        "Random Seed must be a whole number with at most 8 digits";
     }
 
     if (this.selectedTool() === "colabfold") {
       const value = Number.parseInt(this.colabfoldNumRecycles(), 10);
       if (!Number.isInteger(value) || value < 1) {
-        return {
-          colabfoldNumRecycles:
-            "colabfold_num_recycles must be a whole number greater than or equal to 1",
-        };
+        errors.colabfoldNumRecycles =
+          "colabfold_num_recycles must be a whole number greater than or equal to 1";
       }
     }
 
-    return {};
+    return errors;
   }
 
   private buildToolSettingsPayload(): SinglePredictionToolSettingsPayload {
+    const random_seed = Number.parseInt(this.randomSeed(), 10);
+
     switch (this.selectedTool()) {
       case "alphafold2":
         return {
-          alphafold2_random_seed: Number.parseInt(
-            this.alphafold2RandomSeed(),
-            10
-          ),
+          random_seed,
           alphafold2_full_dbs: this.alphafold2FullDbs(),
         };
       case "colabfold":
         return {
+          random_seed,
           colabfold_num_recycles: Number.parseInt(
             this.colabfoldNumRecycles(),
             10
@@ -754,6 +762,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         };
       case "boltz":
         return {
+          random_seed,
           boltz_use_potentials: this.boltzUsePotentials(),
         };
     }

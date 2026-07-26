@@ -48,7 +48,7 @@ describe("WorkflowLayoutComponent", () => {
 
     fixture = TestBed.createComponent(WorkflowLayoutComponent);
     component = fixture.componentInstance;
-    fixture.componentRef.setInput("title", "Test Workflow");
+    fixture.componentRef.setInput("heading", "Test Workflow");
     fixture.detectChanges();
   });
 

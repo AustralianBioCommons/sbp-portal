@@ -39,7 +39,7 @@ describe("DialogComponent", () => {
 
   it("should open the dialog and lock body scroll when isOpen is true", () => {
     fixture.componentRef.setInput("isOpen", true);
-    fixture.componentRef.setInput("title", "Test Title");
+    fixture.componentRef.setInput("heading", "Test Title");
     fixture.componentRef.setInput("message", "Test Message");
     fixture.detectChanges();
 
@@ -151,7 +151,7 @@ describe("DialogComponent", () => {
 
   it("should set aria-labelledby on the dialog when a title is provided", () => {
     fixture.componentRef.setInput("isOpen", true);
-    fixture.componentRef.setInput("title", "Test Title");
+    fixture.componentRef.setInput("heading", "Test Title");
     fixture.detectChanges();
 
     expect(getDialog().getAttribute("aria-labelledby")).toBe("dialog-title");
@@ -159,7 +159,7 @@ describe("DialogComponent", () => {
 
   it("should not set aria-labelledby when title is empty", () => {
     fixture.componentRef.setInput("isOpen", true);
-    fixture.componentRef.setInput("title", "");
+    fixture.componentRef.setInput("heading", "");
     fixture.detectChanges();
 
     expect(getDialog().getAttribute("aria-labelledby")).toBeNull();

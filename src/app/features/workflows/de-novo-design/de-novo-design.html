@@ -1,5 +1,5 @@
 <app-workflow-layout
-  title="De Novo Design"
+  heading="De Novo Design"
   [showAlert]="showAlert()"
   [alertMessage]="alertMessage()"
   (alertDismissed)="closeAlert()"
@@ -26,7 +26,7 @@
     <div id="select-tool" class="scroll-mt-44">
       <app-step-content
         [step]="1"
-        title="Select a Tool"
+        heading="Select a Tool"
         description="Choose the design tool to run this workflow with."
         contentClass="space-y-4"
       >
@@ -42,7 +42,7 @@
     <div id="input-config" class="scroll-mt-44">
       <app-step-content
         [step]="2"
-        title="Input Configuration"
+        heading="Input Configuration"
         description="Configure input parameters based on the workflow schema."
       >
         @if (schemaLoader.inputSchemaData() &&
@@ -329,7 +329,7 @@
     <div id="tool-settings" class="scroll-mt-44">
       <app-step-content
         [step]="3"
-        title="Tool Settings"
+        heading="Tool Settings"
         description="Configure parameters specific to {{ selectedToolLabel() }}."
       >
         @if (!selectedToolHasParams()) {
