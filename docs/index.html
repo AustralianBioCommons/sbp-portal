@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Structural Biology Platform</title>
+    <meta
+      name="description"
+      content="User-friendly access to high impact computational structural biology workflows on Australian HPC infrastructure."
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://images.squarespace-cdn.com/content/5d3a4213cf4f5b00014ea1db/0b7ee000-0f7e-4ca3-a28a-83c52b057f04/Australian-Biocommons-Favicon-RGB_cropped.png?format=100w&amp;content-type=image%2Fpng"
+    />
+    <style>
+      :root {
+        --primary: #205a86;
+        --secondary: #5ac3b1;
+        --bg: #ffffff;
+        --surface: #f1f5f9;
+        --panel: #eef4fb;
+        --panel-border: #cfe0f0;
+        --text: #14202b;
+        --muted: #4a5b6b;
+        --rule: #dbe3ea;
+        --link: #1a4f78;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1720;
+          --surface: #161f2a;
+          --panel: #14232f;
+          --panel-border: #24455e;
+          --text: #e6edf3;
+          --muted: #9fb0bf;
+          --rule: #26333f;
+          --link: #7cc5ea;
+          --primary: #4d94c8;
+        }
+      }
+
+      :root[data-theme="dark"] {
+        --bg: #0f1720;
+        --surface: #161f2a;
+        --panel: #14232f;
+        --panel-border: #24455e;
+        --text: #e6edf3;
+        --muted: #9fb0bf;
+        --rule: #26333f;
+        --link: #7cc5ea;
+        --primary: #4d94c8;
+      }
+
+      :root[data-theme="light"] {
+        --bg: #ffffff;
+        --surface: #f1f5f9;
+        --panel: #eef4fb;
+        --panel-border: #cfe0f0;
+        --text: #14202b;
+        --muted: #4a5b6b;
+        --rule: #dbe3ea;
+        --link: #1a4f78;
+        --primary: #205a86;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .banner {
+        background: linear-gradient(
+          100deg,
+          var(--primary) 0%,
+          #2f7ba8 55%,
+          var(--secondary) 100%
+        );
+        padding: 2.5rem 1.5rem;
+      }
+
+      .banner-inner {
+        max-width: 60rem;
+        margin: 0 auto;
+      }
+
+      .banner img {
+        height: 3.25rem;
+        width: auto;
+        max-width: 100%;
+        display: block;
+        margin-bottom: 1.25rem;
+      }
+
+      .banner h1 {
+        margin: 0;
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        line-height: 1.15;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.01em;
+      }
+
+      .banner p {
+        margin: 0.75rem 0 0;
+        max-width: 44rem;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 1.0625rem;
+      }
+
+      main {
+        max-width: 60rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.5rem 4rem;
+      }
+
+      section + section {
+        margin-top: 2.5rem;
+      }
+
+      h2 {
+        font-size: 1.375rem;
+        font-weight: 700;
+        margin: 0 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--rule);
+        letter-spacing: -0.01em;
+      }
+
+      h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 1.75rem 0 0.5rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .callout {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-left: 4px solid var(--primary);
+        border-radius: 0.5rem;
+        padding: 1.25rem 1.5rem;
+      }
+
+      .callout p:first-child {
+        margin-top: 0;
+      }
+
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 0.5rem 0;
+        padding-left: 1.375rem;
+      }
+
+      li {
+        margin: 0.4rem 0;
+      }
+
+      li > ul {
+        margin-top: 0.35rem;
+      }
+
+      ul ul {
+        list-style-type: circle;
+      }
+
+      ul ul ul {
+        list-style-type: square;
+      }
+
+      a {
+        color: var(--link);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      a:hover {
+        text-decoration-thickness: 2px;
+      }
+
+      strong {
+        font-weight: 650;
+      }
+
+      .workflows {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 1rem;
+        margin: 1rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .workflows > li {
+        margin: 0;
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-radius: 0.5rem;
+        padding: 1.125rem 1.25rem;
+      }
+
+      .workflows h4 {
+        margin: 0 0 0.625rem;
+        font-size: 1rem;
+        font-weight: 650;
+        color: var(--primary);
+      }
+
+      .workflows ul {
+        margin: 0;
+        padding-left: 1.125rem;
+        font-size: 0.9375rem;
+        color: var(--muted);
+      }
+
+      .note {
+        color: var(--muted);
+      }
+
+      /* Partner marks are dark-on-transparent, so the strip keeps a light
+         surface in both themes rather than letting them vanish on dark. */
+      .partners {
+        background: #ffffff;
+        border: 1px solid var(--rule);
+        border-radius: 0.5rem;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 2.5rem 3.5rem;
+      }
+
+      .partners img {
+        height: 4.5rem;
+        width: auto;
+        max-width: 100%;
+        object-fit: contain;
+      }
+
+      @media (max-width: 32rem) {
+        .partners {
+          gap: 2rem;
+        }
+        .partners img {
+          height: 3.5rem;
+        }
+      }
+
+      footer {
+        border-top: 1px solid var(--rule);
+        padding: 1.5rem;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="banner">
+      <div class="banner-inner">
+        <img src="assets/sbp-logo.png" alt="Structural Biology Platform" />
+        <h1>Structural Biology Platform</h1>
+        <p>
+          User-friendly access to high impact computational structural biology
+          workflows on Australian HPC infrastructure.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <h2>Project objective</h2>
+        <div class="callout">
+          <p>
+            To provide user-friendly access to high impact computational
+            structural biology workflows on Australian HPC infrastructure.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Key product features</h2>
+        <ul>
+          <li>
+            The SBP will allow users to run workflows by populating a web form
+            and hitting submit (with no additional setup or configuration).
+          </li>
+          <li>The SBP will support 3 initial pre-configured workflows:</li>
+        </ul>
+
+        <ul class="workflows">
+          <li>
+            <h4>Single structure prediction</h4>
+            <ul>
+              <li>One AlphaFold2 generation model (AlphaFold2)</li>
+              <li>One AlphaFold3 generation model (Boltz)</li>
+            </ul>
+          </li>
+          <li>
+            <h4>Protein interaction screening</h4>
+            <ul>
+              <li>One AlphaFold2 generation model (AlphaFold2)</li>
+              <li>One AlphaFold3 generation model (Boltz)</li>
+            </ul>
+          </li>
+          <li>
+            <h4>Hotspot-guided protein binder design</h4>
+            <ul>
+              <li>BindCraft</li>
+              <li>RFDiffusion &gt; ProteinMPNN &gt; AlphaFold2</li>
+            </ul>
+          </li>
+        </ul>
+
+        <ul>
+          <li>
+            Users will be able to login to the platform and execute workflows on
+            Australian HPC infrastructure.
+          </li>
+          <li>
+            Users will be able to login to the platform and browse historical
+            jobs submitted by their platform user account.
+          </li>
+          <li>
+            Each workflow result will display an interactive HTML report that is
+            visible from within the platform.
+          </li>
+          <li>
+            Users will be able to download raw data files directly from the
+            platform.
+          </li>
+          <li>
+            User result data will not be visible to other platform users.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Additional context</h2>
+        <ul>
+          <li>
+            Academics within the community are accustomed to
+            <strong>extremely user-friendly</strong> web interfaces available
+            for <strong>small-scale analyses</strong> using existing free/cheap
+            web services (<a
+              href="https://alphafoldserver.com"
+              rel="noopener"
+              >alphafoldserver</a
+            >,
+            <a href="https://github.com/sokrypton/ColabFold" rel="noopener"
+              >colabfold</a
+            >, <a href="https://neurosnap.ai" rel="noopener">neurosnap</a>).
+            <strong>Note:</strong> A user-friendly interface has been a
+            recurring theme across many user interviews.
+          </li>
+          <li>
+            There is a high level of immediate demand for access to workflows
+            under 2 themes (structure prediction, protein design) which are not
+            well accommodated by existing web services:
+            <ul>
+              <li>Protein binder design</li>
+              <li>
+                Bulk structure prediction
+                <ul>
+                  <li>Predicting structures for an entire genome</li>
+                  <li>
+                    Screening 1 protein for potential partners in an entire
+                    genome
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <p class="note">
+              The current approach to conduct these analyses may involve
+              manually submitting thousands of individual jobs to a public web
+              service.
+            </p>
+          </li>
+          <li>
+            Academic users <strong>do not</strong> have a cash budget to use a
+            commercial service like
+            <a href="https://www.tamarind.bio" rel="noopener">Tamarind bio</a>
+            which offers bulk analysis workflows (starting from $50k USD pa).
+          </li>
+          <li>
+            Academic users <strong>do</strong> have access to institutional and
+            national HPC allocations.
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>Partners</h2>
+        <div class="partners">
+          <img
+            src="assets/partners/unsw.png"
+            alt="UNSW Sydney"
+            width="490"
+            height="512"
+          />
+          <img
+            src="assets/partners/unimelb.png"
+            alt="The University of Melbourne"
+            width="416"
+            height="512"
+          />
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a href="https://github.com/AustralianBioCommons/sbp-portal" rel="noopener"
+        >AustralianBioCommons/sbp-portal</a
+      >
+      &middot; Australian BioCommons
+    </footer>
+  </body>
+</html>
