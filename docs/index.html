@@ -73,8 +73,7 @@
         margin: 0;
         background: var(--bg);
         color: var(--text);
-        font-family:
-          ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
           "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
@@ -95,12 +94,22 @@
         margin: 0 auto;
       }
 
-      .banner img {
-        height: 3.25rem;
+      /* The logo artwork has an opaque white background, so it sits in a white
+         chip rather than floating as a white block on the gradient. */
+      .banner .logo {
+        display: inline-block;
+        background: #ffffff;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      }
+
+      .banner .logo img {
+        height: 3.5rem;
         width: auto;
         max-width: 100%;
         display: block;
-        margin-bottom: 1.25rem;
       }
 
       .banner h1 {
@@ -244,13 +253,15 @@
         flex-wrap: wrap;
         align-items: center;
         justify-content: center;
-        gap: 2.5rem 3.5rem;
+        gap: 2rem 3rem;
       }
 
+      /* Fixed height with a width cap: wide wordmarks scale down to fit the box
+         instead of dwarfing the near-square crests. object-fit keeps aspect. */
       .partners img {
         height: 4.5rem;
         width: auto;
-        max-width: 100%;
+        max-width: 10rem;
         object-fit: contain;
       }
 
@@ -275,7 +286,13 @@
   <body>
     <header class="banner">
       <div class="banner-inner">
-        <img src="assets/sbp-logo.png" alt="Structural Biology Platform" />
+        <span class="logo"
+          ><img
+            src="assets/sbp-logo.png"
+            alt="Australian BioCommons"
+            width="805"
+            height="660"
+        /></span>
         <h1>Structural Biology Platform</h1>
         <p>
           User-friendly access to high impact computational structural biology
@@ -346,9 +363,7 @@
             Users will be able to download raw data files directly from the
             platform.
           </li>
-          <li>
-            User result data will not be visible to other platform users.
-          </li>
+          <li>User result data will not be visible to other platform users.</li>
         </ul>
       </section>
 
@@ -359,9 +374,7 @@
             Academics within the community are accustomed to
             <strong>extremely user-friendly</strong> web interfaces available
             for <strong>small-scale analyses</strong> using existing free/cheap
-            web services (<a
-              href="https://alphafoldserver.com"
-              rel="noopener"
+            web services (<a href="https://alphafoldserver.com" rel="noopener"
               >alphafoldserver</a
             >,
             <a href="https://github.com/sokrypton/ColabFold" rel="noopener"
@@ -393,39 +406,43 @@
               service.
             </p>
           </li>
-          <li>
-            Academic users <strong>do not</strong> have a cash budget to use a
-            commercial service like
-            <a href="https://www.tamarind.bio" rel="noopener">Tamarind bio</a>
-            which offers bulk analysis workflows (starting from $50k USD pa).
-          </li>
-          <li>
-            Academic users <strong>do</strong> have access to institutional and
-            national HPC allocations.
-          </li>
         </ul>
       </section>
       <section>
         <h2>Partners</h2>
         <div class="partners">
           <img
+            src="assets/partners/biocommons.png"
+            alt="Australian BioCommons"
+            width="1600"
+            height="580"
+          />
+          <img
+            src="assets/partners/usyd.png"
+            alt="The University of Sydney"
+            width="1493"
+            height="700"
+          />
+          <img
             src="assets/partners/unsw.png"
             alt="UNSW Sydney"
-            width="490"
-            height="512"
+            width="489"
+            height="510"
           />
           <img
             src="assets/partners/unimelb.png"
             alt="The University of Melbourne"
-            width="416"
-            height="512"
+            width="400"
+            height="420"
           />
         </div>
       </section>
     </main>
 
     <footer>
-      <a href="https://github.com/AustralianBioCommons/sbp-portal" rel="noopener"
+      <a
+        href="https://github.com/AustralianBioCommons/sbp-portal"
+        rel="noopener"
         >AustralianBioCommons/sbp-portal</a
       >
       &middot; Australian BioCommons

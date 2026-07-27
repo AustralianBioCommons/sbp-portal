@@ -5,7 +5,7 @@ This folder is the public SBP project page served at
 
 ## How it is published
 
-GitHub Pages is configured under Settings → Pages as *Deploy from a branch* →
+GitHub Pages is configured under Settings → Pages as _Deploy from a branch_ →
 branch **`dev`**, folder **`/docs`**.
 
 GitHub serves these files directly — there is no build step and no publishing
