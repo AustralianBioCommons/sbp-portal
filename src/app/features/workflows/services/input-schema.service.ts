@@ -239,6 +239,19 @@ export class InputSchemaService {
     starting_pdb: "Target PDB",
   };
 
+  /**
+   * Field-specific validation pattern overrides. Used to enforce stricter
+   * formats than whatever the source schema provides (e.g. comma-separated
+   * "<chain><residue>" tokens for hotspot residues — no hyphen/range
+   * separators, and no chain codes longer than 2 characters like "acdef10").
+   */
+  private static readonly VALIDATION_PATTERN_OVERRIDES: Record<
+    string,
+    string
+  > = {
+    target_hotspot_residues: "^[A-Za-z]{0,2}\\d+(\\s*,\\s*[A-Za-z]{0,2}\\d+)*$",
+  };
+
   private parseFields(fields: Record<string, unknown>[]): InputSchemaField[] {
     return fields.map((field) => {
       const name = this.getStringValue(field.name) || "unnamed_field";
@@ -257,10 +270,15 @@ export class InputSchemaService {
         required: typeof field.required === "boolean" ? field.required : false,
         default: this.getDefaultValue(field.default),
         options: this.getOptionsValue(field.options || field.enum),
-        validation:
-          typeof field.validation === "object" && field.validation !== null
+        validation: {
+          ...(typeof field.validation === "object" &&
+          field.validation !== null
             ? (field.validation as Record<string, unknown>)
-            : {},
+            : {}),
+          ...(InputSchemaService.VALIDATION_PATTERN_OVERRIDES[name]
+            ? { pattern: InputSchemaService.VALIDATION_PATTERN_OVERRIDES[name] }
+            : {}),
+        },
         placeholder: this.getStringValue(field.placeholder) || "",
         help_text: this.getStringValue(field.help_text) || "",
         fa_icon: this.getStringValue(field.fa_icon) || "",
@@ -307,7 +325,9 @@ export class InputSchemaService {
             typeof prop.minLength === "number" ? prop.minLength : undefined,
           maxLength:
             typeof prop.maxLength === "number" ? prop.maxLength : undefined,
-          pattern: this.getStringValue(prop.pattern),
+          pattern:
+            InputSchemaService.VALIDATION_PATTERN_OVERRIDES[key] ||
+            this.getStringValue(prop.pattern),
           format: this.getStringValue(prop.format),
         },
         placeholder:
