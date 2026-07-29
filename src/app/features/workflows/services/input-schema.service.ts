@@ -347,7 +347,7 @@ export class InputSchemaService {
       return prop.default ? `Default: ${prop.default}` : "Enter a number";
     }
     if (key.includes("residues")) {
-      return "e.g., 1,2-10 or A1-10,B1-20";
+      return "e.g., 1,2 or A1,A10,B1,B20";
     }
     if (key.includes("chains")) {
       return "e.g., A,B or ABC";
