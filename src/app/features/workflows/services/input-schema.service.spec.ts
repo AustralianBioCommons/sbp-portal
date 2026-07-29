@@ -646,9 +646,7 @@ describe("InputSchemaService", () => {
       // Verify the actual placeholder generation logic
       expect(lengthField?.placeholder).toBe("Enter a number"); // integer type takes precedence
       expect(residuesField?.placeholder).toBe("e.g., 1,2 or A1,A10,B1,B20"); // residues-specific pattern
-      expect(residuesOnlyField?.placeholder).toBe(
-        "e.g., 1,2 or A1,A10,B1,B20"
-      ); // residues-specific pattern
+      expect(residuesOnlyField?.placeholder).toBe("e.g., 1,2 or A1,A10,B1,B20"); // residues-specific pattern
       expect(chainsField?.placeholder).toBe("e.g., A,B or ABC"); // chains-specific pattern
       expect(nameField?.placeholder).toBe("Enter protein name");
       expect(idField?.placeholder).toBe("Enter sequence id");
