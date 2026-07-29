@@ -1080,6 +1080,183 @@ describe("InputSchemaService", () => {
     });
   });
 
+  describe("target_hotspot_residues validation override", () => {
+    it("applies the comma-only pattern override when parsing JSON Schema properties", (done) => {
+      const rawSchema = {
+        properties: {
+          target_hotspot_residues: {
+            type: "string",
+            pattern: "^.*$", // schema-provided pattern should be overridden
+          },
+        },
+      };
+
+      service.parseInputSchema(rawSchema).subscribe({
+        next: (parsed) => {
+          const field = parsed.sections[0].fields.find(
+            (f) => f.name === "target_hotspot_residues"
+          );
+          expect(field?.validation?.pattern).toBe(
+            "^[A-Za-z]{0,3}\\d+(\\s*,\\s*[A-Za-z]{0,3}\\d+)*$"
+          );
+          done();
+        },
+      });
+    });
+
+    it("applies the comma-only pattern override when parsing sections/fields format", (done) => {
+      const rawSchema = {
+        sections: [
+          {
+            name: "section1",
+            fields: [
+              {
+                name: "target_hotspot_residues",
+                type: "string",
+                validation: { pattern: "^.*$" },
+              },
+            ],
+          },
+        ],
+      };
+
+      service.parseInputSchema(rawSchema).subscribe({
+        next: (parsed) => {
+          const field = parsed.sections[0].fields[0];
+          expect(field.validation?.pattern).toBe(
+            "^[A-Za-z]{0,3}\\d+(\\s*,\\s*[A-Za-z]{0,3}\\d+)*$"
+          );
+          done();
+        },
+      });
+    });
+
+    it("does not apply the override to other fields", (done) => {
+      const rawSchema = {
+        properties: {
+          chains: { type: "string" },
+        },
+      };
+
+      service.parseInputSchema(rawSchema).subscribe({
+        next: (parsed) => {
+          const field = parsed.sections[0].fields[0];
+          expect(field.validation?.pattern).toBeUndefined();
+          done();
+        },
+      });
+    });
+
+    it("accepts comma-separated chain+residue tokens, with or without spaces", () => {
+      const field: InputSchemaField = {
+        name: "target_hotspot_residues",
+        type: "string",
+        validation: {
+          pattern: "^[A-Za-z]{0,3}\\d+(\\s*,\\s*[A-Za-z]{0,3}\\d+)*$",
+        },
+      };
+
+      expect(service.validateFieldValue(field, "A1,A10,B1,B20").valid).toBe(
+        true
+      );
+      expect(service.validateFieldValue(field, "A1, A20, B2, B30").valid).toBe(
+        true
+      );
+      expect(service.validateFieldValue(field, "1,2").valid).toBe(true);
+    });
+
+    it("rejects hyphen-separated ranges and malformed chain codes", () => {
+      const field: InputSchemaField = {
+        name: "target_hotspot_residues",
+        type: "string",
+        validation: {
+          pattern: "^[A-Za-z]{0,3}\\d+(\\s*,\\s*[A-Za-z]{0,3}\\d+)*$",
+        },
+      };
+
+      expect(service.validateFieldValue(field, "A56-A60").valid).toBe(false);
+      expect(service.validateFieldValue(field, "acdef10").valid).toBe(false);
+      expect(service.validateFieldValue(field, "A1,,B2").valid).toBe(false);
+    });
+
+    it("applies the uniqueItems override when parsing JSON Schema properties", (done) => {
+      const rawSchema = {
+        properties: {
+          target_hotspot_residues: { type: "string" },
+          chains: { type: "string" },
+        },
+      };
+
+      service.parseInputSchema(rawSchema).subscribe({
+        next: (parsed) => {
+          const hotspotField = parsed.sections[0].fields.find(
+            (f) => f.name === "target_hotspot_residues"
+          );
+          const chainsField = parsed.sections[0].fields.find(
+            (f) => f.name === "chains"
+          );
+          expect(hotspotField?.validation?.uniqueItems).toBe(true);
+          expect(chainsField?.validation?.uniqueItems).toBeUndefined();
+          done();
+        },
+      });
+    });
+
+    it("applies the uniqueItems override when parsing sections/fields format", (done) => {
+      const rawSchema = {
+        sections: [
+          {
+            name: "section1",
+            fields: [{ name: "target_hotspot_residues", type: "string" }],
+          },
+        ],
+      };
+
+      service.parseInputSchema(rawSchema).subscribe({
+        next: (parsed) => {
+          expect(parsed.sections[0].fields[0].validation?.uniqueItems).toBe(
+            true
+          );
+          done();
+        },
+      });
+    });
+
+    it("rejects duplicate residue tokens, case-insensitively", () => {
+      const field: InputSchemaField = {
+        name: "target_hotspot_residues",
+        type: "string",
+        validation: {
+          pattern: "^[A-Za-z]{0,3}\\d+(\\s*,\\s*[A-Za-z]{0,3}\\d+)*$",
+          uniqueItems: true,
+        },
+      };
+
+      const result1 = service.validateFieldValue(field, "A1,A2,A1");
+      expect(result1.valid).toBe(false);
+      expect(result1.errors[0]).toContain('duplicate value: "A1"');
+
+      const result2 = service.validateFieldValue(field, "A1,a1");
+      expect(result2.valid).toBe(false);
+
+      const result3 = service.validateFieldValue(field, "A1, A2, A1");
+      expect(result3.valid).toBe(false);
+    });
+
+    it("accepts residue tokens that are all unique", () => {
+      const field: InputSchemaField = {
+        name: "target_hotspot_residues",
+        type: "string",
+        validation: {
+          pattern: "^[A-Za-z]{0,3}\\d+(\\s*,\\s*[A-Za-z]{0,3}\\d+)*$",
+          uniqueItems: true,
+        },
+      };
+
+      expect(service.validateFieldValue(field, "A1,A2,B1,B2").valid).toBe(true);
+    });
+  });
+
   describe("section and field fallbacks", () => {
     it("should apply sensible fallbacks when section and field metadata is missing", (done) => {
       const rawSchema = {
