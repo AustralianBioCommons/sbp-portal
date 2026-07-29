@@ -1253,9 +1253,7 @@ describe("InputSchemaService", () => {
         },
       };
 
-      expect(service.validateFieldValue(field, "A1,A2,B1,B2").valid).toBe(
-        true
-      );
+      expect(service.validateFieldValue(field, "A1,A2,B1,B2").valid).toBe(true);
     });
   });
 
