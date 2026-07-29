@@ -50,30 +50,6 @@
         <div class="space-y-4">
           @for (row of schemaLoader.inputRows(); track row.id; let i = $index) {
 
-          <!-- Job Name -->
-          <div class="rounded-lg border bg-white p-4">
-            <label for="jobNameInput" class="mb-1 block text-sm font-medium">
-              Job Name
-              <span class="text-red-500" aria-hidden="true">*</span>
-            </label>
-            <input
-              id="jobNameInput"
-              type="text"
-              class="block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
-              [class.border-red-500]="hasJobNameError()"
-              [formControl]="form.controls.jobName"
-              placeholder="e.g. my-binder-job"
-              maxlength="60"
-            />
-            <p class="mt-1 text-xs text-gray-500">
-              Required identifier for this job. Allowed characters: letters,
-              numbers, hyphens, and underscores. Must not start with a number.
-            </p>
-            @if (hasJobNameError()) {
-            <p class="mt-1 text-xs text-red-600">{{ getJobNameError() }}</p>
-            }
-          </div>
-
           <!-- PDB viewer + right-side sliding config panel -->
           <div class="w-full overflow-hidden rounded-lg border">
             <!-- PDB file header — always visible above the viewer -->
@@ -240,6 +216,38 @@
                     <div
                       class="flex flex-col gap-4 flex-1 overflow-y-auto overflow-x-hidden p-4"
                     >
+                      <!-- Job Name -->
+                      <div>
+                        <label
+                          for="jobNameInput"
+                          class="mb-1 flex items-center gap-1 text-sm font-medium"
+                        >
+                          <span>
+                            Job Name
+                            <span class="text-red-500" aria-hidden="true">
+                              *
+                            </span>
+                          </span>
+                          <app-tooltip
+                            message="Required identifier for this job. Allowed characters: letters, numbers, hyphens, and underscores. Must not start with a number."
+                            iconColor="text-gray-400 hover:text-gray-500"
+                          ></app-tooltip>
+                        </label>
+                        <input
+                          id="jobNameInput"
+                          type="text"
+                          class="block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
+                          [class.border-red-500]="hasJobNameError()"
+                          [formControl]="form.controls.jobName"
+                          placeholder="e.g. my-binder-job"
+                          maxlength="60"
+                        />
+                        @if (hasJobNameError()) {
+                        <p class="mt-1 text-xs text-red-600">
+                          {{ getJobNameError() }}
+                        </p>
+                        }
+                      </div>
                       @for (field of schemaLoader.requiredInputFields(); track
                       field.name) { @if (field.name === 'starting_pdb' ||
                       field.name === 'max_length' || field.name ===
@@ -293,7 +301,7 @@
                       } }
 
                       <!-- Number of designs + credits -->
-                      <div class="flex flex-col gap-4">
+                      <div class="flex flex-col border rounded-lg p-4 gap-4">
                         @for (field of schemaLoader.requiredInputFields(); track
                         field.name) { @if (field.name ===
                         'number_of_final_designs') {
@@ -382,7 +390,7 @@
     (cancelled)="showPreview.set(false)"
   ></app-workflow-preview-modal>
 
-  <ul papers class="list-disc list-inside text-sm text-gray-600">
+  <ul papers class="list-disc list-inside text-sm text-gray-500">
     <li>AlphaFold: Jumper et al., 2021</li>
     <li>ColabFold: Mirdita et al., 2022</li>
     <li>BindCraft: Project documentation</li>

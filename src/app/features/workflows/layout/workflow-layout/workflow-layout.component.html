@@ -19,49 +19,69 @@
   (cancelled)="submitNewJob()"
 ></app-dialog>
 
+<!-- Error Alert -->
+@if (showAlert()) {
+<app-alert
+  [type]="'error'"
+  [message]="alertMessage()"
+  [dismissible]="true"
+  (dismissed)="alertDismissed.emit()"
+></app-alert>
+}
+
 <div
   class="bg-gray-100 bg-[url('/assets/workflows-bg.png')] bg-no-repeat bg-size-[auto_600px] xl:bg-contain bg-top bg-fixed"
 >
-  <!-- Error Alert -->
-  @if (showAlert()) {
-  <app-alert
-    [type]="'error'"
-    [message]="alertMessage()"
-    [dismissible]="true"
-    (dismissed)="alertDismissed.emit()"
-  ></app-alert>
-  }
-
   <div class="max-w-7xl px-6 mx-auto py-12">
     <!-- Browser-style Tabs attached to container -->
-    <nav class="flex justify-center" aria-label="Tabs">
-      <ul class="flex md:gap-6 gap-2">
+    <div class="flex justify-center">
+      <ul
+        class="flex w-full gap-1 md:w-auto md:gap-6"
+        role="tablist"
+        aria-label="Workflow sections"
+      >
         @for (tab of tabs; track tab.id) {
-        <li class="relative">
+        <li class="relative flex-1 md:flex-none" role="presentation">
           <button
+            #tabButton
+            role="tab"
+            [id]="tabId(tab.id)"
+            [attr.aria-selected]="isActiveTab(tab.id)"
+            [attr.aria-controls]="isActiveTab(tab.id) ? panelId(tab.id) : null"
+            [attr.tabindex]="isActiveTab(tab.id) ? 0 : -1"
+            [attr.aria-label]="tab.shortLabel ? tab.label : null"
             (click)="switchTab(tab.id)"
+            (keydown)="onTabListKeydown($event)"
             [class]="
               isActiveTab(tab.id)
-                ? 'bg-white border-t border-l border-r  text-gray-900 font-semibold relative z-10'
-                : 'bg-gray-100 border-t border-l border-r border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-white text-gray-900 font-semibold z-10'
+                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             "
-            class="px-6 py-3 min-w-32 md:min-w-48 text-sm font-medium transition-all rounded-t-lg border-b-0 -mb-px relative first:rounded-tl-lg last:rounded-tr-lg"
+            class="w-full py-3 text-sm md:min-w-36 lg:min-w-48 font-medium whitespace-nowrap transition-all rounded-t-lg border-t border-l border-r border-b-0 -mb-px relative"
             type="button"
           >
+            @if (tab.shortLabel) {
+            <span class="sm:hidden">{{ tab.shortLabel }}</span>
+            <span class="hidden sm:inline">{{ tab.label }}</span>
+            } @else {
             {{ tab.label }}
+            }
           </button>
         </li>
         } @empty {
         <li
           class="px-4 py-2 text-sm text-gray-500 bg-white border rounded-t-lg"
+          role="presentation"
         >
           No tabs available
         </li>
         }
       </ul>
-    </nav>
+    </div>
 
-    <div class="bg-white rounded-lg shadow-sm border p-12 space-y-12">
+    <div
+      class="bg-white rounded-b-lg rounded-t-none md:rounded-t-lg shadow-sm border p-12 space-y-8"
+    >
       <div>
         <h1 class="text-3xl font-semibold">{{ heading() }}</h1>
         <p class="mt-2 text-sm text-gray-500">
@@ -69,17 +89,14 @@
         </p>
       </div>
 
-      <!-- Overview Tab Content -->
-      @if (isActiveTab('overview')) {
-      <div>
-        <h2 class="text-xl font-semibold">Description</h2>
-        <p class="mt-2 text-sm text-gray-500">
-          <ng-content select="[overview]"></ng-content>
-        </p>
-      </div>
-
-      <div>
-        <h1 class="text-xl font-semibold">Execute this workflow</h1>
+      <!-- Execute Tab Content -->
+      @if (isActiveTab('execute')) {
+      <div
+        role="tabpanel"
+        [id]="panelId('execute')"
+        [attr.aria-labelledby]="tabId('execute')"
+      >
+        <h2 class="text-xl font-semibold">Execute this workflow</h2>
 
         <!-- Hide form and show access restricted message if user cannot execute workflows -->
         @if ((auth.canExecuteWorkflows$ | async) === false) {
@@ -122,11 +139,33 @@
       </div>
       }
 
-      <!-- Output Tab Content -->
+      <!-- About Tab Content -->
+      @if (isActiveTab('about')) {
+      <div
+        role="tabpanel"
+        [id]="panelId('about')"
+        [attr.aria-labelledby]="tabId('about')"
+        tabindex="0"
+        class="rounded-lg focus-visible:outline-2 space-y-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+      >
+        <h2 class="text-xl font-semibold">About this workflow</h2>
+        <p class="text-sm text-gray-500">
+          <ng-content select="[overview]"></ng-content>
+        </p>
+      </div>
+      }
+
+      <!-- Example Output Tab Content -->
       @if (isActiveTab('output')) {
-      <div class="bg-gray-50 border rounded-lg p-4 space-y-2">
-        <h2 class="text-base font-semibold">Output</h2>
-        <p class="text-sm text-gray-600">
+      <div
+        role="tabpanel"
+        [id]="panelId('output')"
+        [attr.aria-labelledby]="tabId('output')"
+        tabindex="0"
+        class="rounded-lg space-y-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+      >
+        <h2 class="text-xl font-semibold">Example Output</h2>
+        <p class="text-sm text-gray-500">
           Results, visualizations, and downloadable files will appear here after
           submission.
         </p>
@@ -135,9 +174,15 @@
 
       <!-- Papers Tab Content -->
       @if (isActiveTab('papers')) {
-      <div class="bg-gray-50 border rounded-lg p-4 space-y-2">
-        <h2 class="text-base font-semibold">Papers</h2>
-        <p class="text-sm text-gray-600">
+      <div
+        role="tabpanel"
+        [id]="panelId('papers')"
+        [attr.aria-labelledby]="tabId('papers')"
+        tabindex="0"
+        class="rounded-lg space-y-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+      >
+        <h2 class="text-xl font-semibold">Papers</h2>
+        <p class="text-sm text-gray-500">
           Relevant publications and references related to the selected tools.
         </p>
         <ng-content select="[papers]"></ng-content>

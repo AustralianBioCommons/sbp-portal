@@ -24,6 +24,7 @@ import {
   jobNameErrorMessage,
 } from "../shared/job-name.validators";
 import { ButtonComponent } from "../../../components/button/button.component";
+import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 import { MolstarViewerComponent } from "../components/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../components/length-range-slider/length-range-slider.component";
 
@@ -64,6 +65,7 @@ const MAX_HOTSPOT_RESIDUES = 8;
     CommonModule,
     ReactiveFormsModule,
     ButtonComponent,
+    TooltipComponent,
     ToolSelectionComponent,
     WorkflowFormComponent,
     WorkflowLayoutComponent,

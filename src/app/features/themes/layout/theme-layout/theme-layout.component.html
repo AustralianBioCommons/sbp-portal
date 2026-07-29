@@ -16,7 +16,7 @@
           @for (workflow of workflows(); track workflow.id) {
           <a
             [routerLink]="workflow.disabled ? null : workflow.href"
-            class="group rounded-xl border shadow-sm p-6 flex flex-col gap-4 no-underline text-inherit"
+            class="group rounded-lg border shadow-sm p-6 flex flex-col gap-4 no-underline text-inherit"
             [class]="
               workflow.disabled
                 ? 'bg-gray-100 opacity-50 cursor-not-allowed'
@@ -32,12 +32,7 @@
                 @for (tool of workflow.tools; track tool.id) {
                 <li>
                   <span
-                    class="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold border rounded-full"
-                    [class]="
-                      tool.disabled
-                        ? 'bg-gray-100 text-gray-400 border-gray-400'
-                        : 'text-gray-900 border-gray-900'
-                    "
+                    class="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold bg-gray-200 rounded-full"
                     [attr.aria-label]="
                       tool.disabled ? tool.label + ' (coming soon)' : null
                     "

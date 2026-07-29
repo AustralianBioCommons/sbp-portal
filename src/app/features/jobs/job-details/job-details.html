@@ -178,14 +178,14 @@
                 {{ categoryGroup.category }}
               </div>
 
-              <ul class="space-y-2">
+              <ul class="grid gap-2 sm:grid-cols-2">
                 @for (file of categoryGroup.files; track file.url) {
                 <li>
                   <a
                     [href]="file.url"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="flex items-center gap-4 rounded p-4 hover:bg-sky-50"
+                    class="flex h-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all"
                     [title]="'Download ' + file.label"
                     [attr.aria-label]="'Download ' + file.label"
                   >
@@ -194,7 +194,6 @@
                     >
                       {{ file.label }}
                     </span>
-
                     <ng-icon
                       name="heroArrowDownTray"
                       size="20"
