@@ -245,12 +245,11 @@ export class InputSchemaService {
    * "<chain><residue>" tokens for hotspot residues — no hyphen/range
    * separators, and no chain codes longer than 2 characters like "acdef10").
    */
-  private static readonly VALIDATION_PATTERN_OVERRIDES: Record<
-    string,
-    string
-  > = {
-    target_hotspot_residues: "^[A-Za-z]{0,2}\\d+(\\s*,\\s*[A-Za-z]{0,2}\\d+)*$",
-  };
+  private static readonly VALIDATION_PATTERN_OVERRIDES: Record<string, string> =
+    {
+      target_hotspot_residues:
+        "^[A-Za-z]{0,2}\\d+(\\s*,\\s*[A-Za-z]{0,2}\\d+)*$",
+    };
 
   private parseFields(fields: Record<string, unknown>[]): InputSchemaField[] {
     return fields.map((field) => {
@@ -271,8 +270,7 @@ export class InputSchemaService {
         default: this.getDefaultValue(field.default),
         options: this.getOptionsValue(field.options || field.enum),
         validation: {
-          ...(typeof field.validation === "object" &&
-          field.validation !== null
+          ...(typeof field.validation === "object" && field.validation !== null
             ? (field.validation as Record<string, unknown>)
             : {}),
           ...(InputSchemaService.VALIDATION_PATTERN_OVERRIDES[name]
