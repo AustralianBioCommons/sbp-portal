@@ -645,10 +645,8 @@ describe("InputSchemaService", () => {
 
       // Verify the actual placeholder generation logic
       expect(lengthField?.placeholder).toBe("Enter a number"); // integer type takes precedence
-      expect(residuesField?.placeholder).toBe("e.g., 1,2-10 or A1-10,B1-20"); // residues-specific pattern
-      expect(residuesOnlyField?.placeholder).toBe(
-        "e.g., 1,2-10 or A1-10,B1-20"
-      ); // residues-specific pattern
+      expect(residuesField?.placeholder).toBe("e.g., 1,2 or A1,A10,B1,B20"); // residues-specific pattern
+      expect(residuesOnlyField?.placeholder).toBe("e.g., 1,2 or A1,A10,B1,B20"); // residues-specific pattern
       expect(chainsField?.placeholder).toBe("e.g., A,B or ABC"); // chains-specific pattern
       expect(nameField?.placeholder).toBe("Enter protein name");
       expect(idField?.placeholder).toBe("Enter sequence id");
@@ -903,7 +901,7 @@ describe("InputSchemaService", () => {
       const residuesField = fields.find((f) => f.name === "pure_residues");
 
       expect(lengthField?.placeholder).toBe("Enter length value"); // Still matches length condition
-      expect(residuesField?.placeholder).toBe("e.g., 1,2-10 or A1-10,B1-20"); // residues-specific pattern
+      expect(residuesField?.placeholder).toBe("e.g., 1,2 or A1,A10,B1,B20"); // residues-specific pattern
     });
   });
 
@@ -1055,7 +1053,7 @@ describe("InputSchemaService", () => {
       const residuesField = fields!.find(
         (f) => f.name === "residues_selection"
       );
-      expect(residuesField?.placeholder).toBe("e.g., 1,2-10 or A1-10,B1-20");
+      expect(residuesField?.placeholder).toBe("e.g., 1,2 or A1,A10,B1,B20");
     });
 
     it("should return empty array when bindflow schema lacks items.properties (line 407)", () => {
