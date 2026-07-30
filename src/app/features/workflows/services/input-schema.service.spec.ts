@@ -279,6 +279,47 @@ describe("InputSchemaService", () => {
       expect(result3.valid).toBe(true);
     });
 
+    it("should reject decimals for integer fields", () => {
+      const field: InputSchemaField = {
+        name: "number_of_final_designs",
+        label: "Number Of Final Designs",
+        type: "number",
+        validation: {
+          min: 1,
+          integer: true,
+        },
+      };
+
+      const decimal = service.validateFieldValue(field, 2.5);
+      expect(decimal.valid).toBe(false);
+      expect(decimal.errors[0]).toContain("must be a whole number");
+
+      expect(service.validateFieldValue(field, 0).valid).toBe(false);
+      expect(service.validateFieldValue(field, 2).valid).toBe(true);
+    });
+
+    it("should flag integer schema types as whole-number only", () => {
+      let parsed: ParsedInputSchema;
+      service
+        .parseInputSchema({
+          type: "object",
+          properties: {
+            number_of_final_designs: { type: "integer", minimum: 1 },
+            score: { type: "number" },
+          },
+        })
+        .subscribe((result) => (parsed = result));
+
+      const fields = parsed!.sections[0].fields;
+      expect(
+        fields.find((f) => f.name === "number_of_final_designs")?.validation
+          ?.integer
+      ).toBe(true);
+      expect(fields.find((f) => f.name === "score")?.validation?.integer).toBe(
+        false
+      );
+    });
+
     it("should validate enum options", () => {
       const field: InputSchemaField = {
         name: "test_field",

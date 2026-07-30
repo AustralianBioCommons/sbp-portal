@@ -270,6 +270,55 @@ describe("FormFieldComponent", () => {
     expect(component.field().type).toBe("number");
   });
 
+  // ── Whole-number fields ─────────────────────────────────────────────────────
+
+  function setNumberField(validation: InputSchemaField["validation"]): void {
+    fixture.componentRef.setInput("field", {
+      name: "number_of_final_designs",
+      label: "Number Of Final Designs",
+      type: "number",
+      required: true,
+      validation,
+    });
+  }
+
+  it("should step by 1 for integer fields and stay free-form otherwise", () => {
+    setNumberField({ min: 1, integer: true });
+    expect(component.numberStep).toBe(1);
+
+    setNumberField({ min: 0, max: 1 });
+    expect(component.numberStep).toBe("any");
+
+    setNumberField({ integer: true, step: 5 });
+    expect(component.numberStep).toBe(5);
+  });
+
+  it("should render schema constraints as attributes without leaking undefined", () => {
+    setNumberField({ min: 1, integer: true });
+    fixture.detectChanges();
+
+    const numberInput: HTMLInputElement =
+      fixture.nativeElement.querySelector("input[type=number]");
+    expect(numberInput.getAttribute("min")).toBe("1");
+    expect(numberInput.getAttribute("step")).toBe("1");
+    expect(numberInput.hasAttribute("max")).toBe(false);
+
+    fixture.componentRef.setInput("field", {
+      name: "binder_name",
+      label: "Binder Name",
+      type: "string",
+      required: true,
+      validation: { minLength: 2, maxLength: 8 },
+    });
+    fixture.detectChanges();
+
+    const textInput: HTMLInputElement =
+      fixture.nativeElement.querySelector("input[type=text]");
+    expect(textInput.getAttribute("minlength")).toBe("2");
+    expect(textInput.getAttribute("maxlength")).toBe("8");
+    expect(textInput.hasAttribute("pattern")).toBe(false);
+  });
+
   it("should handle boolean field type", () => {
     fixture.componentRef.setInput("field", {
       name: "b",
