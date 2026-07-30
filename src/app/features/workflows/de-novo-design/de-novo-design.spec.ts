@@ -433,9 +433,7 @@ describe("DeNovoDesignComponent", () => {
         errors: ["required"],
       });
       component.updateRowValueWithValidation("row1", "some_field", "A");
-      expect(component.getRowFieldError("row1", "some_field")).toBe(
-        "required"
-      );
+      expect(component.getRowFieldError("row1", "some_field")).toBe("required");
     });
 
     it("reports config-section errors including the job name", () => {
@@ -758,8 +756,9 @@ describe("DeNovoDesignComponent", () => {
       component["performSubmit"]();
 
       expect(workflowSubmission.submitWorkflowWithDataset).toHaveBeenCalled();
-      const payload = workflowSubmission.submitWorkflowWithDataset.calls.mostRecent()
-        .args[0] as Record<string, unknown>;
+      const payload =
+        workflowSubmission.submitWorkflowWithDataset.calls.mostRecent()
+          .args[0] as Record<string, unknown>;
       expect(payload["chains"]).toBe("A");
     });
 
@@ -773,8 +772,9 @@ describe("DeNovoDesignComponent", () => {
       component["performSubmit"]();
 
       expect(workflowSubmission.submitWorkflowWithDataset).toHaveBeenCalled();
-      const payload = workflowSubmission.submitWorkflowWithDataset.calls.mostRecent()
-        .args[0] as Record<string, unknown>;
+      const payload =
+        workflowSubmission.submitWorkflowWithDataset.calls.mostRecent()
+          .args[0] as Record<string, unknown>;
       expect("chains" in payload).toBe(false);
     });
 
