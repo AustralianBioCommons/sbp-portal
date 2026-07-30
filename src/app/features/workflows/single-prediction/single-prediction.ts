@@ -40,7 +40,6 @@ import {
   isValidSmiles,
   lookupCcdCompound,
   validateDnaSequence,
-  validateFastaHeader,
   validateProteinSequence,
   validateRnaSequence,
 } from "../shared/fasta.utils";
@@ -50,6 +49,7 @@ import {
   WorkflowTool,
 } from "../shared/workflow.interfaces";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
+import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 
 type MoleculeType = "protein" | "rna" | "dna" | "ligand" | "ccd";
 type SinglePredictionTool = Extract<
@@ -63,12 +63,10 @@ interface ToolChip extends ToolOption {
 
 interface EntityRow {
   id: number;
-  name: string;
   sequence: string;
   copyNumber: string;
   moleculeType: MoleculeType;
   touched: {
-    name: boolean;
     sequence: boolean;
     copyNumber: boolean;
     moleculeType: boolean;
@@ -76,20 +74,38 @@ interface EntityRow {
 }
 
 interface EntityRowErrors {
-  name?: string;
   sequence?: string;
   copyNumber?: string;
   tool?: string;
 }
 
 interface ToolSettingErrors {
-  alphafold2RandomSeed?: string;
+  randomSeed?: string;
   colabfoldNumRecycles?: string;
 }
 
 interface SequenceCell {
   char: string;
   label: string;
+}
+
+/** Maximum number of entities (copies included) Proteinfold can run. */
+const MAX_TOTAL_ENTITIES = 52;
+
+/** Fixed prediction size counted for every ligand copy (SMILES or CCD). */
+const LIGAND_FIXED_SIZE = 30;
+
+/** Total prediction size limits (exclusive upper bound) per tool. */
+const PREDICTION_SIZE_LIMIT_DEFAULT = 4000;
+const PREDICTION_SIZE_LIMIT_ALPHAFOLD2 = 2000;
+const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
+
+/** Exclusive upper bound for the random seed (enforces a maximum of 8 digits). */
+const MAX_RANDOM_SEED = 99999999;
+
+/** Generates a random 8-digit integer to pre-fill the Random Seed field. */
+function generateRandomSeed(): string {
+  return String(Math.floor(Math.random() * 90000000) + 10000000);
 }
 
 @Component({
@@ -107,6 +123,7 @@ interface SequenceCell {
     NgIconComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
+    TooltipComponent,
   ],
   providers: [provideIcons({ bootstrapGripVertical, heroTrash })],
   host: {
@@ -189,12 +206,12 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return jobNameErrorMessage(this.form.controls.jobName.errors);
   }
 
-  alphafold2RandomSeed = signal("42");
+  randomSeed = signal(generateRandomSeed());
   alphafold2FullDbs = signal(false);
   colabfoldNumRecycles = signal("3");
   colabfoldUseTemplates = signal(false);
   boltzUsePotentials = signal(false);
-  alphafold2RandomSeedTouched = signal(false);
+  randomSeedTouched = signal(false);
   colabfoldNumRecyclesTouched = signal(false);
 
   // Single-page form sections (rendered + tracked by app-workflow-form)
@@ -209,15 +226,75 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     this.entityRows().map((row) => this.validateEntityRow(row))
   );
   readonly toolSettingErrors = computed(() => this.validateToolSettings());
+
+  /** Total number of entities to predict, counting copies. */
+  readonly totalEntityCount = computed(() =>
+    this.entityRows().reduce(
+      (sum, row) => sum + this.getParsedCopyNumber(row.copyNumber),
+      0
+    )
+  );
+
+  /** Combined prediction size (residues + fixed ligand size), counting copies. */
+  readonly totalPredictionSize = computed(() =>
+    this.entityRows().reduce(
+      (sum, row) => sum + this.getEntityPredictionSize(row),
+      0
+    )
+  );
+
+  /** Upper limit on the total prediction size for the selected tool. */
+  readonly predictionSizeLimit = computed(() => {
+    const tool = this.selectedTool();
+    if (tool === "boltz" && this.boltzUsePotentials()) {
+      return PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS;
+    }
+    if (tool === "alphafold2") {
+      return PREDICTION_SIZE_LIMIT_ALPHAFOLD2;
+    }
+    return PREDICTION_SIZE_LIMIT_DEFAULT;
+  });
+
+  readonly hasProteinInput = computed(() =>
+    this.entityRows().some((row) => row.moleculeType === "protein")
+  );
+
+  /** Form validation errors. */
+  readonly inputSummaryErrors = computed<string[]>(() => {
+    const errors: string[] = [];
+
+    const totalEntities = this.totalEntityCount();
+    if (totalEntities > MAX_TOTAL_ENTITIES) {
+      errors.push(
+        `Too many entities: ${totalEntities} including copies. The maximum allowed is ${MAX_TOTAL_ENTITIES}.`
+      );
+    }
+
+    if (!this.hasProteinInput()) {
+      errors.push(
+        "At least one entity must be a protein. This workflow cannot run without a protein input."
+      );
+    }
+
+    const limit = this.predictionSizeLimit();
+    const size = this.totalPredictionSize();
+    if (size >= limit) {
+      errors.push(
+        `Total prediction size (${size}) must be less than ${limit} for ${this.selectedToolLabel()}. Reduce sequence length or the number of copies.`
+      );
+    }
+
+    return errors;
+  });
   readonly isStep1Valid = computed(() => {
     this.jobName();
     return (
       this.form.controls.jobName.valid &&
       this.entityRows().length > 0 &&
       this.entityValidationResults().every(
-        (errors) =>
-          !errors.name && !errors.sequence && !errors.copyNumber && !errors.tool
-      )
+        (errors) => !errors.sequence && !errors.copyNumber && !errors.tool
+      ) &&
+      this.inputSummaryErrors().length === 0
     );
   });
   readonly isStep2Valid = computed(
@@ -252,10 +329,14 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       type: `${this.getMoleculeTypeLabel(
         row.moleculeType
       )} x${this.getParsedCopyNumber(row.copyNumber)}`,
-      name: row.name.trim() || `Entity ${index + 1}`,
+      name: this.getEntityName(index),
       sequence: this.getNormalizedSequence(row),
     }))
   );
+
+  private getEntityName(index: number): string {
+    return `seq${index + 1}`;
+  }
 
   readonly generatedFastaContent = computed(() => {
     if (!this.isStep1Valid()) {
@@ -264,17 +345,17 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     const fastaRecords: string[] = [];
 
-    for (const row of this.entityRows()) {
+    this.entityRows().forEach((row, index) => {
       const copies = this.getParsedCopyNumber(row.copyNumber);
       const sequence = this.getNormalizedSequence(row);
-      const name = row.name.trim();
+      const name = this.getEntityName(index);
       const type = this.getFastaMoleculeType(row.moleculeType);
 
       for (let copyIndex = 0; copyIndex < copies; copyIndex += 1) {
         const headerId = copies > 1 ? `${name}_${copyIndex + 1}` : name;
         fastaRecords.push(`>${headerId}|${type}\n${sequence}`);
       }
-    }
+    });
 
     return fastaRecords.join("\n");
   });
@@ -333,10 +414,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   updateRowCopyNumber(id: number, value: string): void {
     this.patchRow(id, { copyNumber: value });
-  }
-
-  updateRowName(id: number, value: string): void {
-    this.patchRow(id, { name: value });
   }
 
   updateRowMoleculeType(id: number, value: string): void {
@@ -404,14 +481,16 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     value: string;
     fieldName: string;
   }[] {
+    const randomSeedItem = {
+      label: "random_seed",
+      value: this.randomSeed(),
+      fieldName: "random_seed",
+    };
+
     switch (this.selectedTool()) {
       case "alphafold2":
         return [
-          {
-            label: "alphafold2_random_seed",
-            value: this.alphafold2RandomSeed(),
-            fieldName: "alphafold2_random_seed",
-          },
+          randomSeedItem,
           {
             label: "alphafold2_full_dbs",
             value: this.alphafold2FullDbs() ? "true" : "false",
@@ -420,6 +499,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         ];
       case "colabfold":
         return [
+          randomSeedItem,
           {
             label: "colabfold_num_recycles",
             value: this.colabfoldNumRecycles(),
@@ -428,6 +508,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         ];
       case "boltz":
         return [
+          randomSeedItem,
           {
             label: "boltz_use_potentials",
             value: this.boltzUsePotentials() ? "true" : "false",
@@ -461,16 +542,16 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     };
   }
 
-  updateAlphafold2RandomSeed(value: string): void {
-    this.alphafold2RandomSeed.set(value);
+  updateRandomSeed(value: string): void {
+    this.randomSeed.set(value);
   }
 
   updateColabfoldNumRecycles(value: string): void {
     this.colabfoldNumRecycles.set(value);
   }
 
-  setAlphafold2RandomSeedTouched(): void {
-    this.alphafold2RandomSeedTouched.set(true);
+  setRandomSeedTouched(): void {
+    this.randomSeedTouched.set(true);
   }
 
   setColabfoldNumRecyclesTouched(): void {
@@ -515,12 +596,10 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     const id = this.nextRowId++;
     return {
       id,
-      name: "",
       sequence: "",
       copyNumber: "1",
       moleculeType: "protein",
       touched: {
-        name: false,
         sequence: false,
         copyNumber: false,
         moleculeType: false,
@@ -583,7 +662,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       rows.map((row) => ({
         ...row,
         touched: {
-          name: true,
           sequence: true,
           copyNumber: true,
           moleculeType: true,
@@ -594,20 +672,12 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   private touchToolSettings(): void {
     this.stepTwoTouched.set(true);
-    this.alphafold2RandomSeedTouched.set(true);
+    this.randomSeedTouched.set(true);
     this.colabfoldNumRecyclesTouched.set(true);
   }
 
   private validateEntityRow(row: EntityRow): EntityRowErrors {
     const errors: EntityRowErrors = {};
-
-    const otherNames = this.entityRows()
-      .filter((r) => r.id !== row.id)
-      .map((r) => r.name);
-    const headerValidation = validateFastaHeader(row.name, otherNames);
-    if (!headerValidation.valid) {
-      errors.name = headerValidation.errorMessage;
-    }
 
     const normalizedSequence = this.getNormalizedSequence(row);
 
@@ -653,41 +723,37 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   }
 
   private validateToolSettings(): ToolSettingErrors {
-    if (this.selectedTool() === "alphafold2") {
-      const value = Number.parseInt(this.alphafold2RandomSeed(), 10);
-      if (!Number.isInteger(value) || value < 0) {
-        return {
-          alphafold2RandomSeed:
-            "alphafold2_random_seed must be a whole number greater than or equal to 0",
-        };
-      }
+    const errors: ToolSettingErrors = {};
+
+    const seed = Number.parseInt(this.randomSeed(), 10);
+    if (!Number.isInteger(seed) || seed < 0 || seed > MAX_RANDOM_SEED) {
+      errors.randomSeed =
+        "Random Seed must be a whole number with at most 8 digits";
     }
 
     if (this.selectedTool() === "colabfold") {
       const value = Number.parseInt(this.colabfoldNumRecycles(), 10);
       if (!Number.isInteger(value) || value < 1) {
-        return {
-          colabfoldNumRecycles:
-            "colabfold_num_recycles must be a whole number greater than or equal to 1",
-        };
+        errors.colabfoldNumRecycles =
+          "colabfold_num_recycles must be a whole number greater than or equal to 1";
       }
     }
 
-    return {};
+    return errors;
   }
 
   private buildToolSettingsPayload(): SinglePredictionToolSettingsPayload {
+    const random_seed = Number.parseInt(this.randomSeed(), 10);
+
     switch (this.selectedTool()) {
       case "alphafold2":
         return {
-          alphafold2_random_seed: Number.parseInt(
-            this.alphafold2RandomSeed(),
-            10
-          ),
+          random_seed,
           alphafold2_full_dbs: this.alphafold2FullDbs(),
         };
       case "colabfold":
         return {
+          random_seed,
           colabfold_num_recycles: Number.parseInt(
             this.colabfoldNumRecycles(),
             10
@@ -696,6 +762,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         };
       case "boltz":
         return {
+          random_seed,
           boltz_use_potentials: this.boltzUsePotentials(),
         };
     }
@@ -703,13 +770,22 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return {};
   }
 
-  /** 1-based position labels for the sequence ruler overlay: every 10th character and the last one. */
-  getSequenceCells(sequence: string): SequenceCell[] {
+  /**
+   * 1-based position labels for the sequence ruler overlay: every 10th character
+   * and the last one. SMILES (ligand) is excleded.
+   */
+  getSequenceCells(
+    sequence: string,
+    moleculeType: MoleculeType
+  ): SequenceCell[] {
+    const showLabels = moleculeType !== "ligand";
     const length = sequence.length;
     return Array.from(sequence, (char, index) => {
       const position = index + 1;
       const label =
-        position % 10 === 0 || position === length ? String(position) : "";
+        showLabels && (position % 10 === 0 || position === length)
+          ? String(position)
+          : "";
       return { char, label };
     });
   }
@@ -737,6 +813,18 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   private getParsedCopyNumber(value: string): number {
     const parsed = Number.parseInt(value, 10);
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+  }
+
+  /**
+   * Prediction size an entity contributes, counting copies. Protein, RNA and DNA
+   * count one per residue; SMILES and CCD ligands use a fixed size per copy.
+   */
+  private getEntityPredictionSize(row: EntityRow): number {
+    const copies = this.getParsedCopyNumber(row.copyNumber);
+    if (row.moleculeType === "ligand" || row.moleculeType === "ccd") {
+      return LIGAND_FIXED_SIZE * copies;
+    }
+    return this.getNormalizedSequence(row).length * copies;
   }
 
   private prepareSinglePredictionInput(
@@ -832,8 +920,8 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       workflow: "single-prediction",
       tool: this.selectedTool(),
       runName: this.jobName().trim(),
-      entities: this.entityRows().map((row) => ({
-        id: row.name.trim(),
+      entities: this.entityRows().map((row, index) => ({
+        id: this.getEntityName(index),
         moleculeType: row.moleculeType,
         copyNumber: this.getParsedCopyNumber(row.copyNumber),
         sequence: this.getNormalizedSequence(row),

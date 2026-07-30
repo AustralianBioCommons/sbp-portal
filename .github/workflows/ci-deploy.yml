@@ -2,9 +2,9 @@ name: CI / Build and Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [dev]
   pull_request:
-    branches: [ main ]
+    branches: [dev]
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
       - name: Use Node.js 24
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: "24"
 
       - name: Install dependencies
         run: |

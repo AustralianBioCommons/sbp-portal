@@ -11,7 +11,6 @@ import { THEMES } from "../../../core/configs/themes.config";
 export class BinderDesignComponent {
   private readonly theme = THEMES.find((t) => t.id === "binder-design")!;
   workflows = signal(this.theme.workflows);
-  tools = signal(this.theme.tools);
 
   communityResources = signal([
     {

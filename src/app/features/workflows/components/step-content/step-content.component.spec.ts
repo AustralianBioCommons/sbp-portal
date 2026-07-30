@@ -19,7 +19,7 @@ describe("StepContentComponent", () => {
   });
 
   it("should display title when provided", () => {
-    fixture.componentRef.setInput("title", "Test Step Title");
+    fixture.componentRef.setInput("heading", "Test Step Title");
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain("Test Step Title");
@@ -33,7 +33,7 @@ describe("StepContentComponent", () => {
   });
 
   it("should not display title when not provided", () => {
-    fixture.componentRef.setInput("title", "");
+    fixture.componentRef.setInput("heading", "");
     fixture.detectChanges();
     const titleElement = fixture.nativeElement.querySelector("h5");
     expect(titleElement).toBeFalsy();
@@ -64,7 +64,7 @@ describe("StepContentComponent", () => {
   });
 
   it("should handle both title and description together", () => {
-    fixture.componentRef.setInput("title", "Test Title");
+    fixture.componentRef.setInput("heading", "Test Title");
     fixture.componentRef.setInput("description", "Test Description");
     fixture.detectChanges();
 

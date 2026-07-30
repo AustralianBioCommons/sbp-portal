@@ -7,7 +7,7 @@
 >
   <div modalHeader class="flex items-center justify-between gap-4 border-b p-4">
     <h2 id="workflow-preview-title" class="text-lg font-semibold text-gray-900">
-      {{ title() }}
+      {{ heading() }}
     </h2>
     <button
       type="button"
@@ -21,14 +21,113 @@
   </div>
 
   <div modalBody class="max-h-[70vh] overflow-y-auto p-4">
-    <app-configuration-summary
-      [workflowName]="workflowName()"
-      [selectedTool]="selectedTool()"
-      [hasParameters]="hasParameters()"
-      [inputItems]="inputItems()"
-      [inputEntities]="inputEntities()"
-      [toolSettingItems]="toolSettingItems()"
-    ></app-configuration-summary>
+    <div class="space-y-4">
+      <div class="bg-gray-50 border rounded-lg p-4 space-y-4 text-sm">
+        <!-- Workflow & Tool -->
+        <div class="space-y-4">
+          <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+            <div class="space-y-1">
+              <p class="font-medium">Workflow</p>
+              <p class="text-gray-600 wrap-break-word">
+                {{ workflowName() || "—" }}
+              </p>
+            </div>
+            <div class="space-y-1">
+              <p class="font-medium">Tool</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-gray-600 wrap-break-word">
+                  {{ selectedTool() || "—" }}
+                </p>
+                @if (hasParameters()) {
+                <span
+                  class="inline-block shrink-0 text-xs bg-sky-200 text-biocommons-primary px-2 py-1 rounded-full"
+                >
+                  Has Parameters
+                </span>
+                } @else {
+                <span
+                  class="inline-block shrink-0 text-xs bg-gray-200 px-2 py-1 rounded-full"
+                >
+                  No Parameters
+                </span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-t border-gray-200" />
+
+        <!-- Input Configuration -->
+        <div class="space-y-4">
+          <div class="font-semibold">Input Configuration</div>
+          <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+            @for (item of inputItems(); track item.fieldName) {
+            <div class="space-y-1">
+              <p class="font-medium">{{ item.label }}</p>
+              @if (item.url && item.value) {
+              <a
+                [href]="item.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                class="text-sky-700 underline wrap-break-word hover:text-biocommons-primary"
+              >
+                {{ item.value }}
+              </a>
+              } @else {
+              <p class="text-gray-600 wrap-break-word">
+                {{ item.value || "—" }}
+              </p>
+              }
+            </div>
+            }
+          </div>
+          @if (inputEntities().length > 0) {
+          <div class="space-y-1">
+            <p class="font-medium">Entities</p>
+            <ul class="space-y-1">
+              @for (entity of inputEntities(); track $index) {
+              <li class="text-gray-600 wrap-break-word">
+                {{ entity.type }} — {{ entity.name }} @if (entity.sequence) { —
+                <span class="font-mono">{{ entity.sequence }}</span>
+                }
+              </li>
+              }
+            </ul>
+          </div>
+          }
+        </div>
+
+        @if (credits() !== null) {
+        <app-credit-summary
+          [total]="credits()"
+          [remaining]="creditsRemaining()"
+        ></app-credit-summary>
+        }
+
+        <hr class="border-t border-gray-200" />
+
+        <!-- Tool Settings -->
+        <div class="space-y-4">
+          <div class="font-semibold">Tool Settings</div>
+          @if (toolSettingItems().length > 0) {
+          <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+            @for (item of toolSettingItems(); track item.fieldName) {
+            <div class="space-y-1">
+              <p class="font-medium">{{ item.label }}</p>
+              <p class="text-gray-600 wrap-break-word">
+                {{ item.value || "—" }}
+              </p>
+            </div>
+            }
+          </div>
+          } @else {
+          <p class="text-gray-600">No tool settings</p>
+          }
+        </div>
+      </div>
+    </div>
   </div>
 
   <div modalActions class="flex justify-end gap-4 p-4 pt-0 text-sm">

@@ -11,5 +11,4 @@ import { THEMES } from "../../../core/configs/themes.config";
 export class StructurePredictionComponent {
   private readonly theme = THEMES.find((t) => t.id === "structure-prediction")!;
   workflows = this.theme.workflows;
-  tools = this.theme.tools;
 }

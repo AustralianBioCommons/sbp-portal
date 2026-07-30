@@ -4,11 +4,20 @@ import { heroXMark } from "@ng-icons/heroicons/outline";
 
 import { ButtonComponent } from "../../../../components/button/button.component";
 import { ModalComponent } from "../../../../components/modal/modal.component";
-import {
-  ConfigurationSummaryComponent,
-  EntitySummaryItem,
-  SummaryItem,
-} from "../configuration-summary/configuration-summary.component";
+import { CreditSummaryComponent } from "../credit-summary/credit-summary.component";
+
+export interface SummaryItem {
+  label: string;
+  value: string;
+  fieldName: string;
+  url?: string;
+}
+
+export interface EntitySummaryItem {
+  type: string;
+  name: string;
+  sequence: string;
+}
 
 @Component({
   selector: "app-workflow-preview-modal",
@@ -16,7 +25,7 @@ import {
     ModalComponent,
     ButtonComponent,
     NgIconComponent,
-    ConfigurationSummaryComponent,
+    CreditSummaryComponent,
   ],
   providers: [provideIcons({ heroXMark })],
   templateUrl: "./workflow-preview-modal.component.html",
@@ -24,8 +33,9 @@ import {
 })
 export class WorkflowPreviewModalComponent {
   readonly isOpen = input(false);
-  readonly title = input("Review & Submit");
+  readonly heading = input("Review & Submit");
   readonly credits = input<number | null>(null);
+  readonly creditsRemaining = input<number | null>(null);
   readonly isSubmitting = input(false);
 
   readonly workflowName = input("");

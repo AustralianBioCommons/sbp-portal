@@ -1,5 +1,5 @@
 <app-workflow-layout
-  title="Bulk Prediction"
+  heading="Bulk Prediction"
   [showAlert]="showAlert()"
   [alertMessage]="alertMessage()"
   (alertDismissed)="closeAlert()"
@@ -27,7 +27,7 @@
     <div id="select-tool" class="scroll-mt-44">
       <app-step-content
         [step]="1"
-        title="Select a Tool"
+        heading="Select a Tool"
         description="Choose the design tool to run this workflow with."
       >
         <app-tool-selection
@@ -42,7 +42,7 @@
     <div id="input-config" class="scroll-mt-44">
       <app-step-content
         [step]="2"
-        title="Input Configuration"
+        heading="Input Configuration"
         description="Provide a job name and enter your protein sequences in FASTA format."
       >
         <div class="mt-6 space-y-6">
@@ -132,7 +132,7 @@
     <div id="tool-settings" class="scroll-mt-44">
       <app-step-content
         [step]="3"
-        title="Tool Settings"
+        heading="Tool Settings"
         description="Configure parameters specific to {{ selectedToolLabel() }}."
       >
         <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
@@ -173,6 +173,7 @@
   <app-workflow-preview-modal
     [isOpen]="showPreview()"
     [credits]="creditsEnabled ? creditCost() : null"
+    [creditsRemaining]="creditsRemaining()"
     [isSubmitting]="workflowSubmission.isSubmitting()"
     workflowName="Bulk Prediction"
     [selectedTool]="selectedToolLabel()"

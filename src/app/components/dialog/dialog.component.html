@@ -1,7 +1,7 @@
 <app-modal
   [isOpen]="isOpen()"
   [dismissible]="!loading()"
-  [ariaLabelledby]="title() ? 'dialog-title' : null"
+  [ariaLabelledby]="heading() ? 'dialog-title' : null"
   (dismissed)="onCancel()"
 >
   <!-- Dialog Header: optional danger icon + title -->
@@ -15,7 +15,7 @@
     }
 
     <div id="dialog-title" class="text-2xl font-semibold">
-      {{ title() }}
+      {{ heading() }}
     </div>
   </div>
 

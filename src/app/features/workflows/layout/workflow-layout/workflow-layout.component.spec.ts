@@ -48,7 +48,7 @@ describe("WorkflowLayoutComponent", () => {
 
     fixture = TestBed.createComponent(WorkflowLayoutComponent);
     component = fixture.componentInstance;
-    fixture.componentRef.setInput("title", "Test Workflow");
+    fixture.componentRef.setInput("heading", "Test Workflow");
     fixture.detectChanges();
   });
 
@@ -56,15 +56,53 @@ describe("WorkflowLayoutComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  it("should default to the overview tab", () => {
-    expect(component.isActiveTab("overview")).toBe(true);
-    expect(component.isActiveTab("output")).toBe(false);
+  it("should default to the execute tab", () => {
+    expect(component.isActiveTab("execute")).toBe(true);
+    expect(component.isActiveTab("about")).toBe(false);
   });
 
   it("should switch the active tab", () => {
     component.switchTab("papers");
     expect(component.isActiveTab("papers")).toBe(true);
-    expect(component.isActiveTab("overview")).toBe(false);
+    expect(component.isActiveTab("execute")).toBe(false);
+  });
+
+  it("should move selection with arrow keys and wrap around", () => {
+    const press = (key: string) => {
+      const selected: HTMLElement = fixture.nativeElement.querySelector(
+        '[role="tab"][aria-selected="true"]'
+      );
+      selected.dispatchEvent(new KeyboardEvent("keydown", { key }));
+      fixture.detectChanges();
+    };
+
+    press("ArrowRight");
+    expect(component.isActiveTab("about")).toBe(true);
+
+    press("ArrowLeft");
+    expect(component.isActiveTab("execute")).toBe(true);
+
+    press("ArrowLeft");
+    expect(component.isActiveTab("papers")).toBe(true);
+
+    press("Home");
+    expect(component.isActiveTab("execute")).toBe(true);
+
+    press("End");
+    expect(component.isActiveTab("papers")).toBe(true);
+  });
+
+  it("should expose the selected tab to assistive technology", () => {
+    const selected: HTMLElement = fixture.nativeElement.querySelector(
+      '[role="tab"][aria-selected="true"]'
+    );
+    const panel: HTMLElement =
+      fixture.nativeElement.querySelector('[role="tabpanel"]');
+
+    expect(selected.textContent?.trim()).toBe("Execute");
+    expect(selected.getAttribute("tabindex")).toBe("0");
+    expect(selected.getAttribute("aria-controls")).toBe(panel.id);
+    expect(panel.getAttribute("aria-labelledby")).toBe(selected.id);
   });
 
   it("should delegate goToJobs to the workflow submission service", () => {

@@ -94,7 +94,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   searchQuery = signal<string>("");
   selectedStatuses = signal<string[]>([]);
   currentPage = signal<number>(1);
-  pageSize = signal<number>(50);
+  pageSize = signal<number>(10);
   scoreSortDirection = signal<"asc" | "desc">("desc");
   submittedSortDirection = signal<"asc" | "desc">("desc");
   activeSort = signal<"score" | "submitted">("submitted");

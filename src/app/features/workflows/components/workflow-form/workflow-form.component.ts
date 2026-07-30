@@ -11,6 +11,8 @@ import {
   viewChild,
 } from "@angular/core";
 import { ButtonComponent } from "../../../../components/button/button.component";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { heroCheck } from "@ng-icons/heroicons/outline";
 
 export interface WorkflowSection {
   id: string;
@@ -20,10 +22,15 @@ export interface WorkflowSection {
 
 @Component({
   selector: "app-workflow-form",
-  imports: [ButtonComponent],
+  imports: [ButtonComponent, NgIconComponent],
   templateUrl: "./workflow-form.component.html",
   styleUrl: "./workflow-form.component.scss",
   host: { class: "block" },
+  viewProviders: [
+    provideIcons({
+      heroCheck,
+    }),
+  ],
 })
 export class WorkflowFormComponent {
   readonly sections = input.required<WorkflowSection[]>();
@@ -224,12 +231,15 @@ export class WorkflowFormComponent {
       classes.push("border-biocommons-primary group-hover:border-sky-900");
     if (!active && !valid && (completed || visited))
       classes.push("border-red-600 group-hover:border-red-700");
-
     if ((completed && valid) || (last && active && valid))
       classes.push("bg-biocommons-primary group-hover:bg-sky-900");
     if (completed && !valid) classes.push("bg-red-600 group-hover:bg-red-700");
     if (!completed && !(last && active && valid))
       classes.push("bg-white hover:bg-gray-100");
+    if ((completed && valid) || (last && active && valid))
+      classes.push("text-white");
+    else if (valid && (visited || completed))
+      classes.push("text-biocommons-primary");
 
     return classes.join(" ");
   }

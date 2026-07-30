@@ -1,5 +1,5 @@
 <app-workflow-layout
-  title="Single Prediction"
+  heading="Single Prediction"
   [showAlert]="showAlert()"
   [alertMessage]="alertMessage()"
   (alertDismissed)="closeAlert()"
@@ -28,7 +28,7 @@
     <div id="select-tool" class="scroll-mt-44">
       <app-step-content
         [step]="1"
-        title="Select a Tool"
+        heading="Select a Tool"
         description="Choose the design tool to run this workflow with."
       >
         <app-tool-selection
@@ -43,7 +43,7 @@
     <div id="input-config" class="scroll-mt-44">
       <app-step-content
         [step]="2"
-        title="Input Configuration"
+        heading="Input Configuration"
         description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
       >
         <div class="rounded-lg border p-4">
@@ -97,7 +97,7 @@
               cdkDragPreviewContainer="parent"
             >
               <div
-                class="grid gap-4 lg:grid-cols-[40px_170px_110px_170px_minmax(0,1fr)_40px] lg:items-start"
+                class="grid gap-4 lg:grid-cols-[40px_170px_110px_minmax(0,1fr)_40px] lg:items-start"
               >
                 <div class="flex shrink-0 cursor-grab flex-col items-center">
                   <span class="mb-1 block text-sm font-medium">
@@ -165,41 +165,6 @@
 
                 <div class="min-w-0">
                   <label
-                    [for]="'sequence-name-' + row.id"
-                    class="mb-1 block text-sm font-medium"
-                  >
-                    Sequence Name
-                    <span class="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    [id]="'sequence-name-' + row.id"
-                    [attr.aria-label]="'Sequence name for entity ' + (i + 1)"
-                    [value]="row.name"
-                    (input)="updateRowName(row.id, $any($event.target).value)"
-                    (blur)="touchRowField(row.id, 'name')"
-                    [placeholder]="'seq' + (i + 1)"
-                    [class]="
-                    shouldShowRowFieldError(row, 'name') && getRowErrors(i).name
-                      ? 'border-red-500 focus:ring-red-100'
-                      : 'focus:ring-sky-100'
-                  "
-                    class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
-                    autocomplete="off"
-                    spellcheck="false"
-                    autocorrect="off"
-                    autocapitalize="off"
-                  />
-                  @if (shouldShowRowFieldError(row, 'name') &&
-                  getRowErrors(i).name) {
-                  <p class="mt-1 text-xs text-red-600" role="alert">
-                    {{ getRowErrors(i).name }}
-                  </p>
-                  }
-                </div>
-
-                <div class="min-w-0">
-                  <label
                     [for]="'sequence-' + row.id"
                     class="mb-1 block text-sm font-medium"
                   >
@@ -230,8 +195,8 @@
                         class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-1 font-mono text-sm text-gray-900"
                         aria-hidden="true"
                       >
-                        @for (cell of getSequenceCells(row.sequence); track
-                        $index) {<span
+                        @for (cell of getSequenceCells(row.sequence,
+                        row.moleculeType); track $index) {<span
                           class="relative inline-block w-[1ch] align-top text-center leading-7.5 mr-0.5"
                           ><span
                             class="pointer-events-none absolute inset-x-0 -top-0.5 overflow-visible text-[9px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
@@ -322,7 +287,18 @@
           </div>
         </div>
 
-        @if (creditsEnabled) {
+        @if (inputSummaryErrors().length > 0) {
+        <div
+          class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4"
+          role="alert"
+        >
+          <ul class="list-none space-y-1 text-sm text-red-700">
+            @for (error of inputSummaryErrors(); track error) {
+            <li>{{ error }}</li>
+            }
+          </ul>
+        </div>
+        } @if (creditsEnabled) {
         <app-credit-summary
           class="mt-4 block"
           [total]="creditCost()"
@@ -336,57 +312,56 @@
     <div id="tool-settings" class="scroll-mt-44">
       <app-step-content
         [step]="3"
-        title="Tool Settings"
+        heading="Tool Settings"
         description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}."
       >
         <div class="space-y-4">
-          @if (selectedTool() === 'alphafold2') {
           <div class="rounded-lg border p-4">
             <label
-              for="alphafold2-random-seed"
-              class="block text-sm font-medium"
+              for="random-seed"
+              class="inline-flex items-center justify-center gap-1 text-sm font-medium"
             >
-              alphafold2_random_seed
+              Random Seed
+              <app-tooltip
+                message="Set a random seed to ensure the same output between multiple runs."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
             </label>
             <input
-              id="alphafold2-random-seed"
+              id="random-seed"
               type="number"
               min="0"
+              max="99999999"
               step="1"
-              [value]="alphafold2RandomSeed()"
-              (input)="updateAlphafold2RandomSeed($any($event.target).value)"
-              (blur)="setAlphafold2RandomSeedTouched()"
+              [value]="randomSeed()"
+              (input)="updateRandomSeed($any($event.target).value)"
+              (blur)="setRandomSeedTouched()"
               [class]="
-                (stepTwoTouched() || alphafold2RandomSeedTouched()) && toolSettingErrors().alphafold2RandomSeed
+                (stepTwoTouched() || randomSeedTouched()) && toolSettingErrors().randomSeed
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
               class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
             />
-            @if ((stepTwoTouched() || alphafold2RandomSeedTouched()) &&
-            toolSettingErrors().alphafold2RandomSeed) {
+            @if ((stepTwoTouched() || randomSeedTouched()) &&
+            toolSettingErrors().randomSeed) {
             <p class="mt-1 text-xs text-red-600" role="alert">
-              {{ toolSettingErrors().alphafold2RandomSeed }}
+              {{ toolSettingErrors().randomSeed }}
             </p>
             }
-
-            <label class="mt-4 flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-                [checked]="alphafold2FullDbs()"
-                (change)="alphafold2FullDbs.set($any($event.target).checked)"
-              />
-              <span>alphafold2_full_dbs</span>
-            </label>
           </div>
-          } @if (selectedTool() === 'colabfold') {
+
+          @if (selectedTool() === 'colabfold') {
           <div class="rounded-lg border p-4">
             <label
               for="colabfold-num-recycles"
-              class="block text-sm font-medium"
+              class="inline-flex items-center justify-center gap-1 text-sm font-medium"
             >
-              colabfold_num_recycles
+              Recycles
+              <app-tooltip
+                message="Increasing recycles can improve the prediction quality but slows down the prediction."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
             </label>
             <input
               id="colabfold-num-recycles"
@@ -410,17 +385,49 @@
             </p>
             }
           </div>
-          } @if (selectedTool() === 'boltz') {
-          <div class="rounded-lg border p-4">
-            <label class="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-                [checked]="boltzUsePotentials()"
-                (change)="boltzUsePotentials.set($any($event.target).checked)"
-              />
-              <span>boltz_use_potentials</span>
+          } @if (selectedTool() === 'alphafold2') {
+          <div
+            class="rounded-lg border p-4 flex items-center justify-start gap-2"
+          >
+            <label
+              for="alphafold2-full-dbs"
+              class="flex items-center gap-1 text-sm font-medium"
+            >
+              Full DBs
+              <app-tooltip
+                message="Use the full BFD database for MSA generation. Can improve search sensitivity but slows down the prediction."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
             </label>
+            <input
+              id="alphafold2-full-dbs"
+              type="checkbox"
+              class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+              [checked]="alphafold2FullDbs()"
+              (change)="alphafold2FullDbs.set($any($event.target).checked)"
+            />
+          </div>
+          } @if (selectedTool() === 'boltz') {
+          <div
+            class="rounded-lg border p-4 flex items-center justify-start gap-2"
+          >
+            <label
+              for="boltz-use-potentials"
+              class="flex items-center gap-1 text-sm font-medium"
+            >
+              Use Potentials
+              <app-tooltip
+                message="Can reduce non-physical artifacts but slows down prediction and decreases maximum size limit."
+                iconColor="text-gray-400 hover:text-gray-500"
+              ></app-tooltip>
+            </label>
+            <input
+              id="boltz-use-potentials"
+              type="checkbox"
+              class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+              [checked]="boltzUsePotentials()"
+              (change)="boltzUsePotentials.set($any($event.target).checked)"
+            />
           </div>
           }
         </div>
@@ -431,6 +438,7 @@
   <app-workflow-preview-modal
     [isOpen]="showPreview()"
     [credits]="creditsEnabled ? creditCost() : null"
+    [creditsRemaining]="creditsRemaining()"
     [isSubmitting]="workflowSubmission.isSubmitting()"
     workflowName="Single Prediction"
     [selectedTool]="selectedToolLabel()"

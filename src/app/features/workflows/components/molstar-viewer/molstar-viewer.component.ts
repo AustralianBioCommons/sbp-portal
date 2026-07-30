@@ -55,7 +55,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   disabled = input(false);
   /** Programmatically select residues from outside (e.g. manual form input).
    *  Accepts the same comma-separated token format the viewer emits:
-   *  "A56,B12" or ranges "A12-A14". Set to "" to clear the selection. */
+   *  "A56,B12". Set to "" to clear the selection. */
   externalSelection = input("");
   /** Round the viewport's bottom-right corner. Set when the viewer meets the
    *  container's right edge (e.g. the config panel is collapsed); the WebGL
@@ -239,10 +239,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         // Suppress echo-back while we are applying an external selection.
         if (this._applyingExternalSelection) return;
         const residues = this.readCurrentSelection(selMgr);
-        const compressed = this.compressToRanges(residues);
         this.zone.run(() => {
-          this.selectedResidues.set(compressed);
-          this.residuesSelected.emit(compressed.join(","));
+          this.selectedResidues.set(residues);
+          this.residuesSelected.emit(residues.join(","));
         });
       });
     } catch {
@@ -253,7 +252,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   /** Programmatically select the residues described by a comma-separated token
-   *  string (e.g. "A56,B12" or ranges "A12-A14").  Suppresses the outgoing
+   *  string (e.g. "A56,B12").  Suppresses the outgoing
    *  residuesSelected event so the parent form is not overwritten. */
   private async applyExternalSelection(residueString: string): Promise<void> {
     if (!this.plugin || this.status() !== "loaded") return;
@@ -456,48 +455,6 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     } catch {
       /* non-critical */
     }
-  }
-
-  /**
-   * Collapse runs of consecutive same-chain residues into range notation.
-   * e.g. ["A12","A13","A14","B5"] → ["A12-A14","B5"]
-   */
-  private compressToRanges(residues: string[]): string[] {
-    if (residues.length === 0) return [];
-
-    type Parsed = { chain: string; seq: number; label: string };
-    const parsed: (Parsed | null)[] = residues.map((label) => {
-      const p = this.parseResidueLabel(label);
-      return p ? { ...p, label } : null;
-    });
-
-    const result: string[] = [];
-    let i = 0;
-    while (i < parsed.length) {
-      const cur = parsed[i];
-      if (!cur) {
-        result.push(residues[i++]);
-        continue;
-      }
-
-      let j = i + 1;
-      while (j < parsed.length) {
-        const prev = parsed[j - 1] as Parsed;
-        const next = parsed[j];
-        if (!next || next.chain !== cur.chain || next.seq !== prev.seq + 1)
-          break;
-        j++;
-      }
-
-      const last = parsed[j - 1] as Parsed;
-      result.push(
-        j - i === 1
-          ? cur.label
-          : `${cur.chain}${cur.seq}-${last.chain}${last.seq}`
-      );
-      i = j;
-    }
-    return result;
   }
 
   /** Prevent any <button> inside the viewer from submitting the parent form.
