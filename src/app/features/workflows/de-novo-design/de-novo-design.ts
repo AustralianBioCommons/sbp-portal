@@ -145,7 +145,12 @@ export default class DeNovoDesignComponent
     const requiredFields = this.schemaLoader.requiredInputFields();
     return rows.every((row) =>
       requiredFields.every((field) => {
-        if (field.name === "binder_name" || field.name === "id") return true;
+        if (
+          field.name === "binder_name" ||
+          field.name === "id" ||
+          field.name === "chains"
+        )
+          return true;
         const value = row.values[field.name];
         return value !== undefined && value !== null && value !== "";
       })
@@ -297,7 +302,6 @@ export default class DeNovoDesignComponent
     // If replacing an existing file, clear only structure-derived fields;
     // min_length, max_length, and pdbSequenceLength stay at schema defaults.
     if (this.localPdbFile()) {
-      this.updateRowValue(rowId, "chains", "");
       this.updateRowValue(rowId, "target_hotspot_residues", "");
       this.programmaticViewerSelection.set("");
     }
@@ -314,69 +318,13 @@ export default class DeNovoDesignComponent
     this.pdbResidueMap.set(null);
     this.programmaticViewerSelection.set("");
     this.updateRowValueWithValidation(rowId, "starting_pdb", "");
-    this.updateRowValueWithValidation(rowId, "chains", "");
     this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
-  }
-
-  /** Return sorted, deduplicated chain letters from a residue string like "A56,B12,B13". */
-  private chainsFromResidues(residues: string): string {
-    return [
-      ...new Set(
-        residues
-          .split(",")
-          .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
-          .filter(Boolean)
-      ),
-    ]
-      .sort()
-      .join(",");
   }
 
   /** Receives the chain→residue map emitted by the Mol* viewer after it
    *  parses the PDB structure — no need to re-parse the file ourselves. */
   onStructureResiduesDetected(residues: Map<string, Set<number>>): void {
     this.pdbResidueMap.set(residues.size > 0 ? residues : null);
-  }
-
-  private validateChains(rowId: string, value: string): string | null {
-    if (!value?.trim()) return null;
-    const tokens = value
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    for (const token of tokens) {
-      if (!/^[A-Za-z]+$/.test(token)) {
-        return `Invalid chain "${token}". Use letter identifiers only, e.g. "A" or "A,B"`;
-      }
-    }
-
-    const residueMap = this.pdbResidueMap();
-    if (residueMap) {
-      for (const token of tokens) {
-        if (!residueMap.has(token)) {
-          return `Chain "${token}" not found in PDB. Available: ${[
-            ...residueMap.keys(),
-          ]
-            .sort()
-            .join(", ")}`;
-        }
-      }
-    }
-
-    const hotspot =
-      (this.getRowValue(rowId, "target_hotspot_residues") as string) ?? "";
-    if (hotspot.trim()) {
-      const chainsSet = new Set(tokens);
-      for (const hChain of this.chainsFromResidues(hotspot)
-        .split(",")
-        .filter(Boolean)) {
-        if (!chainsSet.has(hChain)) {
-          return `Chain "${hChain}" is used in Target Hotspot Residues but not listed in Chains`;
-        }
-      }
-    }
-    return null;
   }
 
   private validateHotspotResidues(value: string): string | null {
@@ -428,8 +376,8 @@ export default class DeNovoDesignComponent
   programmaticViewerSelection = signal<string>("");
 
   /** Called when the user manually edits the target_hotspot_residues field.
-   *  Updates the value, auto-derives chains, validates against the PDB, and
-   *  pushes the new selection string to the Mol* viewer. */
+   *  Updates the value, validates against the PDB, and pushes the new
+   *  selection string to the Mol* viewer. */
   onHotspotResiduesManualChange(rowId: string, value: unknown): void {
     const residues = (value as string) ?? "";
     this.updateRowValueWithValidation(
@@ -437,13 +385,7 @@ export default class DeNovoDesignComponent
       "target_hotspot_residues",
       residues
     );
-    const chains = this.chainsFromResidues(residues);
-    if (chains) this.updateRowValueWithValidation(rowId, "chains", chains);
     this.programmaticViewerSelection.set(residues);
-  }
-
-  onChainsDetected(rowId: string, chains: string): void {
-    this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
   onSequenceLengthDetected(count: number): void {
@@ -476,18 +418,13 @@ export default class DeNovoDesignComponent
     this.updateRowValueWithValidation(rowId, "max_length", range.max);
   }
 
-  /** Called when the user selects residues in the Mol* viewer.
-   *  Also derives the unique chain letters (first char of each token)
-   *  and auto-fills the chains field. e.g. "A56,B12" → chains = "A,B".
-   */
+  /** Called when the user selects residues in the Mol* viewer. */
   onResiduesSelected(rowId: string, residues: string): void {
     this.updateRowValueWithValidation(
       rowId,
       "target_hotspot_residues",
       residues
     );
-    const chains = this.chainsFromResidues(residues);
-    this.updateRowValueWithValidation(rowId, "chains", chains);
   }
 
   onFileSelected(event: Event) {
@@ -624,7 +561,6 @@ export default class DeNovoDesignComponent
     this.validateAllRequiredFields();
     for (const row of this.schemaLoader.inputRows()) {
       this.validateRowField(row.id, "target_hotspot_residues");
-      this.validateRowField(row.id, "chains");
     }
   }
 
@@ -674,6 +610,22 @@ export default class DeNovoDesignComponent
     this.doSubmitWorkflow();
   }
 
+  /** Sorted, deduplicated chain letters from a residue string like
+   *  "A56,B12,B13" -> "A,B" — used only to build the BindCraft submission
+   *  payload, not for user-facing chain input. */
+  private extractChainsForSubmission(residues: string): string {
+    return [
+      ...new Set(
+        residues
+          .split(",")
+          .map((r) => r.trim().match(/^([A-Za-z]+)/)?.[1] ?? "")
+          .filter(Boolean)
+      ),
+    ]
+      .sort()
+      .join(",");
+  }
+
   private doSubmitWorkflow(): void {
     const rawFormData = this.getFormData();
     const formData = {
@@ -683,6 +635,19 @@ export default class DeNovoDesignComponent
       binder_name: this.jobName(),
       runName: this.jobName(),
     };
+
+    // BindCraft submits a target chain list derived from the selected hotspot
+    // residues (deduplicated, e.g. "A12,A13" -> "A"). RFDiffusion doesn't take
+    // a chains input at all, so it's omitted from the payload entirely.
+    const formDataRecord = formData as Record<string, unknown>;
+    if (this.selectedTool() === "bindcraft") {
+      const hotspotResidues =
+        (formDataRecord["target_hotspot_residues"] as string) ?? "";
+      formDataRecord["chains"] =
+        this.extractChainsForSubmission(hotspotResidues);
+    } else {
+      delete formDataRecord["chains"];
+    }
 
     this.workflowSubmission.isSubmitting.set(true);
 
@@ -855,7 +820,12 @@ export default class DeNovoDesignComponent
 
     // Validate each required field to show specific errors
     for (const field of requiredFields) {
-      if (field.name === "binder_name" || field.name === "id") continue;
+      if (
+        field.name === "binder_name" ||
+        field.name === "id" ||
+        field.name === "chains"
+      )
+        continue;
       const value = currentData[field.name];
       this.validateField(field.name, value);
     }
@@ -926,6 +896,7 @@ export default class DeNovoDesignComponent
       "settings_advanced",
       "binder_name",
       "id",
+      "chains",
     ];
 
     fields.forEach((field) => {
@@ -1061,8 +1032,6 @@ export default class DeNovoDesignComponent
       let customError: string | null = null;
       if (fieldName === "target_hotspot_residues") {
         customError = this.validateHotspotResidues(value as string);
-      } else if (fieldName === "chains") {
-        customError = this.validateChains(rowId, value as string);
       }
       if (customError) {
         this.formErrors.set({ ...currentErrors, [errorKey]: customError });
@@ -1095,12 +1064,9 @@ export default class DeNovoDesignComponent
   /** Returns true when any field inside the collapsible config section has a validation error. */
   hasConfigSectionErrors(rowId: string): boolean {
     if (this.hasJobNameError()) return true;
-    return [
-      "target_hotspot_residues",
-      "chains",
-      "min_length",
-      "max_length",
-    ].some((f) => this.hasRowFieldError(rowId, f));
+    return ["target_hotspot_residues", "min_length", "max_length"].some((f) =>
+      this.hasRowFieldError(rowId, f)
+    );
   }
 
   // Update row value with validation

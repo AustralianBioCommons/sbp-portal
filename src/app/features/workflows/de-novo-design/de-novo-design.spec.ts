@@ -212,10 +212,11 @@ describe("DeNovoDesignComponent", () => {
       expect(component.isFormValid()).toBe(false);
     });
 
-    it("ignores binder_name and id required fields", () => {
+    it("ignores binder_name, id, and chains required fields", () => {
       schemaLoader.requiredInputFields.set([
         requiredField("binder_name"),
         requiredField("id"),
+        requiredField("chains"),
       ]);
       schemaLoader.inputRows.set([rowWith({})]);
       expect(component.isFormValid()).toBe(true);
@@ -328,43 +329,10 @@ describe("DeNovoDesignComponent", () => {
   describe("row field validation", () => {
     beforeEach(() => {
       schemaLoader.inputSchemaFields.set([
-        field({ name: "chains" }),
+        field({ name: "some_field" }),
         field({ name: "target_hotspot_residues" }),
       ]);
       schemaLoader.inputRows.set([rowWith({})]);
-    });
-
-    it("passes valid chains present in the PDB", () => {
-      component.pdbResidueMap.set(new Map([["A", new Set([1])]]));
-      component.updateRowValueWithValidation("row1", "chains", "A");
-      expect(component.getRowFieldError("row1", "chains")).toBeNull();
-    });
-
-    it("rejects a chain with invalid characters", () => {
-      component.updateRowValueWithValidation("row1", "chains", "A1");
-      expect(component.hasRowFieldError("row1", "chains")).toBe(true);
-    });
-
-    it("rejects a chain not found in the PDB", () => {
-      component.pdbResidueMap.set(new Map([["A", new Set([1])]]));
-      component.updateRowValueWithValidation("row1", "chains", "B");
-      expect(component.getRowFieldError("row1", "chains")).toContain(
-        "not found in PDB"
-      );
-    });
-
-    it("rejects a hotspot chain not listed in chains", () => {
-      component.pdbResidueMap.set(
-        new Map([
-          ["A", new Set([1])],
-          ["B", new Set([12])],
-        ])
-      );
-      component.updateRowValue("row1", "target_hotspot_residues", "B12");
-      component.updateRowValueWithValidation("row1", "chains", "A");
-      expect(component.getRowFieldError("row1", "chains")).toContain(
-        "Target Hotspot Residues"
-      );
     });
 
     it("passes a valid hotspot residue", () => {
@@ -464,8 +432,8 @@ describe("DeNovoDesignComponent", () => {
         valid: false,
         errors: ["required"],
       });
-      component.updateRowValueWithValidation("row1", "chains", "A");
-      expect(component.getRowFieldError("row1", "chains")).toBe("required");
+      component.updateRowValueWithValidation("row1", "some_field", "A");
+      expect(component.getRowFieldError("row1", "some_field")).toBe("required");
     });
 
     it("reports config-section errors including the job name", () => {
@@ -478,7 +446,6 @@ describe("DeNovoDesignComponent", () => {
   describe("field-driven handlers", () => {
     beforeEach(() => {
       schemaLoader.inputSchemaFields.set([
-        field({ name: "chains" }),
         field({ name: "target_hotspot_residues" }),
         field({ name: "min_length", type: "number" }),
         field({ name: "max_length", type: "number" }),
@@ -486,7 +453,7 @@ describe("DeNovoDesignComponent", () => {
       schemaLoader.inputRows.set([rowWith({})]);
     });
 
-    it("derives chains and pushes viewer selection on manual hotspot change", () => {
+    it("pushes viewer selection on manual hotspot change", () => {
       component.pdbResidueMap.set(
         new Map([
           ["A", new Set([56])],
@@ -494,20 +461,18 @@ describe("DeNovoDesignComponent", () => {
         ])
       );
       component.onHotspotResiduesManualChange("row1", "A56,B12");
-      expect(component.getRowValue("row1", "chains")).toBe("A,B");
+      expect(component.getRowValue("row1", "target_hotspot_residues")).toBe(
+        "A56,B12"
+      );
       expect(component.programmaticViewerSelection()).toBe("A56,B12");
     });
 
-    it("auto-fills chains when residues are selected in the viewer", () => {
+    it("updates hotspot residues when selected in the viewer", () => {
       component.pdbResidueMap.set(new Map([["A", new Set([56])]]));
       component.onResiduesSelected("row1", "A56");
-      expect(component.getRowValue("row1", "chains")).toBe("A");
-    });
-
-    it("stores detected chains", () => {
-      component.pdbResidueMap.set(new Map([["A", new Set([1])]]));
-      component.onChainsDetected("row1", "A");
-      expect(component.getRowValue("row1", "chains")).toBe("A");
+      expect(component.getRowValue("row1", "target_hotspot_residues")).toBe(
+        "A56"
+      );
     });
 
     it("flags a structure that is too small", () => {
@@ -780,6 +745,37 @@ describe("DeNovoDesignComponent", () => {
       expect(pdbUpload.uploadPdbFile).toHaveBeenCalled();
       expect(datasetUpload.uploadDataset).toHaveBeenCalled();
       expect(workflowSubmission.submitWorkflowWithDataset).toHaveBeenCalled();
+    });
+
+    it("derives deduplicated chains from hotspot residues for bindcraft", () => {
+      component.formData.set({ target_hotspot_residues: "A12,A13" });
+      datasetUpload.uploadDataset.and.returnValue(
+        of({ message: "", success: true, s3Key: "key-123" })
+      );
+
+      component["performSubmit"]();
+
+      expect(workflowSubmission.submitWorkflowWithDataset).toHaveBeenCalled();
+      const payload =
+        workflowSubmission.submitWorkflowWithDataset.calls.mostRecent()
+          .args[0] as Record<string, unknown>;
+      expect(payload["chains"]).toBe("A");
+    });
+
+    it("omits chains from the payload for rfdiffusion", () => {
+      component.selectTool("rfdiffusion");
+      component.formData.set({
+        target_hotspot_residues: "A12,B5",
+        starting_pdb: "s3://bucket/target.pdb",
+      });
+
+      component["performSubmit"]();
+
+      expect(workflowSubmission.submitWorkflowWithDataset).toHaveBeenCalled();
+      const payload =
+        workflowSubmission.submitWorkflowWithDataset.calls.mostRecent()
+          .args[0] as Record<string, unknown>;
+      expect("chains" in payload).toBe(false);
     });
 
     it("falls back to the file name when the upload returns no URI", () => {
