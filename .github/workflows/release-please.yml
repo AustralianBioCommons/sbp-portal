@@ -2,7 +2,7 @@ name: release-please
 
 on:
   push:
-    branches: [dev, staging]
+    branches: [staging]
   workflow_dispatch:
 
 permissions:
@@ -24,9 +24,10 @@ jobs:
         with:
           release-type: node
           package-name: sbp-portal
-          # Maintain a separate release line per integration branch: a push to
-          # dev manages the dev release PR, a push to staging manages staging's.
-          target-branch: ${{ github.ref_name }}
+          # Releases are cut at the promotion point. A dev -> staging merge lands
+          # the promoted commits on staging; release-please compiles them into the
+          # staging release PR / notes. dev has no release line of its own.
+          target-branch: staging
           token: ${{ steps.app-token.outputs.token }}
           changelog-types: |
             [
