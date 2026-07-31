@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "description": "Unique identifier for this sequence entry"
+      },
+      "sequence": {
+        "type": "string",
+        "format": "file-path",
+        "pattern": "^\\S+\\.(fa(sta)?|yaml|yml|json)$",
+        "errorMessage": "Must be a .fa, .fasta, .yaml, .yml, or .json file path",
+        "description": "Path to the FASTA, YAML, or JSON file containing the sequence"
+      },
+      "group": {
+        "type": "string",
+        "description": "Sequence group: 'query' or 'target'"
+      }
+    },
+    "required": ["id", "sequence"]
+  }
+}
