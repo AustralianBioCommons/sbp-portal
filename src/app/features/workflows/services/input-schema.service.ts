@@ -22,6 +22,7 @@ export interface InputSchemaField {
     pattern?: string;
     format?: string;
     accept?: string;
+    uniqueItems?: boolean;
   };
   placeholder?: string;
   help_text?: string;
@@ -243,6 +244,26 @@ export class InputSchemaService {
     starting_pdb: "Target PDB",
   };
 
+  /**
+   * Field-specific validation pattern overrides. Used to enforce stricter
+   * formats than whatever the source schema provides (e.g. comma-separated
+   * "<chain><residue>" tokens for hotspot residues — no hyphen/range
+   * separators, and no chain codes longer than 3 characters like "acdef10").
+   */
+  private static readonly VALIDATION_PATTERN_OVERRIDES: Record<string, string> =
+    {
+      target_hotspot_residues:
+        "^[A-Za-z]{0,3}\\d+(\\s*,\\s*[A-Za-z]{0,3}\\d+)*$",
+    };
+
+  /**
+   * Fields whose comma-separated tokens must each be unique (case-insensitive).
+   * Enforced by validateFieldValue alongside VALIDATION_PATTERN_OVERRIDES.
+   */
+  private static readonly UNIQUE_ITEMS_FIELDS = new Set<string>([
+    "target_hotspot_residues",
+  ]);
+
   private parseFields(fields: Record<string, unknown>[]): InputSchemaField[] {
     return fields.map((field) => {
       const name = this.getStringValue(field.name) || "unnamed_field";
@@ -264,6 +285,12 @@ export class InputSchemaService {
             ? (field.validation as Record<string, unknown>)
             : {}),
           integer: schemaType.toLowerCase() === "integer",
+          ...(InputSchemaService.VALIDATION_PATTERN_OVERRIDES[name]
+            ? { pattern: InputSchemaService.VALIDATION_PATTERN_OVERRIDES[name] }
+            : {}),
+          ...(InputSchemaService.UNIQUE_ITEMS_FIELDS.has(name)
+            ? { uniqueItems: true }
+            : {}),
         },
         placeholder: this.getStringValue(field.placeholder) || "",
         help_text: this.getStringValue(field.help_text) || "",
@@ -312,8 +339,13 @@ export class InputSchemaService {
             typeof prop.minLength === "number" ? prop.minLength : undefined,
           maxLength:
             typeof prop.maxLength === "number" ? prop.maxLength : undefined,
-          pattern: this.getStringValue(prop.pattern),
+          pattern:
+            InputSchemaService.VALIDATION_PATTERN_OVERRIDES[key] ||
+            this.getStringValue(prop.pattern),
           format: this.getStringValue(prop.format),
+          uniqueItems: InputSchemaService.UNIQUE_ITEMS_FIELDS.has(key)
+            ? true
+            : undefined,
         },
         placeholder:
           Array.isArray(prop.examples) && prop.examples.length > 0
@@ -490,6 +522,22 @@ export class InputSchemaService {
   }
 
   /**
+   * Return the first comma-separated token (trimmed, case-insensitively)
+   * that repeats in the given value, or undefined if all tokens are unique.
+   */
+  private findDuplicateToken(value: string): string | undefined {
+    const seen = new Set<string>();
+    for (const rawToken of value.split(",")) {
+      const token = rawToken.trim();
+      if (!token) continue;
+      const normalized = token.toUpperCase();
+      if (seen.has(normalized)) return token;
+      seen.add(normalized);
+    }
+    return undefined;
+  }
+
+  /**
    * Validate a field value against its schema
    */
   validateFieldValue(
@@ -545,6 +593,16 @@ export class InputSchemaService {
             !new RegExp(field.validation.pattern).test(value)
           ) {
             errors.push(`${field.label || field.name} format is invalid`);
+          }
+          if (field.validation?.uniqueItems) {
+            const duplicate = this.findDuplicateToken(value);
+            if (duplicate) {
+              errors.push(
+                `${
+                  field.label || field.name
+                } has a duplicate value: "${duplicate}"`
+              );
+            }
           }
         }
         break;
