@@ -35,6 +35,7 @@ import { DatasetUploadService } from "../services/dataset-upload.service";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import { InteractionScreeningPayload } from "../shared/workflow.interfaces";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
+import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 
 function multiFastaValidator(
   control: AbstractControl
@@ -87,6 +88,7 @@ interface ToolChip extends ToolOption {
     StepContentComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
+    TooltipComponent,
   ],
   host: {
     class: "block w-full interaction-screening-bg",

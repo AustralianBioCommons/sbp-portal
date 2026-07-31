@@ -470,6 +470,12 @@ describe("SinglePredictionComponent", () => {
       component.updateRandomSeed("-1");
       expect(component.isStep2Valid()).toBe(false);
 
+      component.updateRandomSeed("1234.5");
+      expect(component.isStep2Valid()).toBe(false);
+      expect(component.toolSettingErrors().randomSeed).toContain(
+        "whole number"
+      );
+
       component.updateRandomSeed("12345678");
       expect(component.toolSettingErrors().randomSeed).toBeUndefined();
     }
@@ -492,6 +498,19 @@ describe("SinglePredictionComponent", () => {
 
     component.updateColabfoldNumRecycles("4");
     expect(component.isStep2Valid()).toBe(true);
+  });
+
+  it("should reject a decimal number of Recycles", () => {
+    component.selectTool("colabfold");
+
+    component.updateColabfoldNumRecycles("3.5");
+    expect(component.isStep2Valid()).toBe(false);
+    expect(component.toolSettingErrors().colabfoldNumRecycles).toContain(
+      "whole number"
+    );
+
+    component.updateColabfoldNumRecycles("3");
+    expect(component.toolSettingErrors().colabfoldNumRecycles).toBeUndefined();
   });
 
   it("should define the four uniform workflow sections", () => {
@@ -684,6 +703,17 @@ describe("SinglePredictionComponent", () => {
 
     const errors = component.entityValidationResults()[0];
     expect(errors["copyNumber"]).toContain("greater than or equal to 1");
+  });
+
+  it("should produce a copy number validation error for decimal values", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowSequence(rowId, "ACDEFGHIK");
+    component.updateRowCopyNumber(rowId, "2.5");
+    component.touchRowField(rowId, "copyNumber");
+
+    expect(component.entityValidationResults()[0]["copyNumber"]).toContain(
+      "whole number"
+    );
   });
 
   it("should require jobName in step 1 validation", () => {

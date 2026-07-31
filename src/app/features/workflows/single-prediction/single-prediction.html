@@ -47,9 +47,18 @@
         description="Add one or more entities. Each row requires sequence, copy number, and molecule type."
       >
         <div class="rounded-lg border p-4">
-          <label for="job-name" class="block text-sm font-medium mb-1">
-            Job Name
-            <span class="text-red-500" aria-hidden="true">*</span>
+          <label
+            for="job-name"
+            class="mb-1 flex items-center gap-1 text-sm font-medium"
+          >
+            <span>
+              Job Name
+              <span class="text-red-500" aria-hidden="true">*</span>
+            </span>
+            <app-tooltip
+              message="Required identifier for this job. Allowed characters: letters, numbers, hyphens, and underscores. Must not start with a number."
+              iconColor="text-gray-400 hover:text-gray-500"
+            ></app-tooltip>
           </label>
           <input
             id="job-name"
@@ -65,10 +74,6 @@
             class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
             maxlength="60"
           />
-          <p class="mt-1 text-xs text-gray-500">
-            Required identifier for this job. Allowed characters: letters,
-            numbers, hyphens, and underscores. Must not start with a number.
-          </p>
           @if (hasJobNameError()) {
           <p class="mt-1 text-xs text-red-600" role="alert">
             {{ getJobNameError() }}
