@@ -3,6 +3,7 @@ import {
   CCD_COMPOUNDS,
   isValidSmiles,
   parseMultiFasta,
+  validateBulkFastaProtein,
   validateDnaSequence,
   validateFastaHeader,
   validateMultiFastaProtein,
@@ -213,6 +214,10 @@ describe("fasta.utils", () => {
       expect(isValidSmiles("NH4]")).toBe(false);
     });
 
+    it("rejects strings that OCL's parser cannot resolve into a molecule", () => {
+      expect(isValidSmiles("C1CC")).toBe(false);
+    });
+
     it("rejects mismatched mixed brackets", () => {
       expect(isValidSmiles("C([NH4)")).toBe(false);
     });
@@ -323,6 +328,90 @@ describe("fasta.utils", () => {
         valid: true,
         sequenceCount: 1,
       });
+    });
+  });
+
+  describe("validateBulkFastaProtein", () => {
+    it("rejects empty input", () => {
+      expect(validateBulkFastaProtein("")).toEqual({
+        valid: false,
+        errorMessage: "At least one FASTA sequence is required",
+        sequenceCount: 0,
+      });
+    });
+
+    it("rejects input without a FASTA header", () => {
+      expect(validateBulkFastaProtein("MKTAYIAK")).toEqual({
+        valid: false,
+        errorMessage:
+          'Input must be in FASTA format: each entry needs a header line starting with ">".',
+        sequenceCount: 0,
+      });
+    });
+
+    it("rejects an entry with an empty header", () => {
+      expect(validateBulkFastaProtein(">\nMKTAYIAK")).toEqual({
+        valid: false,
+        errorMessage:
+          'FASTA header cannot be empty (the ">" line must contain text after it).',
+        sequenceCount: 0,
+      });
+    });
+
+    it("rejects duplicate headers within the same input", () => {
+      const result = validateBulkFastaProtein(
+        ">seq1\nMKTAYIAK\n>seq1\nACDEFGHIK"
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain('Duplicate FASTA header: "seq1"');
+    });
+
+    it("rejects an entry with no sequence after the header", () => {
+      expect(validateBulkFastaProtein(">seq1\n")).toEqual({
+        valid: false,
+        errorMessage: 'No sequence found for header "seq1"',
+        sequenceCount: 0,
+      });
+    });
+
+    it("rejects spaces within sequence content", () => {
+      expect(validateBulkFastaProtein(">seq1\nACD EFG HIK LMN")).toEqual({
+        valid: false,
+        errorMessage: 'Sequence for "seq1" must not contain spaces',
+        sequenceCount: 0,
+      });
+    });
+
+    it("rejects non-canonical amino acid characters", () => {
+      const result = validateBulkFastaProtein(">seq1\nMKTBBBIAK");
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain('"seq1"');
+      expect(result.errorMessage).toContain("ARNDCQEGHILKMFPSTWYV");
+    });
+
+    it("rejects invalid ':' chain-delimiter placement", () => {
+      const result = validateBulkFastaProtein(">seq1\n:MKTAYIAK");
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain('invalid ":" placement');
+    });
+
+    it("rejects sequences exceeding the maximum amino-acid length", () => {
+      const result = validateBulkFastaProtein(`>seq1\n${"A".repeat(1001)}`);
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain("exceeding the maximum of 1000");
+    });
+
+    it("accepts a single valid entry", () => {
+      expect(validateBulkFastaProtein(">seq1\nMKTAYIAK")).toEqual({
+        valid: true,
+        sequenceCount: 1,
+      });
+    });
+
+    it("accepts multiple valid entries with a multimer chain delimiter", () => {
+      expect(
+        validateBulkFastaProtein(">seq1\nMKTAYIAK:ACDEFGHIK\n>seq2\nACDEFGHIK")
+      ).toEqual({ valid: true, sequenceCount: 2 });
     });
   });
 
