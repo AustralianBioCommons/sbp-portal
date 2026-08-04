@@ -1,3 +1,5 @@
+import { Molecule } from "openchemlib";
+
 export interface SequenceValidationResult {
   valid: boolean;
   errorMessage?: string;
@@ -425,10 +427,14 @@ export function isValidSmiles(value: string): boolean {
     return false;
   }
 
+  // OCL's SMILES parser accepts query-molecule extensions (e.g. "?" as an
+  // any-atom wildcard) that aren't valid for a concrete ligand structure.
   if (!/^[A-Za-z0-9@+\-[\]()=#$\\/%.:*]+$/.test(value)) {
     return false;
   }
 
+  // OCL's SMILES parser silently auto-closes unmatched opening
+  // brackets/parens instead of throwing, so bracket balance is checked here.
   const stack: string[] = [];
   const pairs: Record<string, string> = {
     ")": "(",
@@ -439,12 +445,19 @@ export function isValidSmiles(value: string): boolean {
     if (char === "(" || char === "[") {
       stack.push(char);
     } else if (char === ")" || char === "]") {
-      const expected = pairs[char];
-      if (stack.pop() !== expected) {
+      if (stack.pop() !== pairs[char]) {
         return false;
       }
     }
   }
 
-  return stack.length === 0 && /[A-Za-z]/.test(value);
+  if (stack.length !== 0) {
+    return false;
+  }
+
+  try {
+    return Molecule.fromSmiles(value).getAllAtoms() > 0;
+  } catch {
+    return false;
+  }
 }
