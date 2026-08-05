@@ -34,6 +34,7 @@
     "als-normalize-urlpath": "^2.3.0",
     "date-fns": "^4.1.0",
     "molstar": "^5.6.1",
+    "openchemlib": "^9.24.0",
     "playwright": "^1.56.0",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.3.0",
