@@ -160,6 +160,10 @@ export default class JobsListComponent implements OnInit, OnDestroy {
       });
   }
 
+  dismissHealthAlert(): void {
+    this.systemUnhealthy.set(false);
+  }
+
   /**
    * Load jobs from the API
    */

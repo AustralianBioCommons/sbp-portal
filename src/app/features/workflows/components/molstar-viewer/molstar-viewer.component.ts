@@ -31,7 +31,25 @@ import {
 } from "molstar/lib/mol-model/structure";
 import { MolScriptBuilder as MS } from "molstar/lib/mol-script/language/builder";
 import { compile } from "molstar/lib/mol-script/runtime/query/compiler";
+import { isPolymer } from "molstar/lib/mol-model/structure/model/types";
 import { OrderedSet } from "molstar/lib/mol-data/int";
+import {
+  ResidueRef,
+  StructureFormat,
+} from "../../../jobs/shared/prediction-results.utils";
+
+/**
+ * Registered by Mol*'s quality-assessment extension. The cast is needed because
+ * extension themes sit outside the colour union typing `addRepresentation`.
+ */
+const PLDDT_COLOR_THEME = "plddt-confidence" as "uniform";
+
+export interface StructureSource {
+  content: string;
+  format: StructureFormat;
+  /** Label shown in the Mol* state tree. */
+  label: string;
+}
 
 @Component({
   selector: "app-molstar-viewer",
@@ -51,16 +69,33 @@ import { OrderedSet } from "molstar/lib/mol-data/int";
 })
 export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   pdbFile = input<File | null>(null);
+  /** Render in-memory content instead of a picked file; wins over `pdbFile`. */
+  structureSource = input<StructureSource | null>(null);
   /** Disables the file picker embedded in the idle placeholder. */
   disabled = input(false);
+  /** Show the idle upload placeholder. Off where the structure always arrives from outside. */
+  enableUpload = input(true);
   /** Programmatically select residues from outside (e.g. manual form input).
    *  Accepts the same comma-separated token format the viewer emits:
    *  "A56,B12". Set to "" to clear the selection. */
   externalSelection = input("");
+  /** As `externalSelection`, but a fresh object re-applies an unchanged token
+   *  list — for selections that can legitimately be asked for twice. Wins when set. */
+  selectionRequest = input<{ tokens: string } | null>(null);
   /** Round the viewport's bottom-right corner. Set when the viewer meets the
    *  container's right edge (e.g. the config panel is collapsed); the WebGL
    *  canvas must be rounded on its own container, not by an ancestor clip. */
   roundBottomRight = input(false);
+  /** Overlay hint shown once a structure is on screen. Empty hides it. */
+  hint = input("Click residues in the viewer to add them as hotspots");
+  /** The default keeps the ball-and-stick overlay the design workflows pick
+   *  residues with; "cartoon" is the plain fold view. */
+  representation = input<"cartoon" | "cartoon-and-sticks">(
+    "cartoon-and-sticks"
+  );
+  /** "plddt" uses the AlphaFold confidence palette, for predicted structures only. */
+  colorTheme = input<"default" | "plddt">("default");
+  showSequencePanel = input(true);
 
   /** Emits a comma-separated residue string (e.g. "A42,A43,B11") on each selection change. */
   residuesSelected = output<string>();
@@ -71,6 +106,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   /** Emits the full chain→residue-number map after a structure loads.
    *  The parent can use this for validation without re-parsing the PDB file. */
   structureResiduesDetected = output<Map<string, Set<number>>>();
+  /** Polymer residues in sequence order; positions line up with PAE rows and columns. */
+  residueIndexDetected = output<ResidueRef[]>();
 
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
   readonly errorMessage = signal("");
@@ -89,13 +126,13 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
 
   constructor() {
-    // React to pdbFile changes after view is ready.
+    // React to structure input changes after view is ready.
     effect(() => {
-      const file = this.pdbFile();
+      this.structureSource();
+      this.pdbFile();
       untracked(() => {
         if (!this._viewInitialized) return;
-        if (file) void this.loadFile(file);
-        else this.clearViewer();
+        void this.loadRequestedStructure();
       });
     });
 
@@ -107,6 +144,18 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         if (this.status() === "loaded") {
           this.zone.runOutsideAngular(
             () => void this.applyExternalSelection(sel)
+          );
+        }
+      });
+    });
+
+    effect(() => {
+      const request = this.selectionRequest();
+      untracked(() => {
+        if (!this._viewInitialized || !request) return;
+        if (this.status() === "loaded") {
+          this.zone.runOutsideAngular(
+            () => void this.applyExternalSelection(request.tokens)
           );
         }
       });
@@ -129,8 +178,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this._viewInitialized = true;
-    const file = this.pdbFile();
-    if (file) void this.loadFile(file);
+    void this.loadRequestedStructure();
   }
 
   ngOnDestroy(): void {
@@ -157,7 +205,39 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
   // ── Viewer management ──────────────────────────────────────────────────────
 
+  /** Load whichever structure input is set, preferring in-memory content. */
+  private async loadRequestedStructure(): Promise<void> {
+    const source = this.structureSource();
+    if (source) {
+      await this.loadStructure(source);
+      return;
+    }
+
+    const file = this.pdbFile();
+    if (file) {
+      await this.loadFile(file);
+      return;
+    }
+
+    this.clearViewer();
+  }
+
   private async loadFile(file: File): Promise<void> {
+    this.status.set("loading");
+    this.errorMessage.set("");
+
+    try {
+      const content = await file.text();
+      await this.loadStructure({ content, format: "pdb", label: file.name });
+    } catch (err) {
+      this.errorMessage.set(
+        err instanceof Error ? err.message : "Could not read PDB file."
+      );
+      this.status.set("error");
+    }
+  }
+
+  private async loadStructure(source: StructureSource): Promise<void> {
     this.status.set("loading");
     this.errorMessage.set("");
     this.cleanupSubscription();
@@ -167,13 +247,15 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         this.viewer = await Viewer.create(this.containerId, {
           layoutIsExpanded: false,
           layoutShowControls: true,
-          layoutShowSequence: true,
+          layoutShowSequence: this.showSequencePanel(),
           layoutShowRemoteState: false,
           layoutShowLeftPanel: false,
           collapseRightPanel: true,
           layoutShowLog: false,
           viewportShowSelectionMode: true,
           viewportShowControls: false,
+          viewportShowAnimation: false,
+          viewportShowTrajectoryControls: false,
         });
         try {
           this.plugin?.managers.interactivity.setProps({
@@ -195,23 +277,23 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         this.hookSelection();
       }
 
-      const content = await file.text();
-      await this.viewer.loadStructureFromData(content, "pdb", {
-        dataLabel: file.name,
+      await this.viewer.loadStructureFromData(source.content, source.format, {
+        dataLabel: source.label,
       });
 
-      await this.applyBallAndStick();
-      this.showSequencePanel();
+      await this.applyRepresentation();
+      this.applyTopRegion();
       this.status.set("loaded");
       this.emitStructureInfo();
       // Apply any selection that arrived before or while the structure was loading.
-      const pendingSel = this.externalSelection();
+      const pendingSel =
+        this.selectionRequest()?.tokens ?? this.externalSelection();
       if (pendingSel) {
         void this.applyExternalSelection(pendingSel);
       }
     } catch (err) {
       this.errorMessage.set(
-        err instanceof Error ? err.message : "Could not render PDB file."
+        err instanceof Error ? err.message : "Could not render the structure."
       );
       this.status.set("error");
     }
@@ -297,7 +379,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           : MS.struct.combinator.merge(chainExprs);
       const query = compile<StructureSelection>(expr);
 
-      // Run the query against every loaded structure and apply the result.
+      // lociSelects.select applies the selection *marking* as well as the state,
+      // which is what makes the representation and sequence panel show it.
+      // Writing to the selection manager alone marks nothing.
       const structures =
         this.plugin.managers.structure.hierarchy.current?.structures ?? [];
       for (const s of structures) {
@@ -305,8 +389,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         if (!structure) continue;
         const sel = query(new QueryContext(structure));
         const loci = StructureSelection.toLociWithSourceUnits(sel);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.selectionManager.fromLoci("add", loci as any);
+        // The loci are already whole residues, so skip granularity expansion.
+        lociSelects.select({ loci }, false);
       }
     } catch (e) {
       console.warn("Mol* external selection failed:", e);
@@ -368,11 +452,12 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   /**
-   * Force regionState.top to 'full' so the sequence panel gets space.
-   * layoutIsExpanded:false leaves all regions 'hidden' by default.
+   * Force regionState.top to 'full' so the sequence bar gets space —
+   * layoutIsExpanded:false leaves all regions 'hidden' by default. With the bar
+   * off, `layoutShowSequence: false` has already dropped the top region.
    */
-  private showSequencePanel(): void {
-    if (!this.plugin) return;
+  private applyTopRegion(): void {
+    if (!this.plugin || !this.showSequencePanel()) return;
     try {
       const regionState = this.plugin.layout.state.regionState;
       this.plugin.layout.setProps({
@@ -384,9 +469,10 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Replace the default representation with cartoon + ball-and-stick overlay.
+   * Replace the default representation with cartoon, plus a ball-and-stick
+   * overlay unless the caller asked for the plain cartoon view.
    */
-  private async applyBallAndStick(): Promise<void> {
+  private async applyRepresentation(): Promise<void> {
     if (!this.plugin) return;
     try {
       const { hierarchy, component: componentMgr } =
@@ -403,24 +489,45 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
             { label: "Polymer" }
           );
         if (!polymer) continue;
-        await reprBuilder.addRepresentation(polymer, { type: "cartoon" });
-        await reprBuilder.addRepresentation(polymer, {
-          type: "ball-and-stick",
-          typeParams: { sizeFactor: 0.18, sizeAspectRatio: 0.7 },
-        });
+
+        // Mol*'s theme reads pLDDT from ma_qa_metric_local (mmCIF) or the
+        // B-factor column (PDB); anything without it falls back to the default.
+        const usePlddt = this.colorTheme() === "plddt";
+        let coloured = false;
+        if (usePlddt) {
+          try {
+            await reprBuilder.addRepresentation(polymer, {
+              type: "cartoon",
+              color: PLDDT_COLOR_THEME,
+            });
+            coloured = true;
+          } catch {
+            coloured = false;
+          }
+        }
+        if (!coloured) {
+          await reprBuilder.addRepresentation(polymer, { type: "cartoon" });
+        }
+
+        if (this.representation() === "cartoon-and-sticks") {
+          await reprBuilder.addRepresentation(polymer, {
+            type: "ball-and-stick",
+            typeParams: { sizeFactor: 0.18, sizeAspectRatio: 0.7 },
+          });
+        }
       }
     } catch {
       /* non-critical — default visual still shows */
     }
   }
 
-  /** Walk the loaded structure once, then emit the chain→residue map and total
-   *  residue count.  Replaces separate emitSequenceLength + parsePdbResidues. */
+  /** One walk of the structure, emitting the chain→residue map, count and index. */
   private emitStructureInfo(): void {
     try {
       const structures =
         this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
       const residueMap = new Map<string, Set<number>>();
+      const polymerMap = new Map<string, Set<number>>();
 
       for (const s of structures) {
         const structure = s.cell.obj?.data as Structure | undefined;
@@ -433,11 +540,18 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
             const chainIdx = atomicHierarchy.chainAtomSegments.index;
             const seqIdVal = atomicHierarchy.residues.auth_seq_id.value;
             const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
+            const moleculeType = atomicHierarchy.derived.residue.moleculeType;
             OrderedSet.forEach(unit.elements, (atomIdx) => {
               const chain = chainIdVal(chainIdx[atomIdx]);
-              const resNum = seqIdVal(residueIdx[atomIdx]);
+              const resIdx = residueIdx[atomIdx];
+              const resNum = seqIdVal(resIdx);
               if (!residueMap.has(chain)) residueMap.set(chain, new Set());
               residueMap.get(chain)!.add(resNum);
+
+              if (isPolymer(moleculeType[resIdx])) {
+                if (!polymerMap.has(chain)) polymerMap.set(chain, new Set());
+                polymerMap.get(chain)!.add(resNum);
+              }
             });
           } catch {
             /* skip unit */
@@ -447,14 +561,30 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
       if (residueMap.size > 0) {
         const total = [...residueMap.values()].reduce((n, s) => n + s.size, 0);
+        const residueIndex = MolstarViewerComponent.toOrderedResidues(
+          polymerMap.size > 0 ? polymerMap : residueMap
+        );
         this.zone.run(() => {
           this.structureResiduesDetected.emit(residueMap);
           this.sequenceLengthDetected.emit(total);
+          this.residueIndexDetected.emit(residueIndex);
         });
       }
     } catch {
       /* non-critical */
     }
+  }
+
+  /** Sequence order: chains alphabetically, as prediction tools assign them,
+   *  then residues ascending. */
+  private static toOrderedResidues(
+    residues: Map<string, Set<number>>
+  ): ResidueRef[] {
+    return [...residues.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .flatMap(([chain, seqs]) =>
+        [...seqs].sort((a, b) => a - b).map((seq) => ({ chain, seq }))
+      );
   }
 
   /** Prevent any <button> inside the viewer from submitting the parent form.

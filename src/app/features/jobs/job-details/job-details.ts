@@ -27,6 +27,8 @@ import { AlertComponent } from "../../../components/alert/alert.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../../components/button/button.component";
+import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
+import { ResultFileRef } from "../shared/prediction-results.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import {
@@ -36,6 +38,16 @@ import {
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
+
+/** Compare workflow labels without depending on the backend's exact casing. */
+function normalizeWorkflowName(workflow: string | undefined): string {
+  return (workflow ?? "")
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 type JobSettingItem = {
   label: string;
   value: string;
@@ -52,6 +64,7 @@ type JobSettingItem = {
     LoadingComponent,
     DialogComponent,
     ButtonComponent,
+    SinglePredictionReportComponent,
   ],
   providers: [
     provideIcons({
@@ -95,9 +108,7 @@ export default class JobDetailsComponent implements OnInit {
   reportUrl = signal<SafeResourceUrl | null>(null);
   reportLoading = signal(false);
   reportError = signal<string | null>(null);
-  filesItems = signal<Array<{ label: string; url: string; category: string }>>(
-    []
-  );
+  filesItems = signal<ResultFileRef[]>([]);
   filesLoading = signal(false);
   filesError = signal<string | null>(null);
   settingsItems = signal<JobSettingItem[]>([]);
@@ -110,6 +121,20 @@ export default class JobDetailsComponent implements OnInit {
   canDownloadAllFiles = computed(
     () =>
       !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
+  );
+
+  isSinglePrediction = computed(
+    () => normalizeWorkflowName(this.job()?.workflow) === "single prediction"
+  );
+
+  /** Sticky for the life of the job: flipping back would remount the failing
+   *  view and loop. */
+  reportFallback = signal(false);
+
+  resultsHeading = computed(() =>
+    this.isSinglePrediction() && !this.reportFallback()
+      ? "Prediction Results"
+      : "Design Summary Report"
   );
 
   readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
@@ -133,7 +158,10 @@ export default class JobDetailsComponent implements OnInit {
     effect(() => {
       this.job();
       this.activeTab.set("results");
-      this.loadReport();
+      this.reportFallback.set(false);
+      // Single prediction renders its own view; the report is a fallback.
+      if (this.isSinglePrediction()) this.resetReportState();
+      else this.loadReport();
       this.loadDownloads();
       this.loadSettings();
       this.resetLogsState();
@@ -176,6 +204,10 @@ export default class JobDetailsComponent implements OnInit {
         this.systemUnhealthy.set(unhealthy);
         this.healthMessage.set(unhealthy ? health.message : null);
       });
+  }
+
+  dismissHealthAlert(): void {
+    this.systemUnhealthy.set(false);
   }
 
   private loadJob(id: string): void {
@@ -396,12 +428,22 @@ export default class JobDetailsComponent implements OnInit {
     URL.revokeObjectURL(objectUrl);
   }
 
+  onSinglePredictionReportUnavailable(): void {
+    if (this.reportFallback()) return;
+    this.reportFallback.set(true);
+    this.loadReport();
+  }
+
+  private resetReportState(): void {
+    this.reportUrl.set(null);
+    this.reportError.set(null);
+    this.reportLoading.set(false);
+  }
+
   private loadReport(): void {
     const job = this.job();
     if (!job) {
-      this.reportUrl.set(null);
-      this.reportError.set(null);
-      this.reportLoading.set(false);
+      this.resetReportState();
       return;
     }
 
@@ -486,6 +528,7 @@ export default class JobDetailsComponent implements OnInit {
           response.downloads.map((download) => ({
             label: download.label,
             url: this.normalizeDownloadUrl(download.url),
+            key: download.key,
             category: download.category,
           }))
         );

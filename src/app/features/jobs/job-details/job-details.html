@@ -4,6 +4,8 @@
   type="warning"
   position="fixed"
   [message]="healthMessage() ?? 'Some workflow services are currently unavailable. Job status and logs may not be up to date until the service is restored.'"
+  [dismissible]="true"
+  (dismissed)="dismissHealthAlert()"
 ></app-alert>
 }
 
@@ -44,7 +46,7 @@
         >
           <span class="flex items-center gap-2">
             <ng-icon name="heroTrash" size="16"></ng-icon>
-            Delete
+            Delete job
           </span>
         </app-button>
         <app-button
@@ -122,8 +124,16 @@
 
         <div class="space-y-6">
           @switch (activeTab()) { @case ("results") {
-          <div class="font-semibold text-gray-900">Design Summary Report</div>
-          @if (reportError()) {
+          <div class="font-semibold text-gray-900">{{ resultsHeading() }}</div>
+          @if (isSinglePrediction() && !reportFallback()) {
+          <app-single-prediction-report
+            [runId]="selectedJob.id"
+            [files]="filesItems()"
+            [filesLoading]="filesLoading()"
+            [filesError]="filesError()"
+            (unavailable)="onSinglePredictionReportUnavailable()"
+          ></app-single-prediction-report>
+          } @else { @if (reportError()) {
           <div
             class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
           >
@@ -154,7 +164,7 @@
           <p class="text-sm text-gray-900 wrap-break-word">
             No report data is available for this run.
           </p>
-          } } @case ("files") {
+          } } } @case ("files") {
           <div class="space-y-2">
             <div class="font-semibold text-gray-900">Available files</div>
             <p class="text-sm text-gray-500">
