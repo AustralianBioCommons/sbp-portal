@@ -45,10 +45,7 @@ import {
   tokensToResidueIndices,
 } from "../../shared/prediction-results.utils";
 
-/**
- * Single-prediction results: the predicted structure in Mol* beside its PAE
- * matrix, with the residue selection shared between the two.
- */
+/** The predicted structure beside its PAE matrix, sharing one residue selection. */
 @Component({
   selector: "app-single-prediction-report",
   imports: [
@@ -87,6 +84,8 @@ export class SinglePredictionReportComponent {
   );
 
   readonly residueIndex = signal<ResidueRef[]>([]);
+  /** The viewer reports its index after the structure loads, not before. */
+  private readonly indexReported = signal(false);
   readonly selectedIndices = signal<number[]>([]);
   /** Fresh object each request so an identical selection still re-applies. */
   readonly viewerSelectionRequest = signal<{ tokens: string } | null>(null);
@@ -162,7 +161,7 @@ export class SinglePredictionReportComponent {
     return items;
   });
 
-  /** One tooltip for every score on show; it renders pre-line, so blank lines separate them. */
+  /** One tooltip for every score; it renders pre-line, so blank lines separate them. */
   readonly scoresHint = computed(() =>
     this.scores()
       .map((score) => `${score.label}: ${score.hint}`)
@@ -181,10 +180,7 @@ export class SinglePredictionReportComponent {
     { label: "Very low", range: "pLDDT < 50", color: "#ff7d45" },
   ];
 
-  /**
-   * Raised when the structure or PAE view cannot be shown, so the page can fall
-   * back to the packaged HTML report. A missing alignment or score does not count.
-   */
+  /** Hands the page over to the packaged report. A missing score does not count. */
   unavailable = output<void>();
 
   readonly coreUnavailable = computed(
@@ -193,8 +189,19 @@ export class SinglePredictionReportComponent {
       (!!this.filesError() ||
         this.missingArtifacts().length > 0 ||
         !!this.structureError() ||
-        !!this.paeError())
+        !!this.paeError() ||
+        this.tokenMismatch())
   );
+
+  /**
+   * A ligand is scored per atom, so those runs have more rows than residues and
+   * every label would be offset. Better to fall back than to show it wrong.
+   */
+  readonly tokenMismatch = computed(() => {
+    const matrix = this.paeMatrix();
+    if (!matrix || !this.indexReported()) return false;
+    return this.residueIndex().length !== matrix.size;
+  });
 
   readonly missingArtifacts = computed(() => {
     if (this.filesLoading() || this.filesError()) return [];
@@ -303,14 +310,22 @@ export class SinglePredictionReportComponent {
 
   onResidueIndexDetected(residues: ResidueRef[]): void {
     this.residueIndex.set(residues);
+    this.indexReported.set(true);
+  }
+
+  /**
+   * Mol*'s message names a parser internal, so report it as a load failure.
+   * Ignored once the source is gone: a superseded load must not condemn its
+   * replacement.
+   */
+  onViewerLoadError(): void {
+    if (!this.structureSource()) return;
+    this.structureError.set("Failed to load the predicted structure file.");
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
 
-  /**
-   * Fetch one artifact, counting it as outstanding while in flight. `finalize`
-   * covers completion, failure and unsubscribe, so the counter cannot stick.
-   */
+  /** `finalize` covers success, failure and unsubscribe, so the count cannot stick. */
   private fetchText(runId: string, key: string): Observable<string> {
     this.pendingRequests.update((count) => count + 1);
     return this.resultsService.getResultFileText(runId, key).pipe(
@@ -329,6 +344,7 @@ export class SinglePredictionReportComponent {
     this.structureError.set(null);
     this.structureSource.set(null);
     this.residueIndex.set([]);
+    this.indexReported.set(false);
 
     this.fetchText(runId, key)
       .pipe(

@@ -90,4 +90,48 @@ describe("MsaCoverageComponent", () => {
 
     expect(fixture.nativeElement.textContent).toContain("No alignment");
   });
+
+  const settle = async () => {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      fixture.detectChanges();
+      await new Promise(requestAnimationFrame);
+    }
+  };
+
+  it("keeps the plot at its capped width as the container grows", async () => {
+    const host: HTMLElement = fixture.nativeElement;
+    host.style.width = "1200px";
+    const canvas: HTMLCanvasElement = host.querySelector("canvas")!;
+    await waitForDraw(canvas);
+    const capped = component.plotRect().width;
+
+    host.style.width = "1600px";
+    await settle();
+
+    expect(component.plotRect().width).toBe(capped);
+  });
+
+  it("keeps the last measurement when the container collapses", async () => {
+    const host: HTMLElement = fixture.nativeElement;
+    host.style.width = "480px";
+    const canvas: HTMLCanvasElement = host.querySelector("canvas")!;
+    await waitForDraw(canvas);
+    const measured = component.plotRect().width;
+
+    host.style.width = "0px";
+    await settle();
+
+    expect(component.plotRect().width).toBe(measured);
+  });
+
+  it("labels both axes from zero", async () => {
+    const host: HTMLElement = fixture.nativeElement;
+    host.style.width = "480px";
+    const canvas: HTMLCanvasElement = host.querySelector("canvas")!;
+    await waitForDraw(canvas);
+
+    const plot = component.plotRect();
+    expect(plot.left).toBeGreaterThan(0);
+    expect(parseFloat(canvas.style.height)).toBeGreaterThan(plot.height);
+  });
 });

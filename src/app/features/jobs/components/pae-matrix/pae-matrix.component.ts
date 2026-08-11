@@ -123,6 +123,12 @@ export class PaeMatrixComponent implements OnDestroy {
   /** Previous external highlight, so only real changes invalidate a local block. */
   private lastHighlight: ReadonlySet<number> | null = null;
   private drag: { row: number; col: number } | null = null;
+  /**
+   * Fixed corner a Shift+Arrow selection grows from. Held separately because the
+   * region's corners are sorted, so an anchor derived from them would drift when
+   * the selection extended up or left and could never collapse back.
+   */
+  private keyAnchor: { row: number; col: number } | null = null;
   private baseImage: HTMLCanvasElement | null = null;
   private baseImageFor: PaeMatrix | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -135,9 +141,12 @@ export class PaeMatrixComponent implements OnDestroy {
     buildChainSegments(this.residues())
   );
 
-  /** Interaction needs a residue for every row, which requires the structure. */
+  /**
+   * Exact, not at-least: a spare residue offsets every index past it, so
+   * selections would silently point at the wrong structure residue.
+   */
   readonly interactive = computed(
-    () => this.size() > 0 && this.residues().length >= this.size()
+    () => this.size() > 0 && this.residues().length === this.size()
   );
 
   /** True when the structure and the matrix disagree on residue count. */
@@ -252,6 +261,7 @@ export class PaeMatrixComponent implements OnDestroy {
 
       const region = untracked(() => this.region());
       if (region && !this.regionCoveredBy(region, highlighted)) {
+        this.keyAnchor = null;
         this.region.set(null);
       }
     });
@@ -272,6 +282,8 @@ export class PaeMatrixComponent implements OnDestroy {
     (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
     event.preventDefault();
     this.drag = cell;
+    // A later Shift+Arrow extends from where the drag began.
+    this.keyAnchor = cell;
     this.cursor.set(cell);
     this.region.set({
       rowStart: cell.row,
@@ -334,6 +346,7 @@ export class PaeMatrixComponent implements OnDestroy {
       event.preventDefault();
       const cursor = this.cursor();
       if (!cursor) return;
+      this.keyAnchor = cursor;
       this.region.set({
         rowStart: cursor.row,
         rowEnd: cursor.row,
@@ -355,19 +368,21 @@ export class PaeMatrixComponent implements OnDestroy {
     };
     this.cursor.set(next);
 
-    if (event.shiftKey) {
-      const region = this.region();
-      const anchor = region
-        ? { row: region.rowStart, col: region.colStart }
-        : cursor;
-      this.region.set({
-        rowStart: Math.min(anchor.row, next.row),
-        rowEnd: Math.max(anchor.row, next.row),
-        colStart: Math.min(anchor.col, next.col),
-        colEnd: Math.max(anchor.col, next.col),
-      });
-      this.emitRegionSelection();
+    if (!event.shiftKey) {
+      // Moving without extending re-anchors the next Shift+Arrow here.
+      this.keyAnchor = null;
+      return;
     }
+
+    const anchor = this.keyAnchor ?? cursor;
+    this.keyAnchor = anchor;
+    this.region.set({
+      rowStart: Math.min(anchor.row, next.row),
+      rowEnd: Math.max(anchor.row, next.row),
+      colStart: Math.min(anchor.col, next.col),
+      colEnd: Math.max(anchor.col, next.col),
+    });
+    this.emitRegionSelection();
   }
 
   onBlur(): void {
@@ -375,6 +390,7 @@ export class PaeMatrixComponent implements OnDestroy {
   }
 
   clearSelection(): void {
+    this.keyAnchor = null;
     this.region.set(null);
     this.selectionChange.emit([]);
   }

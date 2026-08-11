@@ -49,17 +49,29 @@ const STRUCTURE_FORMATS: Array<{ pattern: RegExp; format: StructureFormat }> = [
 const STRUCTURE_CATEGORY = "pdb";
 
 /**
- * Pick the structure to render: mmCIF over PDB, and files the backend classified
- * as structures over look-alikes such as an uploaded input PDB.
+ * `label` can be a display name like "Structure PDB", so the filename may only be
+ * on the key or the URL. Callers match each candidate whole, never pooled.
  */
+function filenameCandidates(file: ResultFileRef): string[] {
+  const names = [file.key, file.label, file.url]
+    .filter((value): value is string => !!value)
+    .map((value) => basename(value).toLowerCase())
+    .filter((name) => name.length > 0);
+  return [...new Set(names)];
+}
+
+/** mmCIF over PDB, and a classified structure over a look-alike input file. */
 export function findStructureArtifact(
   files: readonly ResultFileRef[]
 ): StructureArtifact | null {
   let best: { artifact: StructureArtifact; rank: number } | null = null;
 
   for (const file of files) {
-    const name = basename(file.label || file.url);
-    const match = STRUCTURE_FORMATS.find((entry) => entry.pattern.test(name));
+    const candidates = filenameCandidates(file);
+    // Ordered mmCIF first, so this also settles a file whose fields disagree.
+    const match = STRUCTURE_FORMATS.find((entry) =>
+      candidates.some((name) => entry.pattern.test(name))
+    );
     if (!match) continue;
 
     const categoryRank =
@@ -76,9 +88,8 @@ export function findStructureArtifact(
 }
 
 /**
- * Pick the PAE matrix for model 0 — a run emits one per predicted model, and
- * only index 0 is the structure in `top_ranked_structures`. Any other index,
- * then a loose `*pae*.tsv`, are fallbacks.
+ * Model 0 is the structure on screen, so it wins; another index, then a loose
+ * `*pae*.tsv`, are fallbacks.
  */
 export function findPaeArtifact(
   files: readonly ResultFileRef[]
@@ -86,24 +97,25 @@ export function findPaeArtifact(
   let best: { file: ResultFileRef; rank: number } | null = null;
 
   for (const file of files) {
-    const name = basename(file.label || file.url).toLowerCase();
-    // "pae" as its own token: `_ipsae.tsv` contains it but is another metric.
-    if (
-      !name.endsWith(".tsv") ||
-      !/(?:^|[^a-z0-9])pae(?:[^a-z0-9]|$)/.test(name)
-    ) {
-      continue;
-    }
+    for (const name of filenameCandidates(file)) {
+      // "pae" as its own token: `_ipsae.tsv` contains it but is another metric.
+      if (
+        !name.endsWith(".tsv") ||
+        !/(?:^|[^a-z0-9])pae(?:[^a-z0-9]|$)/.test(name)
+      ) {
+        continue;
+      }
 
-    let rank = 2;
-    if (/(?:_pae_0|_0_pae)\.tsv$/.test(name)) {
-      rank = 0;
-    } else if (/(?:_pae_\d+|_\d+_pae)\.tsv$/.test(name)) {
-      rank = 1;
-    }
+      let rank = 2;
+      if (/(?:_pae_0|_0_pae)\.tsv$/.test(name)) {
+        rank = 0;
+      } else if (/(?:_pae_\d+|_\d+_pae)\.tsv$/.test(name)) {
+        rank = 1;
+      }
 
-    if (!best || rank < best.rank) {
-      best = { file, rank };
+      if (!best || rank < best.rank) {
+        best = { file, rank };
+      }
     }
   }
 
@@ -146,9 +158,7 @@ export function findMsaArtifact(
 ): ResultFileRef | null {
   return (
     files.find((file) =>
-      basename(file.label || file.url)
-        .toLowerCase()
-        .endsWith("_msa.tsv")
+      filenameCandidates(file).some((name) => name.endsWith("_msa.tsv"))
     ) ?? null
   );
 }
@@ -160,17 +170,12 @@ export function findChainwiseArtifact(
   const suffix = `_chainwise_${metric}.tsv`;
   return (
     files.find((file) =>
-      basename(file.label || file.url)
-        .toLowerCase()
-        .endsWith(suffix)
+      filenameCandidates(file).some((name) => name.endsWith(suffix))
     ) ?? null
   );
 }
 
-/**
- * Parse `<chain>:<chain>\t<score>` rows, highest first. The leading `\t0` header
- * line has no pair label and is skipped.
- */
+/** `A:B\t0.39` rows, highest first. The leading `\t0` header row is skipped. */
 export function parseChainPairScores(text: string): ChainPairScore[] {
   const scores: ChainPairScore[] = [];
 
@@ -194,9 +199,8 @@ export interface ChainPairMatrix {
 }
 
 /**
- * Arrange chain-pair scores as a symmetric matrix. The files list each pair once
- * (`A:B`, never `B:A`), so both halves come from the one entry; the diagonal
- * stays empty as a chain has no interface with itself.
+ * Each pair is listed once, so both halves come from the one entry. The diagonal
+ * stays empty: a chain has no interface with itself.
  */
 export function buildChainPairMatrix(
   scores: readonly ChainPairScore[]
@@ -228,9 +232,8 @@ export function buildChainPairMatrix(
 }
 
 /**
- * Parse the MSA token matrix into a coverage bitmap plus per-position depth.
- * Rows beyond `MAX_MSA_ROWS` still count toward the depth but are left out of
- * the bitmap, which only has to fill a couple of hundred pixels of height.
+ * Into a coverage bitmap plus per-position depth. Rows past `MAX_MSA_ROWS` still
+ * count toward the depth but are left out of the bitmap, which is only pixels tall.
  */
 export function parseMsaCoverage(text: string): MsaCoverage {
   const firstLine = readLine(text, 0);
@@ -319,11 +322,7 @@ export function parseMsaCoverage(text: string): MsaCoverage {
   };
 }
 
-/**
- * Order sequences most-similar-to-the-query first, as MSA coverage plots are
- * conventionally drawn — this is what turns the image from a noisy band into a
- * readable gradient.
- */
+/** Most-similar-first, which is what makes the image a gradient not a noisy band. */
 function sortRowsByIdentity(
   covered: Uint8Array,
   identity: Float32Array,
@@ -348,28 +347,22 @@ function sortRowsByIdentity(
   return { covered: sortedCovered, identity: sortedIdentity };
 }
 
-/**
- * Find the TSV holding a global confidence score, excluding the per-chain-pair
- * breakdowns. ipTM is only produced for multimers, so a missing file is expected
- * rather than an error.
- */
+/** ipTM only exists for multimers, so a missing file is expected, not an error. */
 export function findMetricArtifact(
   files: readonly ResultFileRef[],
   metric: PredictionMetric
 ): ResultFileRef | null {
   const suffix = `_${metric}.tsv`;
   for (const file of files) {
-    const name = basename(file.label || file.url).toLowerCase();
-    if (name.includes("chainwise")) continue;
-    if (name.endsWith(suffix)) return file;
+    const candidates = filenameCandidates(file);
+    // Chainwise in any field rules the file out as the global score.
+    if (candidates.some((name) => name.includes("chainwise"))) continue;
+    if (candidates.some((name) => name.endsWith(suffix))) return file;
   }
   return null;
 }
 
-/**
- * Read a `<model index>\t<score>` TSV and return model 0's score — the model
- * `top_ranked_structures` holds. Falls back to the first row if there is no index.
- */
+/** `0\t0.274` rows; model 0 is the one on screen. Falls back to the first row. */
 export function parseModelScore(text: string): number | null {
   let fallback: number | null = null;
 
@@ -392,15 +385,12 @@ export function parseModelScore(text: string): number | null {
 }
 
 /**
- * Parse a PAE matrix TSV into a flat row-major matrix, tolerating tab or comma
- * separators, an optional header row, and an optional leading index column.
+ * Tolerates tab or comma separators, an optional header row and an index column.
  *
- * @throws Error with a user-presentable message when the file is not a square
- * numeric matrix.
+ * @throws Error with a user-presentable message when the file is not square.
  */
 export function parsePaeMatrix(text: string): PaeMatrix {
-  // 100+ MB for a large complex, so this scans the string once with charCodeAt
-  // rather than allocating tens of millions of per-value strings.
+  // 100+ MB files, so scan once instead of allocating a string per value.
   const { size, offset, indexBase, dataStart } = readMatrixShape(text);
 
   if (size > MAX_PAE_SIZE) {
@@ -422,8 +412,7 @@ export function parsePaeMatrix(text: string): PaeMatrix {
     const code = text.charCodeAt(cursor);
 
     if (code === NEWLINE || code === RETURN) {
-      // Only a row that consumed a cell ends here, so the second half of a CRLF
-      // pair and any blank line are not read as empty rows.
+      // Needs a cell, so a CRLF's second half is not read as an empty row.
       if (col > -offset) {
         if (col !== size) {
           throw new Error(
@@ -510,11 +499,8 @@ function scanNumberEnd(text: string, start: number): number {
 }
 
 /**
- * Work out the matrix dimensions: header row, index column, and width.
- *
- * The row count is what disambiguates an index column, and has to be: a PAE
- * matrix's first column often reads 0, 1, 2, ... for a well-folded chain, which
- * by value alone is indistinguishable from a row index.
+ * Header row, index column and width. The row count is what tells an index column
+ * apart, since a real first column often reads 0, 1, 2, ... too.
  */
 function readMatrixShape(text: string): {
   size: number;
@@ -544,8 +530,7 @@ function readMatrixShape(text: string): {
     throw new Error("The PAE file contains no data rows.");
   }
 
-  // An index column makes each row one cell wider than the matrix is tall, and
-  // counts from 0 or 1. Its values are verified row by row while parsing.
+  // One cell wider than tall, counting from 0 or 1. Verified again while parsing.
   const firstCell = Number(cells[0]);
   const offset =
     width === rows + 1 && (firstCell === 0 || firstCell === 1) ? 1 : 0;

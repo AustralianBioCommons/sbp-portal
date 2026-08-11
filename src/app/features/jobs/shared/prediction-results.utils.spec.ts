@@ -202,6 +202,101 @@ describe("findMsaArtifact / findChainwiseArtifact", () => {
   });
 });
 
+/** A display label such as "Structure PDB" leaves the filename on the key or URL. */
+describe("artifact discovery from a display label", () => {
+  const labelled = (
+    label: string,
+    filename: string,
+    category = "stats_csv"
+  ): ResultFileRef => ({
+    label,
+    key: `run-1/${filename}`,
+    url: `https://cdn.test/${filename}`,
+    category,
+  });
+
+  const urlOnly = (
+    label: string,
+    filename: string,
+    category = "stats_csv"
+  ): ResultFileRef => ({
+    label,
+    key: "opaque-key",
+    url: `https://cdn.test/${filename}`,
+    category,
+  });
+
+  it("finds the structure behind a display label", () => {
+    const artifact = findStructureArtifact([
+      labelled("Structure PDB", "struct.pdb", "pdb"),
+    ]);
+
+    expect(artifact?.format).toBe("pdb");
+    expect(artifact?.label).toBe("Structure PDB");
+  });
+
+  it("finds the structure when only the URL carries the extension", () => {
+    expect(
+      findStructureArtifact([urlOnly("Predicted model", "model.cif", "pdb")])
+        ?.format
+    ).toBe("mmcif");
+  });
+
+  it("still prefers mmCIF when both are behind display labels", () => {
+    const artifact = findStructureArtifact([
+      labelled("Structure PDB", "struct.pdb", "pdb"),
+      labelled("Structure mmCIF", "struct.cif", "pdb"),
+    ]);
+
+    expect(artifact?.format).toBe("mmcif");
+  });
+
+  it("finds the PAE matrix behind a display label", () => {
+    expect(
+      findPaeArtifact([labelled("PAE matrix", "T1024_pae_0.tsv")])?.label
+    ).toBe("PAE matrix");
+  });
+
+  it("keeps ranking model 0 first behind display labels", () => {
+    expect(
+      findPaeArtifact([
+        labelled("PAE matrix 2", "T1024_pae_2.tsv"),
+        labelled("PAE matrix", "T1024_pae_0.tsv"),
+      ])?.label
+    ).toBe("PAE matrix");
+  });
+
+  it("finds the MSA and chainwise files behind display labels", () => {
+    expect(
+      findMsaArtifact([labelled("Alignment", "T1024_boltz_msa.tsv")])?.label
+    ).toBe("Alignment");
+    expect(
+      findChainwiseArtifact(
+        [labelled("Interface ipSAE", "T1024_chainwise_ipsae.tsv")],
+        "ipsae"
+      )?.label
+    ).toBe("Interface ipSAE");
+  });
+
+  it("finds a global score behind a display label", () => {
+    expect(
+      findMetricArtifact([labelled("pTM", "T1024_ptm.tsv")], "ptm")?.label
+    ).toBe("pTM");
+  });
+
+  it("does not accept a chainwise file as the global score, whatever the label", () => {
+    expect(
+      findMetricArtifact([labelled("ipTM", "T1024_chainwise_iptm.tsv")], "iptm")
+    ).toBeNull();
+  });
+
+  it("ignores a label that is not a filename at all", () => {
+    expect(
+      findStructureArtifact([labelled("Results CSV", "results.csv")])
+    ).toBeNull();
+  });
+});
+
 describe("parseChainPairScores", () => {
   const text = "\t0\r\nA:B\t0.3912\r\nA:C\t0.1000\r\nA:D\t0.9000\r\n";
 

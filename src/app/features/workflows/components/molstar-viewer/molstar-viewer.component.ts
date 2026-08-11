@@ -108,6 +108,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   structureResiduesDetected = output<Map<string, Set<number>>>();
   /** Polymer residues in sequence order; positions line up with PAE rows and columns. */
   residueIndexDetected = output<ResidueRef[]>();
+  /** A malformed or unsupported file, which the caller cannot detect from the fetch. */
+  loadError = output<string>();
 
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
   readonly errorMessage = signal("");
@@ -230,10 +232,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       const content = await file.text();
       await this.loadStructure({ content, format: "pdb", label: file.name });
     } catch (err) {
-      this.errorMessage.set(
-        err instanceof Error ? err.message : "Could not read PDB file."
-      );
-      this.status.set("error");
+      this.fail(err, "Could not read PDB file.");
     }
   }
 
@@ -292,11 +291,16 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         void this.applyExternalSelection(pendingSel);
       }
     } catch (err) {
-      this.errorMessage.set(
-        err instanceof Error ? err.message : "Could not render the structure."
-      );
-      this.status.set("error");
+      this.fail(err, "Could not render the structure.");
     }
+  }
+
+  /** Loading runs outside Angular's zone, so the emit is re-entered through it. */
+  private fail(err: unknown, fallback: string): void {
+    const message = err instanceof Error ? err.message : fallback;
+    this.errorMessage.set(message);
+    this.status.set("error");
+    this.zone.run(() => this.loadError.emit(message));
   }
 
   private clearViewer(): void {

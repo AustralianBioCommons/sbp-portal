@@ -23,8 +23,7 @@
   } @else {
   <div class="border rounded-lg p-6 space-y-12">
     @if (scores().length > 0) {
-    <!-- A div rather than a dl: metric and value read as one phrase, so there is
-         no term/definition pair to mark up. -->
+    <!-- Not a dl: metric and value read as one phrase, not a term/definition pair. -->
     <div
       class="flex flex-wrap items-center justify-center border rounded-lg p-4 bg-gray-50 gap-x-6 gap-y-2"
     >
@@ -58,8 +57,7 @@
           <p class="wrap-break-word">{{ structureError() }}</p>
         </div>
         } @else {
-        <!-- One equal share per band, so the bars span the viewer. min-w-0 lets a
-             share shrink below its label width, which keeps the shares equal. -->
+        <!-- Equal shares spanning the viewer; min-w-0 stops the labels sizing them. -->
         <ul class="flex items-end gap-x-2">
           @for (band of plddtLegend; track band.label) {
           <li class="min-w-0 flex-1 space-y-2">
@@ -89,6 +87,7 @@
             hint=""
             (residuesSelected)="onViewerResiduesSelected($event)"
             (residueIndexDetected)="onResidueIndexDetected($event)"
+            (loadError)="onViewerLoadError()"
           ></app-molstar-viewer>
         </div>
         }
@@ -105,9 +104,8 @@
       </section>
     </div>
 
-    <!-- The plot takes half the width, each matrix a quarter. Equal auto columns
-       with the plot spanning two, rather than a fixed 2fr/1fr/1fr template, so a
-       run missing a metric redistributes the width instead of leaving a gap. -->
+    <!-- Plot at half width, each matrix a quarter. Equal auto columns with the plot
+       spanning two, so a run missing a metric redistributes instead of gapping. -->
     @if (msaArtifact() || hasInterfaceMatrices()) {
     <div class="grid gap-6 xl:auto-cols-fr xl:grid-flow-col">
       @if (msaArtifact()) {

@@ -1,5 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { By } from "@angular/platform-browser";
 import { Subject, of, throwError } from "rxjs";
 
 import { SinglePredictionReportComponent } from "./single-prediction-report.component";
@@ -31,6 +32,7 @@ class MolstarViewerStubComponent {
   hint = input("");
   residuesSelected = output<string>();
   residueIndexDetected = output<ResidueRef[]>();
+  loadError = output<string>();
 }
 
 const STRUCTURE_KEY = "run-1/boltz/top_ranked_structures/sample.cif";
@@ -453,5 +455,123 @@ describe("SinglePredictionReportComponent", () => {
 
     expect(component.viewerSelectionRequest()).not.toBe(first);
     expect(component.viewerSelectionRequest()).toEqual({ tokens: "A1" });
+  });
+
+  // --- Viewer render failures -----------------------------------------------
+
+  const viewerStub = (): MolstarViewerStubComponent =>
+    fixture.debugElement.query(By.directive(MolstarViewerStubComponent))
+      .componentInstance;
+
+  it("falls back when Mol* cannot render the fetched structure", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    render();
+    component.unavailable.subscribe(unavailable);
+
+    // The fetch succeeded, so only the viewer knows the file is unusable.
+    expect(component.structureError()).toBeNull();
+    viewerStub().loadError.emit("Invalid CIF: unexpected token");
+    fixture.detectChanges();
+
+    expect(component.structureError()).toBe(
+      "Failed to load the predicted structure file."
+    );
+    expect(component.coreUnavailable()).toBeTrue();
+    expect(unavailable).toHaveBeenCalled();
+  });
+
+  it("shows the render failure in place of the viewer", () => {
+    render();
+    viewerStub().loadError.emit("Invalid CIF");
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      "Failed to load the predicted structure file."
+    );
+    expect(
+      fixture.debugElement.query(By.directive(MolstarViewerStubComponent))
+    ).toBeNull();
+  });
+
+  it("ignores a render failure once the structure is gone", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    render();
+    component.unavailable.subscribe(unavailable);
+    const stub = viewerStub();
+
+    // A superseded load must not condemn the run that replaced it.
+    component.structureSource.set(null);
+    stub.loadError.emit("Invalid CIF");
+    fixture.detectChanges();
+
+    expect(component.structureError()).toBeNull();
+  });
+
+  // --- Token index vs matrix size -------------------------------------------
+
+  it("accepts an index that lines up with the matrix", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    render();
+    component.unavailable.subscribe(unavailable);
+
+    component.onResidueIndexDetected(residues);
+    fixture.detectChanges();
+
+    expect(component.tokenMismatch()).toBeFalse();
+    expect(unavailable).not.toHaveBeenCalled();
+  });
+
+  it("gives up the interactive view when a ligand leaves the index short", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    render();
+    component.unavailable.subscribe(unavailable);
+
+    // A ligand is scored per atom, so the 3x3 matrix outruns two residues.
+    component.onResidueIndexDetected(residues.slice(0, 2));
+    fixture.detectChanges();
+
+    expect(component.tokenMismatch()).toBeTrue();
+    expect(component.coreUnavailable()).toBeTrue();
+    expect(unavailable).toHaveBeenCalled();
+  });
+
+  it("gives up when a ligand-only run reports one entry per residue", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    render();
+    component.unavailable.subscribe(unavailable);
+
+    // A single ligand residue against a matrix of per-atom tokens.
+    component.onResidueIndexDetected([{ chain: "B", seq: 1 }]);
+    fixture.detectChanges();
+
+    expect(component.tokenMismatch()).toBeTrue();
+    expect(unavailable).toHaveBeenCalled();
+  });
+
+  it("waits for the viewer's index before judging the matrix", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    render();
+    component.unavailable.subscribe(unavailable);
+    fixture.detectChanges();
+
+    // An index that has not arrived yet is not a mismatch.
+    expect(component.paeMatrix()).not.toBeNull();
+    expect(component.residueIndex()).toEqual([]);
+    expect(component.tokenMismatch()).toBeFalse();
+    expect(unavailable).not.toHaveBeenCalled();
+  });
+
+  it("re-checks the index when the run changes", () => {
+    render();
+    component.onResidueIndexDetected(residues);
+    expect(component.tokenMismatch()).toBeFalse();
+
+    fixture.componentRef.setInput("runId", "run-2");
+    fixture.detectChanges();
+
+    // A new structure load clears the index until the viewer reports again.
+    expect(component.tokenMismatch()).toBeFalse();
+    component.onResidueIndexDetected(residues.slice(0, 1));
+    expect(component.tokenMismatch()).toBeTrue();
   });
 });
