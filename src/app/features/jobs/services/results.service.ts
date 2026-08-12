@@ -70,6 +70,14 @@ export class ResultsService {
     );
   }
 
+  /** Read one artifact as text. Via the API, since S3 serves no CORS headers. */
+  getResultFileText(runId: string, key: string): Observable<string> {
+    return this.http.get(
+      `${this.resultsUrl}/${encodeURIComponent(runId)}/file`,
+      { params: { key }, responseType: "text" }
+    );
+  }
+
   getJobDownloads(runId: string): Observable<ResultDownloadsResponse> {
     return this.http.get<ResultDownloadsResponse>(
       `${this.resultsUrl}/${encodeURIComponent(runId)}/downloads`

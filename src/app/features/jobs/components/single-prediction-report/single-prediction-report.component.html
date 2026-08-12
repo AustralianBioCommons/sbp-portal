@@ -1,0 +1,146 @@
+<div class="space-y-4">
+  @if (filesError()) {
+  <div
+    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+    role="alert"
+  >
+    <ng-icon
+      name="heroExclamationCircle"
+      size="20"
+      class="shrink-0 text-red-500"
+      aria-hidden="true"
+    ></ng-icon>
+    <p class="wrap-break-word">{{ filesError() }}</p>
+  </div>
+  } @else if (loading()) {
+  <app-loading message="Loading results..." [inline]="true"></app-loading>
+  } @else if (missingArtifacts().length > 0) {
+  <p class="text-sm text-gray-900 wrap-break-word">
+    This run is missing {{ missingArtifacts().join(" and ") }}, so the structure
+    and PAE view cannot be shown. The individual output files are listed under
+    the Files tab.
+  </p>
+  } @else {
+  <div class="border rounded-lg p-6 space-y-12">
+    @if (scores().length > 0) {
+    <!-- Not a dl: metric and value read as one phrase, not a term/definition pair. -->
+    <div
+      class="flex flex-wrap items-center justify-center border rounded-lg p-4 bg-gray-50 gap-x-6 gap-y-2"
+    >
+      <div class="flex flex-wrap items-center gap-6 text-sm">
+        @for (score of scores(); track score.label) {
+        <span>{{ score.label }} = {{ score.value }}</span>
+        }
+      </div>
+      <app-tooltip
+        [message]="scoresHint()"
+        iconColor="text-gray-400 hover:text-gray-500"
+      ></app-tooltip>
+    </div>
+    }
+
+    <!-- 60/40: the structure viewer gets the larger share -->
+    <div class="grid gap-12 lg:grid-cols-[3fr_2fr] lg:items-center">
+      <!-- min-w-0 so the canvas cannot widen the column into a page scroll. -->
+      <section class="min-w-0 space-y-2" aria-label="Predicted structure">
+        @if (structureError()) {
+        <div
+          class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          role="alert"
+        >
+          <ng-icon
+            name="heroExclamationCircle"
+            size="20"
+            class="shrink-0 text-red-500"
+            aria-hidden="true"
+          ></ng-icon>
+          <p class="wrap-break-word">{{ structureError() }}</p>
+        </div>
+        } @else {
+        <!-- Equal shares spanning the viewer; min-w-0 stops the labels sizing them. -->
+        <ul class="flex items-end gap-x-2">
+          @for (band of plddtLegend; track band.label) {
+          <li class="min-w-0 flex-1 space-y-2">
+            <p class="text-center text-xs text-gray-600">
+              <span class="font-medium text-gray-900">{{ band.label }}</span>
+              ({{ band.range }})
+            </p>
+            <div
+              class="h-2 rounded-full"
+              [style.background]="band.color"
+              aria-hidden="true"
+            ></div>
+          </li>
+          }
+        </ul>
+
+        <div class="relative h-128 overflow-hidden rounded-lg border bg-white">
+          <app-molstar-viewer
+            class="absolute inset-0"
+            [structureSource]="structureSource()"
+            [enableUpload]="false"
+            [roundBottomRight]="true"
+            [selectionRequest]="viewerSelectionRequest()"
+            representation="cartoon"
+            colorTheme="plddt"
+            [showSequencePanel]="false"
+            hint=""
+            (residuesSelected)="onViewerResiduesSelected($event)"
+            (residueIndexDetected)="onResidueIndexDetected($event)"
+            (loadError)="onViewerLoadError()"
+          ></app-molstar-viewer>
+        </div>
+        }
+      </section>
+
+      <section class="min-w-0" aria-label="Predicted aligned error matrix">
+        <app-pae-matrix
+          [matrix]="paeMatrix()"
+          [residues]="residueIndex()"
+          [highlightedIndices]="selectedIndices()"
+          [errorMessage]="paeError()"
+          (selectionChange)="onMatrixSelectionChange($event)"
+        ></app-pae-matrix>
+      </section>
+    </div>
+
+    <!-- Plot at half width, each matrix a quarter. Equal auto columns with the plot
+       spanning two, so a run missing a metric redistributes instead of gapping. -->
+    @if (msaArtifact() || hasInterfaceMatrices()) {
+    <div class="grid gap-6 xl:auto-cols-fr xl:grid-flow-col">
+      @if (msaArtifact()) {
+      <section
+        class="min-w-0 space-y-2 xl:col-span-2"
+        aria-label="Alignment coverage"
+      >
+        <h3 class="text-sm font-semibold text-gray-900">
+          MSA sequence coverage
+        </h3>
+        <app-msa-coverage
+          [coverage]="msaCoverage()"
+          [errorMessage]="msaError()"
+        ></app-msa-coverage>
+      </section>
+      }
+
+      <!-- Only multimers produce chain pairs. -->
+      @if (hasIpsaeMatrix()) {
+      <section class="min-w-0" aria-label="Interface confidence, ipSAE">
+        <app-chain-matrix
+          metric="ipSAE"
+          [matrix]="ipsaeMatrix()"
+        ></app-chain-matrix>
+      </section>
+      } @if (hasChainIptmMatrix()) {
+      <section class="min-w-0" aria-label="Interface confidence, ipTM">
+        <app-chain-matrix
+          metric="ipTM"
+          [matrix]="chainIptmMatrix()"
+        ></app-chain-matrix>
+      </section>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>

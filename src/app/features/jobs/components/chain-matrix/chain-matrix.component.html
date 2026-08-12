@@ -1,0 +1,55 @@
+<div class="space-y-2">
+  <h3 class="text-sm font-semibold text-gray-900">Chainwise {{ metric() }}</h3>
+
+  <div class="max-h-84 overflow-auto rounded-lg border border-gray-200">
+    <table class="text-xs">
+      <caption class="sr-only">
+        {{
+          metric()
+        }}
+        for each pair of chains. The matrix is symmetric and the diagonal is
+        empty, since a chain has no interface with itself.
+      </caption>
+      <thead>
+        <tr>
+          <th
+            scope="col"
+            class="sticky left-0 top-0 z-20 bg-gray-50 px-2.5 py-2 text-left font-medium"
+          >
+            Chain
+          </th>
+          @for (chain of matrix().chains; track chain) {
+          <th
+            scope="col"
+            class="sticky top-0 z-10 bg-gray-50 px-2.5 py-2 text-right font-medium"
+          >
+            {{ chain }}
+          </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (chain of matrix().chains; track chain; let row = $index) {
+        <tr class="border-t border-gray-100">
+          <th
+            scope="row"
+            class="sticky left-0 z-10 bg-white px-2.5 py-2 text-left font-medium"
+          >
+            {{ chain }}
+          </th>
+          @for (value of matrix().rows[row]; track $index) {
+          <td class="px-2.5 py-2 text-right text-gray-900 tabular-nums">
+            @if (value !== null) {
+            {{ value.toFixed(precision()) }}
+            } @else {
+            <span class="text-gray-300" aria-hidden="true">—</span>
+            <span class="sr-only">not applicable</span>
+            }
+          </td>
+          }
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

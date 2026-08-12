@@ -1,6 +1,7 @@
+import { Component, input, output } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { HttpHeaders, HttpResponse } from "@angular/common/http";
-import { DomSanitizer } from "@angular/platform-browser";
+import { By, DomSanitizer } from "@angular/platform-browser";
 import { ActivatedRoute, provideRouter, Router } from "@angular/router";
 import { of, throwError } from "rxjs";
 
@@ -11,6 +12,8 @@ import {
 } from "../services/results.service";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
+import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
+import { ResultFileRef } from "../shared/prediction-results.utils";
 import { environment } from "../../../../environments/environment";
 
 type JobDetailsPrivateApi = {
@@ -26,6 +29,30 @@ type JobDetailsPrivateApi = {
   ) => string[];
   isFileDownloadKey: (key: string) => boolean;
   extractFilename: (path: string) => string;
+};
+
+/** Stands in for the report view: only its `unavailable` output matters here. */
+@Component({
+  selector: "app-single-prediction-report",
+  template: "",
+})
+class SinglePredictionReportStubComponent {
+  runId = input.required<string>();
+  files = input<readonly ResultFileRef[]>([]);
+  filesLoading = input(false);
+  filesError = input<string | null>(null);
+  unavailable = output<void>();
+}
+
+const singlePredictionJob: JobListItem = {
+  id: "job-sp",
+  jobName: "Boltz run",
+  tool: "Boltz",
+  workflow: "Single Prediction",
+  status: "Completed",
+  submittedAt: "2026-03-12T10:00:00Z",
+  score: 0.9,
+  finalDesignCount: null,
 };
 
 describe("JobDetailsComponent", () => {
@@ -114,7 +141,12 @@ describe("JobDetailsComponent", () => {
           },
         },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(JobDetailsComponent, {
+        remove: { imports: [SinglePredictionReportComponent] },
+        add: { imports: [SinglePredictionReportStubComponent] },
+      })
+      .compileComponents();
 
     sanitizer = TestBed.inject(DomSanitizer);
     resultsService.getJobReport.and.returnValue(
@@ -632,9 +664,24 @@ describe("JobDetailsComponent", () => {
 
   it("should group files by category with formatted names via getFilesByCategory", () => {
     component.filesItems.set([
-      { label: "File A", url: "https://cdn.test/a.csv", category: "stat_csv" },
-      { label: "File B", url: "https://cdn.test/b.pdb", category: "pdb_files" },
-      { label: "File C", url: "https://cdn.test/c.csv", category: "stat_csv" },
+      {
+        label: "File A",
+        url: "https://cdn.test/a.csv",
+        key: "run/a.csv",
+        category: "stat_csv",
+      },
+      {
+        label: "File B",
+        url: "https://cdn.test/b.pdb",
+        key: "run/b.pdb",
+        category: "pdb_files",
+      },
+      {
+        label: "File C",
+        url: "https://cdn.test/c.csv",
+        key: "run/c.csv",
+        category: "stat_csv",
+      },
     ]);
 
     const groups = component.getFilesByCategory();
@@ -865,5 +912,59 @@ describe("JobDetailsComponent", () => {
       expect(items[0].value).toBe("PDL1");
       expect(items[0].url).toBeUndefined();
     });
+  });
+
+  // --- HTML report fallback for single prediction ----------------------------
+
+  const renderSinglePrediction = () => {
+    mockJobsService.getJob.and.returnValue(of(singlePredictionJob));
+    routeId = singlePredictionJob.id;
+    fixture = TestBed.createComponent(JobDetailsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  };
+
+  it("does not fetch the packaged report for a healthy single prediction", () => {
+    renderSinglePrediction();
+
+    expect(component.isSinglePrediction()).toBeTrue();
+    expect(component.reportFallback()).toBeFalse();
+    expect(resultsService.getJobReport).not.toHaveBeenCalled();
+    expect(component.resultsHeading()).toBe("Prediction Results");
+  });
+
+  it("falls back to the packaged report when the interactive view cannot render", () => {
+    renderSinglePrediction();
+
+    const report = fixture.debugElement.query(
+      By.directive(SinglePredictionReportStubComponent)
+    );
+    report.componentInstance.unavailable.emit();
+    fixture.detectChanges();
+
+    expect(component.reportFallback()).toBeTrue();
+    expect(resultsService.getJobReport).toHaveBeenCalledWith(
+      singlePredictionJob.id
+    );
+    expect(component.resultsHeading()).toBe("Design Summary Report");
+    expect(
+      fixture.debugElement.query(
+        By.directive(SinglePredictionReportStubComponent)
+      )
+    ).toBeNull();
+    expect(fixture.nativeElement.querySelector("iframe")).not.toBeNull();
+  });
+
+  it("fetches the packaged report only once however often the view reports in", () => {
+    renderSinglePrediction();
+
+    const report = fixture.debugElement.query(
+      By.directive(SinglePredictionReportStubComponent)
+    );
+    report.componentInstance.unavailable.emit();
+    component.onSinglePredictionReportUnavailable();
+    component.onSinglePredictionReportUnavailable();
+
+    expect(resultsService.getJobReport).toHaveBeenCalledTimes(1);
   });
 });
