@@ -180,6 +180,8 @@
       type="warning"
       position="fixed"
       [message]="healthMessage() ?? 'Some workflow services are currently unavailable. Job status and logs may not be up to date until the service is restored.'"
+      [dismissible]="true"
+      (dismissed)="dismissHealthAlert()"
     ></app-alert>
     } @if (loading()) {
     <!-- Loading State -->

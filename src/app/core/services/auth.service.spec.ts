@@ -405,37 +405,34 @@ describe("AuthService", () => {
   });
 
   describe("General error handling", () => {
-    it("should show error banner and automatically logout after 3 seconds on authentication error", (done) => {
+    it("should show a persistent error banner and immediately clear the session locally, without a redirect", fakeAsync(() => {
       const error = { error: "email_not_verified" };
 
-      // Reset the spy call count
       (mockAuth0Service.logout as jasmine.Spy).calls.reset();
 
-      // Track banner visibility
-      let bannerShown = false;
-      service.showBanner$.subscribe((visible) => {
-        if (visible && !bannerShown) {
-          bannerShown = true;
-          expect(service.currentBannerMessage).toBe("email_not_verified");
-          expect(service.currentBannerType).toBe("error");
+      errorSubject.next(error);
 
-          // Check that logout will be called after 3 seconds
-          setTimeout(() => {
-            expect(mockAuth0Service.logout).toHaveBeenCalledWith({
-              logoutParams: {
-                returnTo: window.location.origin,
-              },
-            });
-            done();
-          }, 3100); // Slightly more than 3 seconds to ensure timeout completes
-        }
+      expect(service.currentBannerMessage).toBe("email_not_verified");
+      expect(service.currentBannerType).toBe("error");
+      expect(service.isBannerVisible).toBe(true);
+
+      // Session cleanup happens right away, and skips the browser redirect
+      // (openUrl: false) so it doesn't interrupt the banner.
+      expect(mockAuth0Service.logout).toHaveBeenCalledWith({
+        openUrl: false,
+        logoutParams: {
+          returnTo: window.location.origin,
+        },
       });
 
-      // Trigger authentication error
-      errorSubject.next(error);
-    });
+      // The banner is not auto-hidden — it stays until dismissError() is called.
+      tick(10000);
+      expect(service.isBannerVisible).toBe(true);
+      expect(service.currentBannerType).toBe("error");
 
-    // retry login functionality removed - authentication errors now show for 3 seconds then trigger automatic logout
+      service.dismissError();
+      expect(service.isBannerVisible).toBe(false);
+    }));
   });
 
   describe("Authentication callback handling", () => {

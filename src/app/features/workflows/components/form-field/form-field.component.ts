@@ -39,6 +39,12 @@ export class FormFieldComponent {
     return label.replace(/\bPdb\b/g, "PDB");
   }
 
+  /** Whole-number fields step by 1 so the spinner never produces a decimal. */
+  get numberStep(): number | string {
+    const validation = this.field().validation;
+    return validation?.step ?? (validation?.integer ? 1 : "any");
+  }
+
   get hasRange(): boolean {
     const validation = this.field().validation;
     return validation?.min !== undefined || validation?.max !== undefined;

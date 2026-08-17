@@ -48,6 +48,10 @@ import {
   SinglePredictionToolSettingsPayload,
   WorkflowTool,
 } from "../shared/workflow.interfaces";
+import {
+  parsePositiveInteger,
+  parseWholeNumber,
+} from "../shared/number-input.utils";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
 import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 
@@ -102,6 +106,9 @@ const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
 
 /** Exclusive upper bound for the random seed (enforces a maximum of 8 digits). */
 const MAX_RANDOM_SEED = 99999999;
+
+/** ColabFold recycle count used until the user changes it. */
+const DEFAULT_COLABFOLD_NUM_RECYCLES = 3;
 
 /** Generates a random 8-digit integer to pre-fill the Random Seed field. */
 function generateRandomSeed(): string {
@@ -208,7 +215,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   randomSeed = signal(generateRandomSeed());
   alphafold2FullDbs = signal(false);
-  colabfoldNumRecycles = signal("3");
+  colabfoldNumRecycles = signal(String(DEFAULT_COLABFOLD_NUM_RECYCLES));
   colabfoldUseTemplates = signal(false);
   boltzUsePotentials = signal(false);
   randomSeedTouched = signal(false);
@@ -705,8 +712,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       }
     }
 
-    const copyNumber = Number.parseInt(row.copyNumber, 10);
-    if (!Number.isInteger(copyNumber) || copyNumber < 1) {
+    if (parsePositiveInteger(row.copyNumber) === null) {
       errors.copyNumber =
         "Copy number must be a whole number greater than or equal to 1";
     }
@@ -725,25 +731,25 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   private validateToolSettings(): ToolSettingErrors {
     const errors: ToolSettingErrors = {};
 
-    const seed = Number.parseInt(this.randomSeed(), 10);
-    if (!Number.isInteger(seed) || seed < 0 || seed > MAX_RANDOM_SEED) {
+    const seed = parseWholeNumber(this.randomSeed());
+    if (seed === null || seed > MAX_RANDOM_SEED) {
       errors.randomSeed =
         "Random Seed must be a whole number with at most 8 digits";
     }
 
-    if (this.selectedTool() === "colabfold") {
-      const value = Number.parseInt(this.colabfoldNumRecycles(), 10);
-      if (!Number.isInteger(value) || value < 1) {
-        errors.colabfoldNumRecycles =
-          "colabfold_num_recycles must be a whole number greater than or equal to 1";
-      }
+    if (
+      this.selectedTool() === "colabfold" &&
+      parsePositiveInteger(this.colabfoldNumRecycles()) === null
+    ) {
+      errors.colabfoldNumRecycles =
+        "colabfold_num_recycles must be a whole number greater than or equal to 1";
     }
 
     return errors;
   }
 
   private buildToolSettingsPayload(): SinglePredictionToolSettingsPayload {
-    const random_seed = Number.parseInt(this.randomSeed(), 10);
+    const random_seed = parseWholeNumber(this.randomSeed()) ?? 0;
 
     switch (this.selectedTool()) {
       case "alphafold2":
@@ -754,10 +760,9 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       case "colabfold":
         return {
           random_seed,
-          colabfold_num_recycles: Number.parseInt(
-            this.colabfoldNumRecycles(),
-            10
-          ),
+          colabfold_num_recycles:
+            parsePositiveInteger(this.colabfoldNumRecycles()) ??
+            DEFAULT_COLABFOLD_NUM_RECYCLES,
           colabfold_use_templates: this.colabfoldUseTemplates(),
         };
       case "boltz":
@@ -811,8 +816,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   }
 
   private getParsedCopyNumber(value: string): number {
-    const parsed = Number.parseInt(value, 10);
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+    return parsePositiveInteger(value) ?? 1;
   }
 
   /**

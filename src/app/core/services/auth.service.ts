@@ -163,10 +163,8 @@ export class AuthService {
     this.auth0.error$.subscribe((error) => {
       if (error) {
         console.log("Auth error:", error);
-
-        // Show error banner and logout after 3 seconds
         console.log(
-          "Authentication error detected - showing error and logging out"
+          "Authentication error detected - showing persistent error banner"
         );
         this.handleAuthError(error);
       } else {
@@ -199,7 +197,10 @@ export class AuthService {
   }
 
   /**
-   * Handle authentication error by showing error banner and logout after 3 seconds
+   * Handle authentication error by showing an error banner that stays on
+   * screen until the user dismisses it (e.g. access-denied messages point
+   * users to a support link, so a brief auto-hide doesn't give them time to
+   * read or copy it).
    */
   private handleAuthError(error: AuthError): void {
     // Extract and show error message immediately
@@ -210,28 +211,31 @@ export class AuthService {
       "An unexpected error occurred during authentication.";
     this.showBanner(errorMessage, "error");
 
-    // Logout to clear previous session after 3 seconds
-    setTimeout(() => {
-      this.auth0.logout({
-        logoutParams: {
-          returnTo: window.location.origin,
-        },
-      });
-    }, 3000);
+    // Clear the failed session locally (openUrl: false skips the redirect to
+    // Auth0's /v2/logout endpoint) so cleanup doesn't navigate away from the
+    // banner that's still on screen.
+    this.auth0.logout({
+      openUrl: false,
+      logoutParams: {
+        returnTo: window.location.origin,
+      },
+    });
   }
 
   /**
-   * Show banner message for 3 seconds
+   * Show a banner message. Success banners auto-hide after 3 seconds; error
+   * banners stay until dismissed via dismissError().
    */
   private showBanner(message: string, type: "success" | "error"): void {
     this.bannerMessageSubject.next(message);
     this.bannerTypeSubject.next(type);
     this.showBannerSubject.next(true);
 
-    // Auto-hide banner after 3 seconds
-    setTimeout(() => {
-      this.clearBanner();
-    }, 3000);
+    if (type === "success") {
+      setTimeout(() => {
+        this.clearBanner();
+      }, 3000);
+    }
   }
 
   /**

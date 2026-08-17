@@ -14,10 +14,14 @@ export interface InputSchemaField {
   validation?: {
     min?: number;
     max?: number;
+    /** Whole numbers only (schema type `integer`). */
+    integer?: boolean;
+    step?: number;
     minLength?: number;
     maxLength?: number;
     pattern?: string;
     format?: string;
+    accept?: string;
     uniqueItems?: boolean;
   };
   placeholder?: string;
@@ -267,12 +271,10 @@ export class InputSchemaService {
         this.getStringValue(field.label) ||
         this.getStringValue(field.title) ||
         name;
+      const schemaType = this.getStringValue(field.type) || "string";
       return {
         name,
-        type: this.mapFieldType(
-          this.getStringValue(field.type) || "string",
-          this.getStringValue(field.format)
-        ),
+        type: this.mapFieldType(schemaType, this.getStringValue(field.format)),
         label: InputSchemaService.LABEL_OVERRIDES[name] ?? schemaLabel,
         description: this.getStringValue(field.description) || "",
         required: typeof field.required === "boolean" ? field.required : false,
@@ -282,6 +284,7 @@ export class InputSchemaService {
           ...(typeof field.validation === "object" && field.validation !== null
             ? (field.validation as Record<string, unknown>)
             : {}),
+          integer: schemaType.toLowerCase() === "integer",
           ...(InputSchemaService.VALIDATION_PATTERN_OVERRIDES[name]
             ? { pattern: InputSchemaService.VALIDATION_PATTERN_OVERRIDES[name] }
             : {}),
@@ -331,6 +334,7 @@ export class InputSchemaService {
         validation: {
           min: typeof prop.minimum === "number" ? prop.minimum : undefined,
           max: typeof prop.maximum === "number" ? prop.maximum : undefined,
+          integer: prop.type === "integer",
           minLength:
             typeof prop.minLength === "number" ? prop.minLength : undefined,
           maxLength:
@@ -607,6 +611,8 @@ export class InputSchemaService {
         const numValue = Number(value);
         if (isNaN(numValue)) {
           errors.push(`${field.label || field.name} must be a number`);
+        } else if (field.validation?.integer && !Number.isInteger(numValue)) {
+          errors.push(`${field.label || field.name} must be a whole number`);
         } else {
           if (
             field.validation?.min !== undefined &&

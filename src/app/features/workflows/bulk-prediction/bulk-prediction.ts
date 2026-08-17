@@ -33,6 +33,7 @@ import { DatasetUploadService } from "../services/dataset-upload.service";
 import { BulkPredictionPayload } from "../shared/workflow.interfaces";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
+import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 
 function bulkFastaValidator(control: AbstractControl): ValidationErrors | null {
   const result = validateBulkFastaProtein(control.value ?? "");
@@ -54,6 +55,7 @@ interface ToolChip extends ToolOption {
     StepContentComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
+    TooltipComponent,
   ],
   host: {
     class: "block w-full bulk-prediction-bg",

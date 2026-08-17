@@ -488,7 +488,7 @@ export default class DeNovoDesignComponent
     const rowId = this.schemaLoader.inputRows()[0]?.id;
     if (!rowId) return null;
     const count = this.getRowNumberValue(rowId, "number_of_final_designs", 0);
-    if (!Number.isFinite(count) || count < 1) return null;
+    if (!Number.isInteger(count) || count < 1) return null;
     return multiplier * count;
   });
 
