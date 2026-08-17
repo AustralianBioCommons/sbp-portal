@@ -1,6 +1,8 @@
 import {
   Component,
   DOCUMENT,
+  ElementRef,
+  afterNextRender,
   effect,
   inject,
   input,
@@ -20,6 +22,7 @@ let nextTooltipId = 0;
 })
 export class TooltipComponent {
   private readonly document = inject(DOCUMENT);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   message = input.required<string>();
   iconColor = input<string>("text-red-500 hover:text-red-600");
@@ -30,6 +33,8 @@ export class TooltipComponent {
   readonly top = signal(0);
 
   constructor() {
+    afterNextRender(() => this.describeTrigger());
+
     const close = () => this.open.set(false);
     effect((onCleanup) => {
       if (!this.open()) return;
@@ -40,6 +45,16 @@ export class TooltipComponent {
         this.document.defaultView?.removeEventListener("resize", close);
       });
     });
+  }
+
+  /** Link a projected trigger's accessible description to the tooltip. */
+  private describeTrigger(): void {
+    const trigger = this.host.nativeElement.querySelector(
+      "button, a[href], input, select, textarea, [tabindex]"
+    );
+    if (trigger && !trigger.hasAttribute("aria-describedby")) {
+      trigger.setAttribute("aria-describedby", this.tooltipId);
+    }
   }
 
   show(event: Event): void {

@@ -1,14 +1,15 @@
 <div class="space-y-2">
   <h3 class="text-sm font-semibold text-gray-900">Chainwise {{ metric() }}</h3>
 
-  <div class="max-h-84 overflow-auto rounded-lg border border-gray-200">
-    <table class="text-xs">
+  <div class="max-h-84 overflow-auto rounded-lg border">
+    <table class="w-full text-xs">
       <caption class="sr-only">
         {{
           metric()
         }}
-        for each pair of chains. The matrix is symmetric and the diagonal is
-        empty, since a chain has no interface with itself.
+        for each pair of chains, read as row chain against column chain. The
+        diagonal is empty since a chain has no interface with itself, and a
+        blank elsewhere means the results do not report that direction.
       </caption>
       <thead>
         <tr>
@@ -26,6 +27,10 @@
             {{ chain }}
           </th>
           }
+          <th
+            aria-hidden="true"
+            class="sticky top-0 z-10 w-full bg-gray-50 p-0"
+          ></th>
         </tr>
       </thead>
       <tbody>
@@ -43,10 +48,13 @@
             {{ value.toFixed(precision()) }}
             } @else {
             <span class="text-gray-300" aria-hidden="true">—</span>
-            <span class="sr-only">not applicable</span>
+            <span class="sr-only">
+              {{ row === $index ? "not applicable" : "not reported" }}
+            </span>
             }
           </td>
           }
+          <td aria-hidden="true" class="p-0"></td>
         </tr>
         }
       </tbody>

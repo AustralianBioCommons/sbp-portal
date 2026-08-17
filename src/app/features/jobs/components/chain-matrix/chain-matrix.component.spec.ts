@@ -26,10 +26,20 @@ describe("ChainMatrixComponent", () => {
 
   it("heads the corner cell with Chain and the axes with chain labels", () => {
     const headers = Array.from(
-      fixture.nativeElement.querySelectorAll("thead th")
+      fixture.nativeElement.querySelectorAll("thead th:not([aria-hidden])")
     ).map((th) => (th as HTMLElement).textContent?.trim());
 
     expect(headers).toEqual(["Chain", "A", "B", "C"]);
+  });
+
+  it("pads every row to the container width", () => {
+    const rows = fixture.nativeElement.querySelectorAll("tr");
+    const padded = Array.from(rows).filter(
+      (row) =>
+        (row as HTMLElement).querySelector(":scope > [aria-hidden]") !== null
+    );
+
+    expect(padded.length).toBe(rows.length);
   });
 
   it("labels each row with its chain", () => {
@@ -40,7 +50,7 @@ describe("ChainMatrixComponent", () => {
     expect(rowHeaders).toEqual(["A", "B", "C"]);
   });
 
-  it("renders the symmetric values and an empty diagonal", () => {
+  it("renders the row's values and an empty diagonal", () => {
     const firstRow = fixture.nativeElement.querySelectorAll("tbody tr")[0];
     const cells = Array.from(firstRow.querySelectorAll("td")).map((td) =>
       (td as HTMLElement).textContent?.trim()
@@ -56,8 +66,10 @@ describe("ChainMatrixComponent", () => {
     const text: string = fixture.nativeElement.textContent;
 
     expect(text).toContain("ipSAE");
-    expect(
-      fixture.nativeElement.querySelector("caption").textContent
-    ).toContain("symmetric");
+
+    const caption =
+      fixture.nativeElement.querySelector("caption").textContent ?? "";
+    expect(caption).toContain("row chain against column chain");
+    expect(caption).not.toContain("symmetric");
   });
 });

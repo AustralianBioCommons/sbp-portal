@@ -5,6 +5,7 @@ import {
   buildChainPairMatrix,
   buildChainSegments,
   buildResidueLookup,
+  countStructureTokens,
   findChainwiseArtifact,
   findMetricArtifact,
   findMsaArtifact,
@@ -297,6 +298,103 @@ describe("artifact discovery from a display label", () => {
   });
 });
 
+describe("countStructureTokens", () => {
+  const cif = (rows: string[]) =>
+    [
+      "data_test",
+      "loop_",
+      "_atom_site.group_PDB",
+      "_atom_site.id",
+      "_atom_site.label_atom_id",
+      "_atom_site.label_comp_id",
+      "_atom_site.auth_seq_id",
+      "_atom_site.auth_asym_id",
+      "_atom_site.Cartn_x",
+      ...rows,
+    ].join("\n");
+
+  it("counts one token per polymer residue", () => {
+    const text = cif([
+      "ATOM 1 N MET 1 A 0.0",
+      "ATOM 2 CA MET 1 A 1.0",
+      "ATOM 3 C MET 1 A 2.0",
+      "ATOM 4 N GLY 2 A 3.0",
+      "ATOM 5 CA GLY 2 A 4.0",
+    ]);
+
+    expect(countStructureTokens(text, "mmcif")).toBe(2);
+  });
+
+  it("counts one token per ligand atom", () => {
+    const text = cif([
+      "ATOM 1 N MET 1 A 0.0",
+      "ATOM 2 CA MET 1 A 1.0",
+      "HETATM 3 PA NAD 1 B 2.0",
+      "HETATM 4 O1A NAD 1 B 3.0",
+      "HETATM 5 O2A NAD 1 B 4.0",
+    ]);
+
+    expect(countStructureTokens(text, "mmcif")).toBe(4);
+  });
+
+  it("counts nucleotides as residues, like any other polymer", () => {
+    const text = cif([
+      "ATOM 1 P A 1 E 0.0",
+      "ATOM 2 OP1 A 1 E 1.0",
+      "ATOM 3 P G 2 E 2.0",
+    ]);
+
+    expect(countStructureTokens(text, "mmcif")).toBe(2);
+  });
+
+  it("keeps chains with the same residue numbering apart", () => {
+    const text = cif([
+      "ATOM 1 CA MET 1 A 0.0",
+      "ATOM 2 CA MET 1 B 1.0",
+      "ATOM 3 CA GLY 2 B 2.0",
+    ]);
+
+    expect(countStructureTokens(text, "mmcif")).toBe(3);
+  });
+
+  it("counts a PDB file by its fixed columns", () => {
+    const text = [
+      "ATOM      1  N   MET A   1      0.000   0.000   0.000  1.00 50.0           N",
+      "ATOM      2  CA  MET A   1      1.000   0.000   0.000  1.00 50.0           C",
+      "ATOM      3  CA  GLY A   2      2.000   0.000   0.000  1.00 50.0           C",
+      "HETATM    4  PA  NAD B   1      3.000   0.000   0.000  1.00 50.0           P",
+      "END",
+    ].join("\n");
+
+    expect(countStructureTokens(text, "pdb")).toBe(3);
+  });
+
+  it("counts only the first model", () => {
+    const text = [
+      "MODEL        1",
+      "ATOM      1  CA  MET A   1      0.000   0.000   0.000  1.00 50.0           C",
+      "ATOM      2  CA  GLY A   2      1.000   0.000   0.000  1.00 50.0           C",
+      "ENDMDL",
+      "MODEL        2",
+      "ATOM      3  CA  MET A   1      0.000   0.000   0.000  1.00 50.0           C",
+      "ENDMDL",
+    ].join("\n");
+
+    expect(countStructureTokens(text, "pdb")).toBe(2);
+  });
+
+  it("returns null when there are no atoms to count", () => {
+    expect(
+      countStructureTokens("data_test\n_entry.id test\n", "mmcif")
+    ).toBeNull();
+    expect(countStructureTokens("", "pdb")).toBeNull();
+  });
+
+  it("returns null for an mmCIF with no atom_site header", () => {
+    expect(countStructureTokens("ATOM 1 N MET 1 A 0.0\n", "mmcif")).toBeNull();
+  });
+});
+
 describe("parseChainPairScores", () => {
   const text = "\t0\r\nA:B\t0.3912\r\nA:C\t0.1000\r\nA:D\t0.9000\r\n";
 
@@ -311,6 +409,38 @@ describe("parseChainPairScores", () => {
   it("returns an empty list for a monomer with no pairs", () => {
     expect(parseChainPairScores("\t0\r\n")).toEqual([]);
   });
+
+  it("reads the top-ranked model from a multi-model file", () => {
+    const colabfold =
+      "\t1\t2\t3\t4\t5\r\nA:B\t0.8803\t0.8780\t0.8761\t0.8752\t0.8688\r\n";
+
+    expect(parseChainPairScores(colabfold)).toEqual([
+      { pair: "A:B", value: 0.8803 },
+    ]);
+  });
+
+  it("picks the lowest model index whatever order the columns are in", () => {
+    const shuffled = "\t3\t1\t2\r\nA:B\t0.30\t0.10\t0.20\r\n";
+
+    expect(parseChainPairScores(shuffled)).toEqual([
+      { pair: "A:B", value: 0.1 },
+    ]);
+  });
+
+  it("falls back to the first value column without a usable header", () => {
+    expect(parseChainPairScores("A:B\t0.42\r\n")).toEqual([
+      { pair: "A:B", value: 0.42 },
+    ]);
+  });
+
+  it("keeps both directions of an asymmetric pair", () => {
+    const boltz = "\t0\r\nA:B\t0.5003\r\nB:A\t0.6805\r\n";
+
+    expect(parseChainPairScores(boltz)).toEqual([
+      { pair: "B:A", value: 0.6805 },
+      { pair: "A:B", value: 0.5003 },
+    ]);
+  });
 });
 
 describe("buildChainPairMatrix", () => {
@@ -318,15 +448,38 @@ describe("buildChainPairMatrix", () => {
     "\t0\r\nA:B\t0.20\r\nA:C\t0.80\r\nB:C\t0.50\r\n"
   );
 
-  it("fills both halves from the single listed pair", () => {
+  it("leaves the reverse of a one-way pair blank", () => {
     const matrix = buildChainPairMatrix(scores);
 
+    // ipSAE lists each pair once, so the lower triangle is not inferred.
     expect(matrix.chains).toEqual(["A", "B", "C"]);
     expect(matrix.rows).toEqual([
       [null, 0.2, 0.8],
-      [0.2, null, 0.5],
-      [0.8, 0.5, null],
+      [null, null, 0.5],
+      [null, null, null],
     ]);
+  });
+
+  it("keeps each direction when the file lists both", () => {
+    const matrix = buildChainPairMatrix(
+      parseChainPairScores("\t0\r\nA:B\t0.5003\r\nB:A\t0.6805\r\n")
+    );
+
+    expect(matrix.rows).toEqual([
+      [null, 0.5003],
+      [0.6805, null],
+    ]);
+  });
+
+  it("mixes a two-way pair with a one-way one", () => {
+    const matrix = buildChainPairMatrix(
+      parseChainPairScores("\t0\r\nA:B\t0.10\r\nB:A\t0.90\r\nA:C\t0.50\r\n")
+    );
+
+    expect(matrix.rows[0][1]).toBe(0.1);
+    expect(matrix.rows[1][0]).toBe(0.9);
+    expect(matrix.rows[0][2]).toBe(0.5);
+    expect(matrix.rows[2][0]).toBeNull();
   });
 
   it("leaves the diagonal empty", () => {
@@ -553,7 +706,36 @@ describe("residue index helpers", () => {
   });
 
   it("builds a token to index lookup", () => {
-    expect(buildResidueLookup(residues).get("B11")).toBe(4);
+    expect(buildResidueLookup(residues).get("B11")).toEqual([4]);
+  });
+
+  it("maps a ligand residue to every one of its atom tokens", () => {
+    const withLigand: ResidueRef[] = [
+      { chain: "A", seq: 1 },
+      { chain: "B", seq: 1, atom: "PA" },
+      { chain: "B", seq: 1, atom: "O1A" },
+      { chain: "B", seq: 1, atom: "O2A" },
+    ];
+
+    expect(buildResidueLookup(withLigand).get("B1")).toEqual([1, 2, 3]);
+    expect(
+      tokensToResidueIndices("B1", buildResidueLookup(withLigand))
+    ).toEqual([1, 2, 3]);
+  });
+
+  it("collapses a ligand's atom tokens back to one residue token", () => {
+    const withLigand: ResidueRef[] = [
+      { chain: "A", seq: 1 },
+      { chain: "B", seq: 1, atom: "PA" },
+      { chain: "B", seq: 1, atom: "O1A" },
+      { chain: "B", seq: 1, atom: "O2A" },
+    ];
+
+    expect(residueIndicesToTokens([1, 2, 3], withLigand)).toEqual(["B1"]);
+    expect(residueIndicesToTokens([0, 1, 2, 3], withLigand)).toEqual([
+      "A1",
+      "B1",
+    ]);
   });
 
   it("collapses consecutive indices into range tokens", () => {

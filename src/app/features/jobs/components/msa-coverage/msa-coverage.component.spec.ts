@@ -39,15 +39,51 @@ describe("MsaCoverageComponent", () => {
     );
   });
 
+  const measuredColumn = (canvas: HTMLCanvasElement): HTMLElement => {
+    const column = canvas.closest(".overflow-hidden");
+    expect(column).not.toBeNull();
+    return column as HTMLElement;
+  };
+
   it("draws within its container", async () => {
     const host: HTMLElement = fixture.nativeElement;
     host.style.width = "360px";
     const canvas: HTMLCanvasElement = host.querySelector("canvas")!;
     await waitForDraw(canvas);
 
-    const wrapper = canvas.parentElement!;
+    const column = measuredColumn(canvas);
     expect(canvas.offsetWidth).toBeGreaterThan(0);
-    expect(canvas.offsetWidth).toBeLessThanOrEqual(wrapper.clientWidth);
+    expect(canvas.offsetWidth).toBeLessThanOrEqual(column.clientWidth);
+    expect(column.scrollWidth).toBeLessThanOrEqual(column.clientWidth);
+  });
+
+  it("centres the plot in a column wider than its cap when asked", async () => {
+    fixture.componentRef.setInput("centered", true);
+    const host: HTMLElement = fixture.nativeElement;
+    host.style.width = "1400px";
+    const canvas: HTMLCanvasElement = host.querySelector("canvas")!;
+    await waitForDraw(canvas);
+
+    const column = measuredColumn(canvas);
+    const slack = column.clientWidth - canvas.offsetWidth;
+    expect(slack).toBeGreaterThan(0);
+    expect(canvas.getBoundingClientRect().left).toBeCloseTo(
+      column.getBoundingClientRect().left + slack / 2,
+      0
+    );
+  });
+
+  it("leaves the plot at the left edge by default", async () => {
+    const host: HTMLElement = fixture.nativeElement;
+    host.style.width = "1400px";
+    const canvas: HTMLCanvasElement = host.querySelector("canvas")!;
+    await waitForDraw(canvas);
+
+    const column = measuredColumn(canvas);
+    expect(canvas.getBoundingClientRect().left).toBeCloseTo(
+      column.getBoundingClientRect().left,
+      0
+    );
   });
 
   it("uses matplotlib's reversed rainbow for identity", async () => {
