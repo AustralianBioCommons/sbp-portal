@@ -14,32 +14,32 @@
 } @else if (loading()) {
 <app-loading message="Loading alignment..." [inline]="true"></app-loading>
 } @else if (coverage(); as msa) {
-<div class="space-y-6">
-  <div #wrapper class="relative w-full overflow-hidden">
+<div #wrapper class="w-full overflow-hidden">
+  <div class="w-fit space-y-6" [class.mx-auto]="centered()">
     <canvas
       #plot
       class="block"
       role="img"
       [attr.aria-label]="summary()"
     ></canvas>
-  </div>
 
-  <div
-    class="space-y-2"
-    [style.margin-left.px]="plotRect().left"
-    [style.width.px]="plotRect().width"
-  >
     <div
-      class="h-4 border border-gray-300"
-      [style.background]="identityGradient"
-      aria-hidden="true"
-    ></div>
-    <div class="flex justify-between text-xs text-gray-600 tabular-nums">
-      @for (tick of identityTicks; track tick) {
-      <span>{{ tick }}</span>
-      }
+      class="space-y-2"
+      [style.margin-left.px]="plotRect().left"
+      [style.width.px]="plotRect().width"
+    >
+      <div
+        class="h-6 border"
+        [style.background]="identityGradient"
+        aria-hidden="true"
+      ></div>
+      <div class="flex justify-between text-xs text-gray-600 tabular-nums">
+        @for (tick of identityTicks; track tick) {
+        <span>{{ tick }}</span>
+        }
+      </div>
+      <p class="text-center text-xs font-medium">Sequence identity to query</p>
     </div>
-    <p class="text-center text-xs font-medium">Sequence identity to query</p>
   </div>
 </div>
 } @else {

@@ -12,7 +12,11 @@ import type { WritableSignal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { EMPTY, Observable, catchError, finalize } from "rxjs";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroExclamationCircle } from "@ng-icons/heroicons/outline";
+import {
+  heroArrowPath,
+  heroExclamationCircle,
+  heroLifebuoy,
+} from "@ng-icons/heroicons/outline";
 import {
   MolstarViewerComponent,
   StructureSource,
@@ -31,7 +35,7 @@ import {
   ResidueRef,
   ResultFileRef,
   buildChainPairMatrix,
-  buildResidueLookup,
+  countStructureTokens,
   findChainwiseArtifact,
   findMetricArtifact,
   findMsaArtifact,
@@ -42,7 +46,6 @@ import {
   parseMsaCoverage,
   parsePaeMatrix,
   residueIndicesToTokens,
-  tokensToResidueIndices,
 } from "../../shared/prediction-results.utils";
 
 /** The predicted structure beside its PAE matrix, sharing one residue selection. */
@@ -57,7 +60,9 @@ import {
     TooltipComponent,
     NgIconComponent,
   ],
-  providers: [provideIcons({ heroExclamationCircle })],
+  providers: [
+    provideIcons({ heroArrowPath, heroExclamationCircle, heroLifebuoy }),
+  ],
   templateUrl: "./single-prediction-report.component.html",
   styleUrl: "./single-prediction-report.component.scss",
 })
@@ -90,8 +95,6 @@ export class SinglePredictionReportComponent {
   /** Fresh object each request so an identical selection still re-applies. */
   readonly viewerSelectionRequest = signal<{ tokens: string } | null>(null);
 
-  /** Residue indices we pushed into Mol*, so its echo does not overwrite them. */
-  private pushedIndices: readonly number[] | null = null;
   private structureRequest = 0;
   private paeRequest = 0;
 
@@ -168,9 +171,21 @@ export class SinglePredictionReportComponent {
       .join("\n\n")
   );
 
-  private readonly residueLookup = computed(() =>
-    buildResidueLookup(this.residueIndex())
-  );
+  /** Tooltip instructions */
+  readonly viewerHelp = [
+    "To move around:",
+    "- Scroll up/down to zoom in and out",
+    "- Click & drag to rotate the structure",
+    "- CTRL + click & drag to move the structure",
+    "- Click a residue to centre and zoom in on it",
+    "- SHIFT + scroll to slice through the front of the structure",
+    "- Use the button above to reset the view",
+    "",
+    "To make a selection:",
+    "- Drag a block on the PAE matrix to select those residues",
+    "- The rest of the structure is greyed out while a block is selected",
+    "- Clear the selection with the (×) button in the corner of the block",
+  ].join("\n");
 
   /** Hexes taken from Mol*'s plddt-confidence theme, so the legend cannot drift. */
   readonly plddtLegend = [
@@ -194,13 +209,24 @@ export class SinglePredictionReportComponent {
   );
 
   /**
-   * A ligand is scored per atom, so those runs have more rows than residues and
-   * every label would be offset. Better to fall back than to show it wrong.
+   * The matrix and structure have different token counts, which would offset labels
+   * and highlights. Use the structure count while loading, with the viewer index as
+   * a backstop.
    */
   readonly tokenMismatch = computed(() => {
     const matrix = this.paeMatrix();
-    if (!matrix || !this.indexReported()) return false;
-    return this.residueIndex().length !== matrix.size;
+    if (!matrix) return false;
+
+    const counted = this.expectedTokens();
+    if (counted !== null && counted !== matrix.size) return true;
+
+    return this.indexReported() && this.residueIndex().length !== matrix.size;
+  });
+
+  /** Rows implied by the structure, or null if they can't be counted. */
+  private readonly expectedTokens = computed(() => {
+    const source = this.structureSource();
+    return source ? countStructureTokens(source.content, source.format) : null;
   });
 
   readonly missingArtifacts = computed(() => {
@@ -291,18 +317,8 @@ export class SinglePredictionReportComponent {
 
   // ── Selection wiring ──────────────────────────────────────────────────────
 
-  onViewerResiduesSelected(residueString: string): void {
-    const indices = tokensToResidueIndices(residueString, this.residueLookup());
-    if (this.pushedIndices && sameIndices(indices, this.pushedIndices)) {
-      return;
-    }
-    this.pushedIndices = null;
-    this.selectedIndices.set(indices);
-  }
-
   onMatrixSelectionChange(indices: number[]): void {
     this.selectedIndices.set(indices);
-    this.pushedIndices = indices;
     this.viewerSelectionRequest.set({
       tokens: residueIndicesToTokens(indices, this.residueIndex()).join(","),
     });
@@ -467,8 +483,4 @@ export class SinglePredictionReportComponent {
         }
       });
   }
-}
-
-function sameIndices(a: readonly number[], b: readonly number[]): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
 }

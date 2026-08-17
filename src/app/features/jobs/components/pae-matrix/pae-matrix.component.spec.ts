@@ -82,6 +82,21 @@ describe("PaeMatrixComponent", () => {
     expect(component.residueLabel(2)).toBe("B5");
   });
 
+  it("labels a ligand's rows by atom, since they share one residue number", () => {
+    fixture.componentRef.setInput("residues", [
+      { chain: "A", seq: 1 },
+      { chain: "A", seq: 2 },
+      { chain: "B", seq: 1, atom: "PA" },
+      { chain: "B", seq: 1, atom: "O1A" },
+    ]);
+    fixture.detectChanges();
+
+    expect(component.residueLabel(1)).toBe("A2");
+    expect(component.residueLabel(2)).toBe("B:PA");
+    expect(component.residueLabel(3)).toBe("B:O1A");
+    expect(component.interactive()).toBeTrue();
+  });
+
   it("reads the value at a cell", () => {
     expect(component.valueAt(0, 3)).toBe(22);
     expect(component.valueAt(9, 9)).toBeNull();
@@ -273,7 +288,7 @@ describe("PaeMatrixComponent", () => {
   });
 
   it("describes the matrix for assistive technology", () => {
-    expect(component.surfaceLabel()).toContain("4 by 4 residues");
+    expect(component.surfaceLabel()).toContain("4 by 4 positions");
     expect(component.surfaceLabel()).toContain("Lower is more confident");
   });
 
@@ -479,6 +494,113 @@ describe("PaeMatrixComponent", () => {
       colStart: 1,
       colEnd: 3,
     });
+  });
+
+  const clearHandle = (): HTMLButtonElement | null =>
+    fixture.nativeElement.querySelector('button[aria-label="Clear selection"]');
+
+  /** Drag from one cell to another and release like a real selection */
+  const dragBlock = async (
+    from: { row: number; col: number },
+    to: { row: number; col: number }
+  ) => {
+    const start = cellCentre(from.row, from.col);
+    const end = cellCentre(to.row, to.col);
+    component.onPointerDown(pointerAt("pointerdown", start.x, start.y));
+    component.onPointerMove(pointerAt("pointermove", end.x, end.y));
+    component.onPointerUp();
+    fixture.detectChanges();
+  };
+
+  it("clears the selection from the handle on the block", async () => {
+    await readyCanvas();
+    const emitted: number[][] = [];
+    component.selectionChange.subscribe((indices) => emitted.push(indices));
+
+    await dragBlock({ row: 0, col: 0 }, { row: 2, col: 2 });
+
+    clearHandle()!.click();
+    fixture.detectChanges();
+
+    expect(component.region()).toBeNull();
+    expect(emitted[emitted.length - 1]).toEqual([]);
+    expect(clearHandle()).toBeNull();
+  });
+
+  it("offers no clear handle until something is selected", async () => {
+    await readyCanvas();
+
+    expect(clearHandle()).toBeNull();
+    expect(component.selectionHandle()).toBeNull();
+  });
+
+  it("withholds the handle mid-drag", async () => {
+    await readyCanvas();
+    const start = cellCentre(0, 0);
+    const end = cellCentre(2, 2);
+
+    component.onPointerDown(pointerAt("pointerdown", start.x, start.y));
+    component.onPointerMove(pointerAt("pointermove", end.x, end.y));
+    fixture.detectChanges();
+    expect(clearHandle()).toBeNull();
+
+    component.onPointerUp();
+    fixture.detectChanges();
+    expect(clearHandle()).not.toBeNull();
+  });
+
+  it("does not select on a click that never moves", async () => {
+    await readyCanvas();
+    const emitted: number[][] = [];
+    component.selectionChange.subscribe((indices) => emitted.push(indices));
+    const at = cellCentre(1, 1);
+
+    component.onPointerDown(pointerAt("pointerdown", at.x, at.y));
+    component.onPointerMove(pointerAt("pointermove", at.x, at.y));
+    component.onPointerUp();
+    fixture.detectChanges();
+
+    expect(component.region()).toBeNull();
+    expect(emitted).toEqual([]);
+    expect(clearHandle()).toBeNull();
+  });
+
+  it("leaves an existing block alone when clicked without dragging", async () => {
+    await readyCanvas();
+    await dragBlock({ row: 0, col: 0 }, { row: 2, col: 2 });
+    const selected = component.region();
+
+    const at = cellCentre(3, 3);
+    component.onPointerDown(pointerAt("pointerdown", at.x, at.y));
+    component.onPointerUp();
+    fixture.detectChanges();
+
+    expect(component.region()).toEqual(selected);
+  });
+
+  it("sits the handle on the block's top-right corner", async () => {
+    await readyCanvas();
+    const padding = component.padding();
+    const cell = component.plotRect().side / matrix.size;
+
+    component.region.set({ rowStart: 1, rowEnd: 2, colStart: 1, colEnd: 2 });
+
+    expect(component.selectionHandle()).toEqual({
+      x: padding.left + 3 * cell,
+      y: padding.top + cell,
+    });
+  });
+
+  it("keeps the handle over the plot for a block on the edge", async () => {
+    await readyCanvas();
+    const padding = component.padding();
+    const side = component.plotRect().side;
+
+    component.region.set({ rowStart: 0, rowEnd: 1, colStart: 2, colEnd: 3 });
+    const handle = component.selectionHandle()!;
+
+    expect(handle.x).toBeLessThan(padding.left + side);
+    expect(handle.y).toBeGreaterThan(padding.top);
   });
 
   it("tracks the pointer without selecting until a drag starts", async () => {
@@ -756,6 +878,7 @@ describe("PaeMatrixComponent", () => {
 
   it("outlines the keyboard cursor when nothing is selected", async () => {
     const canvas = await readyCanvas();
+    component.onFocus();
     component.cursor.set({ row: 1, col: 1 });
     component.region.set(null);
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -782,5 +905,69 @@ describe("PaeMatrixComponent", () => {
     }
 
     expect(inkPixels).toBeGreaterThan(0);
+  });
+
+  describe("axis ticks", () => {
+    const chain = (start: number, count = 301): ResidueRef[] =>
+      Array.from({ length: count }, (_, i) => ({ chain: "A", seq: start + i }));
+
+    const sized = (size: number): PaeMatrix => ({
+      size,
+      values: new Float32Array(size * size),
+      min: 0,
+      max: 0,
+    });
+
+    function labels(residues: ResidueRef[]): string[] {
+      fixture.componentRef.setInput("matrix", sized(residues.length));
+      fixture.componentRef.setInput("residues", residues);
+      fixture.detectChanges();
+      return component.axisTicks().map((tick) => tick.label);
+    }
+
+    it("labels a single chain with its own residue numbers", () => {
+      expect(labels(chain(20))).toEqual([
+        "20",
+        "50",
+        "100",
+        "150",
+        "200",
+        "250",
+        "300",
+      ]);
+      expect(component.numberByResidue()).toBeTrue();
+    });
+
+    it("drops the origin mark when a round one is within half a step", () => {
+      expect(labels(chain(45))[0]).toBe("50");
+    });
+
+    it("counts positions once a second chain restarts the numbering", () => {
+      const twoChains = [
+        ...chain(1, 200),
+        ...Array.from({ length: 101 }, (_, i) => ({ chain: "B", seq: 1 + i })),
+      ];
+
+      expect(labels(twoChains)).toEqual([
+        "1",
+        "50",
+        "100",
+        "150",
+        "200",
+        "250",
+        "300",
+      ]);
+      expect(component.numberByResidue()).toBeFalse();
+    });
+
+    it("counts positions when a ligand contributes one entry per atom", () => {
+      const withLigand = [
+        ...chain(1, 300),
+        { chain: "B", seq: 1, atom: "C1B" },
+      ];
+
+      expect(component.numberByResidue()).toBeFalse();
+      expect(labels(withLigand)[0]).toBe("1");
+    });
   });
 });

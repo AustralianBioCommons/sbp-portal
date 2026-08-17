@@ -2,22 +2,31 @@ import { TestBed } from "@angular/core/testing";
 
 import { MolstarViewerComponent } from "./molstar-viewer.component";
 
+interface Token {
+  polymer: boolean;
+  atoms: string[];
+}
+
 type MolstarViewerStatics = {
-  toOrderedResidues: (
-    residues: Map<string, Set<number>>
-  ) => Array<{ chain: string; seq: number }>;
+  toOrderedTokens: (
+    chains: Map<string, Map<number, Token>>
+  ) => Array<{ chain: string; seq: number; atom?: string }>;
 };
 
 const statics = () => MolstarViewerComponent as unknown as MolstarViewerStatics;
 
-describe("MolstarViewerComponent.toOrderedResidues", () => {
+/** A polymer chain: one entry per residue, no atoms. */
+const polymer = (...seqs: number[]) =>
+  new Map(seqs.map((seq) => [seq, { polymer: true, atoms: [] }]));
+
+describe("MolstarViewerComponent.toOrderedTokens", () => {
   it("orders chains alphabetically then residues ascending", () => {
-    const residues = new Map([
-      ["B", new Set([11, 10])],
-      ["A", new Set([2, 1, 3])],
+    const chains = new Map([
+      ["B", polymer(11, 10)],
+      ["A", polymer(2, 1, 3)],
     ]);
 
-    expect(statics().toOrderedResidues(residues)).toEqual([
+    expect(statics().toOrderedTokens(chains)).toEqual([
       { chain: "A", seq: 1 },
       { chain: "A", seq: 2 },
       { chain: "A", seq: 3 },
@@ -27,17 +36,45 @@ describe("MolstarViewerComponent.toOrderedResidues", () => {
   });
 
   it("handles a single chain with non-contiguous numbering", () => {
-    const residues = new Map([["A", new Set([5, 9, 7])]]);
-
-    expect(statics().toOrderedResidues(residues)).toEqual([
+    expect(
+      statics().toOrderedTokens(new Map([["A", polymer(5, 9, 7)]]))
+    ).toEqual([
       { chain: "A", seq: 5 },
       { chain: "A", seq: 7 },
       { chain: "A", seq: 9 },
     ]);
   });
 
+  it("expands a ligand into one token per atom, in file order", () => {
+    const chains = new Map([
+      ["A", polymer(1)],
+      ["B", new Map([[1, { polymer: false, atoms: ["PA", "O1A", "O2A"] }]])],
+    ]);
+
+    expect(statics().toOrderedTokens(chains)).toEqual([
+      { chain: "A", seq: 1 },
+      { chain: "B", seq: 1, atom: "PA" },
+      { chain: "B", seq: 1, atom: "O1A" },
+      { chain: "B", seq: 1, atom: "O2A" },
+    ]);
+  });
+
+  it("keeps ligand chains in their alphabetical place between polymers", () => {
+    const chains = new Map([
+      ["E", polymer(1)],
+      ["C", new Map([[1, { polymer: false, atoms: ["C7", "C8"] }]])],
+      ["A", polymer(1)],
+    ]);
+
+    expect(
+      statics()
+        .toOrderedTokens(chains)
+        .map((token) => token.chain)
+    ).toEqual(["A", "C", "C", "E"]);
+  });
+
   it("returns an empty list for an empty map", () => {
-    expect(statics().toOrderedResidues(new Map())).toEqual([]);
+    expect(statics().toOrderedTokens(new Map())).toEqual([]);
   });
 });
 

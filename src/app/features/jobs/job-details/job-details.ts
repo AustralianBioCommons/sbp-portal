@@ -131,19 +131,33 @@ export default class JobDetailsComponent implements OnInit {
    *  view and loop. */
   reportFallback = signal(false);
 
-  resultsHeading = computed(() =>
-    this.isSinglePrediction() && !this.reportFallback()
-      ? "Prediction Results"
-      : "Design Summary Report"
-  );
-
-  readonly tabs: Array<{ id: JobResultsTab; label: string; icon: string }> = [
+  readonly tabs: Array<{
+    id: JobResultsTab;
+    label: string;
+    icon: string;
+    description?: string;
+  }> = [
     { id: "results", label: "Results", icon: "heroChartBarSquare" },
-    { id: "files", label: "Files", icon: "heroFolder" },
+    {
+      id: "files",
+      label: "Files",
+      icon: "heroFolder",
+      description: "Download individual result files from this workflow run.",
+    },
     { id: "settings", label: "Settings", icon: "heroCog6Tooth" },
     { id: "logs", label: "Logs", icon: "heroCommandLine" },
-    { id: "citations", label: "Citations", icon: "heroBookOpen" },
+    {
+      id: "citations",
+      label: "Citations",
+      icon: "heroBookOpen",
+      description:
+        "Cite the workflow and platform used to produce the results from this run.",
+    },
   ];
+
+  activeTabInfo = computed(() =>
+    this.tabs.find((tab) => tab.id === this.activeTab())
+  );
 
   constructor() {
     // A job passed through router navigation state lets us render immediately

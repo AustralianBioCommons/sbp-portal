@@ -86,9 +86,7 @@
     <div class="text-4xl font-semibold text-gray-900">
       {{ selectedJob.jobName }}
     </div>
-    <div
-      class="relative w-full overflow-hidden rounded-lg border bg-white shadow-sm"
-    >
+    <div class="relative w-full rounded-lg border bg-white shadow-sm">
       <div class="p-6 space-y-6">
         <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
           @for (item of getSummaryItems(selectedJob); track item.label) {
@@ -101,209 +99,201 @@
           }
         </div>
 
-        <nav
-          class="scrollbar-hidden overflow-x-auto border-b flex"
-          aria-label="Job result tabs"
-        >
-          @for (tab of tabs; track tab.id) {
-          <button
-            type="button"
-            (click)="setActiveTab(tab.id)"
-            class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-transparent border-b-3 py-3 min-w-24 w-24 text-sm font-semibold transition-all"
-            [class.border-sky-500]="activeTab() === tab.id"
-            [class.text-sky-600]="activeTab() === tab.id"
-            [class.border-transparent]="activeTab() !== tab.id"
-            [class.text-gray-500]="activeTab() !== tab.id"
-            [class.hover:border-gray-600]="activeTab() !== tab.id"
-          >
-            <ng-icon [name]="tab.icon" size="20"></ng-icon>
-            {{ tab.label }}
-          </button>
-          }
-        </nav>
-
-        <div class="space-y-6">
-          @switch (activeTab()) { @case ("results") {
-          <div class="font-semibold text-gray-900">{{ resultsHeading() }}</div>
-          @if (isSinglePrediction() && !reportFallback()) {
-          <app-single-prediction-report
-            [runId]="selectedJob.id"
-            [files]="filesItems()"
-            [filesLoading]="filesLoading()"
-            [filesError]="filesError()"
-            (unavailable)="onSinglePredictionReportUnavailable()"
-          ></app-single-prediction-report>
-          } @else { @if (reportError()) {
-          <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
-          >
-            {{ reportError() }}
-          </div>
-          } @else if (reportUrl(); as reportDocumentUrl) {
-          <div class="relative overflow-hidden rounded border bg-white">
-            @if (reportLoading()) {
-            <div
-              class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+        <div class="-mt-6">
+          <div class="sticky top-22 z-20 -mx-6 bg-white px-6 pt-6">
+            <nav
+              class="scrollbar-hidden flex justify-start overflow-x-auto rounded-t-lg border bg-white px-2 pt-1 sm:justify-center"
+              aria-label="Job result tabs"
             >
-              <app-loading message="Loading report..." [inline]="true" />
-            </div>
-            }
-            <iframe
-              class="w-full bg-white"
-              style="height: 100vh; zoom: 0.8"
-              [src]="reportDocumentUrl"
-              [title]="'Job report for ' + selectedJob.jobName"
-              (load)="onReportLoad()"
-              (error)="onReportError()"
-            >
-            </iframe>
-          </div>
-          } @else if (reportLoading()) {
-          <app-loading message="Loading report..." [inline]="true" />
-          } @else {
-          <p class="text-sm text-gray-900 wrap-break-word">
-            No report data is available for this run.
-          </p>
-          } } } @case ("files") {
-          <div class="space-y-2">
-            <div class="font-semibold text-gray-900">Available files</div>
-            <p class="text-sm text-gray-500">
-              Download individual result files from this workflow run.
-            </p>
-          </div>
-          @if (filesError()) {
-          <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
-          >
-            {{ filesError() }}
-          </div>
-          } @else if (filesLoading()) {
-          <app-loading message="Loading files..." [inline]="true" />
-          } @else if (filesItems().length > 0) {
-          <div class="space-y-6">
-            @for (categoryGroup of getFilesByCategory(); track
-            categoryGroup.category) {
-            <section class="space-y-2">
-              <div class="text-sm font-semibold text-gray-900">
-                {{ categoryGroup.category }}
-              </div>
-
-              <ul class="grid gap-2 sm:grid-cols-2">
-                @for (file of categoryGroup.files; track file.url) {
-                <li>
-                  <a
-                    [href]="file.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="flex h-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all"
-                    [title]="'Download ' + file.label"
-                    [attr.aria-label]="'Download ' + file.label"
-                  >
-                    <span
-                      class="min-w-0 flex-1 truncate text-sm font-medium text-sky-600 hover:text-sky-700"
-                    >
-                      {{ file.label }}
-                    </span>
-                    <ng-icon
-                      name="heroArrowDownTray"
-                      size="20"
-                      class="shrink-0 text-sky-600"
-                    />
-                  </a>
-                </li>
-                }
-              </ul>
-            </section>
-            }
-          </div>
-          } @else {
-          <p class="text-sm text-gray-900 wrap-break-word">
-            No files available for this run.
-          </p>
-          } } @case ("settings") {
-          <div class="font-semibold text-gray-900">Run settings</div>
-          @if (settingsError()) {
-          <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
-          >
-            {{ settingsError() }}
-          </div>
-          } @else if (settingsLoading()) {
-          <app-loading message="Loading settings..." [inline]="true" />
-          } @else if (settingsItems().length > 0) {
-          <div class="grid gap-4 grid-cols-2">
-            @for (setting of settingsItems(); track setting.label) {
-            <div class="rounded border bg-gray-50 p-4 space-y-2">
-              <div class="text-xs font-semibold uppercase text-gray-600">
-                {{ setting.label }}
-              </div>
-              @if (setting.url) {
-              <a
-                [href]="setting.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                class="text-sky-600 hover:underline transition-all hover:text-sky-800 text-xs wrap-break-word font-mono"
+              @for (tab of tabs; track tab.id) {
+              <button
+                type="button"
+                (click)="setActiveTab(tab.id)"
+                class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-transparent border-b-3 py-3 min-w-24 w-24 text-sm font-semibold transition-all"
+                [class.border-sky-500]="activeTab() === tab.id"
+                [class.text-sky-600]="activeTab() === tab.id"
+                [class.border-transparent]="activeTab() !== tab.id"
+                [class.text-gray-500]="activeTab() !== tab.id"
+                [class.hover:border-gray-600]="activeTab() !== tab.id"
               >
-                {{ setting.value }}
-              </a>
-              } @else {
-              <div class="text-xs text-gray-900 wrap-break-word font-mono">
-                {{ setting.value }}
+                <ng-icon [name]="tab.icon" size="20"></ng-icon>
+                {{ tab.label }}
+              </button>
+              }
+            </nav>
+          </div>
+
+          <div class="space-y-6 rounded-b-lg border border-t-0 p-6">
+            @if (activeTabInfo(); as tabInfo) {
+            <div class="space-y-2">
+              <div class="font-semibold text-gray-900">{{ tabInfo.label }}</div>
+              @if (tabInfo.description) {
+              <p class="text-sm text-gray-500">{{ tabInfo.description }}</p>
+              }
+            </div>
+            } @switch (activeTab()) { @case ("results") { @if
+            (isSinglePrediction() && !reportFallback()) {
+            <app-single-prediction-report
+              [runId]="selectedJob.id"
+              [files]="filesItems()"
+              [filesLoading]="filesLoading()"
+              [filesError]="filesError()"
+              (unavailable)="onSinglePredictionReportUnavailable()"
+            ></app-single-prediction-report>
+            } @else { @if (reportError()) {
+            <div
+              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+            >
+              {{ reportError() }}
+            </div>
+            } @else if (reportUrl(); as reportDocumentUrl) {
+            <div class="relative overflow-hidden rounded border bg-white">
+              @if (reportLoading()) {
+              <div
+                class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+              >
+                <app-loading message="Loading report..." [inline]="true" />
               </div>
-              } @if (setting.details.length > 0) {
-              <div class="space-y-2">
-                @for (detail of setting.details; track detail) {
-                <p class="text-xs text-gray-900 font-mono wrap-break-word">
-                  {{ detail }}
-                </p>
+              }
+              <iframe
+                class="w-full bg-white"
+                style="height: 100vh; zoom: 0.8"
+                [src]="reportDocumentUrl"
+                [title]="'Job report for ' + selectedJob.jobName"
+                (load)="onReportLoad()"
+                (error)="onReportError()"
+              >
+              </iframe>
+            </div>
+            } @else if (reportLoading()) {
+            <app-loading message="Loading report..." [inline]="true" />
+            } @else {
+            <p class="text-sm text-gray-900 wrap-break-word">
+              No report data is available for this run.
+            </p>
+            } } } @case ("files") { @if (filesError()) {
+            <div
+              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+            >
+              {{ filesError() }}
+            </div>
+            } @else if (filesLoading()) {
+            <app-loading message="Loading files..." [inline]="true" />
+            } @else if (filesItems().length > 0) {
+            <div class="space-y-6">
+              @for (categoryGroup of getFilesByCategory(); track
+              categoryGroup.category) {
+              <section class="space-y-2">
+                <div class="text-sm font-semibold text-gray-900">
+                  {{ categoryGroup.category }}
+                </div>
+
+                <ul class="grid gap-2 sm:grid-cols-2">
+                  @for (file of categoryGroup.files; track file.url) {
+                  <li>
+                    <a
+                      [href]="file.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex h-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all"
+                      [title]="'Download ' + file.label"
+                      [attr.aria-label]="'Download ' + file.label"
+                    >
+                      <span
+                        class="min-w-0 flex-1 truncate text-sm font-medium text-sky-600 hover:text-sky-700"
+                      >
+                        {{ file.label }}
+                      </span>
+                      <ng-icon
+                        name="heroArrowDownTray"
+                        size="20"
+                        class="shrink-0 text-sky-600"
+                      />
+                    </a>
+                  </li>
+                  }
+                </ul>
+              </section>
+              }
+            </div>
+            } @else {
+            <p class="text-sm text-gray-900 wrap-break-word">
+              No files available for this run.
+            </p>
+            } } @case ("settings") { @if (settingsError()) {
+            <div
+              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+            >
+              {{ settingsError() }}
+            </div>
+            } @else if (settingsLoading()) {
+            <app-loading message="Loading settings..." [inline]="true" />
+            } @else if (settingsItems().length > 0) {
+            <div class="grid gap-4 grid-cols-2">
+              @for (setting of settingsItems(); track setting.label) {
+              <div class="rounded border bg-gray-50 p-4 space-y-2">
+                <div class="text-xs font-semibold uppercase text-gray-600">
+                  {{ setting.label }}
+                </div>
+                @if (setting.url) {
+                <a
+                  [href]="setting.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  class="text-sky-600 hover:underline transition-all hover:text-sky-800 text-xs wrap-break-word font-mono"
+                >
+                  {{ setting.value }}
+                </a>
+                } @else {
+                <div class="text-xs text-gray-900 wrap-break-word font-mono">
+                  {{ setting.value }}
+                </div>
+                } @if (setting.details.length > 0) {
+                <div class="space-y-2">
+                  @for (detail of setting.details; track detail) {
+                  <p class="text-xs text-gray-900 font-mono wrap-break-word">
+                    {{ detail }}
+                  </p>
+                  }
+                </div>
                 }
               </div>
               }
             </div>
-            }
-          </div>
-          } @else {
-          <p class="text-sm text-gray-900 wrap-break-word">
-            No settings data is available for this run.
-          </p>
-          } } @case ("logs") {
-          <div class="font-semibold text-gray-900">Logs</div>
-          @if (logsError()) {
-          <div
-            class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
-          >
-            {{ logsError() }}
-          </div>
-          } @else if (logsLoading()) {
-          <app-loading message="Loading logs..." [inline]="true" />
-          } @else if (logsItems().length > 0) {
-          <div
-            class="rounded p-6 bg-gray-900 space-y-2 font-mono text-xs text-white"
-          >
-            @for (line of logsItems(); track line) {
-            <p class="whitespace-pre-wrap wrap-break-word">{{ line }}</p>
-            }
-          </div>
-          } @else {
-          <p class="text-sm text-gray-900 wrap-break-word">
-            No logs are available for this run.
-          </p>
-          } } @case ("citations") {
-          <div class="space-y-2">
-            <div class="font-semibold text-gray-900">Citations</div>
-            <p class="text-sm text-gray-500">
-              Cite the workflow and platform used to produce the results from
-              this run.
+            } @else {
+            <p class="text-sm text-gray-900 wrap-break-word">
+              No settings data is available for this run.
             </p>
-          </div>
-          <ul class="space-y-2 list-disc pl-6 text-sm">
-            @for (citation of getCitations(selectedJob); track citation) {
-            <li>{{ citation }}</li>
-            }
-          </ul>
+            } } @case ("logs") { @if (logsError()) {
+            <div
+              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+            >
+              {{ logsError() }}
+            </div>
+            } @else if (logsLoading()) {
+            <app-loading message="Loading logs..." [inline]="true" />
+            } @else if (logsItems().length > 0) {
+            <div
+              class="rounded p-6 bg-gray-900 space-y-2 font-mono text-xs text-white"
+            >
+              @for (line of logsItems(); track line) {
+              <p class="whitespace-pre-wrap wrap-break-word">{{ line }}</p>
+              }
+            </div>
+            } @else {
+            <p class="text-sm text-gray-900 wrap-break-word">
+              No logs are available for this run.
+            </p>
+            } } @case ("citations") {
+            <ul class="space-y-2 list-disc pl-6 text-sm">
+              @for (citation of getCitations(selectedJob); track citation) {
+              <li>{{ citation }}</li>
+              }
+            </ul>
 
-          } }
+            } }
+          </div>
         </div>
       </div>
     </div>

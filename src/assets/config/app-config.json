@@ -5,7 +5,7 @@
     "clientId": "VgTSGK8Ph92r8mVhmVvQDrxGzbWX0vCm",
     "audience": "https://dev.api.aai.test.biocommons.org.au"
   },
-  "apiBaseUrl": "https://api.dev.sbp.test.biocommons.org.au",
+  "apiBaseUrl": "http://localhost:3000",
   "profileUrl": "https://dev.portal.aai.test.biocommons.org.au/profile",
   "rolesClaim": "https://biocommons.org.au/roles",
   "workflowRole": "biocommons/group/sbp_workflow_execution"

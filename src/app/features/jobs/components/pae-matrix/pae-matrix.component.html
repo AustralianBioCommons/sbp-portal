@@ -14,19 +14,39 @@
 } @else if (loading()) {
 <app-loading message="Loading PAE matrix..." [inline]="true"></app-loading>
 } @else if (matrix()) {
-<div class="space-y-4">
+<div class="space-y-6">
   @if (countMismatch()) {
   <p
     class="rounded border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800"
   >
-    The structure has {{ residues().length }} polymer residues but the matrix
-    covers {{ size() }}, so residue labels may be offset and cross-highlighting
-    is turned off.
+    The structure accounts for {{ residues().length }} positions but the matrix
+    covers {{ size() }}, so labels may be offset and cross-highlighting is
+    turned off.
   </p>
   }
 
   <div #wrapper class="w-full overflow-hidden">
     <div class="mx-auto w-fit space-y-6">
+      <div
+        class="space-y-2"
+        [style.margin-left.px]="plotRect().left"
+        [style.width.px]="plotRect().side"
+      >
+        <p class="text-center text-xs font-medium">
+          Expected position error (Ångströms)
+        </p>
+        <div
+          class="h-6 border"
+          [style.background]="legendGradient"
+          aria-hidden="true"
+        ></div>
+        <div class="flex justify-between text-xs text-gray-500 tabular-nums">
+          @for (tick of legendTicks; track tick) {
+          <span>{{ tick }}</span>
+          }
+        </div>
+      </div>
+
       <div class="relative">
         <canvas #heatmap class="block" aria-hidden="true"></canvas>
 
@@ -49,12 +69,13 @@
           (pointercancel)="onPointerUp()"
           (pointerleave)="onPointerLeave()"
           (keydown)="onKeyDown($event)"
+          (focus)="onFocus()"
           (blur)="onBlur()"
         ></div>
 
         @if (tooltipPlacement(); as placement) { @if (tooltipValue() !== null) {
         <div
-          class="pointer-events-none absolute z-10 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 shadow-md"
+          class="pointer-events-none absolute z-30 w-max rounded-md border bg-white px-2.5 py-1.5 shadow-md"
           [style.left.px]="placement.x"
           [style.top.px]="placement.y"
           [style.transform]="placement.transform"
@@ -68,28 +89,18 @@
             {{ residueLabel(tooltip()!.col) }}
           </div>
         </div>
-        } }
-      </div>
-
-      <!-- Expected position error scale -->
-      <div
-        class="mt-3 space-y-1"
-        [style.margin-left.px]="plotRect().left"
-        [style.width.px]="plotRect().side"
-      >
-        <div
-          class="h-4 border border-gray-300"
-          [style.background]="legendGradient"
-          aria-hidden="true"
-        ></div>
-        <div class="flex justify-between text-xs text-gray-500 tabular-nums">
-          @for (tick of legendTicks; track tick) {
-          <span>{{ tick }}</span>
-          }
-        </div>
-        <p class="text-center text-xs font-medium">
-          Expected position error (Ångströms)
-        </p>
+        } } @if (selectionHandle(); as handle) {
+        <button
+          type="button"
+          class="absolute z-20 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+          [style.left.px]="handle.x"
+          [style.top.px]="handle.y"
+          aria-label="Clear selection"
+          (click)="clearSelection()"
+        >
+          <ng-icon name="heroXMark" size="14"></ng-icon>
+        </button>
+        }
       </div>
     </div>
   </div>

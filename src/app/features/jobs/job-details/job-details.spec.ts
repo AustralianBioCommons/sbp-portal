@@ -930,7 +930,6 @@ describe("JobDetailsComponent", () => {
     expect(component.isSinglePrediction()).toBeTrue();
     expect(component.reportFallback()).toBeFalse();
     expect(resultsService.getJobReport).not.toHaveBeenCalled();
-    expect(component.resultsHeading()).toBe("Prediction Results");
   });
 
   it("falls back to the packaged report when the interactive view cannot render", () => {
@@ -946,7 +945,6 @@ describe("JobDetailsComponent", () => {
     expect(resultsService.getJobReport).toHaveBeenCalledWith(
       singlePredictionJob.id
     );
-    expect(component.resultsHeading()).toBe("Design Summary Report");
     expect(
       fixture.debugElement.query(
         By.directive(SinglePredictionReportStubComponent)

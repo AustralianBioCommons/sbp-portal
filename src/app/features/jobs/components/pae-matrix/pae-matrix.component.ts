@@ -1,9 +1,11 @@
 import {
   Component,
+  DOCUMENT,
   ElementRef,
   OnDestroy,
   computed,
   effect,
+  inject,
   input,
   output,
   signal,
@@ -11,14 +13,14 @@ import {
   viewChild,
 } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroExclamationCircle } from "@ng-icons/heroicons/outline";
+import { heroExclamationCircle, heroXMark } from "@ng-icons/heroicons/outline";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
 import {
   ChainSegment,
   PaeMatrix,
   ResidueRef,
   buildChainSegments,
-  formatResidueToken,
+  formatTokenLabel,
 } from "../../shared/prediction-results.utils";
 
 /** A rectangular block of the matrix: rows [rowStart, rowEnd] x cols [colStart, colEnd]. */
@@ -56,23 +58,20 @@ const RAMP = [
 
 /** Warm accent for selection, so it never reads as a value on the green ramp. */
 const SELECTION_INK = "#eb6834";
-/* text-gray-900 / text-gray-600 / border-gray-300, as hex rather than the
-   theme's oklch() values because canvas oklch parsing is not universal. */
-const AXIS_INK = "#101828";
-const MUTED_INK = "#4a5565";
-const GRID_INK = "#d1d5dc";
-/** text-xs, with axis titles at font-medium (the 500 in the shorthand). */
-const AXIS_TICK_FONT = '12px system-ui, -apple-system, "Segoe UI", sans-serif';
+const SELECTION_LINE = 1.5;
+
+const AXIS_INK = "#101828"; // text-gray-900
+const MUTED_INK = "#4a5565"; // text-gray-600
+const GRID_INK = "#d1d5dc"; // border-gray-300
+const AXIS_TICK_FONT = '12px system-ui, -apple-system, "Segoe UI", sans-serif'; // text-xs font-sans
 const AXIS_TITLE_FONT =
-  '500 12px system-ui, -apple-system, "Segoe UI", sans-serif';
-const SURFACE = "#ffffff";
+  '500 12px system-ui, -apple-system, "Segoe UI", sans-serif'; // text-xs font-medium font-sans
+const CHAIN_BOUNDARY_INK = "#101828"; // text-gray-900
 
 const TICK_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000];
 /** Baseline of an axis title, measured back from the outer edge of its gutter. */
 const AXIS_TITLE_GAP = 8;
-/** Gap between a tick mark and its label, the same on both axes. */
 const AXIS_LABEL_GAP = 6;
-/** Length of a tick mark, drawn outward from the plot edge. */
 const AXIS_TICK_LENGTH = 4;
 /** Distance from the canvas edge to the rotated y-axis title. */
 const AXIS_TITLE_INSET = 12;
@@ -82,9 +81,10 @@ const MAX_PLOT_SIDE = 460;
 @Component({
   selector: "app-pae-matrix",
   imports: [NgIconComponent, LoadingComponent],
-  providers: [provideIcons({ heroExclamationCircle })],
+  providers: [provideIcons({ heroExclamationCircle, heroXMark })],
   templateUrl: "./pae-matrix.component.html",
   styleUrl: "./pae-matrix.component.scss",
+  host: { class: "block" },
 })
 export class PaeMatrixComponent implements OnDestroy {
   matrix = input<PaeMatrix | null>(null);
@@ -98,6 +98,9 @@ export class PaeMatrixComponent implements OnDestroy {
   /** Emits the residue indices covered by a matrix selection (rows and columns). */
   selectionChange = output<number[]>();
 
+  private readonly document = inject(DOCUMENT);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
   private static instanceCount = 0;
   private readonly uid = `pae-matrix-${++PaeMatrixComponent.instanceCount}`;
   readonly instructionsId = `${this.uid}-instructions`;
@@ -106,10 +109,12 @@ export class PaeMatrixComponent implements OnDestroy {
     viewChild<ElementRef<HTMLCanvasElement>>("heatmap");
   private readonly wrapperRef = viewChild<ElementRef<HTMLElement>>("wrapper");
 
-  /** Committed matrix selection, kept so the reader can see the block they chose. */
+  /** Committed matrix selection. */
   readonly region = signal<PaeRegion | null>(null);
   /** Keyboard cursor cell; also set on pointer hover so both report the same value. */
   readonly cursor = signal<{ row: number; col: number } | null>(null);
+  /** Draw the cursor box only while focused for keyboard navigation. */
+  private readonly focused = signal(false);
   readonly tooltip = signal<{
     row: number;
     col: number;
@@ -122,7 +127,11 @@ export class PaeMatrixComponent implements OnDestroy {
   private readonly plotSide = signal(0);
   /** Previous external highlight, so only real changes invalidate a local block. */
   private lastHighlight: ReadonlySet<number> | null = null;
-  private drag: { row: number; col: number } | null = null;
+  /** A signal so the clear handle can wait for the drag to finish. */
+  private readonly drag = signal<{ row: number; col: number } | null>(null);
+  private dragMoved = false;
+  /** Restored when a press turns out to be a click rather than a drag. */
+  private regionBeforeDrag: PaeRegion | null = null;
   /**
    * Fixed corner a Shift+Arrow selection grows from. Held separately because the
    * region's corners are sorted, so an anchor derived from them would drift when
@@ -149,10 +158,42 @@ export class PaeMatrixComponent implements OnDestroy {
     () => this.size() > 0 && this.residues().length === this.size()
   );
 
-  /** True when the structure and the matrix disagree on residue count. */
   readonly countMismatch = computed(() => {
     const residueCount = this.residues().length;
     return residueCount > 0 && this.size() > 0 && residueCount !== this.size();
+  });
+
+  readonly numberByResidue = computed(
+    () => this.chainSegments().length === 1 && this.interactive()
+  );
+
+  readonly axisTicks = computed<{ index: number; label: string }[]>(() => {
+    const size = this.size();
+    if (size === 0) return [];
+
+    const step = tickStep(size);
+    const byResidue = this.numberByResidue();
+    const residues = this.residues();
+    const ticks: { index: number; label: string }[] = [];
+
+    if (byResidue) {
+      for (let index = 0; index < size; index++) {
+        const seq = residues[index].seq;
+        if (seq % step === 0) ticks.push({ index, label: String(seq) });
+      }
+    } else {
+      for (let index = step - 1; index < size; index += step) {
+        ticks.push({ index, label: String(index + 1) });
+      }
+    }
+
+    if (ticks[0] && ticks[0].index >= step / 2) {
+      ticks.unshift({
+        index: 0,
+        label: byResidue ? String(residues[0].seq) : "1",
+      });
+    }
+    return ticks;
   });
 
   readonly highlightSet = computed(() => new Set(this.highlightedIndices()));
@@ -186,6 +227,39 @@ export class PaeMatrixComponent implements OnDestroy {
     return tooltip ? this.valueAt(tooltip.row, tooltip.col) : null;
   });
 
+  /**
+   * Show the clear handle inside the selection's top-right corner.
+   * Hide it while dragging and for single-cell selections, where it would cover the cell.
+   */
+  readonly selectionHandle = computed(() => {
+    const region = this.region();
+    const size = this.size();
+    const side = this.plotSide();
+    if (!region || this.drag() || size === 0 || side <= 0) return null;
+    if (
+      region.rowStart === region.rowEnd &&
+      region.colStart === region.colEnd
+    ) {
+      return null;
+    }
+
+    const padding = this.padding();
+    const cell = side / size;
+    const inset = 11;
+    return {
+      x: clamp(
+        padding.left + (region.colEnd + 1) * cell,
+        padding.left + inset,
+        padding.left + side - inset
+      ),
+      y: clamp(
+        padding.top + region.rowStart * cell,
+        padding.top + inset,
+        padding.top + side - inset
+      ),
+    };
+  });
+
   /** Keeps the tooltip inside the plot by flipping it across the pointer. */
   readonly tooltipPlacement = computed(() => {
     const tooltip = this.tooltip();
@@ -208,7 +282,7 @@ export class PaeMatrixComponent implements OnDestroy {
     const size = this.size();
     if (!stats || size === 0) return "Predicted aligned error matrix";
     return (
-      `Predicted aligned error matrix, ${size} by ${size} residues. ` +
+      `Predicted aligned error matrix, ${size} by ${size} positions. ` +
       `Values range from ${stats.min.toFixed(2)} to ${stats.max.toFixed(
         2
       )} angstroms, ` +
@@ -226,7 +300,6 @@ export class PaeMatrixComponent implements OnDestroy {
     )}, predicted aligned error ${value.toFixed(2)} angstroms.`;
   });
 
-  /** Colour bar stops, mirroring the ramp used for the cells. */
   readonly legendGradient = `linear-gradient(to right, ${RAMP.join(", ")})`;
   readonly legendTicks = [0, 5, 10, 15, 20, 25, 30];
 
@@ -238,13 +311,13 @@ export class PaeMatrixComponent implements OnDestroy {
       untracked(() => this.observeResize(wrapper));
     });
 
-    // Redraw whenever the data, the highlight, the selection or the size changes.
     effect(() => {
       this.matrix();
       this.residues();
       this.highlightSet();
       this.region();
       this.cursor();
+      this.focused();
       this.plotSide();
       this.canvasRef();
       this.scheduleDraw();
@@ -265,6 +338,22 @@ export class PaeMatrixComponent implements OnDestroy {
         this.region.set(null);
       }
     });
+
+    // Escape works whenever a block is selected, regardless of focus. A drag ends on
+    // the canvas, and focusing it programmatically would leave a focus ring behind.
+    effect((onCleanup) => {
+      if (!this.region()) return;
+
+      const clear = (event: KeyboardEvent) => {
+        if (event.key !== "Escape" || isTyping(event.target)) return;
+        // Let the plot's own keydown handler handle events from inside it.
+        if (this.host.nativeElement.contains(event.target as Node)) return;
+        this.clearSelection();
+      };
+
+      this.document.addEventListener("keydown", clear);
+      onCleanup(() => this.document.removeEventListener("keydown", clear));
+    });
   }
 
   ngOnDestroy(): void {
@@ -281,16 +370,13 @@ export class PaeMatrixComponent implements OnDestroy {
 
     (event.target as HTMLElement).setPointerCapture?.(event.pointerId);
     event.preventDefault();
-    this.drag = cell;
+    this.drag.set(cell);
     // A later Shift+Arrow extends from where the drag began.
     this.keyAnchor = cell;
     this.cursor.set(cell);
-    this.region.set({
-      rowStart: cell.row,
-      rowEnd: cell.row,
-      colStart: cell.col,
-      colEnd: cell.col,
-    });
+    // No region yet: a press that never moves is a click, not a selection, so
+    // whatever was already selected is left alone until the pointer travels.
+    this.regionBeforeDrag = this.region();
   }
 
   onPointerMove(event: PointerEvent): void {
@@ -301,17 +387,23 @@ export class PaeMatrixComponent implements OnDestroy {
       return;
     }
 
+    // Pointer capture keeps a drag reporting from outside the plot, so the
+    // readout is pinned to the edge rather than following over the axes.
     const padding = this.padding();
+    const side = this.plotSide();
     this.tooltip.set({
       ...cell,
-      x: event.offsetX + padding.left,
-      y: event.offsetY + padding.top,
+      x: padding.left + clamp(event.offsetX, 0, side),
+      y: padding.top + clamp(event.offsetY, 0, side),
     });
 
-    const drag = this.drag;
+    const drag = this.drag();
     if (!drag) return;
 
     this.cursor.set(cell);
+    if (cell.row === drag.row && cell.col === drag.col) return;
+
+    this.dragMoved = true;
     this.region.set({
       rowStart: Math.min(drag.row, cell.row),
       rowEnd: Math.max(drag.row, cell.row),
@@ -321,8 +413,18 @@ export class PaeMatrixComponent implements OnDestroy {
   }
 
   onPointerUp(): void {
-    if (!this.drag) return;
-    this.drag = null;
+    if (!this.drag()) return;
+    this.drag.set(null);
+
+    if (!this.dragMoved) {
+      // A click, so restore whatever the press interrupted and emit nothing.
+      this.region.set(this.regionBeforeDrag);
+      this.regionBeforeDrag = null;
+      return;
+    }
+
+    this.dragMoved = false;
+    this.regionBeforeDrag = null;
     this.emitRegionSelection();
   }
 
@@ -385,7 +487,12 @@ export class PaeMatrixComponent implements OnDestroy {
     this.emitRegionSelection();
   }
 
+  onFocus(): void {
+    this.focused.set(true);
+  }
+
   onBlur(): void {
+    this.focused.set(false);
     this.tooltip.set(null);
   }
 
@@ -400,7 +507,7 @@ export class PaeMatrixComponent implements OnDestroy {
   residueLabel(index: number): string {
     const residues = this.residues();
     const residue = residues[index];
-    return residue ? formatResidueToken(residue) : `Residue ${index + 1}`;
+    return residue ? formatTokenLabel(residue) : `Residue ${index + 1}`;
   }
 
   valueAt(row: number, col: number): number | null {
@@ -500,7 +607,7 @@ export class PaeMatrixComponent implements OnDestroy {
       event.offsetY >= 0 &&
       event.offsetX < side &&
       event.offsetY < side;
-    if (!inside && !this.drag) return null;
+    if (!inside && !this.drag()) return null;
 
     return {
       row: clamp(Math.floor((event.offsetY / side) * size), 0, size - 1),
@@ -581,8 +688,8 @@ export class PaeMatrixComponent implements OnDestroy {
     );
 
     this.drawChainSeparators(ctx, padding.left, padding.top, side, matrix.size);
-    this.drawSelection(ctx, padding.left, padding.top, side, matrix.size);
     this.drawAxes(ctx, padding, side, matrix.size);
+    this.drawSelection(ctx, padding.left, padding.top, side, matrix.size);
   }
 
   /** Rasterise the matrix once per dataset at one pixel per cell. */
@@ -624,10 +731,10 @@ export class PaeMatrixComponent implements OnDestroy {
     if (segments.length < 2) return;
 
     ctx.save();
-    ctx.strokeStyle = SURFACE;
+    ctx.strokeStyle = CHAIN_BOUNDARY_INK;
     ctx.lineWidth = 1;
     for (const segment of segments.slice(1)) {
-      const offset = (segment.start / size) * side;
+      const offset = Math.round((segment.start / size) * side) + 0.5;
       ctx.beginPath();
       ctx.moveTo(left + offset, top);
       ctx.lineTo(left + offset, top + side);
@@ -658,22 +765,35 @@ export class PaeMatrixComponent implements OnDestroy {
       const y = top + region.rowStart * cell;
       const width = Math.max((region.colEnd - region.colStart + 1) * cell, 2);
       const height = Math.max((region.rowEnd - region.rowStart + 1) * cell, 2);
+
+      ctx.save();
+      ctx.fillStyle = SELECTION_INK;
+      ctx.globalAlpha = 0.22;
+      ctx.fillRect(x, y, width, height);
+      ctx.restore();
+
       ctx.save();
       ctx.strokeStyle = SELECTION_INK;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, width, height);
+      ctx.lineWidth = SELECTION_LINE;
+      ctx.strokeRect(
+        x + SELECTION_LINE / 2,
+        y + SELECTION_LINE / 2,
+        Math.max(width - SELECTION_LINE, 1),
+        Math.max(height - SELECTION_LINE, 1)
+      );
       ctx.restore();
     }
 
-    if (cursor && !region) {
+    if (cursor && !region && this.focused()) {
+      const box = Math.max(cell, 4);
       ctx.save();
       ctx.strokeStyle = SELECTION_INK;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = SELECTION_LINE;
       ctx.strokeRect(
-        left + cursor.col * cell,
-        top + cursor.row * cell,
-        Math.max(cell, 4),
-        Math.max(cell, 4)
+        left + cursor.col * cell + SELECTION_LINE / 2,
+        top + cursor.row * cell + SELECTION_LINE / 2,
+        Math.max(box - SELECTION_LINE, 1),
+        Math.max(box - SELECTION_LINE, 1)
       );
       ctx.restore();
     }
@@ -697,10 +817,8 @@ export class PaeMatrixComponent implements OnDestroy {
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
 
-    const step = tickStep(size);
-    for (let index = 0; index < size; index += step) {
+    for (const { index, label } of this.axisTicks()) {
       const offset = ((index + 0.5) / size) * side;
-      const label = this.tickLabel(index);
 
       ctx.beginPath();
       ctx.moveTo(left + offset, top + side);
@@ -722,13 +840,13 @@ export class PaeMatrixComponent implements OnDestroy {
       ctx.textBaseline = "top";
     }
 
-    // Chains appear only as the separator lines inside the plot, no letters.
+    const text = this.numberByResidue() ? "residue" : "position";
     ctx.fillStyle = AXIS_INK;
     ctx.font = AXIS_TITLE_FONT;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.fillText(
-      "Scored residue",
+      `Scored ${text}`,
       left + side / 2,
       top + side + padding.bottom - AXIS_TITLE_GAP
     );
@@ -736,15 +854,10 @@ export class PaeMatrixComponent implements OnDestroy {
     ctx.save();
     ctx.translate(AXIS_TITLE_INSET, top + side / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText("Aligned residue", 0, 0);
+    ctx.fillText(`Aligned ${text}`, 0, 0);
     ctx.restore();
 
     ctx.restore();
-  }
-
-  private tickLabel(index: number): string {
-    const residue = this.residues()[index];
-    return residue ? String(residue.seq) : String(index + 1);
   }
 
   private statsFor(matrix: PaeMatrix, region: PaeRegion): BlockStats | null {
@@ -777,6 +890,16 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
+/** Escape belongs to whatever the reader is editing, not to the plot. */
+function isTyping(target: EventTarget | null): boolean {
+  const element = target as HTMLElement | null;
+  if (!element) return false;
+  return (
+    element.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(element.tagName)
+  );
+}
+
 function sameSet(a: ReadonlySet<number>, b: ReadonlySet<number>): boolean {
   if (a.size !== b.size) return false;
   for (const value of a) {
@@ -786,9 +909,7 @@ function sameSet(a: ReadonlySet<number>, b: ReadonlySet<number>): boolean {
 }
 
 /**
- * Draw an x-axis tick label centred on its tick, right-aligning the outermost one
- * instead of overhanging the plot — otherwise the plot needs a right-hand gutter
- * to hold one label's overhang.
+ * Centred on its tick, except the last label, which is right-aligned to avoid overflow.
  */
 function drawXTickLabel(
   ctx: CanvasRenderingContext2D,

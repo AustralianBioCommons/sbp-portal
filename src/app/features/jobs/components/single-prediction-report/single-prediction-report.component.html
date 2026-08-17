@@ -21,11 +21,10 @@
     the Files tab.
   </p>
   } @else {
-  <div class="border rounded-lg p-6 space-y-12">
+  <div class="space-y-12">
     @if (scores().length > 0) {
-    <!-- Not a dl: metric and value read as one phrase, not a term/definition pair. -->
     <div
-      class="flex flex-wrap items-center justify-center border rounded-lg p-4 bg-gray-50 gap-x-6 gap-y-2"
+      class="flex flex-wrap items-center justify-center border border-sky-200 text-sky-800 rounded-lg p-4 bg-sky-50 gap-x-6 gap-y-2"
     >
       <div class="flex flex-wrap items-center gap-6 text-sm">
         @for (score of scores(); track score.label) {
@@ -40,7 +39,7 @@
     }
 
     <!-- 60/40: the structure viewer gets the larger share -->
-    <div class="grid gap-12 lg:grid-cols-[3fr_2fr] lg:items-center">
+    <div class="grid gap-12 lg:grid-cols-[3fr_2fr] lg:items-start">
       <!-- min-w-0 so the canvas cannot widen the column into a page scroll. -->
       <section class="min-w-0 space-y-2" aria-label="Predicted structure">
         @if (structureError()) {
@@ -76,6 +75,7 @@
 
         <div class="relative h-128 overflow-hidden rounded-lg border bg-white">
           <app-molstar-viewer
+            #viewer
             class="absolute inset-0"
             [structureSource]="structureSource()"
             [enableUpload]="false"
@@ -84,11 +84,35 @@
             representation="cartoon"
             colorTheme="plddt"
             [showSequencePanel]="false"
+            [enablePicking]="false"
+            [isolateSelection]="true"
             hint=""
-            (residuesSelected)="onViewerResiduesSelected($event)"
             (residueIndexDetected)="onResidueIndexDetected($event)"
             (loadError)="onViewerLoadError()"
           ></app-molstar-viewer>
+
+          <div
+            class="absolute right-4 top-4 z-10 flex flex-col items-center gap-4"
+          >
+            <button
+              type="button"
+              class="flex items-center rounded-lg border bg-white p-1.5 text-gray-600 shadow-sm transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              aria-label="Reset the view"
+              (click)="viewer.resetCamera()"
+            >
+              <ng-icon name="heroArrowPath" size="20"></ng-icon>
+            </button>
+
+            <app-tooltip [message]="viewerHelp">
+              <div
+                class="flex items-center rounded-full bg-white border p-1.5 text-gray-500"
+                tabindex="0"
+                aria-label="How to use the 3D viewer"
+              >
+                <ng-icon name="heroLifebuoy" size="22"></ng-icon>
+              </div>
+            </app-tooltip>
+          </div>
         </div>
         }
       </section>
@@ -119,6 +143,7 @@
         <app-msa-coverage
           [coverage]="msaCoverage()"
           [errorMessage]="msaError()"
+          [centered]="!hasInterfaceMatrices()"
         ></app-msa-coverage>
       </section>
       }

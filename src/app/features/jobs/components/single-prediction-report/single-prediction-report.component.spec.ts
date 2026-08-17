@@ -29,10 +29,14 @@ class MolstarViewerStubComponent {
   );
   colorTheme = input<"default" | "plddt">("default");
   showSequencePanel = input(true);
+  enablePicking = input(true);
+  isolateSelection = input(false);
   hint = input("");
-  residuesSelected = output<string>();
   residueIndexDetected = output<ResidueRef[]>();
   loadError = output<string>();
+  resetCamera(): void {
+    /* the real viewer moves the camera; nothing to do without one */
+  }
 }
 
 const STRUCTURE_KEY = "run-1/boltz/top_ranked_structures/sample.cif";
@@ -347,13 +351,13 @@ describe("SinglePredictionReportComponent", () => {
     expect(component.msaError()).toBeNull();
   });
 
-  it("arranges chain pairs as a symmetric matrix", () => {
+  it("arranges chain pairs as a matrix, leaving unlisted directions blank", () => {
     render([...files, ipsaeFile]);
 
     const matrix = component.ipsaeMatrix();
     expect(matrix.chains).toEqual(["A", "B", "C"]);
     expect(matrix.rows[0]).toEqual([null, 0.2, 0.8]);
-    expect(matrix.rows[1][0]).toBe(0.2);
+    expect(matrix.rows[1][0]).toBeNull();
   });
 
   it("builds the chainwise ipTM matrix alongside ipSAE", () => {
@@ -392,16 +396,7 @@ describe("SinglePredictionReportComponent", () => {
     expect(component.paeMatrix()?.size).toBe(3);
   });
 
-  // --- Bidirectional selection ---------------------------------------------
-
-  it("mirrors a viewer selection onto the matrix", () => {
-    render();
-    component.onResidueIndexDetected(residues);
-
-    component.onViewerResiduesSelected("A2,A3");
-
-    expect(component.selectedIndices()).toEqual([1, 2]);
-  });
+  // --- PAE Matrix drives the viewer --------------------------------------------
 
   it("mirrors a matrix selection onto the viewer as residue tokens", () => {
     render();
@@ -411,27 +406,6 @@ describe("SinglePredictionReportComponent", () => {
 
     expect(component.selectedIndices()).toEqual([0, 1]);
     expect(component.viewerSelectionRequest()).toEqual({ tokens: "A1-A2" });
-  });
-
-  it("ignores the viewer echoing back a selection it was just given", () => {
-    render();
-    component.onResidueIndexDetected(residues);
-    component.onMatrixSelectionChange([0, 1]);
-
-    // Mol* reports the same residues individually rather than as a range.
-    component.onViewerResiduesSelected("A1,A2");
-
-    expect(component.selectedIndices()).toEqual([0, 1]);
-  });
-
-  it("accepts a genuinely different viewer selection after a matrix selection", () => {
-    render();
-    component.onResidueIndexDetected(residues);
-    component.onMatrixSelectionChange([0, 1]);
-
-    component.onViewerResiduesSelected("A3");
-
-    expect(component.selectedIndices()).toEqual([2]);
   });
 
   it("clears the selection in both views when the matrix clears", () => {
@@ -516,6 +490,61 @@ describe("SinglePredictionReportComponent", () => {
 
     component.onResidueIndexDetected(residues);
     fixture.detectChanges();
+
+    expect(component.tokenMismatch()).toBeFalse();
+    expect(unavailable).not.toHaveBeenCalled();
+  });
+
+  const cif = (rows: string[]) =>
+    [
+      "data_sample",
+      "loop_",
+      "_atom_site.group_PDB",
+      "_atom_site.id",
+      "_atom_site.label_atom_id",
+      "_atom_site.label_comp_id",
+      "_atom_site.auth_seq_id",
+      "_atom_site.auth_asym_id",
+      ...rows,
+    ].join("\n");
+
+  const renderWithStructure = (structure: string) => {
+    resultsService.getResultFileText.and.callFake((_runId, key) =>
+      key === PAE_KEY ? of(PAE_TSV) : of(structure)
+    );
+    fixture = TestBed.createComponent(SinglePredictionReportComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput("runId", "run-1");
+    fixture.componentRef.setInput("files", files);
+    const unavailable = jasmine.createSpy("unavailable");
+    component.unavailable.subscribe(unavailable);
+    fixture.detectChanges();
+    return unavailable;
+  };
+
+  it("falls back on the first render when the counts disagree", () => {
+    const unavailable = renderWithStructure(
+      cif(["ATOM 1 CA MET 1 A", "ATOM 2 CA GLY 2 A"])
+    );
+
+    expect(component.residueIndex()).toEqual([]);
+    expect(component.tokenMismatch()).toBeTrue();
+    expect(unavailable).toHaveBeenCalled();
+  });
+
+  it("keeps a run whose ligand atoms make up the matrix", () => {
+    const unavailable = renderWithStructure(
+      cif(["ATOM 1 CA MET 1 A", "HETATM 2 C7 LIG 1 B", "HETATM 3 C8 LIG 1 B"])
+    );
+
+    expect(component.tokenMismatch()).toBeFalse();
+    expect(unavailable).not.toHaveBeenCalled();
+  });
+
+  it("accepts a plain polymer run counted from the file", () => {
+    const unavailable = renderWithStructure(
+      cif(["ATOM 1 CA MET 1 A", "ATOM 2 CA GLY 2 A", "ATOM 3 CA SER 3 A"])
+    );
 
     expect(component.tokenMismatch()).toBeFalse();
     expect(unavailable).not.toHaveBeenCalled();
