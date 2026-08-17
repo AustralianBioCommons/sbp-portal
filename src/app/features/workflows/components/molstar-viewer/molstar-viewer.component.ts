@@ -369,10 +369,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     if (components.length === 0) return;
 
     try {
-      if (selected.length === 0) {
-        await clearStructureOverpaint(this.plugin, components);
-        return;
-      }
+      await clearStructureOverpaint(this.plugin, components);
+      if (selected.length === 0) return;
 
       const byStructure = new Map<Structure, StructureElement.Loci>();
       for (const loci of selected) {

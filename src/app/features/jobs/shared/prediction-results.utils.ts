@@ -283,7 +283,11 @@ function topRankedColumn(rows: readonly string[]): number {
 
 export interface ChainPairMatrix {
   chains: string[];
-  /** Row-major, symmetric; null on the diagonal and for any missing pair. */
+  /**
+   * Row-major and directional: `rows[i][j]` is chain i against chain j, which may
+   * differ from `rows[j][i]`. Null on the diagonal and for any direction the file
+   * leaves out, so never fill a null from its opposite.
+   */
   rows: Array<Array<number | null>>;
 }
 

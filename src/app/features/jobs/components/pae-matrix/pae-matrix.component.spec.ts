@@ -969,5 +969,24 @@ describe("PaeMatrixComponent", () => {
       expect(component.numberByResidue()).toBeFalse();
       expect(labels(withLigand)[0]).toBe("1");
     });
+
+    it("counts positions for a single chain of ligand atoms", () => {
+      const atomsOnly = Array.from({ length: 301 }, (_, i) => ({
+        chain: "A",
+        seq: 1,
+        atom: `C${i + 1}`,
+      }));
+
+      expect(labels(atomsOnly)).toEqual([
+        "1",
+        "50",
+        "100",
+        "150",
+        "200",
+        "250",
+        "300",
+      ]);
+      expect(component.numberByResidue()).toBeFalse();
+    });
   });
 });

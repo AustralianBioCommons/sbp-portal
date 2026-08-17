@@ -164,7 +164,10 @@ export class PaeMatrixComponent implements OnDestroy {
   });
 
   readonly numberByResidue = computed(
-    () => this.chainSegments().length === 1 && this.interactive()
+    () =>
+      this.chainSegments().length === 1 &&
+      this.interactive() &&
+      this.residues().every((residue) => !residue.atom)
   );
 
   readonly axisTicks = computed<{ index: number; label: string }[]>(() => {
