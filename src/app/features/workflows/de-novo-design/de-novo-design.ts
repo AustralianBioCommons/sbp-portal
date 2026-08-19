@@ -110,7 +110,7 @@ export default class DeNovoDesignComponent
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
-    "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/schema_input.json";
+    "https://raw.githubusercontent.com/AustralianBioCommons/sbp-bindflow/refs/heads/dev/assets/schema_input.json";
 
   // Job Name (reactive form field)
   private readonly fb = inject(NonNullableFormBuilder);
