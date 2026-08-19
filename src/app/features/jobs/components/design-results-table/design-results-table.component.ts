@@ -59,25 +59,25 @@ export class DesignResultsTableComponent {
   });
 
   readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.rows().length / this.pageSize())),
+    Math.max(1, Math.ceil(this.rows().length / this.pageSize()))
   );
 
   readonly currentPage = computed(() =>
-    Math.min(Math.max(1, this.page()), this.totalPages()),
+    Math.min(Math.max(1, this.page()), this.totalPages())
   );
 
   readonly firstRowNumber = computed(() =>
     this.rows().length === 0
       ? 0
-      : (this.currentPage() - 1) * this.pageSize() + 1,
+      : (this.currentPage() - 1) * this.pageSize() + 1
   );
 
   readonly lastRowNumber = computed(() =>
-    Math.min(this.currentPage() * this.pageSize(), this.rows().length),
+    Math.min(this.currentPage() * this.pageSize(), this.rows().length)
   );
 
   readonly pageRows = computed(() =>
-    this.sortedRows().slice(this.firstRowNumber() - 1, this.lastRowNumber()),
+    this.sortedRows().slice(this.firstRowNumber() - 1, this.lastRowNumber())
   );
 
   readonly hasPreviousPage = computed(() => this.currentPage() > 1);
@@ -93,7 +93,7 @@ export class DesignResultsTableComponent {
   toggleSort(column: DesignColumn): void {
     if (this.sortKey() === column.key) {
       this.sortDirection.update((direction) =>
-        direction === "asc" ? "desc" : "asc",
+        direction === "asc" ? "desc" : "asc"
       );
     } else {
       this.sortKey.set(column.key);
@@ -128,7 +128,7 @@ export class DesignResultsTableComponent {
     column: DesignColumn,
     row: DesignRow,
     first: boolean,
-    last: boolean,
+    last: boolean
   ): string {
     const classes = column.sequence
       ? ["w-full", "font-mono", "text-xs", "wrap-anywhere"]
