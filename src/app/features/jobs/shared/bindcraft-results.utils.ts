@@ -1,12 +1,3 @@
-/**
- * BindCraft's adapter. A run publishes:
- *
- *   <run>/ranker/<sample>_final_design_stats.csv
- *   <run>/ranker/<sample>_Ranked/<rank>_<design>_model<n>.pdb
- *
- * so the CSV's `Design` is the ranked filename without its rank and `_model<n>`.
- */
-
 import {
   DeNovoDesignAdapter,
   DesignColumn,

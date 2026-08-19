@@ -38,13 +38,8 @@ import {
   DesignRow,
   getDeNovoDesignAdapter,
 } from "../../shared/de-novo-results.utils";
-// Registers the BindCraft adapter.
 import "../../shared/bindcraft-results.utils";
 
-/**
- * A de novo run's ranked designs: the selected design's structure beside the
- * table it is picked from. Everything workflow-specific comes from the adapter.
- */
 @Component({
   selector: "app-de-novo-design-report",
   imports: [
@@ -95,17 +90,17 @@ export class DeNovoDesignReportComponent {
   readonly structureLoading = signal(false);
 
   readonly loading = computed(
-    () => this.filesLoading() || this.resultsLoading(),
+    () => this.filesLoading() || this.resultsLoading()
   );
 
   private structureRequest = 0;
 
   readonly resultsArtifact = computed(
-    () => this.adapter()?.findResultsArtifact(this.files()) ?? null,
+    () => this.adapter()?.findResultsArtifact(this.files()) ?? null
   );
 
   readonly selectedRow = computed(
-    () => this.rows().find((row) => row.id === this.selectedId()) ?? null,
+    () => this.rows().find((row) => row.id === this.selectedId()) ?? null
   );
 
   /** Null until the files have loaded, so no message flashes. */
@@ -121,7 +116,7 @@ export class DeNovoDesignReportComponent {
       (!!this.filesError() ||
         !this.adapter() ||
         !!this.missingResults() ||
-        !!this.resultsError()),
+        !!this.resultsError())
   );
 
   // The designs table panel
@@ -204,7 +199,7 @@ export class DeNovoDesignReportComponent {
         runId,
         structure.key,
         structure.format,
-        structure.label,
+        structure.label
       );
     });
   }
@@ -287,7 +282,7 @@ export class DeNovoDesignReportComponent {
     busy.set(true);
     return this.resultsService.getResultFileText(runId, key).pipe(
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => busy.set(false)),
+      finalize(() => busy.set(false))
     );
   }
 
@@ -304,7 +299,7 @@ export class DeNovoDesignReportComponent {
             this.resultsError.set("Failed to load the design results file.");
           }
           return EMPTY;
-        }),
+        })
       )
       .subscribe((content) => {
         // Ignore a response for an artifact we have since moved off.
@@ -325,7 +320,7 @@ export class DeNovoDesignReportComponent {
     runId: string,
     key: string,
     format: StructureSource["format"],
-    label: string,
+    label: string
   ): void {
     const request = ++this.structureRequest;
     this.structureError.set(null);
@@ -337,11 +332,11 @@ export class DeNovoDesignReportComponent {
           console.error("Error loading structure file:", err);
           if (request === this.structureRequest) {
             this.structureError.set(
-              "Failed to load the design structure file.",
+              "Failed to load the design structure file."
             );
           }
           return EMPTY;
-        }),
+        })
       )
       .subscribe((content) => {
         if (request !== this.structureRequest) return;
