@@ -35,6 +35,7 @@ import {
   setStructureOverpaint,
 } from "molstar/lib/mol-plugin-state/helpers/structure-overpaint";
 import { PluginCommands } from "molstar/lib/mol-plugin/commands";
+import { Vec3 } from "molstar/lib/mol-math/linear-algebra";
 import { Color } from "molstar/lib/mol-util/color";
 import { MolScriptBuilder as MS } from "molstar/lib/mol-script/language/builder";
 import { compile } from "molstar/lib/mol-script/runtime/query/compiler";
@@ -51,6 +52,50 @@ const PLDDT_COLOR_THEME = "plddt-confidence" as "uniform";
 
 /** gray-500, for everything outside an isolated selection. */
 const MUTED_STRUCTURE_COLOR = Color(0x6a7282);
+
+/** The `chain-a` colours: blue against orange to differentiate. */
+const CHAIN_A_STRUCTURE_COLOR = Color(0x0284c7);
+const OTHER_CHAINS_STRUCTURE_COLOR = Color(0xea8b0b);
+
+/** `chain-a` colours as CSS */
+export const CHAIN_A_COLOR = Color.toHexStyle(CHAIN_A_STRUCTURE_COLOR);
+export const OTHER_CHAINS_COLOR = Color.toHexStyle(
+  OTHER_CHAINS_STRUCTURE_COLOR
+);
+
+/** The chain that gets its own colour; every other chain shares the second. */
+const DISTINCT_CHAIN_ID = "A";
+
+/** Selects chain A, or every other chain, depending on the relation given. */
+function chainQuery(relation: typeof MS.core.rel.eq) {
+  return MS.struct.generator.atomGroups({
+    "chain-test": relation([MS.ammp("auth_asym_id"), DISTINCT_CHAIN_ID]),
+  });
+}
+
+const MIN_CAMERA_RADIUS = 0.01;
+
+/**
+ * Mol*'s default orientation — looking down -Z with +Y up — pointed at the
+ * given structure. Built from constants, not captured from the viewer, because
+ * Mol*'s own default aims at the origin rather than at the structure.
+ */
+export function defaultCameraSnapshot(
+  sphere: { center: Vec3; radius: number },
+  targetDistance: (radius: number) => number
+): { target: Vec3; position: Vec3; up: Vec3; radius: number } {
+  const radius = Math.max(sphere.radius, MIN_CAMERA_RADIUS);
+  return {
+    target: Vec3.clone(sphere.center),
+    position: Vec3.add(
+      Vec3(),
+      sphere.center,
+      Vec3.create(0, 0, targetDistance(radius))
+    ),
+    up: Vec3.create(0, 1, 0),
+    radius,
+  };
+}
 
 /**
  * One component per part, because Mol*'s `polymer` is protein, RNA and DNA only
@@ -119,8 +164,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   representation = input<"cartoon" | "cartoon-and-sticks">(
     "cartoon-and-sticks"
   );
-  /** "plddt" is the AlphaFold confidence palette, for predicted structures only. */
-  colorTheme = input<"default" | "plddt">("default");
+  /** "plddt" is the AlphaFold confidence palette; "chain-a" sets chain A apart. */
+  colorTheme = input<"default" | "plddt" | "chain-a">("default");
   /** Off leaves a click to Mol*'s own focus, which zooms rather than selects. */
   enablePicking = input(true);
   /** Show a selection by muting the rest and zooming to it, not by marking it. */
@@ -219,9 +264,17 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  /** Frame the whole structure again. */
+  /** Reset the structure again based on the orientation it loaded in */
   resetCamera(): void {
-    this.plugin?.managers.camera.reset();
+    const canvas3d = this.plugin?.canvas3d;
+    if (!canvas3d) return;
+
+    canvas3d.requestCameraReset({
+      snapshot: (scene, camera) =>
+        defaultCameraSnapshot(scene.boundingSphereVisible, (radius) =>
+          camera.getTargetDistance(radius)
+        ),
+    });
   }
 
   clearSelection(): void {
@@ -631,8 +684,50 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           }
         }
       }
+
+      if (this.colorTheme() === "chain-a") await this.applyChainColors();
     } catch {
       /* non-critical — default visual still shows */
+    }
+  }
+
+  private async applyChainColors(): Promise<void> {
+    if (!this.plugin) return;
+
+    const components =
+      this.plugin.managers.structure.hierarchy.current?.structures.flatMap(
+        (structure) => structure.components
+      ) ?? [];
+    if (components.length === 0) return;
+
+    const layers = [
+      {
+        color: CHAIN_A_STRUCTURE_COLOR,
+        expression: chainQuery(MS.core.rel.eq),
+      },
+      {
+        color: OTHER_CHAINS_STRUCTURE_COLOR,
+        expression: chainQuery(MS.core.rel.neq),
+      },
+    ];
+
+    try {
+      await clearStructureOverpaint(this.plugin, components);
+
+      for (const layer of layers) {
+        const query = compile<StructureSelection>(layer.expression);
+        await setStructureOverpaint(
+          this.plugin,
+          components,
+          layer.color,
+          async (structure) =>
+            StructureSelection.toLociWithSourceUnits(
+              query(new QueryContext(structure))
+            )
+        );
+      }
+    } catch (e) {
+      console.warn("Mol* chain colouring failed:", e);
     }
   }
 

@@ -152,9 +152,7 @@
                 type="button"
                 (click)="clearFilters()"
                 [disabled]="selectedStatuses().length === 0"
-                [class.opacity-50]="selectedStatuses().length === 0"
-                [class.cursor-not-allowed]="selectedStatuses().length === 0"
-                class="h-10 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:hover:bg-white"
+                class="h-10 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Clear Filters
               </button>
@@ -209,9 +207,7 @@
           type="button"
           (click)="openDeleteDialog()"
           [disabled]="bulkDeleting()"
-          [class.opacity-50]="bulkDeleting()"
-          [class.cursor-not-allowed]="bulkDeleting()"
-          class="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 transition-all"
+          class="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 transition-all disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ng-icon name="heroTrash" size="16"></ng-icon>
           Delete Selected
@@ -376,9 +372,7 @@
             type="button"
             (click)="previousPage()"
             [disabled]="!hasPreviousPage"
-            [class.opacity-50]="!hasPreviousPage"
-            [class.cursor-not-allowed]="!hasPreviousPage"
-            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
           </button>
@@ -386,9 +380,7 @@
             type="button"
             (click)="nextPage()"
             [disabled]="!hasNextPage"
-            [class.opacity-50]="!hasNextPage"
-            [class.cursor-not-allowed]="!hasNextPage"
-            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
@@ -420,9 +412,7 @@
                 type="button"
                 (click)="previousPage()"
                 [disabled]="!hasPreviousPage"
-                [class.opacity-50]="!hasPreviousPage"
-                [class.cursor-not-allowed]="!hasPreviousPage"
-                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-r-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-r-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span class="sr-only">Previous</span>
                 <ng-icon name="heroChevronLeft" size="16"></ng-icon>
@@ -436,9 +426,7 @@
                 type="button"
                 (click)="nextPage()"
                 [disabled]="!hasNextPage"
-                [class.opacity-50]="!hasNextPage"
-                [class.cursor-not-allowed]="!hasNextPage"
-                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-l-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-l-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span class="sr-only">Next</span>
                 <ng-icon name="heroChevronRight" size="16"></ng-icon>

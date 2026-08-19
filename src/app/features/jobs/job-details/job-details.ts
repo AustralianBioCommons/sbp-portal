@@ -28,6 +28,7 @@ import { LoadingComponent } from "../../../components/loading/loading.component"
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
+import { DeNovoDesignReportComponent } from "../components/de-novo-design-report/de-novo-design-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
@@ -65,6 +66,7 @@ type JobSettingItem = {
     DialogComponent,
     ButtonComponent,
     SinglePredictionReportComponent,
+    DeNovoDesignReportComponent,
   ],
   providers: [
     provideIcons({
@@ -127,6 +129,14 @@ export default class JobDetailsComponent implements OnInit {
     () => normalizeWorkflowName(this.job()?.workflow) === "single prediction"
   );
 
+  isDeNovoDesign = computed(
+    () => normalizeWorkflowName(this.job()?.workflow) === "de novo design"
+  );
+
+  hasInteractiveReport = computed(
+    () => this.isSinglePrediction() || this.isDeNovoDesign()
+  );
+
   /** Sticky for the life of the job: flipping back would remount the failing
    *  view and loop. */
   reportFallback = signal(false);
@@ -173,8 +183,7 @@ export default class JobDetailsComponent implements OnInit {
       this.job();
       this.activeTab.set("results");
       this.reportFallback.set(false);
-      // Single prediction renders its own view; the report is a fallback.
-      if (this.isSinglePrediction()) this.resetReportState();
+      if (this.hasInteractiveReport()) this.resetReportState();
       else this.loadReport();
       this.loadDownloads();
       this.loadSettings();
@@ -442,7 +451,7 @@ export default class JobDetailsComponent implements OnInit {
     URL.revokeObjectURL(objectUrl);
   }
 
-  onSinglePredictionReportUnavailable(): void {
+  onInteractiveReportUnavailable(): void {
     if (this.reportFallback()) return;
     this.reportFallback.set(true);
     this.loadReport();

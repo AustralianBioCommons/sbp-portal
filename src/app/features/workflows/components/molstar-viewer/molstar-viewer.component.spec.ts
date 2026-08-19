@@ -1,6 +1,10 @@
 import { TestBed } from "@angular/core/testing";
+import { Vec3 } from "molstar/lib/mol-math/linear-algebra";
 
-import { MolstarViewerComponent } from "./molstar-viewer.component";
+import {
+  MolstarViewerComponent,
+  defaultCameraSnapshot,
+} from "./molstar-viewer.component";
 
 interface Token {
   polymer: boolean;
@@ -75,6 +79,50 @@ describe("MolstarViewerComponent.toOrderedTokens", () => {
 
   it("returns an empty list for an empty map", () => {
     expect(statics().toOrderedTokens(new Map())).toEqual([]);
+  });
+});
+
+describe("defaultCameraSnapshot", () => {
+  const targetDistance = (radius: number) => radius * 4;
+
+  const sphere = { center: Vec3.create(3, 1, -2), radius: 5 };
+
+  it("looks down -Z with +Y up, whichever way the camera was pointing", () => {
+    const snapshot = defaultCameraSnapshot(sphere, targetDistance);
+    const direction = Vec3.sub(Vec3(), snapshot.target, snapshot.position);
+    Vec3.normalize(direction, direction);
+
+    expect([...direction]).toEqual([0, 0, -1]);
+    expect([...snapshot.up]).toEqual([0, 1, 0]);
+  });
+
+  it("centres on the structure and backs off far enough to frame it", () => {
+    const snapshot = defaultCameraSnapshot(sphere, targetDistance);
+
+    expect([...snapshot.target]).toEqual([3, 1, -2]);
+    expect([...snapshot.position]).toEqual([3, 1, -2 + 20]);
+    expect(snapshot.radius).toBe(5);
+  });
+
+  it("keeps a degenerate sphere off the camera's own position", () => {
+    const snapshot = defaultCameraSnapshot(
+      { center: Vec3.create(0, 0, 0), radius: 0 },
+      targetDistance
+    );
+
+    expect(snapshot.radius).toBe(0.01);
+    expect(snapshot.position[2]).toBeGreaterThan(0);
+  });
+
+  it("copies the centre rather than aliasing the scene's own vector", () => {
+    const center = Vec3.create(1, 2, 3);
+    const snapshot = defaultCameraSnapshot(
+      { center, radius: 1 },
+      targetDistance
+    );
+    Vec3.set(center, 9, 9, 9);
+
+    expect([...snapshot.target]).toEqual([1, 2, 3]);
   });
 });
 

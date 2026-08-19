@@ -109,12 +109,12 @@
               <button
                 type="button"
                 (click)="setActiveTab(tab.id)"
-                class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-transparent border-b-3 py-3 min-w-24 w-24 text-sm font-semibold transition-all"
-                [class.border-sky-500]="activeTab() === tab.id"
-                [class.text-sky-600]="activeTab() === tab.id"
-                [class.border-transparent]="activeTab() !== tab.id"
-                [class.text-gray-500]="activeTab() !== tab.id"
-                [class.hover:border-gray-600]="activeTab() !== tab.id"
+                class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-b-3 py-3 min-w-24 w-24 text-sm font-semibold transition-all"
+                [class]="
+                  activeTab() === tab.id
+                    ? 'border-sky-500 text-sky-600'
+                    : 'border-transparent text-gray-500 hover:border-gray-600'
+                "
               >
                 <ng-icon [name]="tab.icon" size="20"></ng-icon>
                 {{ tab.label }}
@@ -138,8 +138,17 @@
               [files]="filesItems()"
               [filesLoading]="filesLoading()"
               [filesError]="filesError()"
-              (unavailable)="onSinglePredictionReportUnavailable()"
+              (unavailable)="onInteractiveReportUnavailable()"
             ></app-single-prediction-report>
+            } @else if (isDeNovoDesign() && !reportFallback()) {
+            <app-de-novo-design-report
+              [runId]="selectedJob.id"
+              [tool]="selectedJob.tool"
+              [files]="filesItems()"
+              [filesLoading]="filesLoading()"
+              [filesError]="filesError()"
+              (unavailable)="onInteractiveReportUnavailable()"
+            ></app-de-novo-design-report>
             } @else { @if (reportError()) {
             <div
               class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
