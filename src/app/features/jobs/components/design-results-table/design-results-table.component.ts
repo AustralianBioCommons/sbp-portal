@@ -145,4 +145,9 @@ export class DesignResultsTableComponent {
   select(row: DesignRow): void {
     this.rowSelected.emit(row);
   }
+
+  selectByKey(row: DesignRow, event: Event): void {
+    event.preventDefault();
+    this.select(row);
+  }
 }

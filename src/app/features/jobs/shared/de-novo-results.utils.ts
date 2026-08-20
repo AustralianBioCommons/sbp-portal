@@ -164,9 +164,12 @@ export function sortDesignRows(
     if (column.numeric) {
       const leftValue = Number(left);
       const rightValue = Number(right);
-      if (Number.isFinite(leftValue) && Number.isFinite(rightValue)) {
+      const leftIsNumeric = Number.isFinite(leftValue);
+      const rightIsNumeric = Number.isFinite(rightValue);
+      if (leftIsNumeric && rightIsNumeric)
         return sign * (leftValue - rightValue);
-      }
+      if (leftIsNumeric) return -1;
+      if (rightIsNumeric) return 1;
     }
 
     return sign * left.localeCompare(right, undefined, { numeric: true });

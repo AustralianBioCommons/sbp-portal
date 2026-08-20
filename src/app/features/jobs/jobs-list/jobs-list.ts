@@ -499,4 +499,9 @@ export default class JobsListComponent implements OnInit, OnDestroy {
       state: { job },
     });
   }
+
+  openJobFromKey(job: JobListItem, event: Event): void {
+    event.preventDefault();
+    this.viewJobDetails(job);
+  }
 }

@@ -186,8 +186,13 @@
                 </button>
                 }
 
-                <!-- Inner content wrapper — clips panel content to the outer's dynamic width -->
-                <div class="h-full overflow-hidden">
+                <!-- Inner content wrapper - clips panel content to the outer's
+                     dynamic width. `inert` keeps the clipped controls out of the
+                     tab order and the accessibility tree. -->
+                <div
+                  class="h-full overflow-hidden"
+                  [attr.inert]="panelWidth() === 0 ? '' : null"
+                >
                   <div class="flex h-full w-full flex-col bg-white">
                     <!-- Panel header -->
                     <div

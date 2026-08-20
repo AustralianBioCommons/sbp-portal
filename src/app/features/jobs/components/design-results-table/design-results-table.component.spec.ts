@@ -326,6 +326,19 @@ describe("DesignResultsTableComponent", () => {
     expect(selected.map((row) => row.id)).toEqual(["design-1", "design-3"]);
   });
 
+  it("does not let Space scroll the page while selecting", () => {
+    render(makeRows(3));
+    const space = new KeyboardEvent("keydown", {
+      key: " ",
+      bubbles: true,
+      cancelable: true,
+    });
+
+    bodyRows()[0].dispatchEvent(space);
+
+    expect(space.defaultPrevented).toBeTrue();
+  });
+
   it("marks the selected row for assistive technology and for the eye", () => {
     render(makeRows(3));
     fixture.componentRef.setInput("selectedId", "design-2");

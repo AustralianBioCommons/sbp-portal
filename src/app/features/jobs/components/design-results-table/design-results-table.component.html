@@ -63,8 +63,8 @@
           [class.bg-green-50]="row.id === selectedId()"
           [attr.aria-selected]="row.id === selectedId()"
           (click)="select(row)"
-          (keydown.enter)="select(row)"
-          (keydown.space)="select(row)"
+          (keydown.enter)="selectByKey(row, $event)"
+          (keydown.space)="selectByKey(row, $event)"
         >
           @for (column of columns(); track column.key; let first = $first; let
           last = $last) {

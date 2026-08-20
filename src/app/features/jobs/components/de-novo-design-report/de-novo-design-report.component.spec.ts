@@ -234,7 +234,66 @@ describe("DeNovoDesignReportComponent", () => {
     expect(viewer()!.structureSource()?.content).toBe(PDB);
   });
 
+  it("keeps the viewer loading while a superseded response finalizes", () => {
+    const first = new Subject<string>();
+    const second = new Subject<string>();
+    resultsService.getResultFileText.and.callFake((_runId, key) => {
+      if (key === STATS_KEY) return of(statsCsv);
+      return key.includes("/1_") ? first : second;
+    });
+
+    render();
+    table()!.rowSelected.emit(component.rows()[1]);
+    fixture.detectChanges();
+
+    // Row 1's fetch ending must not clear the flag row 2's fetch is holding.
+    first.next("STALE");
+    first.complete();
+    fixture.detectChanges();
+
+    expect(component.structureLoading()).toBeTrue();
+    expect(viewer()!.structureSource()).toBeNull();
+
+    // `complete` is what HttpClient does after a body; the flag waits for it.
+    second.next(PDB);
+    second.complete();
+    fixture.detectChanges();
+
+    expect(component.structureLoading()).toBeFalse();
+    expect(viewer()!.structureSource()?.content).toBe(PDB);
+  });
+
+  it("stops loading when the row picked next has no structure", () => {
+    const pending = new Subject<string>();
+    resultsService.getResultFileText.and.callFake((_runId, key) =>
+      key === STATS_KEY ? of(statsCsv) : pending
+    );
+
+    render();
+
+    expect(component.structureLoading()).toBeTrue();
+
+    // A row the table knows nothing about resolves to no structure at all.
+    table()!.rowSelected.emit({
+      ...component.rows()[0],
+      id: "no-such-row",
+    });
+    fixture.detectChanges();
+
+    expect(component.structureLoading()).toBeFalse();
+    expect(viewer()!.structureSource()).toBeNull();
+    expect(component.structureError()).toBeNull();
+  });
+
   // ── The designs panel ─────────────────────────────────────────────────────
+
+  /** Width changes on the panel are animated; tests measure the end state. */
+  const settleLayout = () => {
+    const panel = fixture.nativeElement.querySelector(
+      "#designs-panel"
+    ) as HTMLElement;
+    panel.style.transition = "none";
+  };
 
   const divider = () =>
     fixture.nativeElement.querySelector(
@@ -255,8 +314,40 @@ describe("DeNovoDesignReportComponent", () => {
     expect(table()!.framed()).toBeFalse();
   });
 
+  it("takes the clipped panel out of reach while it is closed", () => {
+    render();
+    const clipped = () =>
+      fixture.nativeElement.querySelector(
+        "#designs-panel .overflow-hidden"
+      ) as HTMLElement;
+    const close = () =>
+      clipped().querySelector('button[title="Close"]') as HTMLButtonElement;
+
+    close().focus();
+    expect(document.activeElement).toBe(close());
+
+    component.closePanel();
+    fixture.detectChanges();
+
+    expect(clipped().hasAttribute("inert")).toBeTrue();
+    // Inert content cannot take focus, so the pill is the first stop. Chrome
+    // leaves an already-focused element current, so let go of it first.
+    close().blur();
+    close().focus();
+    expect(document.activeElement).not.toBe(close());
+
+    component.openPanel();
+    fixture.detectChanges();
+
+    expect(clipped().hasAttribute("inert")).toBeFalse();
+    close().focus();
+    expect(document.activeElement).toBe(close());
+  });
+
   it("keeps the reopen pill off the viewer's controls", () => {
     render();
+    // The panel animates its width, so measure where it lands, not mid-slide.
+    settleLayout();
     component.closePanel();
     fixture.detectChanges();
 
@@ -276,6 +367,7 @@ describe("DeNovoDesignReportComponent", () => {
 
   it("keeps the panel's close button inside the card on a narrow screen", () => {
     render();
+    settleLayout();
     const host = fixture.nativeElement as HTMLElement;
 
     for (const width of [1200, 560, 420]) {
@@ -322,6 +414,53 @@ describe("DeNovoDesignReportComponent", () => {
     fixture.detectChanges();
 
     expect(viewer()!.roundBottomRight()).toBeTrue();
+  });
+
+  it("reports its rendered width before anything drags it", () => {
+    render();
+    const panel = fixture.nativeElement.querySelector(
+      "#designs-panel"
+    ) as HTMLElement;
+
+    // The panel follows a share of the container until a drag sets pixels.
+    expect(component.panelWidth()).toBeNull();
+    expect(divider()!.getAttribute("aria-valuenow")).toBe(
+      String(Math.round(panel.offsetWidth))
+    );
+    expect(divider()!.getAttribute("aria-valuetext")).toBe(
+      `${Math.round(panel.offsetWidth)} pixels`
+    );
+  });
+
+  it("keeps the reported range around the width it reports", () => {
+    render();
+    divider()!.dispatchEvent(
+      new MouseEvent("mousedown", { clientX: 500, bubbles: true })
+    );
+    document.dispatchEvent(new MouseEvent("mousemove", { clientX: 10_000 }));
+    document.dispatchEvent(new MouseEvent("mouseup"));
+    fixture.detectChanges();
+
+    const now = Number(divider()!.getAttribute("aria-valuenow"));
+    const min = Number(divider()!.getAttribute("aria-valuemin"));
+    const max = Number(divider()!.getAttribute("aria-valuemax"));
+
+    expect(now).toBe(component.minPanelWidth);
+    expect(min).toBeLessThanOrEqual(now);
+    expect(max).toBeGreaterThanOrEqual(now);
+  });
+
+  it("drops its drag listeners when destroyed mid-drag", () => {
+    render();
+    divider()!.dispatchEvent(
+      new MouseEvent("mousedown", { clientX: 500, bubbles: true })
+    );
+    const width = component.panelWidth();
+
+    fixture.destroy();
+    document.dispatchEvent(new MouseEvent("mousemove", { clientX: 200 }));
+
+    expect(component.panelWidth()).toBe(width);
   });
 
   it("resizes by dragging the divider, within its limits", () => {

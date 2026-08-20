@@ -13,7 +13,7 @@ import {
 import type { WritableSignal } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { EMPTY, catchError, finalize } from "rxjs";
+import { EMPTY, Subscription, catchError, finalize } from "rxjs";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowPath,
@@ -93,7 +93,8 @@ export class DeNovoDesignReportComponent {
     () => this.filesLoading() || this.resultsLoading()
   );
 
-  private structureRequest = 0;
+  private resultsFetch: Subscription | null = null;
+  private structureFetch: Subscription | null = null;
 
   readonly resultsArtifact = computed(
     () => this.adapter()?.findResultsArtifact(this.files()) ?? null
@@ -131,6 +132,25 @@ export class DeNovoDesignReportComponent {
   /** Width in pixels, 0 is collapsed, null follows the default share. */
   readonly panelWidth = signal<number | null>(null);
   readonly isDragging = signal(false);
+
+  /** The rendered width, tracked so the separator can report a share. */
+  private readonly measuredPanelWidth = signal(0);
+
+  /** What the separator reports: the dragged width, or the rendered share. */
+  readonly panelWidthNow = computed(() => {
+    const dragged = this.panelWidth();
+    if (dragged !== null) return dragged;
+    // Before the first measurement the lower bound is the honest answer.
+    return this.measuredPanelWidth() || this.minPanelWidth;
+  });
+
+  /** The reported range has to contain the reported width. */
+  readonly panelWidthRange = computed(() => ({
+    min: Math.min(this.minPanelWidth, this.panelWidthNow()),
+    max: Math.max(this.maxPanelWidth, this.panelWidthNow()),
+  }));
+
+  readonly panelWidthText = computed(() => `${this.panelWidthNow()} pixels`);
 
   readonly isPanelOpen = computed(() => this.panelWidth() !== 0);
 
@@ -177,6 +197,7 @@ export class DeNovoDesignReportComponent {
       const adapter = this.adapter();
       const artifact = this.resultsArtifact();
       if (!adapter || !artifact) {
+        this.cancelResultsFetch();
         this.rows.set([]);
         this.selectedId.set(null);
         this.resultsError.set(null);
@@ -189,10 +210,10 @@ export class DeNovoDesignReportComponent {
       const runId = this.runId();
       const structure = this.selectedRow()?.structure ?? null;
       if (!structure) {
+        // Not an error: the run simply has no file for this row.
+        this.cancelStructureFetch();
         this.structureSource.set(null);
         this.structureError.set(null);
-        // Not an error: the run simply has no file for this row.
-        this.structureRequest++;
         return;
       }
       this.loadStructure(
@@ -202,6 +223,27 @@ export class DeNovoDesignReportComponent {
         structure.label
       );
     });
+
+    // The separator has to report a width before any drag sets one, and has
+    // to keep reporting the right one as the container resizes under it.
+    effect((onCleanup) => {
+      const element = this.panelElement()?.nativeElement;
+      if (!element) return;
+
+      this.measuredPanelWidth.set(Math.round(element.offsetWidth));
+      if (typeof ResizeObserver === "undefined") return;
+
+      const observer = new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect.width ?? 0;
+        // Not laid out, or collapsed: keep the last width worth reporting.
+        if (width > 0) this.measuredPanelWidth.set(Math.round(width));
+      });
+      observer.observe(element);
+      onCleanup(() => observer.disconnect());
+    });
+
+    // Navigating away mid-drag would otherwise leave both listeners attached.
+    this.destroyRef.onDestroy(() => this.releaseDragListeners());
   }
 
   onRowSelected(row: DesignRow): void {
@@ -242,9 +284,13 @@ export class DeNovoDesignReportComponent {
 
   private readonly onDocumentMouseUp = (): void => {
     this.isDragging.set(false);
+    this.releaseDragListeners();
+  };
+
+  private releaseDragListeners(): void {
     this.document.removeEventListener("mousemove", this.onDocumentMouseMove);
     this.document.removeEventListener("mouseup", this.onDocumentMouseUp);
-  };
+  }
 
   onDividerKeydown(event: KeyboardEvent): void {
     if (!this.isPanelOpen()) return;
@@ -277,7 +323,10 @@ export class DeNovoDesignReportComponent {
 
   // ── Loading ───────────────────────────────────────────────────────────────
 
-  /** `finalize` covers every outcome, so the flag cannot stick. */
+  /**
+   * `finalize` covers every outcome, cancellation included, so the flag cannot
+   * stick. Only one fetch per flag may be live at a time — see the callers.
+   */
   private fetchText(runId: string, key: string, busy: WritableSignal<boolean>) {
     busy.set(true);
     return this.resultsService.getResultFileText(runId, key).pipe(
@@ -286,25 +335,32 @@ export class DeNovoDesignReportComponent {
     );
   }
 
+  /** Drop an in-flight fetch, so neither its flag nor its body can land. */
+  private cancelResultsFetch(): void {
+    this.resultsFetch?.unsubscribe();
+    this.resultsFetch = null;
+  }
+
+  private cancelStructureFetch(): void {
+    this.structureFetch?.unsubscribe();
+    this.structureFetch = null;
+  }
+
   private loadResults(runId: string, key: string): void {
+    this.cancelResultsFetch();
     this.resultsError.set(null);
     this.rows.set([]);
     this.selectedId.set(null);
 
-    this.fetchText(runId, key, this.resultsLoading)
+    this.resultsFetch = this.fetchText(runId, key, this.resultsLoading)
       .pipe(
         catchError((err) => {
           console.error("Error loading design results:", err);
-          if (this.resultsArtifact()?.key === key) {
-            this.resultsError.set("Failed to load the design results file.");
-          }
+          this.resultsError.set("Failed to load the design results file.");
           return EMPTY;
         })
       )
       .subscribe((content) => {
-        // Ignore a response for an artifact we have since moved off.
-        if (this.resultsArtifact()?.key !== key) return;
-
         const rows = this.adapter()?.parseRows(content, this.files()) ?? [];
         if (rows.length === 0) {
           this.resultsError.set("The design results file contains no designs.");
@@ -322,24 +378,19 @@ export class DeNovoDesignReportComponent {
     format: StructureSource["format"],
     label: string
   ): void {
-    const request = ++this.structureRequest;
+    this.cancelStructureFetch();
     this.structureError.set(null);
     this.structureSource.set(null);
 
-    this.fetchText(runId, key, this.structureLoading)
+    this.structureFetch = this.fetchText(runId, key, this.structureLoading)
       .pipe(
         catchError((err) => {
           console.error("Error loading structure file:", err);
-          if (request === this.structureRequest) {
-            this.structureError.set(
-              "Failed to load the design structure file."
-            );
-          }
+          this.structureError.set("Failed to load the design structure file.");
           return EMPTY;
         })
       )
       .subscribe((content) => {
-        if (request !== this.structureRequest) return;
         if (!content.trim()) {
           this.structureError.set("The structure file is empty.");
           return;

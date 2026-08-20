@@ -307,8 +307,8 @@
               role="button"
               tabindex="0"
               (click)="viewJobDetails(job)"
-              (keydown.enter)="viewJobDetails(job)"
-              (keydown.space)="viewJobDetails(job)"
+              (keydown.enter)="openJobFromKey(job, $event)"
+              (keydown.space)="openJobFromKey(job, $event)"
             >
               <td
                 class="relative px-6 py-4 text-center"

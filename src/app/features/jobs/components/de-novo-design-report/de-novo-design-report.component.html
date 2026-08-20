@@ -136,9 +136,10 @@
         aria-orientation="vertical"
         aria-label="Resize the designs panel"
         tabindex="0"
-        [attr.aria-valuemin]="minPanelWidth"
-        [attr.aria-valuemax]="maxPanelWidth"
-        [attr.aria-valuenow]="panelWidth()"
+        [attr.aria-valuemin]="panelWidthRange().min"
+        [attr.aria-valuemax]="panelWidthRange().max"
+        [attr.aria-valuenow]="panelWidthNow()"
+        [attr.aria-valuetext]="panelWidthText()"
         (mousedown)="onDividerMouseDown($event)"
         (keydown)="onDividerKeydown($event)"
       >
@@ -175,8 +176,12 @@
         </button>
         }
 
-        <!-- Clips content to the panel's width. -->
-        <div class="h-full overflow-hidden">
+        <!-- Clips content to the panel's width. Clipped is not gone: without
+             `inert`, every control in here stays focusable at zero width. -->
+        <div
+          class="h-full overflow-hidden"
+          [attr.inert]="isPanelOpen() ? null : ''"
+        >
           <div class="flex h-full w-full flex-col bg-white">
             <div class="flex shrink-0 items-center gap-2 border-b p-4">
               <span class="flex-1 truncate text-sm font-medium">
