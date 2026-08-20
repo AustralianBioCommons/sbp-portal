@@ -55,15 +55,21 @@ const STRUCTURE_FORMATS: Array<{ pattern: RegExp; format: StructureFormat }> = [
 const STRUCTURE_CATEGORY = "pdb";
 
 /**
- * `label` can be a display name like "Structure PDB", so the filename may only be
- * on the key or the URL. Callers match each candidate whole, never pooled.
+ * Every filename this file could be known by, with the original case kept.
+ * The label is sometimes a display name like "Structure PDB" rather than a
+ * filename, so the key and the URL are read too.
  */
-function filenameCandidates(file: ResultFileRef): string[] {
+export function resultFilenames(file: ResultFileRef): string[] {
   const names = [file.key, file.label, file.url]
     .filter((value): value is string => !!value)
-    .map((value) => basename(value).toLowerCase())
+    .map((value) => basename(value))
     .filter((name) => name.length > 0);
   return [...new Set(names)];
+}
+
+/** The same names lower-cased, for the case-insensitive matching below. */
+function filenameCandidates(file: ResultFileRef): string[] {
+  return [...new Set(resultFilenames(file).map((name) => name.toLowerCase()))];
 }
 
 /** mmCIF over PDB, and a classified structure over a look-alike input file. */

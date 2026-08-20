@@ -13,6 +13,7 @@ import {
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
+import { DeNovoDesignReportComponent } from "../components/de-novo-design-report/de-novo-design-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { environment } from "../../../../environments/environment";
 
@@ -44,6 +45,30 @@ class SinglePredictionReportStubComponent {
   unavailable = output<void>();
 }
 
+@Component({
+  selector: "app-de-novo-design-report",
+  template: "",
+})
+class DeNovoDesignReportStubComponent {
+  runId = input.required<string>();
+  tool = input("");
+  files = input<readonly ResultFileRef[]>([]);
+  filesLoading = input(false);
+  filesError = input<string | null>(null);
+  unavailable = output<void>();
+}
+
+const deNovoDesignJob: JobListItem = {
+  id: "job-dn",
+  jobName: "BindCraft run",
+  tool: "Bindcraft",
+  workflow: "De Novo Design",
+  status: "Completed",
+  submittedAt: "2026-03-12T09:00:00Z",
+  score: 0.85,
+  finalDesignCount: 5,
+};
+
 const singlePredictionJob: JobListItem = {
   id: "job-sp",
   jobName: "Boltz run",
@@ -67,8 +92,8 @@ describe("JobDetailsComponent", () => {
   const mockJob: JobListItem = {
     id: "job-1",
     jobName: "Example job",
-    tool: "Binder design",
-    workflow: "De novo design",
+    tool: "Boltz",
+    workflow: "Interaction Screening",
     status: "Completed",
     submittedAt: "2026-03-12T10:00:00Z",
     score: 0.95,
@@ -143,8 +168,18 @@ describe("JobDetailsComponent", () => {
       ],
     })
       .overrideComponent(JobDetailsComponent, {
-        remove: { imports: [SinglePredictionReportComponent] },
-        add: { imports: [SinglePredictionReportStubComponent] },
+        remove: {
+          imports: [
+            SinglePredictionReportComponent,
+            DeNovoDesignReportComponent,
+          ],
+        },
+        add: {
+          imports: [
+            SinglePredictionReportStubComponent,
+            DeNovoDesignReportStubComponent,
+          ],
+        },
       })
       .compileComponents();
 
@@ -960,9 +995,54 @@ describe("JobDetailsComponent", () => {
       By.directive(SinglePredictionReportStubComponent)
     );
     report.componentInstance.unavailable.emit();
-    component.onSinglePredictionReportUnavailable();
-    component.onSinglePredictionReportUnavailable();
+    component.onInteractiveReportUnavailable();
+    component.onInteractiveReportUnavailable();
 
     expect(resultsService.getJobReport).toHaveBeenCalledTimes(1);
+  });
+
+  // --- The de novo design view -----------------------------------------------
+
+  const renderDeNovoDesign = () => {
+    mockJobsService.getJob.and.returnValue(of(deNovoDesignJob));
+    routeId = deNovoDesignJob.id;
+    fixture = TestBed.createComponent(JobDetailsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  };
+
+  const deNovoReport = () =>
+    fixture.debugElement.query(By.directive(DeNovoDesignReportStubComponent));
+
+  it("shows the de novo view, not the packaged report, for a de novo run", () => {
+    renderDeNovoDesign();
+
+    expect(component.isDeNovoDesign()).toBeTrue();
+    expect(component.isSinglePrediction()).toBeFalse();
+    expect(deNovoReport()).not.toBeNull();
+    expect(resultsService.getJobReport).not.toHaveBeenCalled();
+  });
+
+  it("hands the de novo view the run, its tool and its files", () => {
+    renderDeNovoDesign();
+    const report = deNovoReport().componentInstance;
+
+    expect(report.runId()).toBe(deNovoDesignJob.id);
+    expect(report.tool()).toBe("Bindcraft");
+    expect(report.files()).toEqual(component.filesItems());
+  });
+
+  it("falls back to the packaged report when the de novo view cannot render", () => {
+    renderDeNovoDesign();
+
+    deNovoReport().componentInstance.unavailable.emit();
+    fixture.detectChanges();
+
+    expect(component.reportFallback()).toBeTrue();
+    expect(resultsService.getJobReport).toHaveBeenCalledWith(
+      deNovoDesignJob.id
+    );
+    expect(deNovoReport()).toBeNull();
+    expect(fixture.nativeElement.querySelector("iframe")).not.toBeNull();
   });
 });

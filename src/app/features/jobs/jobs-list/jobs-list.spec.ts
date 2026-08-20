@@ -482,6 +482,19 @@ describe("JobsListComponent", () => {
     });
   });
 
+  it("should open a job from the keyboard without scrolling the page", () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = spyOn(router, "navigate");
+    const space = new KeyboardEvent("keydown", { key: " ", cancelable: true });
+
+    component.openJobFromKey(mockJob, space);
+
+    expect(space.defaultPrevented).toBeTrue();
+    expect(navigateSpy).toHaveBeenCalledWith(["/jobs", mockJob.id], {
+      state: { job: mockJob },
+    });
+  });
+
   it("should toggle the status dropdown", () => {
     component.toggleStatusDropdown();
     expect(component.showStatusDropdown()).toBeTrue();

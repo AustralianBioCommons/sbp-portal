@@ -15,9 +15,7 @@
             <div class="flex w-full justify-center">
               <button
                 type="button"
-                class="appearance-none border-0 bg-transparent p-0"
-                [class.cursor-pointer]="!(last && reviewDisabled())"
-                [class.cursor-not-allowed]="last && reviewDisabled()"
+                class="appearance-none border-0 bg-transparent p-0 cursor-pointer disabled:cursor-not-allowed"
                 [disabled]="last && reviewDisabled()"
                 [attr.aria-label]="
                   last ? 'Review and submit' : 'Go to ' + section.label
@@ -91,9 +89,7 @@
           <!-- Label -->
           <button
             type="button"
-            class="mt-2 appearance-none border-0 bg-transparent p-0 text-center text-sm font-medium transition-all"
-            [class.cursor-pointer]="!(last && reviewDisabled())"
-            [class.cursor-not-allowed]="last && reviewDisabled()"
+            class="mt-2 appearance-none border-0 bg-transparent p-0 text-center text-sm font-medium transition-all cursor-pointer disabled:cursor-not-allowed"
             [class]="labelClasses(section.id)"
             [disabled]="last && reviewDisabled()"
             (click)="
