@@ -65,6 +65,7 @@
           #viewer
           class="absolute inset-0"
           [structureSource]="structureSource()"
+          [sourceLoading]="structureLoading()"
           [enableUpload]="false"
           [roundBottomRight]="!isPanelOpen()"
           representation="cartoon"
@@ -87,12 +88,6 @@
             aria-hidden="true"
           ></ng-icon>
           <p class="wrap-break-word">{{ structureError() }}</p>
-        </div>
-        } @else if (structureLoading()) {
-        <div
-          class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
-        >
-          <app-loading message="Loading structure..." [inline]="true" />
         </div>
         } @else if (!selectedRow()?.structure) {
         <p
@@ -185,7 +180,7 @@
           <div class="flex h-full w-full flex-col bg-white">
             <div class="flex shrink-0 items-center gap-2 border-b p-4">
               <span class="flex-1 truncate text-sm font-medium">
-                Ranked designs
+                {{ panelHeading() }}
               </span>
               <button
                 type="button"

@@ -19,6 +19,7 @@ import { ResultFileRef } from "../../shared/prediction-results.utils";
 })
 class MolstarViewerStubComponent {
   structureSource = input<StructureSource | null>(null);
+  sourceLoading = input(false);
   enableUpload = input(true);
   roundBottomRight = input(false);
   representation = input<"cartoon" | "cartoon-and-sticks">(
@@ -312,6 +313,47 @@ describe("DeNovoDesignReportComponent", () => {
     ).not.toBeNull();
     // The panel draws the card, so the table drops its frame.
     expect(table()!.framed()).toBeFalse();
+  });
+
+  it("counts the designs in the panel's heading", () => {
+    render();
+    const heading = () =>
+      (
+        fixture.nativeElement.querySelector(
+          "#designs-panel span.flex-1"
+        ) as HTMLElement
+      ).textContent!.trim();
+
+    expect(component.rows().length).toBe(2);
+    expect(heading()).toBe("Ranked designs (2)");
+  });
+
+  it("leaves the heading bare when the table has nothing to count", () => {
+    respondWith({ [STATS_KEY]: "Rank,Design\n" });
+    render();
+
+    expect(component.panelHeading()).toBe("Ranked designs");
+  });
+
+  it("hands the viewer the loading state instead of drawing its own", () => {
+    const pending = new Subject<string>();
+    resultsService.getResultFileText.and.callFake((_runId, key) =>
+      key === STATS_KEY ? of(statsCsv) : pending
+    );
+
+    render();
+
+    expect(viewer()!.sourceLoading()).toBeTrue();
+    // One spinner between the two components, and it is the viewer's.
+    expect(fixture.nativeElement.querySelectorAll("app-loading").length).toBe(
+      0
+    );
+
+    pending.next(PDB);
+    pending.complete();
+    fixture.detectChanges();
+
+    expect(viewer()!.sourceLoading()).toBeFalse();
   });
 
   it("takes the clipped panel out of reach while it is closed", () => {

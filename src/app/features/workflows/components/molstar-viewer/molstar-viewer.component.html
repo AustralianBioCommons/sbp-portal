@@ -26,17 +26,11 @@
       (change)="onFileInputChange($event)"
     />
   </label>
-  }
-
-  <!-- Loading state -->
-  @if (status() === 'loading') {
-  <div class="flex items-center gap-2 text-sm text-gray-500 py-2">
-    <ng-icon
-      name="heroArrowPath"
-      class="animate-spin h-4 w-4 text-sky-600"
-      aria-hidden="true"
-    ></ng-icon>
-    Loading structure…
+  } @if (status() === 'loading' || sourceLoading()) {
+  <div
+    class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+  >
+    <app-loading message="Loading structure..." [inline]="true" />
   </div>
   }
 
