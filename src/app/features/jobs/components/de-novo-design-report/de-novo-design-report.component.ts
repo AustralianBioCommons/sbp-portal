@@ -152,6 +152,11 @@ export class DeNovoDesignReportComponent {
 
   readonly panelWidthText = computed(() => `${this.panelWidthNow()} pixels`);
 
+  readonly panelHeading = computed(() => {
+    const count = this.rows().length;
+    return count ? `Ranked designs (${count})` : "Ranked designs";
+  });
+
   readonly isPanelOpen = computed(() => this.panelWidth() !== 0);
 
   readonly panelStyleWidth = computed(() => {

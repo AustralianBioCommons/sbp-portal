@@ -26,12 +26,11 @@ describe("DesignResultsTableComponent", () => {
   let fixture: ComponentFixture<DesignResultsTableComponent>;
   let component: DesignResultsTableComponent;
 
-  const render = (rows: DesignRow[], pageSize = 10) => {
+  const render = (rows: DesignRow[]) => {
     fixture = TestBed.createComponent(DesignResultsTableComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput("columns", columns);
     fixture.componentRef.setInput("rows", rows);
-    fixture.componentRef.setInput("pageSize", pageSize);
     fixture.detectChanges();
   };
 
@@ -86,78 +85,20 @@ describe("DesignResultsTableComponent", () => {
     expect(cellText(bodyRows()[0])[1]).toBe("—");
   });
 
-  // ── Pagination ────────────────────────────────────────────────────────────
+  // ── The whole list ───────────────────────────────────────────────────────
 
-  it("shows only one page of designs at a time", () => {
+  it("shows every design at once, in one scrollable list", () => {
     render(makeRows(25));
 
-    expect(bodyRows().length).toBe(10);
-    expect(component.totalPages()).toBe(3);
+    expect(bodyRows().length).toBe(25);
     expect(cellText(bodyRows()[0])[0]).toBe("1");
+    expect(cellText(bodyRows()[24])[0]).toBe("25");
   });
 
-  it("advances and returns a page at a time", () => {
-    render(makeRows(25));
-
-    component.nextPage();
-    fixture.detectChanges();
-    expect(cellText(bodyRows()[0])[0]).toBe("11");
-    expect(component.firstRowNumber()).toBe(11);
-    expect(component.lastRowNumber()).toBe(20);
-
-    component.previousPage();
-    fixture.detectChanges();
-    expect(cellText(bodyRows()[0])[0]).toBe("1");
-  });
-
-  it("stops at the last page, which may be short", () => {
-    render(makeRows(25));
-
-    component.nextPage();
-    component.nextPage();
-    component.nextPage();
-    fixture.detectChanges();
-
-    expect(component.currentPage()).toBe(3);
-    expect(bodyRows().length).toBe(5);
-    expect(component.hasNextPage()).toBeFalse();
-  });
-
-  it("stops at the first page", () => {
-    render(makeRows(25));
-
-    component.previousPage();
-
-    expect(component.currentPage()).toBe(1);
-    expect(component.hasPreviousPage()).toBeFalse();
-  });
-
-  it("disables the pager buttons at each end", () => {
-    render(makeRows(25));
-
-    const [previous, next] = Array.from(
-      fixture.nativeElement.querySelectorAll("nav button")
-    ) as HTMLButtonElement[];
-    expect(previous.disabled).toBeTrue();
-    expect(next.disabled).toBeFalse();
-  });
-
-  it("hides the pager when there is nothing to page", () => {
+  it("says so when there is nothing to show", () => {
     render([]);
 
-    expect(fixture.nativeElement.querySelector("nav")).toBeNull();
     expect(bodyRows()[0].textContent).toContain("No designs to display");
-  });
-
-  it("returns to the first page when a new run's designs arrive", () => {
-    render(makeRows(25));
-    component.nextPage();
-    fixture.detectChanges();
-
-    fixture.componentRef.setInput("rows", makeRows(25));
-    fixture.detectChanges();
-
-    expect(component.currentPage()).toBe(1);
   });
 
   // ── Sorting ───────────────────────────────────────────────────────────────
@@ -280,16 +221,7 @@ describe("DesignResultsTableComponent", () => {
     expect(component.sortIcon(columns[0])).toBe("heroArrowDown");
   });
 
-  it("returns to the first page when the sort changes", () => {
-    render(makeRows(25));
-    component.nextPage();
-
-    component.toggleSort(columns[1]);
-
-    expect(component.currentPage()).toBe(1);
-  });
-
-  it("sorts across pages, not within one", () => {
+  it("sorts the whole list, not the rows in view", () => {
     render(makeRows(25));
 
     component.toggleSort(columns[0]);
@@ -297,6 +229,7 @@ describe("DesignResultsTableComponent", () => {
     fixture.detectChanges();
 
     expect(cellText(bodyRows()[0])[0]).toBe("25");
+    expect(cellText(bodyRows()[24])[0]).toBe("1");
   });
 
   // ── Selection ─────────────────────────────────────────────────────────────

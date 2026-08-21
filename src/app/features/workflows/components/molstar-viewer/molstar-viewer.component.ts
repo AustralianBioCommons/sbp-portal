@@ -13,8 +13,8 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { LoadingComponent } from "../../../../components/loading/loading.component";
 import {
-  heroArrowPath,
   heroArrowUpTray,
   heroExclamationCircle,
   heroFolder,
@@ -127,10 +127,9 @@ interface ResidueToken {
 
 @Component({
   selector: "app-molstar-viewer",
-  imports: [CommonModule, NgIconComponent],
+  imports: [CommonModule, NgIconComponent, LoadingComponent],
   providers: [
     provideIcons({
-      heroArrowPath,
       heroArrowUpTray,
       heroExclamationCircle,
       heroFolder,
@@ -149,6 +148,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   disabled = input(false);
   /** Show the idle upload placeholder. */
   enableUpload = input(true);
+  /** The parent is still fetching the file: same overlay, one phase earlier. */
+  sourceLoading = input(false);
   /** Residues to select, in the tokens the viewer emits ("A56,B12"); "" clears. */
   externalSelection = input("");
   /** As `externalSelection`, but a new object re-applies the same tokens. Wins

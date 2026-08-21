@@ -1,18 +1,9 @@
-import {
-  Component,
-  computed,
-  effect,
-  input,
-  output,
-  signal,
-} from "@angular/core";
+import { Component, computed, input, output, signal } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDown,
   heroArrowUp,
   heroArrowsUpDown,
-  heroChevronLeft,
-  heroChevronRight,
 } from "@ng-icons/heroicons/outline";
 import {
   DesignColumn,
@@ -24,15 +15,7 @@ import {
 @Component({
   selector: "app-design-results-table",
   imports: [NgIconComponent],
-  providers: [
-    provideIcons({
-      heroArrowDown,
-      heroArrowUp,
-      heroArrowsUpDown,
-      heroChevronLeft,
-      heroChevronRight,
-    }),
-  ],
+  providers: [provideIcons({ heroArrowDown, heroArrowUp, heroArrowsUpDown })],
   templateUrl: "./design-results-table.component.html",
   styleUrl: "./design-results-table.component.scss",
 })
@@ -41,7 +24,6 @@ export class DesignResultsTableComponent {
   rows = input.required<readonly DesignRow[]>();
 
   selectedId = input<string | null>(null);
-  pageSize = input(10);
   caption = input("Designs");
   framed = input(true);
 
@@ -49,7 +31,6 @@ export class DesignResultsTableComponent {
 
   readonly sortKey = signal<string | null>(null);
   readonly sortDirection = signal<SortDirection>("asc");
-  readonly page = signal(1);
 
   readonly sortedRows = computed(() => {
     const key = this.sortKey();
@@ -57,38 +38,6 @@ export class DesignResultsTableComponent {
     if (!column) return [...this.rows()];
     return sortDesignRows(this.rows(), column, this.sortDirection());
   });
-
-  readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.rows().length / this.pageSize()))
-  );
-
-  readonly currentPage = computed(() =>
-    Math.min(Math.max(1, this.page()), this.totalPages())
-  );
-
-  readonly firstRowNumber = computed(() =>
-    this.rows().length === 0
-      ? 0
-      : (this.currentPage() - 1) * this.pageSize() + 1
-  );
-
-  readonly lastRowNumber = computed(() =>
-    Math.min(this.currentPage() * this.pageSize(), this.rows().length)
-  );
-
-  readonly pageRows = computed(() =>
-    this.sortedRows().slice(this.firstRowNumber() - 1, this.lastRowNumber())
-  );
-
-  readonly hasPreviousPage = computed(() => this.currentPage() > 1);
-  readonly hasNextPage = computed(() => this.currentPage() < this.totalPages());
-
-  constructor() {
-    effect(() => {
-      this.rows();
-      this.page.set(1);
-    });
-  }
 
   toggleSort(column: DesignColumn): void {
     if (this.sortKey() === column.key) {
@@ -99,7 +48,6 @@ export class DesignResultsTableComponent {
       this.sortKey.set(column.key);
       this.sortDirection.set(column.higherIsBetter ? "desc" : "asc");
     }
-    this.page.set(1);
   }
 
   isSortable(column: DesignColumn): boolean {
@@ -114,14 +62,6 @@ export class DesignResultsTableComponent {
   sortIcon(column: DesignColumn): string {
     if (this.sortKey() !== column.key) return "heroArrowsUpDown";
     return this.sortDirection() === "asc" ? "heroArrowUp" : "heroArrowDown";
-  }
-
-  previousPage(): void {
-    if (this.hasPreviousPage()) this.page.set(this.currentPage() - 1);
-  }
-
-  nextPage(): void {
-    if (this.hasNextPage()) this.page.set(this.currentPage() + 1);
   }
 
   cellClasses(
