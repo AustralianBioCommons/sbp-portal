@@ -23,10 +23,16 @@ export interface PaeMatrix {
   max: number;
 }
 
-/** A polymer residue identified by author chain id and author sequence number. */
+/**
+ * One row/column of the PAE matrix. Boltz scores per token: a residue for protein,
+ * RNA and DNA, but one per *atom* for a ligand, so a ligand contributes several
+ * tokens that share a chain and seq and differ only by `atom`.
+ */
 export interface ResidueRef {
   chain: string;
   seq: number;
+  /** Atom name, set only for ligand tokens. */
+  atom?: string;
 }
 
 export interface ChainSegment {
@@ -49,15 +55,21 @@ const STRUCTURE_FORMATS: Array<{ pattern: RegExp; format: StructureFormat }> = [
 const STRUCTURE_CATEGORY = "pdb";
 
 /**
- * `label` can be a display name like "Structure PDB", so the filename may only be
- * on the key or the URL. Callers match each candidate whole, never pooled.
+ * Every filename this file could be known by, with the original case kept.
+ * The label is sometimes a display name like "Structure PDB" rather than a
+ * filename, so the key and the URL are read too.
  */
-function filenameCandidates(file: ResultFileRef): string[] {
+export function resultFilenames(file: ResultFileRef): string[] {
   const names = [file.key, file.label, file.url]
     .filter((value): value is string => !!value)
-    .map((value) => basename(value).toLowerCase())
+    .map((value) => basename(value))
     .filter((name) => name.length > 0);
   return [...new Set(names)];
+}
+
+/** The same names lower-cased, for the case-insensitive matching below. */
+function filenameCandidates(file: ResultFileRef): string[] {
+  return [...new Set(resultFilenames(file).map((name) => name.toLowerCase()))];
 }
 
 /** mmCIF over PDB, and a classified structure over a look-alike input file. */
@@ -175,32 +187,119 @@ export function findChainwiseArtifact(
   );
 }
 
-/** `A:B\t0.39` rows, highest first. The leading `\t0` header row is skipped. */
+/**
+ * How many PAE rows a structure should have: one per polymer residue, one per
+ * ligand atom. Lets a run be checked against its matrix before the viewer loads.
+ *
+ * Returns null when the text yields no atoms, so an unreadable file is left to
+ * the viewer to report rather than judged here.
+ */
+export function countStructureTokens(
+  text: string,
+  format: StructureFormat
+): number | null {
+  const residues = new Set<string>();
+  let ligandAtoms = 0;
+  let columns: string[] | null = null;
+
+  for (const line of text.split("\n")) {
+    if (format === "mmcif" && line.startsWith("_atom_site.")) {
+      columns ??= [];
+      columns.push(line.trim().slice("_atom_site.".length));
+      continue;
+    }
+
+    const isAtom = line.startsWith("ATOM");
+    if (!isAtom && !line.startsWith("HETATM")) {
+      // Only the first model counts; the rest repeat the same tokens.
+      if (line.startsWith("ENDMDL")) break;
+      continue;
+    }
+
+    const key =
+      format === "mmcif"
+        ? mmcifResidueKey(line, columns)
+        : `${line.slice(21, 22)}:${line.slice(22, 27).trim()}`;
+    if (key === null) continue;
+
+    if (isAtom) residues.add(key);
+    else ligandAtoms++;
+  }
+
+  const total = residues.size + ligandAtoms;
+  return total > 0 ? total : null;
+}
+
+/** `<chain>:<seq>` from an mmCIF atom row, using the loop's own column order. */
+function mmcifResidueKey(
+  line: string,
+  columns: string[] | null
+): string | null {
+  if (!columns) return null;
+  const cells = line.trim().split(/\s+/);
+  const chain = columns.indexOf("auth_asym_id");
+  const seq = columns.indexOf("auth_seq_id");
+  if (chain < 0 || seq < 0 || chain >= cells.length || seq >= cells.length) {
+    return null;
+  }
+  return `${cells[chain]}:${cells[seq]}`;
+}
+
+/**
+ * `A:B\t0.39` rows, highest first. One column per model, named by the header
+ * (`\t0`, or `\t1..\t5` for ColabFold); the lowest index is the model on screen.
+ */
 export function parseChainPairScores(text: string): ChainPairScore[] {
+  const rows = text.split(/\r?\n/);
+  const valueColumn = topRankedColumn(rows);
   const scores: ChainPairScore[] = [];
 
-  for (const line of text.split(/\r?\n/)) {
-    const cells = line.split(/\t/).map((cell) => cell.trim());
-    if (cells.length < 2) continue;
-
+  for (const row of rows) {
+    const cells = row.split(/\t/).map((cell) => cell.trim());
     const pair = cells[0];
-    const value = Number(cells[cells.length - 1]);
-    if (!pair || !pair.includes(":") || !Number.isFinite(value)) continue;
+    if (!pair || !pair.includes(":")) continue;
+
+    const value = Number(cells[valueColumn] ?? cells[cells.length - 1]);
+    if (!Number.isFinite(value)) continue;
     scores.push({ pair, value });
   }
 
   return scores.sort((a, b) => b.value - a.value);
 }
 
+/** The lowest-numbered model's column, or the first value column. */
+function topRankedColumn(rows: readonly string[]): number {
+  for (const row of rows) {
+    const cells = row.split(/\t/);
+    // The header is the one row with no pair label.
+    if (cells.length < 2 || cells[0].trim()) continue;
+
+    const models = cells.slice(1).map((cell) => Number(cell.trim()));
+    if (!models.length || !models.every((model) => Number.isFinite(model))) {
+      break;
+    }
+    let best = 0;
+    models.forEach((model, index) => {
+      if (model < models[best]) best = index;
+    });
+    return best + 1;
+  }
+  return 1;
+}
+
 export interface ChainPairMatrix {
   chains: string[];
-  /** Row-major, symmetric; null on the diagonal and for any missing pair. */
+  /**
+   * Row-major and directional: `rows[i][j]` is chain i against chain j, which may
+   * differ from `rows[j][i]`. Null on the diagonal and for any direction the file
+   * leaves out, so never fill a null from its opposite.
+   */
   rows: Array<Array<number | null>>;
 }
 
 /**
- * Each pair is listed once, so both halves come from the one entry. The diagonal
- * stays empty: a chain has no interface with itself.
+ * Row against column, filling only the directions the file lists — ipTM gives both
+ * and they differ, ipSAE gives one. The diagonal is always empty.
  */
 export function buildChainPairMatrix(
   scores: readonly ChainPairScore[]
@@ -214,7 +313,6 @@ export function buildChainPairMatrix(
     seen.add(left);
     seen.add(right);
     byPair.set(`${left}:${right}`, value);
-    byPair.set(`${right}:${left}`, value);
   }
 
   // Codepoint order, so A-Z sorts before a-z the way the chain labels run.
@@ -600,20 +698,36 @@ function splitCells(line: string): string[] {
     .filter((cell) => cell.length > 0);
 }
 
-/** Map `"A42"` residue tokens to their index in the ordered residue list. */
+/**
+ * `"A42"` to the token indices it covers. A ligand residue covers one index per
+ * atom, so selecting it in the viewer highlights every one of its matrix rows.
+ */
 export function buildResidueLookup(
   residues: readonly ResidueRef[]
-): Map<string, number> {
-  const lookup = new Map<string, number>();
+): Map<string, number[]> {
+  const lookup = new Map<string, number[]>();
   residues.forEach((residue, index) => {
-    lookup.set(formatResidueToken(residue), index);
+    const key = formatResidueToken(residue);
+    const found = lookup.get(key);
+    if (found) found.push(index);
+    else lookup.set(key, [index]);
   });
   return lookup;
 }
 
-/** Render a residue as the `A42` token format the Mol* viewer exchanges. */
+/**
+ * The `A42` format the Mol* viewer exchanges. Always residue-level: the viewer
+ * selects whole residues, so every atom of a ligand shares one token.
+ */
 export function formatResidueToken(residue: ResidueRef): string {
   return `${residue.chain}${residue.seq}`;
+}
+
+/** How a token reads on screen. Ligand atoms share a seq, so they use their name. */
+export function formatTokenLabel(residue: ResidueRef): string {
+  return residue.atom
+    ? `${residue.chain}:${residue.atom}`
+    : `${residue.chain}${residue.seq}`;
 }
 
 /** Group an ordered residue list into contiguous per-chain segments. */
@@ -659,6 +773,16 @@ export function residueIndicesToTokens(
 
   for (const index of sorted) {
     const residue = residues[index];
+    // A ligand's atoms all resolve to the same residue token, so repeats of the
+    // one already open are folded into it rather than emitted again.
+    if (
+      runEnd &&
+      runEnd.chain === residue.chain &&
+      runEnd.seq === residue.seq
+    ) {
+      continue;
+    }
+
     const continues =
       runEnd !== null &&
       runEnd.chain === residue.chain &&
@@ -680,9 +804,12 @@ export function residueIndicesToTokens(
 /** Parse the `A42,B11` / `A12-A14` token format the Mol* viewer emits. */
 export function tokensToResidueIndices(
   tokenString: string,
-  lookup: ReadonlyMap<string, number>
+  lookup: ReadonlyMap<string, readonly number[]>
 ): number[] {
   const indices = new Set<number>();
+  const add = (key: string) => {
+    for (const index of lookup.get(key) ?? []) indices.add(index);
+  };
 
   for (const token of tokenString.split(",")) {
     const trimmed = token.trim();
@@ -693,14 +820,12 @@ export function tokensToResidueIndices(
       const from = parseInt(range[2], 10);
       const to = parseInt(range[4], 10);
       for (let seq = Math.min(from, to); seq <= Math.max(from, to); seq++) {
-        const index = lookup.get(`${range[1]}${seq}`);
-        if (index !== undefined) indices.add(index);
+        add(`${range[1]}${seq}`);
       }
       continue;
     }
 
-    const index = lookup.get(trimmed);
-    if (index !== undefined) indices.add(index);
+    add(trimmed);
   }
 
   return [...indices].sort((a, b) => a - b);

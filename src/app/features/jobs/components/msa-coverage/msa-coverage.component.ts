@@ -14,26 +14,27 @@ import { heroExclamationCircle } from "@ng-icons/heroicons/outline";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
 import { MsaCoverage } from "../../shared/prediction-results.utils";
 
-const DEPTH_INK = "#0b0b0b";
-/* Tailwind grays as hex; canvas oklch parsing is not universal. */
-const AXIS_INK = "#101828";
-const MUTED_INK = "#4a5565";
-const GRID_INK = "#d1d5dc";
-const AXIS_TICK_FONT = '12px system-ui, -apple-system, "Segoe UI", sans-serif';
+const DEPTH_INK = "#030712"; // text-gray-950
+const AXIS_INK = "#101828"; // text-gray-900
+const MUTED_INK = "#4a5565"; // text-gray-600
+const GRID_INK = "#d1d5dc"; // border-gray-300
+const AXIS_TICK_FONT = '12px system-ui, -apple-system, "Segoe UI", sans-serif'; // text-xs font-sans
 const AXIS_TITLE_FONT =
-  '500 12px system-ui, -apple-system, "Segoe UI", sans-serif';
-const SURFACE = "#ffffff";
+  '500 12px system-ui, -apple-system, "Segoe UI", sans-serif'; // text-xs font-medium font-sans
+const SURFACE = "#ffffff"; // bg-white
 
 /** Axis gutters on a 12px grid, identical to the PAE matrix. */
 const PADDING = { left: 60, top: 0, right: 0, bottom: 48 };
-const PLOT_HEIGHT = 340;
-const MIN_PLOT_WIDTH = 140;
-const MAX_PLOT_WIDTH = 900;
+const PLOT_HEIGHT = 336;
+const MIN_PLOT_WIDTH = 144;
+const MAX_PLOT_WIDTH = 840;
 const TICK_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000];
+
 /** Axis title baseline, measured back from the outer edge of its gutter. */
 const AXIS_TITLE_GAP = 8;
 const AXIS_LABEL_GAP = 6;
 const AXIS_TICK_LENGTH = 4;
+
 /** Distance from the canvas edge to the rotated y-axis title. */
 const AXIS_TITLE_INSET = 12;
 
@@ -52,6 +53,7 @@ export class MsaCoverageComponent implements OnDestroy {
   coverage = input<MsaCoverage | null>(null);
   loading = input(false);
   errorMessage = input<string | null>(null);
+  centered = input(false);
 
   private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>("plot");
   private readonly wrapperRef = viewChild<ElementRef<HTMLElement>>("wrapper");
@@ -64,10 +66,9 @@ export class MsaCoverageComponent implements OnDestroy {
   private baseImageFor: MsaCoverage | null = null;
 
   readonly identityGradient = `linear-gradient(to right, ${identityGradientStops()})`;
-  /** As matplotlib labels a vmin=0/vmax=1 colour bar. */
   readonly identityTicks = ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0"];
 
-  /** Plot area within the canvas, in CSS pixels. */
+  /** Plot area within the canvas */
   readonly plotRect = computed(() => ({
     left: PADDING.left,
     top: PADDING.top,
@@ -374,8 +375,7 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * matplotlib's `rainbow_r`, from its own definition rather than eyeballed stops:
- *   r(x) = |2x − 0.5| clipped to 1,  g(x) = sin(πx),  b(x) = cos(πx/2)
+ * Plot colorscheme
  */
 function rainbowReversed(value: number): [number, number, number] {
   const x = 1 - clamp(value, 0, 1);

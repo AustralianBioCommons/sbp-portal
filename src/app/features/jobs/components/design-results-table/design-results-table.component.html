@@ -1,0 +1,84 @@
+<div
+  class="flex h-full flex-col overflow-hidden bg-white"
+  [class]="framed() ? 'rounded-lg border' : ''"
+>
+  <div class="flex-1 overflow-auto">
+    <!-- A grid, so rows can carry aria-selected. No divider on the table: it
+         would draw a line between the header and the first row. -->
+    <table role="grid" class="min-w-full">
+      <caption class="sr-only">
+        {{
+          caption()
+        }}. Select a row to show that design in the structure viewer.
+      </caption>
+      <thead class="bg-sky-900 text-white">
+        <tr>
+          @for (column of columns(); track column.key) {
+          <th
+            scope="col"
+            class="px-4 py-2 text-left align-middle text-sm"
+            [class.w-full]="column.sequence"
+            [attr.aria-sort]="isSortable(column) ? ariaSort(column) : null"
+          >
+            @if (isSortable(column)) {
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 rounded text-left transition-all hover:text-sky-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              [class]="column.emphasised ? 'font-bold' : 'font-medium'"
+              (click)="toggleSort(column)"
+            >
+              {{ column.heading }}
+              <ng-icon
+                [name]="sortIcon(column)"
+                size="12"
+                class="shrink-0"
+                [class.opacity-50]="sortKey() !== column.key"
+                aria-hidden="true"
+              ></ng-icon>
+            </button>
+            } @else {
+            <span [class]="column.emphasised ? 'font-bold' : 'font-medium'">{{
+              column.heading
+            }}</span>
+            }
+          </th>
+          }
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-200 bg-white">
+        @if (sortedRows().length === 0) {
+        <tr>
+          <td
+            [attr.colspan]="columns().length"
+            class="px-4 py-8 text-center text-sm text-gray-500"
+          >
+            No designs to display.
+          </td>
+        </tr>
+        } @else { @for (row of sortedRows(); track row.id) {
+        <tr
+          tabindex="0"
+          class="cursor-pointer transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-600 aria-selected:hover:bg-green-50"
+          [class.bg-green-50]="row.id === selectedId()"
+          [attr.aria-selected]="row.id === selectedId()"
+          (click)="select(row)"
+          (keydown.enter)="selectByKey(row, $event)"
+          (keydown.space)="selectByKey(row, $event)"
+        >
+          @for (column of columns(); track column.key; let first = $first; let
+          last = $last) {
+          <!-- Selection outline: see the stylesheet. -->
+          <td
+            class="p-4 text-sm text-gray-700"
+            [class]="cellClasses(column, row, first, last)"
+          >
+            {{ row.values[column.key] || "—" }}
+          </td>
+          }
+        </tr>
+        } }
+      </tbody>
+    </table>
+  </div>
+</div>

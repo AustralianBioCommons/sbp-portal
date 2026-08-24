@@ -100,7 +100,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   activeSort = signal<"score" | "submitted">("submitted");
 
   // Available status options
-  statusOptions = ["Completed", "Failed", "Stopped", "In progress", "In queue"];
+  statusOptions = ["Completed", "Failed", "In progress", "In queue"];
 
   // Debounce timer for the search input
   private searchDebounce?: ReturnType<typeof setTimeout>;
@@ -498,5 +498,10 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     this.router.navigate(["/jobs", job.id], {
       state: { job },
     });
+  }
+
+  openJobFromKey(job: JobListItem, event: Event): void {
+    event.preventDefault();
+    this.viewJobDetails(job);
   }
 }

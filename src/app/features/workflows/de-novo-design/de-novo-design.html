@@ -154,9 +154,7 @@
               <div
                 id="config-params-panel"
                 class="relative shrink-0"
-                [class.transition-all]="!isDragging()"
-                [class.duration-300]="!isDragging()"
-                [class.ease-in-out]="!isDragging()"
+                [class]="isDragging() ? '' : 'transition-all duration-300 ease-in-out'"
                 [style.width.px]="panelWidth()"
                 [style.minWidth.px]="panelWidth() === 0 ? 0 : minPanelWidth"
                 role="region"
@@ -188,8 +186,13 @@
                 </button>
                 }
 
-                <!-- Inner content wrapper — clips panel content to the outer's dynamic width -->
-                <div class="h-full overflow-hidden">
+                <!-- Inner content wrapper - clips panel content to the outer's
+                     dynamic width. `inert` keeps the clipped controls out of the
+                     tab order and the accessibility tree. -->
+                <div
+                  class="h-full overflow-hidden"
+                  [attr.inert]="panelWidth() === 0 ? '' : null"
+                >
                   <div class="flex h-full w-full flex-col bg-white">
                     <!-- Panel header -->
                     <div

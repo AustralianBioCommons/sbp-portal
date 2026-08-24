@@ -110,7 +110,7 @@ export default class DeNovoDesignComponent
 
   // Schema URLs for bindflow workflow
   private readonly inputSchemaUrl =
-    "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/schema_input.json";
+    "https://raw.githubusercontent.com/AustralianBioCommons/sbp-bindflow/refs/heads/dev/assets/schema_input.json";
 
   // Job Name (reactive form field)
   private readonly fb = inject(NonNullableFormBuilder);
@@ -506,11 +506,6 @@ export default class DeNovoDesignComponent
         // Success callback: initialize form data
         const defaultValues = this.schemaLoader.generateDefaultValues();
 
-        // Add default URLs for settings fields
-        defaultValues.settings_filters =
-          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_filters.json";
-        defaultValues.settings_advanced =
-          "https://raw.githubusercontent.com/Australian-Structural-Biology-Computing/bindflow/refs/heads/dev/assets/bindcraft/default_4stage_multimer.json";
         defaultValues["number_of_final_designs"] = 1;
 
         this.initializeFormData(defaultValues);
@@ -525,20 +520,10 @@ export default class DeNovoDesignComponent
 
         // Initialize table with one default row
         this.schemaLoader.initializeDefaultRow(() => {
-          // After row is created, update it with default URLs
+          // After row is created, update it with default values
           const rows = this.schemaLoader.inputRows();
           if (rows.length > 0) {
             const firstRowId = rows[0].id;
-            this.schemaLoader.updateRowValue(
-              firstRowId,
-              "settings_filters",
-              defaultValues.settings_filters
-            );
-            this.schemaLoader.updateRowValue(
-              firstRowId,
-              "settings_advanced",
-              defaultValues.settings_advanced
-            );
             this.schemaLoader.updateRowValue(
               firstRowId,
               "number_of_final_designs",

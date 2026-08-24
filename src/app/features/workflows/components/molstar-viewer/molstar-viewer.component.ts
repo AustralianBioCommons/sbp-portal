@@ -13,8 +13,8 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import { LoadingComponent } from "../../../../components/loading/loading.component";
 import {
-  heroArrowPath,
   heroArrowUpTray,
   heroExclamationCircle,
   heroFolder,
@@ -25,10 +25,18 @@ import { StructureSelectionManager } from "molstar/lib/mol-plugin-state/manager/
 import { InteractivityManager } from "molstar/lib/mol-plugin-state/manager/interactivity";
 import {
   StructureSelection,
+  StructureElement,
   QueryContext,
   Structure,
   Unit,
 } from "molstar/lib/mol-model/structure";
+import {
+  clearStructureOverpaint,
+  setStructureOverpaint,
+} from "molstar/lib/mol-plugin-state/helpers/structure-overpaint";
+import { PluginCommands } from "molstar/lib/mol-plugin/commands";
+import { Vec3 } from "molstar/lib/mol-math/linear-algebra";
+import { Color } from "molstar/lib/mol-util/color";
 import { MolScriptBuilder as MS } from "molstar/lib/mol-script/language/builder";
 import { compile } from "molstar/lib/mol-script/runtime/query/compiler";
 import { isPolymer } from "molstar/lib/mol-model/structure/model/types";
@@ -38,11 +46,71 @@ import {
   StructureFormat,
 } from "../../../jobs/shared/prediction-results.utils";
 
-/**
- * Registered by Mol*'s quality-assessment extension. The cast is needed because
- * extension themes sit outside the colour union typing `addRepresentation`.
- */
+/** An extension theme, so it falls outside the colour union `addRepresentation`
+ *  is typed with — hence the cast. */
 const PLDDT_COLOR_THEME = "plddt-confidence" as "uniform";
+
+/** gray-500, for everything outside an isolated selection. */
+const MUTED_STRUCTURE_COLOR = Color(0x6a7282);
+
+/** The `chain-a` colours: blue against orange to differentiate. */
+const CHAIN_A_STRUCTURE_COLOR = Color(0x0284c7);
+const OTHER_CHAINS_STRUCTURE_COLOR = Color(0xea8b0b);
+
+/** `chain-a` colours as CSS */
+export const CHAIN_A_COLOR = Color.toHexStyle(CHAIN_A_STRUCTURE_COLOR);
+export const OTHER_CHAINS_COLOR = Color.toHexStyle(
+  OTHER_CHAINS_STRUCTURE_COLOR
+);
+
+/** The chain that gets its own colour; every other chain shares the second. */
+const DISTINCT_CHAIN_ID = "A";
+
+/** Selects chain A, or every other chain, depending on the relation given. */
+function chainQuery(relation: typeof MS.core.rel.eq) {
+  return MS.struct.generator.atomGroups({
+    "chain-test": relation([MS.ammp("auth_asym_id"), DISTINCT_CHAIN_ID]),
+  });
+}
+
+const MIN_CAMERA_RADIUS = 0.01;
+
+/**
+ * Mol*'s default orientation — looking down -Z with +Y up — pointed at the
+ * given structure. Built from constants, not captured from the viewer, because
+ * Mol*'s own default aims at the origin rather than at the structure.
+ */
+export function defaultCameraSnapshot(
+  sphere: { center: Vec3; radius: number },
+  targetDistance: (radius: number) => number
+): { target: Vec3; position: Vec3; up: Vec3; radius: number } {
+  const radius = Math.max(sphere.radius, MIN_CAMERA_RADIUS);
+  return {
+    target: Vec3.clone(sphere.center),
+    position: Vec3.add(
+      Vec3(),
+      sphere.center,
+      Vec3.create(0, 0, targetDistance(radius))
+    ),
+    up: Vec3.create(0, 1, 0),
+    radius,
+  };
+}
+
+/**
+ * One component per part, because Mol*'s `polymer` is protein, RNA and DNA only
+ * and the rest must be named. Sticks for them: a cartoon has no chain to trace.
+ */
+const STRUCTURE_PARTS = [
+  { key: "polymer", label: "Polymer", type: "cartoon" },
+  { key: "ligand", label: "Ligand", type: "ball-and-stick" },
+  { key: "ion", label: "Ion", type: "ball-and-stick" },
+  { key: "branched", label: "Carbohydrate", type: "ball-and-stick" },
+  { key: "lipid", label: "Lipid", type: "ball-and-stick" },
+] as const;
+
+/** Mol*'s defaults (8 and 4) frame a few residues far too close. */
+const ISOLATE_FOCUS = { minRadius: 18, extraRadius: 8, durationMs: 250 };
 
 export interface StructureSource {
   content: string;
@@ -51,12 +119,17 @@ export interface StructureSource {
   label: string;
 }
 
+/** One residue while the index is being built; `atoms` is empty for a polymer. */
+interface ResidueToken {
+  polymer: boolean;
+  atoms: string[];
+}
+
 @Component({
   selector: "app-molstar-viewer",
-  imports: [CommonModule, NgIconComponent],
+  imports: [CommonModule, NgIconComponent, LoadingComponent],
   providers: [
     provideIcons({
-      heroArrowPath,
       heroArrowUpTray,
       heroExclamationCircle,
       heroFolder,
@@ -73,42 +146,44 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   structureSource = input<StructureSource | null>(null);
   /** Disables the file picker embedded in the idle placeholder. */
   disabled = input(false);
-  /** Show the idle upload placeholder. Off where the structure always arrives from outside. */
+  /** Show the idle upload placeholder. */
   enableUpload = input(true);
-  /** Programmatically select residues from outside (e.g. manual form input).
-   *  Accepts the same comma-separated token format the viewer emits:
-   *  "A56,B12". Set to "" to clear the selection. */
+  /** The parent is still fetching the file: same overlay, one phase earlier. */
+  sourceLoading = input(false);
+  /** Residues to select, in the tokens the viewer emits ("A56,B12"); "" clears. */
   externalSelection = input("");
-  /** As `externalSelection`, but a fresh object re-applies an unchanged token
-   *  list — for selections that can legitimately be asked for twice. Wins when set. */
+  /** As `externalSelection`, but a new object re-applies the same tokens. Wins
+   *  when set. */
   selectionRequest = input<{ tokens: string } | null>(null);
-  /** Round the viewport's bottom-right corner. Set when the viewer meets the
-   *  container's right edge (e.g. the config panel is collapsed); the WebGL
-   *  canvas must be rounded on its own container, not by an ancestor clip. */
+  /** Round the canvas's own bottom-right corner. An ancestor's clip cannot round
+   *  WebGL. */
   roundBottomRight = input(false);
   /** Overlay hint shown once a structure is on screen. Empty hides it. */
   hint = input("Click residues in the viewer to add them as hotspots");
-  /** The default keeps the ball-and-stick overlay the design workflows pick
-   *  residues with; "cartoon" is the plain fold view. */
+  /** The default adds the stick overlay residues are picked from; "cartoon" is
+   *  the plain fold view. */
   representation = input<"cartoon" | "cartoon-and-sticks">(
     "cartoon-and-sticks"
   );
-  /** "plddt" uses the AlphaFold confidence palette, for predicted structures only. */
-  colorTheme = input<"default" | "plddt">("default");
+  /** "plddt" is the AlphaFold confidence palette; "chain-a" sets chain A apart. */
+  colorTheme = input<"default" | "plddt" | "chain-a">("default");
+  /** Off leaves a click to Mol*'s own focus, which zooms rather than selects. */
+  enablePicking = input(true);
+  /** Show a selection by muting the rest and zooming to it, not by marking it. */
+  isolateSelection = input(false);
   showSequencePanel = input(true);
 
-  /** Emits a comma-separated residue string (e.g. "A42,A43,B11") on each selection change. */
+  /** The selection as "A42,A43,B11", on every change. */
   residuesSelected = output<string>();
-  /** Emits the chosen File when the user picks one from the idle placeholder. */
+  /** The file picked from the idle placeholder. */
   filePicked = output<File>();
-  /** Emits total residue count of the loaded structure (use as slider max). */
+  /** Residue count of the loaded structure. */
   sequenceLengthDetected = output<number>();
-  /** Emits the full chain→residue-number map after a structure loads.
-   *  The parent can use this for validation without re-parsing the PDB file. */
+  /** chain→residue numbers, so a parent can validate without re-parsing the file. */
   structureResiduesDetected = output<Map<string, Set<number>>>();
   /** Polymer residues in sequence order; positions line up with PAE rows and columns. */
   residueIndexDetected = output<ResidueRef[]>();
-  /** A malformed or unsupported file, which the caller cannot detect from the fetch. */
+  /** A malformed or unsupported file, which the caller cannot see from the fetch. */
   loadError = output<string>();
 
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
@@ -119,8 +194,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   private selectionSub: { unsubscribe(): void } | null = null;
   private formSubmitAbortCtrl: AbortController | null = null;
   private readonly zone = inject(NgZone);
-  /** True while a programmatic selection is being applied — suppresses the
-   *  residuesSelected event so it doesn't echo back to the parent. */
+  /** Suppresses residuesSelected while a programmatic selection is applied, so
+   *  it cannot echo back to the parent. */
   private _applyingExternalSelection = false;
   private _viewInitialized = false;
 
@@ -128,7 +203,6 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
 
   constructor() {
-    // React to structure input changes after view is ready.
     effect(() => {
       this.structureSource();
       this.pdbFile();
@@ -138,7 +212,6 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       });
     });
 
-    // Replaces the externalSelection setter.
     effect(() => {
       const sel = this.externalSelection();
       untracked(() => {
@@ -191,6 +264,19 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
+
+  /** Reset the structure again based on the orientation it loaded in */
+  resetCamera(): void {
+    const canvas3d = this.plugin?.canvas3d;
+    if (!canvas3d) return;
+
+    canvas3d.requestCameraReset({
+      snapshot: (scene, camera) =>
+        defaultCameraSnapshot(scene.boundingSphereVisible, (radius) =>
+          camera.getTargetDistance(radius)
+        ),
+    });
+  }
 
   clearSelection(): void {
     try {
@@ -264,7 +350,9 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           /* non-critical */
         }
         try {
-          this.plugin!.selectionMode = true;
+          // Selection mode makes a plain click pick a residue, and moves camera
+          // focus onto right-click — so picking and click-to-zoom are exclusive.
+          this.plugin!.selectionMode = this.enablePicking();
         } catch {
           /* non-critical */
         }
@@ -281,10 +369,11 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       });
 
       await this.applyRepresentation();
+      await this.relaxCameraClipping();
       this.applyTopRegion();
       this.status.set("loaded");
       this.emitStructureInfo();
-      // Apply any selection that arrived before or while the structure was loading.
+      // A selection that arrived before the structure finished loading.
       const pendingSel =
         this.selectionRequest()?.tokens ?? this.externalSelection();
       if (pendingSel) {
@@ -295,7 +384,74 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  /** Loading runs outside Angular's zone, so the emit is re-entered through it. */
+  /**
+   * Mol* sets the far plane and the fog from the focused radius, so zooming to a
+   * selection clips or fades the rest. Measure both from the scene instead.
+   */
+  private async relaxCameraClipping(): Promise<void> {
+    if (!this.plugin || !this.isolateSelection()) return;
+    try {
+      await PluginCommands.Canvas3D.SetSettings(this.plugin, {
+        settings: (old) => ({
+          cameraClipping: { ...old.cameraClipping, radius: 0, far: false },
+          cameraFog: { name: "off", params: {} },
+        }),
+      });
+    } catch {
+      /* non-critical */
+    }
+  }
+
+  /**
+   * Mute everything but `selected` and zoom to it; an empty list restores the
+   * lot. Overpaint, not a colour theme, so the selection keeps its own colours.
+   */
+  private async isolate(selected: StructureElement.Loci[]): Promise<void> {
+    if (!this.plugin) return;
+
+    const components =
+      this.plugin.managers.structure.hierarchy.current?.structures.flatMap(
+        (structure) => structure.components
+      ) ?? [];
+
+    // Camera first, so a failed or impossible repaint still leaves it zoomed.
+    if (selected.length === 0) {
+      this.plugin.managers.camera.reset();
+    } else {
+      this.plugin.managers.camera.focusLoci(selected, ISOLATE_FOCUS);
+    }
+    if (components.length === 0) return;
+
+    try {
+      await clearStructureOverpaint(this.plugin, components);
+      if (selected.length === 0) return;
+
+      const byStructure = new Map<Structure, StructureElement.Loci>();
+      for (const loci of selected) {
+        const found = byStructure.get(loci.structure);
+        byStructure.set(
+          loci.structure,
+          found ? StructureElement.Loci.union(found, loci) : loci
+        );
+      }
+
+      await setStructureOverpaint(
+        this.plugin,
+        components,
+        MUTED_STRUCTURE_COLOR,
+        async (structure) => {
+          const keep = byStructure.get(structure);
+          const all = StructureElement.Loci.all(structure);
+          // Paint the complement, so what is left keeps its own colours.
+          return keep ? StructureElement.Loci.subtract(all, keep) : all;
+        }
+      );
+    } catch (e) {
+      console.warn("Mol* isolate failed:", e);
+    }
+  }
+
+  /** Loading runs outside Angular's zone, so the emit re-enters it. */
   private fail(err: unknown, fallback: string): void {
     const message = err instanceof Error ? err.message : fallback;
     this.errorMessage.set(message);
@@ -312,17 +468,13 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
   // ── Selection ──────────────────────────────────────────────────────────────
 
-  /**
-   * Subscribe to selection.events.changed — fires after Mol*'s SelectLoci
-   * behavior updates entries, so we always read the current selection.
-   * Callbacks run outside Angular's zone, so we re-enter via NgZone.run().
-   */
+  /** selection.events.changed fires after SelectLoci has updated its entries,
+   *  and outside Angular's zone. */
   private hookSelection(): void {
     if (!this.viewer) return;
     try {
       const selMgr = this.selectionManager;
       this.selectionSub = selMgr.events.changed.subscribe(() => {
-        // Suppress echo-back while we are applying an external selection.
         if (this._applyingExternalSelection) return;
         const residues = this.readCurrentSelection(selMgr);
         this.zone.run(() => {
@@ -337,9 +489,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  /** Programmatically select the residues described by a comma-separated token
-   *  string (e.g. "A56,B12").  Suppresses the outgoing
-   *  residuesSelected event so the parent form is not overwritten. */
+  /** Select the residues named by "A56,B12", without emitting residuesSelected:
+   *  the parent form must not be overwritten. */
   private async applyExternalSelection(residueString: string): Promise<void> {
     if (!this.plugin || this.status() !== "loaded") return;
 
@@ -349,9 +500,11 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         .lociSelects as InteractivityManager.LociSelectManager;
       lociSelects.deselectAll();
 
-      if (!residueString.trim()) return;
+      if (!residueString.trim()) {
+        if (this.isolateSelection()) await this.isolate([]);
+        return;
+      }
 
-      // Parse tokens → chain → Set<residueNumber>
       const targetResidues = new Map<string, Set<number>>();
       for (const token of residueString
         .split(",")
@@ -383,18 +536,27 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           : MS.struct.combinator.merge(chainExprs);
       const query = compile<StructureSelection>(expr);
 
-      // lociSelects.select applies the selection *marking* as well as the state,
-      // which is what makes the representation and sequence panel show it.
-      // Writing to the selection manager alone marks nothing.
       const structures =
         this.plugin.managers.structure.hierarchy.current?.structures ?? [];
+      const selected: StructureElement.Loci[] = [];
+
       for (const s of structures) {
         const structure = s.cell.obj?.data as Structure | undefined;
         if (!structure) continue;
         const sel = query(new QueryContext(structure));
         const loci = StructureSelection.toLociWithSourceUnits(sel);
-        // The loci are already whole residues, so skip granularity expansion.
-        lociSelects.select({ loci }, false);
+        if (StructureElement.Loci.isEmpty(loci)) continue;
+        selected.push(loci);
+
+        if (!this.isolateSelection()) {
+          // Only lociSelects.select marks the representation and sequence
+          // panel. False: these loci are whole residues already.
+          lociSelects.select({ loci }, false);
+        }
+      }
+
+      if (this.isolateSelection()) {
+        await this.isolate(selected);
       }
     } catch (e) {
       console.warn("Mol* external selection failed:", e);
@@ -425,8 +587,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Walk a sub-Structure's units collecting chain+seqId residue labels.
-   * unit.elements is a SortedArray of GLOBAL atom indices into the model hierarchy.
+   * Collect chain+seqId labels from a sub-Structure. `unit.elements` holds
+   * global atom indices into the model hierarchy, not unit-local ones.
    */
   private visitStructureUnits(
     structure: Structure,
@@ -456,9 +618,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   /**
-   * Force regionState.top to 'full' so the sequence bar gets space —
-   * layoutIsExpanded:false leaves all regions 'hidden' by default. With the bar
-   * off, `layoutShowSequence: false` has already dropped the top region.
+   * `layoutIsExpanded: false` hides every region, so the sequence bar only gets
+   * space once the top one is forced back to 'full'.
    */
   private applyTopRegion(): void {
     if (!this.plugin || !this.showSequencePanel()) return;
@@ -472,10 +633,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Replace the default representation with cartoon, plus a ball-and-stick
-   * overlay unless the caller asked for the plain cartoon view.
-   */
+  /** Cartoon in place of Mol*'s default, plus sticks unless plain cartoon. */
   private async applyRepresentation(): Promise<void> {
     if (!this.plugin) return;
     try {
@@ -484,54 +642,103 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       const reprBuilder = this.plugin.builders.structure.representation;
       const structures = hierarchy.current?.structures ?? [];
 
+      // The theme reads pLDDT from ma_qa_metric_local (mmCIF) or the B-factor
+      // column (PDB), and throws for a file carrying neither.
+      const usePlddt = this.colorTheme() === "plddt";
+
       for (const s of structures) {
         await componentMgr.removeRepresentations(s.components);
-        const polymer =
-          await this.plugin.builders.structure.tryCreateComponentStatic(
-            s.cell,
-            "polymer",
-            { label: "Polymer" }
-          );
-        if (!polymer) continue;
 
-        // Mol*'s theme reads pLDDT from ma_qa_metric_local (mmCIF) or the
-        // B-factor column (PDB); anything without it falls back to the default.
-        const usePlddt = this.colorTheme() === "plddt";
-        let coloured = false;
-        if (usePlddt) {
-          try {
-            await reprBuilder.addRepresentation(polymer, {
-              type: "cartoon",
-              color: PLDDT_COLOR_THEME,
+        for (const part of STRUCTURE_PARTS) {
+          const component =
+            await this.plugin.builders.structure.tryCreateComponentStatic(
+              s.cell,
+              part.key,
+              { label: part.label }
+            );
+          if (!component) continue;
+
+          let coloured = false;
+          if (usePlddt) {
+            try {
+              await reprBuilder.addRepresentation(component, {
+                type: part.type,
+                color: PLDDT_COLOR_THEME,
+              });
+              coloured = true;
+            } catch {
+              coloured = false;
+            }
+          }
+          if (!coloured) {
+            await reprBuilder.addRepresentation(component, { type: part.type });
+          }
+
+          if (
+            part.key === "polymer" &&
+            this.representation() === "cartoon-and-sticks"
+          ) {
+            await reprBuilder.addRepresentation(component, {
+              type: "ball-and-stick",
+              typeParams: { sizeFactor: 0.18, sizeAspectRatio: 0.7 },
             });
-            coloured = true;
-          } catch {
-            coloured = false;
           }
         }
-        if (!coloured) {
-          await reprBuilder.addRepresentation(polymer, { type: "cartoon" });
-        }
-
-        if (this.representation() === "cartoon-and-sticks") {
-          await reprBuilder.addRepresentation(polymer, {
-            type: "ball-and-stick",
-            typeParams: { sizeFactor: 0.18, sizeAspectRatio: 0.7 },
-          });
-        }
       }
+
+      if (this.colorTheme() === "chain-a") await this.applyChainColors();
     } catch {
       /* non-critical — default visual still shows */
     }
   }
 
-  /** One walk of the structure, emitting the chain→residue map, count and index. */
+  private async applyChainColors(): Promise<void> {
+    if (!this.plugin) return;
+
+    const components =
+      this.plugin.managers.structure.hierarchy.current?.structures.flatMap(
+        (structure) => structure.components
+      ) ?? [];
+    if (components.length === 0) return;
+
+    const layers = [
+      {
+        color: CHAIN_A_STRUCTURE_COLOR,
+        expression: chainQuery(MS.core.rel.eq),
+      },
+      {
+        color: OTHER_CHAINS_STRUCTURE_COLOR,
+        expression: chainQuery(MS.core.rel.neq),
+      },
+    ];
+
+    try {
+      await clearStructureOverpaint(this.plugin, components);
+
+      for (const layer of layers) {
+        const query = compile<StructureSelection>(layer.expression);
+        await setStructureOverpaint(
+          this.plugin,
+          components,
+          layer.color,
+          async (structure) =>
+            StructureSelection.toLociWithSourceUnits(
+              query(new QueryContext(structure))
+            )
+        );
+      }
+    } catch (e) {
+      console.warn("Mol* chain colouring failed:", e);
+    }
+  }
+
+  /** One walk of the structure for all three outputs: map, count and index. */
   private emitStructureInfo(): void {
     try {
       const structures =
         this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
       const residueMap = new Map<string, Set<number>>();
-      const polymerMap = new Map<string, Set<number>>();
+      const tokens = new Map<string, Map<number, ResidueToken>>();
 
       for (const s of structures) {
         const structure = s.cell.obj?.data as Structure | undefined;
@@ -544,6 +751,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
             const chainIdx = atomicHierarchy.chainAtomSegments.index;
             const seqIdVal = atomicHierarchy.residues.auth_seq_id.value;
             const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
+            const atomIdVal = atomicHierarchy.atoms.label_atom_id.value;
             const moleculeType = atomicHierarchy.derived.residue.moleculeType;
             OrderedSet.forEach(unit.elements, (atomIdx) => {
               const chain = chainIdVal(chainIdx[atomIdx]);
@@ -552,9 +760,17 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
               if (!residueMap.has(chain)) residueMap.set(chain, new Set());
               residueMap.get(chain)!.add(resNum);
 
-              if (isPolymer(moleculeType[resIdx])) {
-                if (!polymerMap.has(chain)) polymerMap.set(chain, new Set());
-                polymerMap.get(chain)!.add(resNum);
+              if (!tokens.has(chain)) tokens.set(chain, new Map());
+              const chainTokens = tokens.get(chain)!;
+              const polymer = isPolymer(moleculeType[resIdx]);
+              const existing = chainTokens.get(resNum);
+              if (!existing) {
+                chainTokens.set(resNum, {
+                  polymer,
+                  atoms: polymer ? [] : [atomIdVal(atomIdx)],
+                });
+              } else if (!existing.polymer) {
+                existing.atoms.push(atomIdVal(atomIdx));
               }
             });
           } catch {
@@ -565,9 +781,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
       if (residueMap.size > 0) {
         const total = [...residueMap.values()].reduce((n, s) => n + s.size, 0);
-        const residueIndex = MolstarViewerComponent.toOrderedResidues(
-          polymerMap.size > 0 ? polymerMap : residueMap
-        );
+        const residueIndex = MolstarViewerComponent.toOrderedTokens(tokens);
         this.zone.run(() => {
           this.structureResiduesDetected.emit(residueMap);
           this.sequenceLengthDetected.emit(total);
@@ -579,22 +793,28 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  /** Sequence order: chains alphabetically, as prediction tools assign them,
-   *  then residues ascending. */
-  private static toOrderedResidues(
-    residues: Map<string, Set<number>>
+  /**
+   * PAE token order, which is how Boltz scores them: chains alphabetically,
+   * residues ascending, a ligand one token per atom in file order.
+   */
+  private static toOrderedTokens(
+    chains: Map<string, Map<number, ResidueToken>>
   ): ResidueRef[] {
-    return [...residues.entries()]
+    return [...chains.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
-      .flatMap(([chain, seqs]) =>
-        [...seqs].sort((a, b) => a - b).map((seq) => ({ chain, seq }))
+      .flatMap(([chain, residues]) =>
+        [...residues.entries()]
+          .sort(([a], [b]) => a - b)
+          .flatMap(([seq, token]) =>
+            token.polymer
+              ? [{ chain, seq }]
+              : token.atoms.map((atom) => ({ chain, seq, atom }))
+          )
       );
   }
 
-  /** Prevent any <button> inside the viewer from submitting the parent form.
-   *  The listener is tied to an AbortController so it's removed on destroy. */
+  /** Prevent any <button> inside the viewer from submitting the parent form. */
   private preventButtonFormSubmit(): void {
-    // Only register once per component instance.
     if (this.formSubmitAbortCtrl) return;
     const container = document.getElementById(this.containerId);
     if (!container) return;
@@ -620,8 +840,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     this.selectionSub = null;
   }
 
-  /** Parse a residue token ("A56" or same-chain range "A12-A14") into
-   *  { chain, resStart, resEnd }, or null for an unrecognised format. */
+  /** "A56" or a same-chain range "A12-A14"; null if it is neither. */
   static parseResidueToken(
     token: string
   ): { chain: string; resStart: number; resEnd: number } | null {

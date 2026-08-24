@@ -74,7 +74,7 @@
 
     <!-- Right: Auth Section -->
     <div class="flex items-center gap-4 shrink-0">
-      @if (isAuthenticated$ | async) { @let user = (user$ | async); @if
+      @if (isAuthenticated$ | async) { @let user = user$ | async; @if
       (creditsEnabled) {
       <!-- Credits remaining -->
       <app-tooltip
@@ -190,8 +190,7 @@
   <!-- Mobile Menu Backdrop -->
   <div
     class="fixed inset-0 z-40 bg-black/50 transition-opacity"
-    [class.opacity-0]="!isMobileMenuOpen()"
-    [class.pointer-events-none]="!isMobileMenuOpen()"
+    [class]="isMobileMenuOpen() ? '' : 'opacity-0 pointer-events-none'"
     (click)="closeMobileMenu()"
     aria-hidden="true"
   ></div>
