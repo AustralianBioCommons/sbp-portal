@@ -418,6 +418,16 @@ export default class DeNovoDesignComponent
     this.updateRowValueWithValidation(rowId, "max_length", range.max);
   }
 
+  /** Called when the user edits the "Number of Trajectories" field. Mirrors
+   *  the value into bindflow's number_of_final_designs so the QC-pass target
+   *  never gates the run below the requested trajectory count — the run is
+   *  bounded to exactly max_trajectories, not an open-ended search for
+   *  passing designs. */
+  onTrajectoryCountChange(rowId: string, value: unknown): void {
+    this.updateRowValueWithValidation(rowId, "max_trajectories", value);
+    this.updateRowValueWithValidation(rowId, "number_of_final_designs", value);
+  }
+
   /** Called when the user selects residues in the Mol* viewer. */
   onResiduesSelected(rowId: string, residues: string): void {
     this.updateRowValueWithValidation(
@@ -481,13 +491,13 @@ export default class DeNovoDesignComponent
     }, 5000);
   }
 
-  /** Credit cost of the run: tool multiplier × number of final designs. */
+  /** Credit cost of the run: tool multiplier × number of trajectories. */
   readonly creditCost = computed<number | null>(() => {
     const multiplier = this.toolMultipliers()[this.selectedTool()];
     if (multiplier == null) return null;
     const rowId = this.schemaLoader.inputRows()[0]?.id;
     if (!rowId) return null;
-    const count = this.getRowNumberValue(rowId, "number_of_final_designs", 0);
+    const count = this.getRowNumberValue(rowId, "max_trajectories", 0);
     if (!Number.isInteger(count) || count < 1) return null;
     return multiplier * count;
   });
@@ -506,6 +516,11 @@ export default class DeNovoDesignComponent
         // Success callback: initialize form data
         const defaultValues = this.schemaLoader.generateDefaultValues();
 
+        // max_trajectories is the user-facing "number of trajectories" dial;
+        // number_of_final_designs is mirrored to the same value so bindflow's
+        // QC-pass target never gates the run below the requested trajectory
+        // count (see onTrajectoryCountChange).
+        defaultValues["max_trajectories"] = 1;
         defaultValues["number_of_final_designs"] = 1;
 
         this.initializeFormData(defaultValues);
@@ -524,6 +539,7 @@ export default class DeNovoDesignComponent
           const rows = this.schemaLoader.inputRows();
           if (rows.length > 0) {
             const firstRowId = rows[0].id;
+            this.schemaLoader.updateRowValue(firstRowId, "max_trajectories", 1);
             this.schemaLoader.updateRowValue(
               firstRowId,
               "number_of_final_designs",
@@ -956,6 +972,7 @@ export default class DeNovoDesignComponent
   resetForm(): void {
     const defaultValues = this.schemaLoader.generateDefaultValues();
     if (Object.keys(defaultValues).length > 0) {
+      defaultValues["max_trajectories"] = 1;
       defaultValues["number_of_final_designs"] = 1;
       this.initializeFormData(defaultValues);
     }
