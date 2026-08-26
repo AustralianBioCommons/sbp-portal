@@ -506,10 +506,23 @@ describe("SinglePredictionComponent", () => {
     component.updateColabfoldNumRecycles("3.5");
     expect(component.isStep2Valid()).toBe(false);
     expect(component.toolSettingErrors().colabfoldNumRecycles).toContain(
-      "whole number"
+      "integer between 1-10"
     );
 
     component.updateColabfoldNumRecycles("3");
+    expect(component.toolSettingErrors().colabfoldNumRecycles).toBeUndefined();
+  });
+
+  it("should reject a number of Recycles greater than 10", () => {
+    component.selectTool("colabfold");
+
+    component.updateColabfoldNumRecycles("11");
+    expect(component.isStep2Valid()).toBe(false);
+    expect(component.toolSettingErrors().colabfoldNumRecycles).toContain(
+      "integer between 1-10"
+    );
+
+    component.updateColabfoldNumRecycles("10");
     expect(component.toolSettingErrors().colabfoldNumRecycles).toBeUndefined();
   });
 
