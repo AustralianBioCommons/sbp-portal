@@ -106,6 +106,7 @@ const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
 
 /** Exclusive upper bound for the random seed (enforces a maximum of 8 digits). */
 const MAX_RANDOM_SEED = 99999999;
+const MAX_COLABFOLD_NUM_RECYCLES = 10;
 
 /** ColabFold recycle count used until the user changes it. */
 const DEFAULT_COLABFOLD_NUM_RECYCLES = 3;
@@ -737,12 +738,12 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         "Random Seed must be a whole number with at most 8 digits";
     }
 
+    const recycles = parsePositiveInteger(this.colabfoldNumRecycles());
     if (
       this.selectedTool() === "colabfold" &&
-      parsePositiveInteger(this.colabfoldNumRecycles()) === null
+      (recycles === null || recycles > MAX_COLABFOLD_NUM_RECYCLES)
     ) {
-      errors.colabfoldNumRecycles =
-        "colabfold_num_recycles must be a whole number greater than or equal to 1";
+      errors.colabfoldNumRecycles = `Should be an integer between 1-${MAX_COLABFOLD_NUM_RECYCLES}. Default value is ${DEFAULT_COLABFOLD_NUM_RECYCLES}.`;
     }
 
     return errors;
