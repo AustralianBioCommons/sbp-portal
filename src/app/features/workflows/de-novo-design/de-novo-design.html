@@ -299,7 +299,7 @@
                         @for (field of schemaLoader.requiredInputFields(); track
                         field.name) { @if (field.name === 'max_trajectories') {
                         <app-form-field
-                          [field]="field"
+                          [field]="getTrajectoryField(field)"
                           [value]="getRowValue(row.id, field.name)"
                           [hasError]="hasRowFieldError(row.id, field.name)"
                           [errorMessage]="getRowFieldError(row.id, field.name) || ''"

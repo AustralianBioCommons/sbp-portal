@@ -45,6 +45,7 @@ import { WorkflowPreviewModalComponent } from "../components/workflow-preview-mo
 import { DatasetUploadService } from "../services/dataset-upload.service";
 import { PdbUploadService } from "../services/pdb-upload.service";
 import { SchemaLoaderService } from "../services/schema-loader.service";
+import { InputSchemaField } from "../services/input-schema.service";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import {
   DeNovoDesignPayload,
@@ -426,6 +427,22 @@ export default class DeNovoDesignComponent
   onTrajectoryCountChange(rowId: string, value: unknown): void {
     this.updateRowValueWithValidation(rowId, "max_trajectories", value);
     this.updateRowValueWithValidation(rowId, "number_of_final_designs", value);
+  }
+
+  /** "Trajectories" is a BindCraft concept (retry until N pass QC, capped at
+   *  max_trajectories) — RFDiffusion has no such loop, it generates exactly
+   *  this many designs directly, so the shared field reads differently
+   *  per tool. */
+  trajectoryFieldLabel(): string {
+    return this.selectedTool() === "bindcraft"
+      ? "Number of Trajectories"
+      : "Number of Final Designs";
+  }
+
+  /** Returns the max_trajectories field with its label swapped for the
+   *  currently selected tool (see trajectoryFieldLabel). */
+  getTrajectoryField(field: InputSchemaField): InputSchemaField {
+    return { ...field, label: this.trajectoryFieldLabel() };
   }
 
   /** Called when the user selects residues in the Mol* viewer. */
@@ -898,6 +915,9 @@ export default class DeNovoDesignComponent
       "binder_name",
       "id",
       "chains",
+      // Mirrored from max_trajectories (see onTrajectoryCountChange) —
+      // showing both would duplicate the same value under two labels.
+      "number_of_final_designs",
     ];
 
     fields.forEach((field) => {
@@ -934,7 +954,10 @@ export default class DeNovoDesignComponent
       }
 
       summary.push({
-        label: field.label || field.name,
+        label:
+          field.name === "max_trajectories"
+            ? this.trajectoryFieldLabel()
+            : field.label || field.name,
         value: displayValue,
         fieldName: field.name,
         ...(downloadUrl ? { url: downloadUrl } : {}),
