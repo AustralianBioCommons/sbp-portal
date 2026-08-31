@@ -12,6 +12,9 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - name: Generate GitHub App token
         id: app-token
@@ -21,6 +24,7 @@ jobs:
           private-key: ${{ secrets.SBP_RELEASE_PLEASE_APP_PRIVATE_KEY }}
 
       - uses: googleapis/release-please-action@v5
+        id: release
         with:
           release-type: node
           package-name: sbp-portal
@@ -39,3 +43,68 @@ jobs:
               {"type":"chore","section":"Chores","hidden":true},
               {"type":"test","section":"Tests","hidden":true}
             ]
+
+  # Publishes an immutable, version-tagged portal build for prod to promote,
+  # right at the point a release is cut (merging the release-please PR) — no
+  # extra manual step, and no new IAM trust needed since this job still runs
+  # under the same push-to-staging OIDC identity as build_and_deploy.yml's
+  # staging job (AWS_ROLE_FRONTEND already trusts refs/heads/staging).
+  publish-release-build:
+    needs: release
+    if: needs.release.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write build version
+        env:
+          TAG_NAME: ${{ needs.release.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          echo "export const buildVersion = '${TAG_NAME#v}';" > src/environments/build-version.ts
+
+      - name: Build production bundle
+        run: npx ng build --configuration production --output-path dist/sbp-portal-prod
+
+      - name: Build debug bundle
+        run: npx ng build --configuration debug --output-path dist/sbp-portal-debug
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_FRONTEND }}
+          role-session-name: portal-release-upload
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload production versioned build
+        env:
+          AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
+          TAG_NAME: ${{ needs.release.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG_NAME#v}"
+          aws s3 sync dist/sbp-portal-prod/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/prod/version/${VERSION}/" --delete
+
+      - name: Upload debug versioned build
+        env:
+          AWS_PORTAL_BUILD_BUCKET: ${{ secrets.AWS_PORTAL_BUILD_BUCKET }}
+          TAG_NAME: ${{ needs.release.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG_NAME#v}"
+          aws s3 sync dist/sbp-portal-debug/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/debug/version/${VERSION}/" --delete
