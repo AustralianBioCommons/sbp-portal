@@ -255,7 +255,8 @@
                       field.name) { @if (field.name === 'starting_pdb' ||
                       field.name === 'max_length' || field.name ===
                       'binder_name' || field.name === 'id' || field.name ===
-                      'number_of_final_designs' || field.name === 'chains') {
+                      'number_of_final_designs' || field.name ===
+                      'max_trajectories' || field.name === 'chains') {
                       <!-- skip: chains are derived from hotspot residues at submission time -->
                       } @else if (field.name === 'min_length') {
                       <div>
@@ -293,17 +294,16 @@
                       ></app-form-field>
                       } }
 
-                      <!-- Number of designs + credits -->
+                      <!-- Number of trajectories + credits -->
                       <div class="flex flex-col gap-4">
                         @for (field of schemaLoader.requiredInputFields(); track
-                        field.name) { @if (field.name ===
-                        'number_of_final_designs') {
+                        field.name) { @if (field.name === 'max_trajectories') {
                         <app-form-field
-                          [field]="field"
+                          [field]="getTrajectoryField(field)"
                           [value]="getRowValue(row.id, field.name)"
                           [hasError]="hasRowFieldError(row.id, field.name)"
                           [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                          (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
+                          (valueChange)="onTrajectoryCountChange(row.id, $event)"
                           (fieldBlur)="validateRowField(row.id, field.name)"
                         ></app-form-field>
                         } } @if (creditsEnabled) {

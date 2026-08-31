@@ -242,6 +242,7 @@ export class InputSchemaService {
    */
   private static readonly LABEL_OVERRIDES: Record<string, string> = {
     starting_pdb: "Target PDB",
+    max_trajectories: "Number of Trajectories",
   };
 
   /**

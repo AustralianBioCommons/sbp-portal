@@ -653,9 +653,9 @@ describe("DeNovoDesignComponent", () => {
       expect(component.getRowNumberValue("row1", "n", 3)).toBe(3);
     });
 
-    it("computes credit cost from multiplier and design count", () => {
+    it("computes credit cost from multiplier and trajectory count", () => {
       component["toolMultipliers"].set({ bindcraft: 10 });
-      component.updateRowValue("row1", "number_of_final_designs", 2);
+      component.updateRowValue("row1", "max_trajectories", 2);
       expect(component.creditCost()).toBe(20);
     });
 
@@ -706,6 +706,11 @@ describe("DeNovoDesignComponent", () => {
 
       expect(component.pdbSequenceLength()).toBe(250);
       expect(component.pdbSequenceMin()).toBe(40);
+      expect(schemaLoader.updateRowValue).toHaveBeenCalledWith(
+        "row1",
+        "max_trajectories",
+        1
+      );
       expect(schemaLoader.updateRowValue).toHaveBeenCalledWith(
         "row1",
         "number_of_final_designs",
@@ -870,6 +875,7 @@ describe("DeNovoDesignComponent", () => {
     it("resets the form to schema defaults", () => {
       schemaLoader.generateDefaultValues.and.returnValue({ foo: "bar" });
       component.resetForm();
+      expect(component.formData()["max_trajectories"]).toBe(1);
       expect(component.formData()["number_of_final_designs"]).toBe(1);
     });
   });
