@@ -30,6 +30,8 @@ export interface ResultSettingParamsResponse {
 export interface ResultDownloadsResponse {
   runId: string;
   downloads: ResultDownloadItem[];
+  /** Categories bundled as a zip - fetch via `downloadCategory`. */
+  hiddenCategories?: string[];
 }
 
 export interface ResultLogsResponse {
@@ -90,6 +92,17 @@ export class ResultsService {
 
   downloadAll(runId: string): Observable<HttpResponse<Blob>> {
     return this.http.get(this.getDownloadAllUrl(runId), {
+      observe: "response",
+      responseType: "blob",
+    });
+  }
+
+  getDownloadCategoryUrl(runId: string, category: string): string {
+    return `${this.resultsUrl}/${encodeURIComponent(runId)}/download-category/${encodeURIComponent(category)}`;
+  }
+
+  downloadCategory(runId: string, category: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(this.getDownloadCategoryUrl(runId, category), {
       observe: "response",
       responseType: "blob",
     });

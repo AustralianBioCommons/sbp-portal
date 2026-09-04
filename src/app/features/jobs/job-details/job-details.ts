@@ -133,6 +133,19 @@ export default class JobDetailsComponent implements OnInit {
     () => normalizeWorkflowName(this.job()?.workflow) === "de novo design"
   );
 
+  // Categories the backend bundles as one zip instead of listing individually.
+  hiddenCategories = signal<string[]>([]);
+  downloadingCategory = signal<string | null>(null);
+
+  canDownloadCategory(category: string): boolean {
+    return (
+      this.hiddenCategories().includes(category) &&
+      !this.filesLoading() &&
+      !this.filesError() &&
+      this.filesItems().length > 0
+    );
+  }
+
   hasInteractiveReport = computed(
     () => this.isSinglePrediction() || this.isDeNovoDesign()
   );
@@ -319,6 +332,39 @@ export default class JobDetailsComponent implements OnInit {
       });
   }
 
+  downloadCategoryZip(category: string): void {
+    const job = this.job();
+    if (
+      !job ||
+      !this.canDownloadCategory(category) ||
+      this.downloadingCategory() === category
+    ) {
+      return;
+    }
+
+    this.downloadingCategory.set(category);
+    this.resultsService
+      .downloadCategory(job.id, category)
+      .pipe(
+        catchError((err) => {
+          console.error(`Error downloading ${category} files:`, err);
+          return EMPTY;
+        }),
+        finalize(() => this.downloadingCategory.set(null))
+      )
+      .subscribe((response) => {
+        if (!response.body) {
+          return;
+        }
+
+        const filename =
+          this.getDownloadFilename(
+            response.headers.get("content-disposition")
+          ) ?? `${job.id}_${category}.zip`;
+        this.startBrowserDownload(response.body, filename);
+      });
+  }
+
   setActiveTab(tab: JobResultsTab): void {
     this.activeTab.set(tab);
     if (tab === "logs") {
@@ -386,13 +432,19 @@ export default class JobDetailsComponent implements OnInit {
     return formatted.join(" ");
   }
 
+  /** Files grouped by category, excluding hidden ones (offered as a zip
+   * instead). `filesItems()` itself stays unfiltered for report components. */
   getFilesByCategory(): Array<{
     category: string;
     files: Array<{ label: string; url: string }>;
   }> {
+    const hidden = this.hiddenCategories();
     const grouped = new Map<string, Array<{ label: string; url: string }>>();
 
     this.filesItems().forEach((file) => {
+      if (hidden.includes(file.category)) {
+        return;
+      }
       if (!grouped.has(file.category)) {
         grouped.set(file.category, []);
       }
@@ -530,6 +582,7 @@ export default class JobDetailsComponent implements OnInit {
       this.filesItems.set([]);
       this.filesError.set(null);
       this.filesLoading.set(false);
+      this.hiddenCategories.set([]);
       return;
     }
 
@@ -543,6 +596,7 @@ export default class JobDetailsComponent implements OnInit {
           this.filesLoading.set(false);
           this.filesItems.set([]);
           this.filesError.set("Failed to load files.");
+          this.hiddenCategories.set([]);
           return EMPTY;
         })
       )
@@ -555,6 +609,7 @@ export default class JobDetailsComponent implements OnInit {
             category: download.category,
           }))
         );
+        this.hiddenCategories.set(response.hiddenCategories ?? []);
         this.filesLoading.set(false);
       });
   }

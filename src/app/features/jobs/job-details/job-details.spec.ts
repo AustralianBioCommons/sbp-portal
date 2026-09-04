@@ -80,6 +80,17 @@ const singlePredictionJob: JobListItem = {
   finalDesignCount: null,
 };
 
+const bulkPredictionJob: JobListItem = {
+  id: "job-bp",
+  jobName: "Colabfold bulk run",
+  tool: "Colabfold",
+  workflow: "Bulk Prediction",
+  status: "Completed",
+  submittedAt: "2026-03-12T12:00:00Z",
+  score: 0.8,
+  finalDesignCount: null,
+};
+
 describe("JobDetailsComponent", () => {
   let component: JobDetailsComponent;
   let fixture: ComponentFixture<JobDetailsComponent>;
@@ -137,6 +148,7 @@ describe("JobDetailsComponent", () => {
       "getJobReport",
       "getJobDownloads",
       "downloadAll",
+      "downloadCategory",
       "getJobSettingParams",
       "getJobLogs",
     ]);
@@ -200,6 +212,16 @@ describe("JobDetailsComponent", () => {
           body: new Blob(["zip"], { type: "application/zip" }),
           headers: new HttpHeaders({
             "content-disposition": 'attachment; filename="results.zip"',
+          }),
+        })
+      )
+    );
+    resultsService.downloadCategory.and.returnValue(
+      of(
+        new HttpResponse({
+          body: new Blob(["zip"], { type: "application/zip" }),
+          headers: new HttpHeaders({
+            "content-disposition": 'attachment; filename="pdb.zip"',
           }),
         })
       )
@@ -1011,6 +1033,14 @@ describe("JobDetailsComponent", () => {
     fixture.detectChanges();
   };
 
+  const renderBulkPrediction = () => {
+    mockJobsService.getJob.and.returnValue(of(bulkPredictionJob));
+    routeId = bulkPredictionJob.id;
+    fixture = TestBed.createComponent(JobDetailsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  };
+
   const deNovoReport = () =>
     fixture.debugElement.query(By.directive(DeNovoDesignReportStubComponent));
 
@@ -1044,5 +1074,208 @@ describe("JobDetailsComponent", () => {
     );
     expect(deNovoReport()).toBeNull();
     expect(fixture.nativeElement.querySelector("iframe")).not.toBeNull();
+  });
+
+  // --- Downloading hidden categories (bindcraft structures, WISPS
+  // structures/PAE) as a zip ---------------------------------------------
+
+  it("offers a zip download for a hidden category on a de novo design (bindcraft) run", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: deNovoDesignJob.id,
+        downloads: [
+          {
+            label: "report.html",
+            key: "report",
+            url: "https://cdn.test/report.html",
+            category: "report",
+          },
+        ],
+        hiddenCategories: ["pdb"],
+      })
+    );
+    renderDeNovoDesign();
+
+    expect(component.hiddenCategories()).toEqual(["pdb"]);
+
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
+    const downloadButton = fixture.nativeElement.querySelector(
+      'button[data-testid="download-category-pdb"]'
+    ) as HTMLButtonElement;
+    expect(downloadButton).not.toBeNull();
+    expect(downloadButton.textContent).toContain("pdb.zip");
+    expect(downloadButton.disabled).toBeFalse();
+  });
+
+  it("offers a zip download per hidden category for an interaction screening (boltz) run", () => {
+    // mockJob is workflow "Interaction Screening" / tool "Boltz".
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: mockJob.id,
+        downloads: [
+          {
+            label: "multiqc_report.html",
+            key: "report",
+            url: "https://cdn.test/multiqc_report.html",
+            category: "report",
+          },
+        ],
+        hiddenCategories: ["pdb", "pae"],
+      })
+    );
+    render();
+
+    expect(component.hiddenCategories()).toEqual(["pdb", "pae"]);
+
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector(
+        'button[data-testid="download-category-pdb"]'
+      )
+    ).not.toBeNull();
+    expect(
+      fixture.nativeElement.querySelector(
+        'button[data-testid="download-category-pae"]'
+      )
+    ).not.toBeNull();
+  });
+
+  it("offers a zip download for a hidden category on a bulk prediction (colabfold) run", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: bulkPredictionJob.id,
+        downloads: [
+          {
+            label: "multiqc_report.html",
+            key: "report",
+            url: "https://cdn.test/multiqc_report.html",
+            category: "report",
+          },
+        ],
+        hiddenCategories: ["pdb", "pae"],
+      })
+    );
+    renderBulkPrediction();
+
+    expect(component.hiddenCategories()).toEqual(["pdb", "pae"]);
+
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector(
+        'button[data-testid="download-category-pdb"]'
+      )
+    ).not.toBeNull();
+  });
+
+  it("does not offer any hidden-category zip download for a single prediction run", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: singlePredictionJob.id,
+        downloads: [
+          {
+            label: "T1024.pdb",
+            key: "structure",
+            url: "https://cdn.test/T1024.pdb",
+            category: "pdb",
+          },
+        ],
+        hiddenCategories: [],
+      })
+    );
+    renderSinglePrediction();
+
+    expect(component.hiddenCategories()).toEqual([]);
+
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('[data-testid^="download-category-"]')
+    ).toBeNull();
+  });
+
+  it("downloads a hidden category's zip through the results service", () => {
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: deNovoDesignJob.id,
+        downloads: [
+          {
+            label: "report.html",
+            key: "report",
+            url: "https://cdn.test/report.html",
+            category: "report",
+          },
+        ],
+        hiddenCategories: ["pdb"],
+      })
+    );
+    const createObjectUrlSpy = spyOn(URL, "createObjectURL").and.returnValue(
+      "blob:pdb-structures"
+    );
+    const revokeObjectUrlSpy = spyOn(URL, "revokeObjectURL");
+    const clickSpy = spyOn(HTMLAnchorElement.prototype, "click");
+    renderDeNovoDesign();
+
+    component.downloadCategoryZip("pdb");
+
+    expect(resultsService.downloadCategory).toHaveBeenCalledWith(
+      deNovoDesignJob.id,
+      "pdb"
+    );
+    expect(createObjectUrlSpy).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:pdb-structures");
+    expect(component.downloadingCategory()).toBeNull();
+  });
+
+  it("does not download a category zip when it is not offered", () => {
+    renderSinglePrediction();
+
+    component.downloadCategoryZip("pdb");
+
+    expect(resultsService.downloadCategory).not.toHaveBeenCalled();
+  });
+
+  it("keeps hidden-category files out of the Files tab list but in filesItems for report components", () => {
+    // Backend still returns hidden items individually; only the Files
+    // tab list should leave them out.
+    resultsService.getJobDownloads.and.returnValue(
+      of({
+        runId: deNovoDesignJob.id,
+        downloads: [
+          {
+            label: "report.html",
+            key: "report",
+            url: "https://cdn.test/report.html",
+            category: "report",
+          },
+          {
+            label: "1_design_model1.pdb",
+            key: "ranker/demo_Ranked/1_design_model1.pdb",
+            url: "https://cdn.test/1_design_model1.pdb",
+            category: "pdb",
+          },
+        ],
+        hiddenCategories: ["pdb"],
+      })
+    );
+    renderDeNovoDesign();
+
+    expect(component.filesItems().map((file) => file.category)).toEqual([
+      "report",
+      "pdb",
+    ]);
+    expect(
+      component.getFilesByCategory().map((group) => group.category)
+    ).toEqual(["Report"]);
+
+    const report = deNovoReport().componentInstance;
+    expect(report.files()).toEqual(component.filesItems());
   });
 });

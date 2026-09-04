@@ -190,6 +190,41 @@
             <app-loading message="Loading files..." [inline]="true" />
             } @else if (filesItems().length > 0) {
             <div class="space-y-6">
+              @for (category of hiddenCategories(); track category) {
+              <section class="space-y-2">
+                <div class="text-sm font-semibold text-gray-900">
+                  {{ formatCategoryName(category) }}
+                </div>
+
+                <ul class="grid gap-2 sm:grid-cols-2">
+                  <li>
+                    <button
+                      type="button"
+                      [attr.data-testid]="'download-category-' + category"
+                      [disabled]="
+                        !canDownloadCategory(category) ||
+                        downloadingCategory() === category
+                      "
+                      (click)="downloadCategoryZip(category)"
+                      class="flex h-full w-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                      [title]="'Download ' + category + '.zip'"
+                      [attr.aria-label]="'Download ' + category + '.zip'"
+                    >
+                      <span
+                        class="min-w-0 flex-1 truncate text-left text-sm font-medium text-sky-600 hover:text-sky-700"
+                      >
+                        {{ category }}.zip
+                      </span>
+                      <ng-icon
+                        name="heroArrowDownTray"
+                        size="20"
+                        class="shrink-0 text-sky-600"
+                      />
+                    </button>
+                  </li>
+                </ul>
+              </section>
+              }
               @for (categoryGroup of getFilesByCategory(); track
               categoryGroup.category) {
               <section class="space-y-2">
