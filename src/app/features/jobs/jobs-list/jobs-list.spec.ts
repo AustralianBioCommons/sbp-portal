@@ -184,14 +184,16 @@ describe("JobsListComponent", () => {
     expect(mockJobsService.listJobs).toHaveBeenCalledWith({
       limit: 10,
       offset: 0,
+      sortBy: "submitted",
+      sortOrder: "desc",
     });
     expect(component.jobs()).toEqual([mockJob]);
   });
 
-  it("should sort loaded jobs by submitted time descending by default", () => {
+  it("should not re-sort jobs client-side, since the backend returns them pre-sorted", () => {
     mockJobsService.listJobs.and.returnValue(
       of({
-        jobs: [mockJob, secondJob],
+        jobs: [secondJob, mockJob],
         total: 2,
         limit: 50,
         offset: 0,
@@ -284,7 +286,20 @@ describe("JobsListComponent", () => {
       offset: 10,
       search: "binder",
       status: ["Completed", "Failed"],
+      sortBy: "submitted",
+      sortOrder: "desc",
     });
+  });
+
+  it("should send the active sort field and direction to the API", () => {
+    component.activeSort.set("score");
+    component.scoreSortDirection.set("asc");
+
+    component.loadJobs();
+
+    expect(mockJobsService.listJobs).toHaveBeenCalledWith(
+      jasmine.objectContaining({ sortBy: "score", sortOrder: "asc" })
+    );
   });
 
   it("should toggle statuses and report selection state", () => {
@@ -339,82 +354,43 @@ describe("JobsListComponent", () => {
     expect(loadJobsSpy).toHaveBeenCalledTimes(2);
   });
 
-  it("should sort scores through desc and asc when score sort is active", () => {
-    component.jobs.set([
-      { ...mockJob, id: "a", score: 0.4 },
-      { ...secondJob, id: "b", score: null },
-      { ...mockJob, id: "c", score: 0.9, submittedAt: "2026-03-12T12:00:00Z" },
-    ]);
+  it("should reload from page one with the flipped score direction when toggling score sort", () => {
+    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
+    component.currentPage.set(3);
 
     component.toggleScoreSort();
     expect(component.activeSort()).toBe("score");
     expect(component.scoreSortDirection()).toBe("desc");
-    expect(component.jobs().map((job) => job.id)).toEqual(["c", "a", "b"]);
+    expect(component.currentPage()).toBe(1);
+    expect(loadJobsSpy).toHaveBeenCalledTimes(1);
 
     component.toggleScoreSort();
     expect(component.scoreSortDirection()).toBe("asc");
-    expect(component.jobs().map((job) => job.id)).toEqual(["a", "c", "b"]);
-
-    component.toggleScoreSort();
-    expect(component.scoreSortDirection()).toBe("desc");
-    expect(component.jobs().map((job) => job.id)).toEqual(["c", "a", "b"]);
+    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
   });
 
   it("should let activating one sort override the other", () => {
-    component.jobs.set([
-      { ...mockJob, id: "a", score: 0.4, submittedAt: "2026-03-12T10:00:00Z" },
-      {
-        ...secondJob,
-        id: "b",
-        score: 0.9,
-        submittedAt: "2026-03-12T12:00:00Z",
-      },
-    ]);
+    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
 
     component.toggleScoreSort();
     expect(component.activeSort()).toBe("score");
-    expect(component.jobs().map((job) => job.id)).toEqual(["b", "a"]);
 
     component.toggleSubmittedSort();
     expect(component.activeSort()).toBe("submitted");
-    // submitted desc → most recent first
-    expect(component.jobs().map((job) => job.id)).toEqual(["b", "a"]);
+    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
   });
 
-  it("should fall back to submittedAt order when both scores are null during score sort", () => {
-    component.jobs.set([
-      { ...mockJob, id: "a", score: null, submittedAt: "2026-03-12T11:00:00Z" },
-      {
-        ...secondJob,
-        id: "b",
-        score: null,
-        submittedAt: "2026-03-12T10:00:00Z",
-      },
-      { ...mockJob, id: "c", score: 0.8, submittedAt: "2026-03-12T09:00:00Z" },
-    ]);
-
-    component.toggleScoreSort();
-    expect(component.scoreSortDirection()).toBe("desc");
-    // c has the only score so comes first; a and b both null → sorted by submittedAt desc
-    expect(component.jobs().map((job) => job.id)).toEqual(["c", "a", "b"]);
-  });
-
-  it("should sort submitted time through desc and asc states", () => {
-    component.jobs.set([
-      { ...mockJob, id: "a", submittedAt: "2026-03-12T10:00:00Z" },
-      { ...secondJob, id: "b", submittedAt: "2026-03-12T12:00:00Z" },
-      { ...mockJob, id: "c", submittedAt: "2026-03-12T11:00:00Z" },
-    ]);
-
-    expect(component.jobs().map((job) => job.id)).toEqual(["a", "b", "c"]);
+  it("should reload from page one with the flipped direction when toggling submitted sort", () => {
+    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
+    component.currentPage.set(3);
 
     component.toggleSubmittedSort();
     expect(component.submittedSortDirection()).toBe("asc");
-    expect(component.jobs().map((job) => job.id)).toEqual(["a", "c", "b"]);
+    expect(component.currentPage()).toBe(1);
 
     component.toggleSubmittedSort();
     expect(component.submittedSortDirection()).toBe("desc");
-    expect(component.jobs().map((job) => job.id)).toEqual(["b", "c", "a"]);
+    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
   });
 
   it("should return status classes and helpers", () => {
