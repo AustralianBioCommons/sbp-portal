@@ -1105,7 +1105,7 @@ describe("JobDetailsComponent", () => {
       'button[data-testid="download-category-pdb"]'
     ) as HTMLButtonElement;
     expect(downloadButton).not.toBeNull();
-    expect(downloadButton.textContent).toContain("PDB.zip");
+    expect(downloadButton.textContent).toContain("PDB files");
     expect(downloadButton.disabled).toBeFalse();
   });
 

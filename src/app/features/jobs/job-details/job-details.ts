@@ -146,6 +146,10 @@ export default class JobDetailsComponent implements OnInit {
     );
   }
 
+  getCategoryZipFilename(category: string, jobName: string): string {
+    return `${category}_${jobName}.zip`;
+  }
+
   hasInteractiveReport = computed(
     () => this.isSinglePrediction() || this.isDeNovoDesign()
   );
@@ -360,7 +364,7 @@ export default class JobDetailsComponent implements OnInit {
         const filename =
           this.getDownloadFilename(
             response.headers.get("content-disposition")
-          ) ?? `${job.id}_${category}.zip`;
+          ) ?? this.getCategoryZipFilename(category, job.jobName);
         this.startBrowserDownload(response.body, filename);
       });
   }

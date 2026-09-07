@@ -208,15 +208,17 @@
                       "
                       (click)="downloadCategoryZip(category)"
                       class="flex h-full w-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all disabled:cursor-not-allowed disabled:opacity-50"
-                      [title]="'Download ' + formatCategoryName(category) + '.zip'"
+                      [title]="
+                        'Download all ' + formatCategoryName(category) + ' files'
+                      "
                       [attr.aria-label]="
-                        'Download ' + formatCategoryName(category) + '.zip'
+                        'Download all ' + formatCategoryName(category) + ' files'
                       "
                     >
                       <span
                         class="min-w-0 flex-1 truncate text-left text-sm font-medium text-sky-600 hover:text-sky-700"
                       >
-                        {{ formatCategoryName(category) }}.zip
+                        {{ formatCategoryName(category) }} files
                       </span>
                       @if (downloadingCategory() === category) {
                       <svg
