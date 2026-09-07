@@ -707,7 +707,9 @@ export default class JobDetailsComponent implements OnInit {
         // fastaS3Uri download link — fall back to that so they aren't blank.
         if (key === "fastaS3Uri") return !hasFastaContent;
       }
-      return allowedKeys ? allowedKeys.has(key) : !this.shouldHideSettingKey(key);
+      return allowedKeys
+        ? allowedKeys.has(key)
+        : !this.shouldHideSettingKey(key);
     };
 
     // Some fields can appear under more than one key (e.g. a tool setting

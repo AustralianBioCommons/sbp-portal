@@ -829,7 +829,9 @@ describe("JobDetailsComponent", () => {
       },
     });
 
-    expect(items.map((item) => item.label)).toEqual(["Target Hotspot Residues"]);
+    expect(items.map((item) => item.label)).toEqual([
+      "Target Hotspot Residues",
+    ]);
   });
 
   it("hides binder_name and chains — copied/derived, not entered by the user", () => {
@@ -839,7 +841,9 @@ describe("JobDetailsComponent", () => {
       chains: "A",
     });
 
-    expect(items.map((item) => item.label)).toEqual(["Target Hotspot Residues"]);
+    expect(items.map((item) => item.label)).toEqual([
+      "Target Hotspot Residues",
+    ]);
   });
 
   it("hides number_of_final_designs — it's max_trajectories mirrored under a second key", () => {
@@ -1010,7 +1014,12 @@ describe("JobDetailsComponent", () => {
         runName: "sarm1-nad",
         sample_id: "sarm1-nad",
         entities: [
-          { id: "seq1", moleculeType: "protein", copyNumber: 1, sequence: "MV" },
+          {
+            id: "seq1",
+            moleculeType: "protein",
+            copyNumber: 1,
+            sequence: "MV",
+          },
         ],
         fastaContent: ">seq1|protein\nMV",
         boltz_use_potentials: false,
