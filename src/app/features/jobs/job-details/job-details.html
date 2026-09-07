@@ -255,7 +255,9 @@
                   {{ setting.value }}
                 </a>
                 } @else {
-                <div class="text-xs text-gray-900 wrap-break-word font-mono">
+                <div
+                  class="text-xs text-gray-900 wrap-break-word font-mono whitespace-pre-wrap"
+                >
                   {{ setting.value }}
                 </div>
                 } @if (setting.details.length > 0) {
