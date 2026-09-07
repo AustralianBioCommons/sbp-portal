@@ -545,15 +545,19 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should render API-backed settings values", () => {
+    // De Novo Design has no settings allowlist, so it falls back to the
+    // hidden-keys blocklist exercised by this schema-param mock data.
+    mockJobsService.getJob.and.returnValue(of(deNovoDesignJob));
+    routeId = deNovoDesignJob.id;
     render();
     component.setActiveTab("settings");
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain("Binder Name");
-    expect(fixture.nativeElement.textContent).toContain("PDL1");
     expect(fixture.nativeElement.textContent).toContain("Min Length");
     expect(fixture.nativeElement.textContent).toContain("60");
     expect(fixture.nativeElement.textContent).toContain("Max: 500");
+    expect(fixture.nativeElement.textContent).not.toContain("Binder Name");
+    expect(fixture.nativeElement.textContent).not.toContain("PDL1");
     expect(fixture.nativeElement.textContent).not.toContain("Settings Filters");
     expect(fixture.nativeElement.textContent).not.toContain(
       "Settings Advanced"
@@ -667,9 +671,13 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should render a download link in the settings tab for an HTTP PDB value", () => {
+    // starting_pdb belongs to De Novo Design's schema-driven settings, which
+    // have no allowlist restricting them.
+    mockJobsService.getJob.and.returnValue(of(deNovoDesignJob));
+    routeId = deNovoDesignJob.id;
     resultsService.getJobSettingParams.and.returnValue(
       of({
-        runId: mockJob.id,
+        runId: deNovoDesignJob.id,
         settingParams: {
           starting_pdb: "https://api.example.com/uploads/target.pdb",
         },
@@ -828,6 +836,51 @@ describe("JobDetailsComponent", () => {
     expect(privateApi().normalizeSettings(null)).toEqual([]);
   });
 
+  it("never surfaces paramsText — the backend's internal Nextflow launch params", () => {
+    const items = privateApi().normalizeSettings({
+      target_hotspot_residues: "A54",
+      // Real proteindj paramsText content (see sbp-backend's
+      // get_proteindj_default_params): re-sends other fields under the
+      // pipeline's own parameter names.
+      paramsText: {
+        out_dir: "s3://bucket/publish/x",
+        input_pdb: "s3://bucket/staged/target.pdb",
+        hotspot_residues: "A54",
+        num_designs: 1,
+        design_length: "65-150",
+      },
+    });
+
+    expect(items.map((item) => item.label)).toEqual([
+      "Target Hotspot Residues",
+    ]);
+  });
+
+  it("hides binder_name and chains — copied/derived, not entered by the user", () => {
+    const items = privateApi().normalizeSettings({
+      target_hotspot_residues: "A54",
+      binder_name: "PDL1",
+      chains: "A",
+    });
+
+    expect(items.map((item) => item.label)).toEqual([
+      "Target Hotspot Residues",
+    ]);
+  });
+
+  it("hides number_of_final_designs — it's max_trajectories mirrored under a second key", () => {
+    const items = privateApi().normalizeSettings({
+      target_hotspot_residues: "A54",
+      max_trajectories: 1,
+      number_of_final_designs: 1,
+    });
+
+    expect(items.map((item) => item.label)).toEqual([
+      "Target Hotspot Residues",
+      "Max Trajectories",
+    ]);
+  });
+
   it("should format setting label edge cases", () => {
     expect(privateApi().formatSettingLabel("___")).toBe("___");
     expect(privateApi().formatSettingLabel("starting-pdb_file")).toBe(
@@ -962,12 +1015,193 @@ describe("JobDetailsComponent", () => {
 
     it("should not set url on non-PDB settings keys", () => {
       const items = privateApi().normalizeSettings({
-        binder_name: "PDL1",
+        target_hotspot_residues: "A54",
       });
 
       expect(items.length).toBe(1);
-      expect(items[0].value).toBe("PDL1");
+      expect(items[0].value).toBe("A54");
       expect(items[0].url).toBeUndefined();
+    });
+  });
+
+  // --- Settings tab allowlist (SBP-560) --------------------------------------
+
+  describe("normalizeSettings — per-workflow allowlist", () => {
+    it("keeps only the form-facing fields for single prediction", () => {
+      component.job.set(singlePredictionJob);
+      const items = privateApi().normalizeSettings({
+        workflow: "single-prediction",
+        tool: "boltz",
+        configProfiles: ["singularity"],
+        runName: "sarm1-nad",
+        sample_id: "sarm1-nad",
+        entities: [
+          {
+            id: "seq1",
+            moleculeType: "protein",
+            copyNumber: 1,
+            sequence: "MV",
+          },
+        ],
+        fastaContent: ">seq1|protein\nMV",
+        boltz_use_potentials: false,
+        paramsText: {
+          mode: "boltz",
+          input: "s3://bucket/samplesheet.csv",
+          outDir: "s3://bucket/publish",
+          randomSeed: 123,
+        },
+      });
+
+      expect(items.map((item) => item.label)).toEqual([
+        "Workflow",
+        "Tool",
+        "FASTA Content",
+        "Use Potentials",
+      ]);
+      expect(items.find((item) => item.label === "FASTA Content")?.value).toBe(
+        ">seq1|protein\nMV"
+      );
+    });
+
+    it("shows each colabfold tool setting once, even when the backend echoes it twice", () => {
+      component.job.set(singlePredictionJob);
+      const items = privateApi().normalizeSettings({
+        workflow: "single-prediction",
+        tool: "colabfold",
+        fastaContent: ">seq1|protein\nMV",
+        random_seed: 17046274,
+        colabfold_num_recycles: 3,
+        // Backend also echoes the same submitted values into the internal
+        // pipeline launch params under identical key names.
+        paramsText: {
+          random_seed: 17046274,
+          colabfold_num_recycles: 3,
+        },
+      });
+
+      const labels = items.map((item) => item.label);
+      expect(labels.filter((label) => label === "Random Seed").length).toBe(1);
+      expect(labels.filter((label) => label === "Recycles").length).toBe(1);
+      expect(labels).toEqual([
+        "Workflow",
+        "Tool",
+        "FASTA Content",
+        "Random Seed",
+        "Recycles",
+      ]);
+    });
+
+    it("always shows FASTA content for single prediction, never the download link", () => {
+      component.job.set(singlePredictionJob);
+      const items = privateApi().normalizeSettings({
+        workflow: "single-prediction",
+        tool: "boltz",
+        fastaContent: ">seq1|protein\nMV",
+        fastaFileUrl: "https://api.example.com/uploads/sarm1-nad.fasta",
+      });
+
+      const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
+      expect(fastaItems.length).toBe(1);
+      expect(fastaItems[0].label).toBe("FASTA Content");
+      expect(fastaItems[0].value).toBe(">seq1|protein\nMV");
+    });
+
+    it("falls back to a download link for older interaction screening jobs with no fastaContent", () => {
+      component.job.set(mockJob); // workflow: "Interaction Screening"
+      const items = privateApi().normalizeSettings({
+        workflow: "interaction-screening",
+        tool: "boltz",
+        configProfiles: ["singularity"],
+        runName: "run-1",
+        sample_id: "run-1",
+        fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
+      });
+
+      expect(items.map((item) => item.label)).toEqual([
+        "Workflow",
+        "Tool",
+        "FASTA File",
+        "Use Potentials",
+      ]);
+      const fastaItem = items.find((item) => item.label === "FASTA File");
+      expect(fastaItem?.value).toBe("sequences.fasta");
+      expect(fastaItem?.url).toBe(
+        "https://api.example.com/uploads/sequences.fasta"
+      );
+    });
+
+    it("prefers FASTA content over the download link for interaction screening", () => {
+      component.job.set(mockJob); // workflow: "Interaction Screening"
+      const items = privateApi().normalizeSettings({
+        workflow: "interaction-screening",
+        tool: "boltz",
+        fastaContent: ">query1|protein\nMV\n>target1|protein\nAK",
+        fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
+      });
+
+      const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
+      expect(fastaItems.length).toBe(1);
+      expect(fastaItems[0].label).toBe("FASTA Content");
+      expect(fastaItems[0].value).toBe(
+        ">query1|protein\nMV\n>target1|protein\nAK"
+      );
+    });
+
+    it("shows Use Potentials (defaulted false) for a boltz job even though interaction screening's form has no such control", () => {
+      component.job.set(mockJob); // workflow: "Interaction Screening"
+      const items = privateApi().normalizeSettings({
+        workflow: "interaction-screening",
+        tool: "boltz",
+        fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
+      });
+
+      const item = items.find((i) => i.label === "Use Potentials");
+      expect(item?.value).toBe("false");
+    });
+
+    it("does not show Use Potentials for a colabfold job in interaction screening", () => {
+      component.job.set(mockJob);
+      const items = privateApi().normalizeSettings({
+        workflow: "interaction-screening",
+        tool: "colabfold",
+        fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
+      });
+
+      expect(items.some((i) => i.label === "Use Potentials")).toBeFalse();
+    });
+
+    it("falls back to a download link for older bulk prediction jobs with no fastaContent", () => {
+      const bulkJob: JobListItem = { ...mockJob, workflow: "Bulk Prediction" };
+      component.job.set(bulkJob);
+      const items = privateApi().normalizeSettings({
+        workflow: "bulk-prediction",
+        tool: "colabfold",
+        runName: "run-1",
+        sample_id: "run-1",
+        fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
+      });
+
+      expect(items.map((item) => item.label)).toEqual([
+        "Workflow",
+        "Tool",
+        "FASTA File",
+      ]);
+    });
+
+    it("prefers FASTA content over the download link for bulk prediction", () => {
+      const bulkJob: JobListItem = { ...mockJob, workflow: "Bulk Prediction" };
+      component.job.set(bulkJob);
+      const items = privateApi().normalizeSettings({
+        workflow: "bulk-prediction",
+        tool: "colabfold",
+        fastaContent: ">seq1|protein\nMV",
+        fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
+      });
+
+      const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
+      expect(fastaItems.length).toBe(1);
+      expect(fastaItems[0].label).toBe("FASTA Content");
     });
   });
 

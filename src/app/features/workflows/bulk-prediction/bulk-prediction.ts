@@ -238,6 +238,7 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
             sample_id: jobName,
             fastaS3Uri,
             splitOutputDir,
+            fastaContent: combinedFasta,
           };
           this.workflowSubmission.submitWorkflowWithDataset(
             formData,
