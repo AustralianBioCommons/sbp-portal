@@ -302,6 +302,18 @@ describe("JobsListComponent", () => {
     );
   });
 
+  it("should expose every status the backend can return as a filter option", () => {
+    expect(component.statusOptions).toEqual([
+      "Staging",
+      "Pending",
+      "In queue",
+      "In progress",
+      "Completed",
+      "Failed",
+      "Stopped",
+    ]);
+  });
+
   it("should toggle statuses and report selection state", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
 
@@ -396,6 +408,9 @@ describe("JobsListComponent", () => {
   it("should return status classes and helpers", () => {
     expect(component.getStatusClass("Completed")).toBe(
       "bg-green-100 text-green-800"
+    );
+    expect(component.getStatusClass("Staging")).toBe(
+      "bg-indigo-100 text-indigo-800"
     );
     expect(component.getStatusClass("Pending")).toBe("bg-sky-100 text-sky-800");
     expect(component.getStatusClass("In progress")).toBe(
