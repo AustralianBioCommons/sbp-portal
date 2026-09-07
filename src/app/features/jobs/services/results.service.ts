@@ -98,10 +98,15 @@ export class ResultsService {
   }
 
   getDownloadCategoryUrl(runId: string, category: string): string {
-    return `${this.resultsUrl}/${encodeURIComponent(runId)}/download-category/${encodeURIComponent(category)}`;
+    return `${this.resultsUrl}/${encodeURIComponent(
+      runId
+    )}/download-category/${encodeURIComponent(category)}`;
   }
 
-  downloadCategory(runId: string, category: string): Observable<HttpResponse<Blob>> {
+  downloadCategory(
+    runId: string,
+    category: string
+  ): Observable<HttpResponse<Blob>> {
     return this.http.get(this.getDownloadCategoryUrl(runId, category), {
       observe: "response",
       responseType: "blob",
