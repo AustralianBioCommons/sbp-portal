@@ -134,12 +134,12 @@ export default class JobDetailsComponent implements OnInit {
   );
 
   // Categories the backend bundles as one zip instead of listing individually.
-  hiddenCategories = signal<string[]>([]);
+  zipCategories = signal<string[]>([]);
   downloadingCategory = signal<string | null>(null);
 
   canDownloadCategory(category: string): boolean {
     return (
-      this.hiddenCategories().includes(category) &&
+      this.zipCategories().includes(category) &&
       !this.filesLoading() &&
       !this.filesError() &&
       this.filesItems().length > 0
@@ -438,7 +438,7 @@ export default class JobDetailsComponent implements OnInit {
     category: string;
     files: Array<{ label: string; url: string }>;
   }> {
-    const hidden = this.hiddenCategories();
+    const hidden = this.zipCategories();
     const grouped = new Map<string, Array<{ label: string; url: string }>>();
 
     this.filesItems().forEach((file) => {
@@ -582,7 +582,7 @@ export default class JobDetailsComponent implements OnInit {
       this.filesItems.set([]);
       this.filesError.set(null);
       this.filesLoading.set(false);
-      this.hiddenCategories.set([]);
+      this.zipCategories.set([]);
       return;
     }
 
@@ -596,7 +596,7 @@ export default class JobDetailsComponent implements OnInit {
           this.filesLoading.set(false);
           this.filesItems.set([]);
           this.filesError.set("Failed to load files.");
-          this.hiddenCategories.set([]);
+          this.zipCategories.set([]);
           return EMPTY;
         })
       )
@@ -609,7 +609,7 @@ export default class JobDetailsComponent implements OnInit {
             category: download.category,
           }))
         );
-        this.hiddenCategories.set(response.hiddenCategories ?? []);
+        this.zipCategories.set(response.zipCategories ?? []);
         this.filesLoading.set(false);
       });
   }

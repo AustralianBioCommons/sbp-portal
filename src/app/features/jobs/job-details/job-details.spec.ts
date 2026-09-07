@@ -1091,12 +1091,12 @@ describe("JobDetailsComponent", () => {
             category: "report",
           },
         ],
-        hiddenCategories: ["pdb"],
+        zipCategories: ["pdb"],
       })
     );
     renderDeNovoDesign();
 
-    expect(component.hiddenCategories()).toEqual(["pdb"]);
+    expect(component.zipCategories()).toEqual(["pdb"]);
 
     component.setActiveTab("files");
     fixture.detectChanges();
@@ -1122,12 +1122,12 @@ describe("JobDetailsComponent", () => {
             category: "report",
           },
         ],
-        hiddenCategories: ["pdb", "pae"],
+        zipCategories: ["pdb", "pae"],
       })
     );
     render();
 
-    expect(component.hiddenCategories()).toEqual(["pdb", "pae"]);
+    expect(component.zipCategories()).toEqual(["pdb", "pae"]);
 
     component.setActiveTab("files");
     fixture.detectChanges();
@@ -1156,12 +1156,12 @@ describe("JobDetailsComponent", () => {
             category: "report",
           },
         ],
-        hiddenCategories: ["pdb", "pae"],
+        zipCategories: ["pdb", "pae"],
       })
     );
     renderBulkPrediction();
 
-    expect(component.hiddenCategories()).toEqual(["pdb", "pae"]);
+    expect(component.zipCategories()).toEqual(["pdb", "pae"]);
 
     component.setActiveTab("files");
     fixture.detectChanges();
@@ -1185,12 +1185,12 @@ describe("JobDetailsComponent", () => {
             category: "pdb",
           },
         ],
-        hiddenCategories: [],
+        zipCategories: [],
       })
     );
     renderSinglePrediction();
 
-    expect(component.hiddenCategories()).toEqual([]);
+    expect(component.zipCategories()).toEqual([]);
 
     component.setActiveTab("files");
     fixture.detectChanges();
@@ -1212,7 +1212,7 @@ describe("JobDetailsComponent", () => {
             category: "report",
           },
         ],
-        hiddenCategories: ["pdb"],
+        zipCategories: ["pdb"],
       })
     );
     const createObjectUrlSpy = spyOn(URL, "createObjectURL").and.returnValue(
@@ -1262,7 +1262,7 @@ describe("JobDetailsComponent", () => {
             category: "pdb",
           },
         ],
-        hiddenCategories: ["pdb"],
+        zipCategories: ["pdb"],
       })
     );
     renderDeNovoDesign();

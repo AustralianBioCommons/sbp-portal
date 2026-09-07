@@ -190,14 +190,14 @@
             <app-loading message="Loading files..." [inline]="true" />
             } @else if (filesItems().length > 0) {
             <div class="space-y-6">
-              @if (hiddenCategories().length > 0) {
+              @if (zipCategories().length > 0) {
               <section class="space-y-2">
                 <div class="text-sm font-semibold text-gray-900">
                   Bundled downloads
                 </div>
 
                 <ul class="grid gap-2 sm:grid-cols-2">
-                  @for (category of hiddenCategories(); track category) {
+                  @for (category of zipCategories(); track category) {
                   <li>
                     <button
                       type="button"

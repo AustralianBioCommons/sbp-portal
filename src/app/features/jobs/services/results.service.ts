@@ -31,7 +31,7 @@ export interface ResultDownloadsResponse {
   runId: string;
   downloads: ResultDownloadItem[];
   /** Categories bundled as a zip - fetch via `downloadCategory`. */
-  hiddenCategories?: string[];
+  zipCategories?: string[];
 }
 
 export interface ResultLogsResponse {
