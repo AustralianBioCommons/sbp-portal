@@ -554,7 +554,7 @@ describe("DeNovoDesignReportComponent", () => {
 
   // ── Nothing to show ───────────────────────────────────────────────────────
 
-  it("hands over to the packaged report when the run has no stats file", () => {
+  it("shows the QC message instead of the packaged report when the run has no stats file", () => {
     const unavailable = jasmine.createSpy("unavailable");
     fixture = TestBed.createComponent(DeNovoDesignReportComponent);
     component = fixture.componentInstance;
@@ -564,9 +564,9 @@ describe("DeNovoDesignReportComponent", () => {
     fixture.componentRef.setInput("files", [files[1]]);
     fixture.detectChanges();
 
-    expect(unavailable).toHaveBeenCalled();
+    expect(unavailable).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain(
-      "_final_design_stats.csv"
+      "No designs passed in silico quality control criteria."
     );
   });
 
@@ -597,13 +597,22 @@ describe("DeNovoDesignReportComponent", () => {
     );
   });
 
-  it("reports a stats file with a header and no designs", () => {
+  it("shows the QC message for a stats file with a header and no designs", () => {
     respondWith({ [STATS_KEY]: "Rank,Design\n" });
+    const unavailable = jasmine.createSpy("unavailable");
+    fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+    component = fixture.componentInstance;
+    component.unavailable.subscribe(unavailable);
+    fixture.componentRef.setInput("runId", RUN);
+    fixture.componentRef.setInput("tool", "BindCraft");
+    fixture.componentRef.setInput("files", files);
+    fixture.detectChanges();
 
-    render();
-
-    expect(component.resultsError()).toBe(
-      "The design results file contains no designs."
+    expect(component.resultsEmpty()).toBeTrue();
+    expect(component.resultsError()).toBeNull();
+    expect(unavailable).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain(
+      "No designs passed in silico quality control criteria."
     );
   });
 

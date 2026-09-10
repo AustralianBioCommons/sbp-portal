@@ -14,11 +14,10 @@
   </div>
   } @else if (loading()) {
   <app-loading message="Loading designs..." [inline]="true"></app-loading>
-  } @else if (missingResults(); as missingFile) {
+  } @else if (noDesignsAvailable()) {
   <p class="text-sm text-gray-900 wrap-break-word">
-    This run is missing its design results file ({{ missingFile }}), so the
-    designs cannot be shown. The individual output files are listed under the
-    Files tab.
+    No designs passed in silico quality control criteria. Consider choosing
+    different hotspots or increasing the number of trajectories.
   </p>
   } @else if (resultsError()) {
   <div
