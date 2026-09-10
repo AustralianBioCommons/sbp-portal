@@ -131,56 +131,62 @@
               <p class="text-sm text-gray-500">{{ tabInfo.description }}</p>
               }
             </div>
-            } @switch (activeTab()) { @case ("results") { @if
-            (isSinglePrediction() && !reportFallback()) {
-            <app-single-prediction-report
-              [runId]="selectedJob.id"
-              [files]="filesItems()"
-              [filesLoading]="filesLoading()"
-              [filesError]="filesError()"
-              (unavailable)="onInteractiveReportUnavailable()"
-            ></app-single-prediction-report>
-            } @else if (isDeNovoDesign() && !reportFallback()) {
-            <app-de-novo-design-report
-              [runId]="selectedJob.id"
-              [tool]="selectedJob.tool"
-              [files]="filesItems()"
-              [filesLoading]="filesLoading()"
-              [filesError]="filesError()"
-              (unavailable)="onInteractiveReportUnavailable()"
-            ></app-de-novo-design-report>
-            } @else { @if (reportError()) {
-            <div
-              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
-            >
-              {{ reportError() }}
-            </div>
-            } @else if (reportUrl(); as reportDocumentUrl) {
-            <div class="relative overflow-hidden rounded border bg-white">
-              @if (reportLoading()) {
+            }
+
+            <!-- Kept mounted so tab switches don't re-fetch/re-parse the report -->
+            <div [hidden]="activeTab() !== 'results'">
+              @if (isSinglePrediction() && !reportFallback()) {
+              <app-single-prediction-report
+                [runId]="selectedJob.id"
+                [files]="filesItems()"
+                [filesLoading]="filesLoading()"
+                [filesError]="filesError()"
+                (unavailable)="onInteractiveReportUnavailable()"
+              ></app-single-prediction-report>
+              } @else if (isDeNovoDesign() && !reportFallback()) {
+              <app-de-novo-design-report
+                [runId]="selectedJob.id"
+                [tool]="selectedJob.tool"
+                [files]="filesItems()"
+                [filesLoading]="filesLoading()"
+                [filesError]="filesError()"
+                (unavailable)="onInteractiveReportUnavailable()"
+              ></app-de-novo-design-report>
+              } @else { @if (reportError()) {
               <div
-                class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+                class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
               >
-                <app-loading message="Loading report..." [inline]="true" />
+                {{ reportError() }}
               </div>
-              }
-              <iframe
-                class="w-full bg-white"
-                style="height: 100vh; zoom: 0.8"
-                [src]="reportDocumentUrl"
-                [title]="'Job report for ' + selectedJob.jobName"
-                (load)="onReportLoad()"
-                (error)="onReportError()"
-              >
-              </iframe>
+              } @else if (reportUrl(); as reportDocumentUrl) {
+              <div class="relative overflow-hidden rounded border bg-white">
+                @if (reportLoading()) {
+                <div
+                  class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
+                >
+                  <app-loading message="Loading report..." [inline]="true" />
+                </div>
+                }
+                <iframe
+                  class="w-full bg-white"
+                  style="height: 100vh; zoom: 0.8"
+                  [src]="reportDocumentUrl"
+                  [title]="'Job report for ' + selectedJob.jobName"
+                  (load)="onReportLoad()"
+                  (error)="onReportError()"
+                >
+                </iframe>
+              </div>
+              } @else if (reportLoading()) {
+              <app-loading message="Loading report..." [inline]="true" />
+              } @else {
+              <p class="text-sm text-gray-900 wrap-break-word">
+                No report data is available for this run.
+              </p>
+              } }
             </div>
-            } @else if (reportLoading()) {
-            <app-loading message="Loading report..." [inline]="true" />
-            } @else {
-            <p class="text-sm text-gray-900 wrap-break-word">
-              No report data is available for this run.
-            </p>
-            } } } @case ("files") { @if (filesError()) {
+
+            @switch (activeTab()) { @case ("files") { @if (filesError()) {
             <div
               class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
             >
@@ -190,7 +196,70 @@
             <app-loading message="Loading files..." [inline]="true" />
             } @else if (filesItems().length > 0) {
             <div class="space-y-6">
-              @for (categoryGroup of getFilesByCategory(); track
+              @if (zipCategories().length > 0) {
+              <section class="space-y-2">
+                <div class="text-sm font-semibold text-gray-900">
+                  Bundled downloads
+                </div>
+
+                <ul class="grid gap-2 sm:grid-cols-2">
+                  @for (category of zipCategories(); track category) {
+                  <li>
+                    <button
+                      type="button"
+                      [attr.data-testid]="'download-category-' + category"
+                      [disabled]="
+                        !canDownloadCategory(category) ||
+                        downloadingCategory() === category
+                      "
+                      (click)="downloadCategoryZip(category)"
+                      class="flex h-full w-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                      [title]="
+                        'Download all ' + formatCategoryName(category) + ' files'
+                      "
+                      [attr.aria-label]="
+                        'Download all ' + formatCategoryName(category) + ' files'
+                      "
+                    >
+                      <span
+                        class="min-w-0 flex-1 truncate text-left text-sm font-medium text-sky-600 hover:text-sky-700"
+                      >
+                        {{ formatCategoryName(category) }} files
+                      </span>
+                      @if (downloadingCategory() === category) {
+                      <svg
+                        class="h-5 w-5 shrink-0 animate-spin text-sky-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      } @else {
+                      <ng-icon
+                        name="heroArrowDownTray"
+                        size="20"
+                        class="shrink-0 text-sky-600"
+                      />
+                      }
+                    </button>
+                  </li>
+                  }
+                </ul>
+              </section>
+              } @for (categoryGroup of getFilesByCategory(); track
               categoryGroup.category) {
               <section class="space-y-2">
                 <div class="text-sm font-semibold text-gray-900">
@@ -255,7 +324,9 @@
                   {{ setting.value }}
                 </a>
                 } @else {
-                <div class="text-xs text-gray-900 wrap-break-word font-mono">
+                <div
+                  class="text-xs text-gray-900 wrap-break-word font-mono whitespace-pre-wrap"
+                >
                   {{ setting.value }}
                 </div>
                 } @if (setting.details.length > 0) {

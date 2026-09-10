@@ -56,6 +56,65 @@ type JobSettingItem = {
   url?: string;
 };
 
+/** Settings actually exposed in each workflow's submission form, keyed by
+ *  normalized workflow name (see normalizeWorkflowName). Everything else in
+ *  settingParams is internal (pipeline launch params, duplicate IDs already
+ *  shown as the job name) and shouldn't surface in the settings tab. Workflows
+ *  not listed here (e.g. de novo design, whose fields are schema-driven) fall
+ *  back to HIDDEN_SETTING_KEYS instead. */
+const ALLOWED_SETTING_KEYS_BY_WORKFLOW: Record<string, Set<string>> = {
+  "single prediction": new Set([
+    "workflow",
+    "tool",
+    "fastaContent",
+    "random_seed",
+    "colabfold_num_recycles",
+    "alphafold2_full_dbs",
+    "boltz_use_potentials",
+  ]),
+  "interaction screening": new Set([
+    "workflow",
+    "tool",
+    "fastaContent",
+    "fastaS3Uri",
+    "boltz_use_potentials",
+  ]),
+  "bulk prediction": new Set([
+    "workflow",
+    "tool",
+    "fastaContent",
+    "fastaS3Uri",
+    "boltz_use_potentials",
+  ]),
+};
+
+/** Workflows whose form is plain text (no file to browse for) — the raw FASTA
+ *  is submitted directly, so it's shown inline. Older jobs submitted before
+ *  fastaContent existed fall back to the fastaS3Uri download link. */
+const WORKFLOWS_PREFERRING_FASTA_CONTENT = new Set([
+  "interaction screening",
+  "bulk prediction",
+]);
+
+/** Workflows whose form has no "Use Potentials" checkbox, but which still run
+ *  Boltz with that flag under the hood (always false, since the form never
+ *  lets the user set it) — shown anyway so the setting isn't a Single
+ *  Prediction-only surprise. */
+const WORKFLOWS_WITH_IMPLICIT_BOLTZ_POTENTIALS = new Set([
+  "interaction screening",
+  "bulk prediction",
+]);
+
+/** Overrides the auto-formatted label for keys whose submission-form label
+ *  isn't just a title-cased version of the raw key. */
+const SETTING_LABEL_OVERRIDES: Record<string, string> = {
+  fastaContent: "FASTA Content",
+  fastaS3Uri: "FASTA File",
+  colabfold_num_recycles: "Recycles",
+  alphafold2_full_dbs: "Full DBs",
+  boltz_use_potentials: "Use Potentials",
+};
+
 @Component({
   selector: "app-job-details",
   imports: [
@@ -132,6 +191,23 @@ export default class JobDetailsComponent implements OnInit {
   isDeNovoDesign = computed(
     () => normalizeWorkflowName(this.job()?.workflow) === "de novo design"
   );
+
+  // Categories the backend bundles as one zip instead of listing individually.
+  zipCategories = signal<string[]>([]);
+  downloadingCategory = signal<string | null>(null);
+
+  canDownloadCategory(category: string): boolean {
+    return (
+      this.zipCategories().includes(category) &&
+      !this.filesLoading() &&
+      !this.filesError() &&
+      this.filesItems().length > 0
+    );
+  }
+
+  getCategoryZipFilename(category: string, jobName: string): string {
+    return `${category}_${jobName}.zip`;
+  }
 
   hasInteractiveReport = computed(
     () => this.isSinglePrediction() || this.isDeNovoDesign()
@@ -319,6 +395,39 @@ export default class JobDetailsComponent implements OnInit {
       });
   }
 
+  downloadCategoryZip(category: string): void {
+    const job = this.job();
+    if (
+      !job ||
+      !this.canDownloadCategory(category) ||
+      this.downloadingCategory() === category
+    ) {
+      return;
+    }
+
+    this.downloadingCategory.set(category);
+    this.resultsService
+      .downloadCategory(job.id, category)
+      .pipe(
+        catchError((err) => {
+          console.error(`Error downloading ${category} files:`, err);
+          return EMPTY;
+        }),
+        finalize(() => this.downloadingCategory.set(null))
+      )
+      .subscribe((response) => {
+        if (!response.body) {
+          return;
+        }
+
+        const filename =
+          this.getDownloadFilename(
+            response.headers.get("content-disposition")
+          ) ?? this.getCategoryZipFilename(category, job.jobName);
+        this.startBrowserDownload(response.body, filename);
+      });
+  }
+
   setActiveTab(tab: JobResultsTab): void {
     this.activeTab.set(tab);
     if (tab === "logs") {
@@ -386,13 +495,19 @@ export default class JobDetailsComponent implements OnInit {
     return formatted.join(" ");
   }
 
+  /** Files grouped by category, excluding hidden ones (offered as a zip
+   * instead). `filesItems()` itself stays unfiltered for report components. */
   getFilesByCategory(): Array<{
     category: string;
     files: Array<{ label: string; url: string }>;
   }> {
+    const hidden = this.zipCategories();
     const grouped = new Map<string, Array<{ label: string; url: string }>>();
 
     this.filesItems().forEach((file) => {
+      if (hidden.includes(file.category)) {
+        return;
+      }
       if (!grouped.has(file.category)) {
         grouped.set(file.category, []);
       }
@@ -530,6 +645,7 @@ export default class JobDetailsComponent implements OnInit {
       this.filesItems.set([]);
       this.filesError.set(null);
       this.filesLoading.set(false);
+      this.zipCategories.set([]);
       return;
     }
 
@@ -543,6 +659,7 @@ export default class JobDetailsComponent implements OnInit {
           this.filesLoading.set(false);
           this.filesItems.set([]);
           this.filesError.set("Failed to load files.");
+          this.zipCategories.set([]);
           return EMPTY;
         })
       )
@@ -555,6 +672,7 @@ export default class JobDetailsComponent implements OnInit {
             category: download.category,
           }))
         );
+        this.zipCategories.set(response.zipCategories ?? []);
         this.filesLoading.set(false);
       });
   }
@@ -634,32 +752,72 @@ export default class JobDetailsComponent implements OnInit {
       return [];
     }
 
+    const workflowName = normalizeWorkflowName(this.job()?.workflow);
+    const allowedKeys = ALLOWED_SETTING_KEYS_BY_WORKFLOW[workflowName];
+
+    const fastaContentValue = settingParams["fastaContent"];
+    const hasFastaContent =
+      typeof fastaContentValue === "string" &&
+      fastaContentValue.trim().length > 0;
+
+    const isKeyVisible = (key: string): boolean => {
+      if (WORKFLOWS_PREFERRING_FASTA_CONTENT.has(workflowName)) {
+        // Older jobs submitted before fastaContent existed have only the
+        // fastaS3Uri download link — fall back to that so they aren't blank.
+        if (key === "fastaS3Uri") return !hasFastaContent;
+      }
+      return allowedKeys
+        ? allowedKeys.has(key)
+        : !this.shouldHideSettingKey(key);
+    };
+
+    // Some fields can appear under more than one key (e.g. a tool setting
+    // mirrored into a second field for a downstream consumer); keep only the
+    // first occurrence.
+    const seenKeys = new Set<string>();
+
     const items: JobSettingItem[] = [];
     for (const [key, value] of Object.entries(settingParams)) {
-      if (key.startsWith("_") || this.shouldHideSettingKey(key)) continue;
+      // paramsText is the backend's internal Nextflow launch params — an
+      // audit trail of what was actually sent to Seqera, not something the
+      // user typed in the form. It re-sends other fields under the
+      // pipeline's own parameter names (e.g. num_designs for
+      // number_of_final_designs), so showing it just duplicates real rows.
+      if (key.startsWith("_") || key === "paramsText" || seenKeys.has(key)) {
+        continue;
+      }
 
-      if (
-        value !== null &&
-        typeof value === "object" &&
-        !Array.isArray(value) &&
-        !this.isSchemaSettingParam(value)
-      ) {
-        // Flat-object value (e.g. paramsText dict): expand each sub-key as its own row.
-        for (const [subKey, subValue] of Object.entries(
-          value as Record<string, unknown>
-        )) {
-          items.push(this.normalizeSettingItem(subKey, subValue));
-        }
-      } else {
+      if (isKeyVisible(key)) {
+        seenKeys.add(key);
         items.push(this.normalizeSettingItem(key, value));
       }
     }
+
+    if (
+      WORKFLOWS_WITH_IMPLICIT_BOLTZ_POTENTIALS.has(workflowName) &&
+      settingParams["tool"] === "boltz" &&
+      !seenKeys.has("boltz_use_potentials")
+    ) {
+      items.push(this.normalizeSettingItem("boltz_use_potentials", false));
+    }
+
     return items;
   }
 
   private static readonly HIDDEN_SETTING_KEYS = new Set([
     "settings_filters",
     "settings_advanced",
+    "runname",
+    "sample_id",
+    "configprofiles",
+    // Mirrored from max_trajectories so a downstream QC-pass target never
+    // gates the run below the requested count — same value, second key.
+    "number_of_final_designs",
+    // Copied from the job name, already shown as the page title.
+    "binder_name",
+    // Derived from target_hotspot_residues to satisfy the Nextflow pipeline's
+    // chain-list requirement — not something the user enters directly.
+    "chains",
   ]);
 
   private shouldHideSettingKey(key: string): boolean {
@@ -722,6 +880,9 @@ export default class JobDetailsComponent implements OnInit {
     const compact = key.replace(/^_+/, "");
     if (!compact) {
       return key;
+    }
+    if (SETTING_LABEL_OVERRIDES[compact]) {
+      return SETTING_LABEL_OVERRIDES[compact];
     }
     return compact
       .replace(/[_-]+/g, " ")

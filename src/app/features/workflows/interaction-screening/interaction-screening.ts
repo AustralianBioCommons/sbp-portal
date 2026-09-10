@@ -362,6 +362,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
             sample_id: jobName,
             fastaS3Uri,
             splitOutputDir,
+            fastaContent: combinedFasta,
           };
           this.workflowSubmission.submitWorkflowWithDataset(
             payload,

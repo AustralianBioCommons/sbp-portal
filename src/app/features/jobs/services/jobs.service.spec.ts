@@ -61,6 +61,17 @@ describe("JobsService", () => {
     req.flush({ jobs: [], total: 0, limit: 25, offset: 50 });
   });
 
+  it("should include sort_by and sort_order when listing jobs", () => {
+    service.listJobs({ sortBy: "score", sortOrder: "asc" }).subscribe();
+
+    const req = httpMock.expectOne(
+      (request) => request.url === `${environment.apiBaseUrl}/api/jobs`
+    );
+    expect(req.request.params.get("sort_by")).toBe("score");
+    expect(req.request.params.get("sort_order")).toBe("asc");
+    req.flush({ jobs: [], total: 0, limit: 50, offset: 0 });
+  });
+
   it("should ignore empty status arrays when listing jobs", () => {
     service.listJobs({ status: [] }).subscribe();
 

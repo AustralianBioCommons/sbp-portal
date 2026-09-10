@@ -100,7 +100,15 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   activeSort = signal<"score" | "submitted">("submitted");
 
   // Available status options
-  statusOptions = ["Completed", "Failed", "In progress", "In queue"];
+  statusOptions = [
+    "Staging",
+    "Pending",
+    "In queue",
+    "In progress",
+    "Completed",
+    "Failed",
+    "Stopped",
+  ];
 
   // Debounce timer for the search input
   private searchDebounce?: ReturnType<typeof setTimeout>;
@@ -175,6 +183,11 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     const params: JobListQueryParams = {
       limit: this.pageSize(),
       offset: (this.currentPage() - 1) * this.pageSize(),
+      sortBy: this.activeSort(),
+      sortOrder:
+        this.activeSort() === "score"
+          ? this.scoreSortDirection()
+          : this.submittedSortDirection(),
     };
 
     if (this.searchQuery()) {
@@ -208,7 +221,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
             workflow: rawJob.workflow ?? rawJob.workflow_name ?? "",
           };
         });
-        this.jobs.set(this.sortJobs(normalizedJobs));
+        this.jobs.set(normalizedJobs);
         this.total.set(response.total);
         this.loading.set(false);
       });
@@ -317,7 +330,8 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     } else {
       this.activeSort.set("score");
     }
-    this.jobs.set(this.sortJobs(this.jobs()));
+    this.currentPage.set(1);
+    this.loadJobs();
   }
 
   toggleSubmittedSort(): void {
@@ -328,44 +342,8 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     } else {
       this.activeSort.set("submitted");
     }
-    this.jobs.set(this.sortJobs(this.jobs()));
-  }
-
-  private sortJobs(jobs: JobListItem[]): JobListItem[] {
-    if (this.activeSort() === "score") {
-      const direction = this.scoreSortDirection();
-      return [...jobs].sort((a, b) => {
-        const aScore = a.score;
-        const bScore = b.score;
-
-        if (aScore === null && bScore === null) {
-          return this.compareSubmittedAt(a, b);
-        }
-        if (aScore === null) return 1;
-        if (bScore === null) return -1;
-
-        const scoreComparison =
-          direction === "asc" ? aScore - bScore : bScore - aScore;
-
-        return scoreComparison !== 0
-          ? scoreComparison
-          : this.compareSubmittedAt(a, b);
-      });
-    }
-
-    return [...jobs].sort((a, b) => {
-      return this.compareSubmittedAt(a, b);
-    });
-  }
-
-  private compareSubmittedAt(a: JobListItem, b: JobListItem): number {
-    const aSubmittedAt = new Date(a.submittedAt).getTime();
-    const bSubmittedAt = new Date(b.submittedAt).getTime();
-    const submittedComparison = aSubmittedAt - bSubmittedAt;
-
-    return this.submittedSortDirection() === "asc"
-      ? submittedComparison
-      : -submittedComparison;
+    this.currentPage.set(1);
+    this.loadJobs();
   }
 
   /**
@@ -375,6 +353,8 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     switch (status) {
       case "Completed":
         return "bg-green-100 text-green-800";
+      case "Staging":
+        return "bg-indigo-100 text-indigo-800";
       case "Pending":
         return "bg-sky-100 text-sky-800";
       case "In progress":

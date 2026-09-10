@@ -35,6 +35,8 @@ export interface JobListQueryParams {
   status?: string[];
   limit?: number;
   offset?: number;
+  sortBy?: "submitted" | "score";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface CancelJobResponse {
@@ -87,6 +89,12 @@ export class JobsService {
       }
       if (params.offset !== undefined) {
         httpParams = httpParams.set("offset", params.offset.toString());
+      }
+      if (params.sortBy) {
+        httpParams = httpParams.set("sort_by", params.sortBy);
+      }
+      if (params.sortOrder) {
+        httpParams = httpParams.set("sort_order", params.sortOrder);
       }
     }
 
