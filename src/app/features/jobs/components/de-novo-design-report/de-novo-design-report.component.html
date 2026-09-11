@@ -38,7 +38,7 @@
     <!-- Sits over the viewer's column; the table has the right. -->
     <div>
       <ul class="flex flex-wrap items-center gap-x-6 gap-y-2">
-        @for (band of chainLegend; track band.label) {
+        @for (band of chainLegend(); track band.label) {
         <li class="flex items-center gap-2 text-xs font-medium">
           <span
             class="h-2 w-12 rounded-full"
@@ -69,7 +69,10 @@
           [enableUpload]="false"
           [roundBottomRight]="!isPanelOpen()"
           representation="cartoon"
-          colorTheme="chain-a"
+          colorTheme="binder-target"
+          [binderChainId]="binderChainId()"
+          [designLength]="designLength()"
+          [superposeKey]="superposeKey()"
           [showSequencePanel]="false"
           [enablePicking]="false"
           hint=""

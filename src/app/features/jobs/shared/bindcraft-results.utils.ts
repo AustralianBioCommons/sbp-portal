@@ -130,6 +130,8 @@ export const bindCraftAdapter: DeNovoDesignAdapter = {
   tool: "bindcraft",
   columns: BINDCRAFT_COLUMNS,
   resultsFileName: STATS_SUFFIX,
+  binderChainId: "B",
+  designLengthKey: "Length",
   findResultsArtifact: findBindCraftStatsArtifact,
   parseRows: (text, files) =>
     parseBindCraftDesigns(parseCsvTable(text).rows, files),

@@ -35,7 +35,16 @@ import {
   setStructureOverpaint,
 } from "molstar/lib/mol-plugin-state/helpers/structure-overpaint";
 import { PluginCommands } from "molstar/lib/mol-plugin/commands";
-import { Vec3 } from "molstar/lib/mol-math/linear-algebra";
+import { Mat4, Vec3 } from "molstar/lib/mol-math/linear-algebra";
+import {
+  CaAtom,
+  chainResidueCounts,
+  findBinderChain,
+  superposeOnTargetChains,
+  targetChains,
+} from "../../../jobs/shared/design-superposition.utils";
+import { Camera } from "molstar/lib/mol-canvas3d/camera";
+import { StateTransforms } from "molstar/lib/mol-plugin-state/transforms";
 import { Color } from "molstar/lib/mol-util/color";
 import { MolScriptBuilder as MS } from "molstar/lib/mol-script/language/builder";
 import { compile } from "molstar/lib/mol-script/runtime/query/compiler";
@@ -53,23 +62,18 @@ const PLDDT_COLOR_THEME = "plddt-confidence" as "uniform";
 /** gray-500, for everything outside an isolated selection. */
 const MUTED_STRUCTURE_COLOR = Color(0x6a7282);
 
-/** The `chain-a` colours: blue against orange to differentiate. */
-const CHAIN_A_STRUCTURE_COLOR = Color(0x0284c7);
-const OTHER_CHAINS_STRUCTURE_COLOR = Color(0xea8b0b);
+/** The `binder-target` colours: orange for the binder, blue for the target. */
+const BINDER_STRUCTURE_COLOR = Color(0xea8b0b);
+const TARGET_STRUCTURE_COLOR = Color(0x0284c7);
 
-/** `chain-a` colours as CSS */
-export const CHAIN_A_COLOR = Color.toHexStyle(CHAIN_A_STRUCTURE_COLOR);
-export const OTHER_CHAINS_COLOR = Color.toHexStyle(
-  OTHER_CHAINS_STRUCTURE_COLOR
-);
+/** `binder-target` colours as CSS */
+export const BINDER_COLOR = Color.toHexStyle(BINDER_STRUCTURE_COLOR);
+export const TARGET_COLOR = Color.toHexStyle(TARGET_STRUCTURE_COLOR);
 
-/** The chain that gets its own colour; every other chain shares the second. */
-const DISTINCT_CHAIN_ID = "A";
-
-/** Selects chain A, or every other chain, depending on the relation given. */
-function chainQuery(relation: typeof MS.core.rel.eq) {
+/** Selects the named chain, or everything else, depending on the relation. */
+function chainQuery(relation: typeof MS.core.rel.eq, chainId: string) {
   return MS.struct.generator.atomGroups({
-    "chain-test": relation([MS.ammp("auth_asym_id"), DISTINCT_CHAIN_ID]),
+    "chain-test": relation([MS.ammp("auth_asym_id"), chainId]),
   });
 }
 
@@ -165,8 +169,19 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   representation = input<"cartoon" | "cartoon-and-sticks">(
     "cartoon-and-sticks"
   );
-  /** "plddt" is the AlphaFold confidence palette; "chain-a" sets chain A apart. */
-  colorTheme = input<"default" | "plddt" | "chain-a">("default");
+  /** "plddt" is the AlphaFold confidence palette. "binder-target" paints
+   *  `binderChainId` as the binder and everything else as the target. */
+  colorTheme = input<"default" | "plddt" | "binder-target">("default");
+  /** The chain the pipeline writes the binder to, when its length cannot say. */
+  binderChainId = input("A");
+  /** Binder length, which names the chain when exactly one matches. */
+  designLength = input<number | null>(null);
+  /**
+   * Lines each structure up on the first one loaded under this key, by their
+   * shared target chains, and leaves the camera alone. A new key starts over;
+   * empty turns it off and lets Mol* frame every structure.
+   */
+  superposeKey = input("");
   /** Off leaves a click to Mol*'s own focus, which zooms rather than selects. */
   enablePicking = input(true);
   /** Show a selection by muting the rest and zooming to it, not by marking it. */
@@ -198,6 +213,12 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
    *  it cannot echo back to the parent. */
   private _applyingExternalSelection = false;
   private _viewInitialized = false;
+  /** First structure of the current `superposeKey`, and its target chains. */
+  private superposeReference: {
+    key: string;
+    atoms: readonly CaAtom[];
+    targetChains: readonly string[];
+  } | null = null;
 
   private static instanceCount = 0;
   readonly containerId = `molstar-viewer-${++MolstarViewerComponent.instanceCount}`;
@@ -278,6 +299,120 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  /** Null until the camera has framed something. */
+  private cameraSnapshot(): Camera.Snapshot | null {
+    const camera = this.plugin?.canvas3d?.camera;
+    // A camera that has not framed anything yet has a zero radius, and putting
+    // that back would leave the run's first design off screen.
+    if (!camera || camera.state.radius <= MIN_CAMERA_RADIUS) return null;
+    return Camera.copySnapshot(Camera.createDefaultSnapshot(), camera.state);
+  }
+
+  private restoreCamera(snapshot: Camera.Snapshot): void {
+    const canvas3d = this.plugin?.canvas3d;
+    if (!canvas3d) return;
+    try {
+      canvas3d.camera.setState(snapshot, 0);
+      canvas3d.requestDraw();
+    } catch {
+      /* non-critical — the default framing still shows the structure */
+    }
+  }
+
+  /** The binder chain for what is loaded: by length when that is decisive. */
+  private resolvedBinderChain(): string {
+    const counts = chainResidueCounts(this.collectCaAtoms());
+    return findBinderChain(counts, this.designLength(), this.binderChainId());
+  }
+
+  /** Alpha carbons of the loaded structure, read straight from Mol*. */
+  private collectCaAtoms(): CaAtom[] {
+    const atoms: CaAtom[] = [];
+    const structures =
+      this.plugin?.managers.structure.hierarchy.current?.structures ?? [];
+
+    for (const s of structures) {
+      const structure = s.cell.obj?.data as Structure | undefined;
+      if (!structure) continue;
+      for (const unit of structure.units) {
+        if (!Unit.isAtomic(unit)) continue;
+        const { atomicHierarchy } = unit.model;
+        const residueIdx = atomicHierarchy.residueAtomSegments.index;
+        const chainIdx = atomicHierarchy.chainAtomSegments.index;
+        const seqIdVal = atomicHierarchy.residues.auth_seq_id.value;
+        const chainIdVal = atomicHierarchy.chains.auth_asym_id.value;
+        const atomIdVal = atomicHierarchy.atoms.label_atom_id.value;
+        // x/y/z are declared with an explicit `this`, so keep them on the object.
+        const conformation = unit.conformation;
+
+        OrderedSet.forEach(unit.elements, (atomIdx) => {
+          if (atomIdVal(atomIdx) !== "CA") return;
+          atoms.push({
+            chain: chainIdVal(chainIdx[atomIdx]),
+            seq: seqIdVal(residueIdx[atomIdx]),
+            x: conformation.x(atomIdx),
+            y: conformation.y(atomIdx),
+            z: conformation.z(atomIdx),
+          });
+        });
+      }
+    }
+
+    return atoms;
+  }
+
+  /**
+   * Works out where the structure just loaded sits against the run's first one.
+   * The first under a key becomes that reference and is left where it is.
+   */
+  private superpositionFor(key: string): Mat4 | null {
+    const atoms = this.collectCaAtoms();
+    if (atoms.length === 0) return null;
+
+    if (this.superposeReference?.key !== key) {
+      const counts = chainResidueCounts(atoms);
+      const binder = findBinderChain(
+        counts,
+        this.designLength(),
+        this.binderChainId()
+      );
+      this.superposeReference = {
+        key,
+        atoms,
+        targetChains: targetChains(counts, binder),
+      };
+      return null;
+    }
+
+    return superposeOnTargetChains(
+      this.superposeReference.atoms,
+      atoms,
+      this.superposeReference.targetChains
+    );
+  }
+
+  private async applySuperposition(transform: Mat4): Promise<void> {
+    if (!this.plugin) return;
+    try {
+      const structures =
+        this.plugin.managers.structure.hierarchy.current?.structures ?? [];
+      for (const structure of structures) {
+        const update = this.plugin.state.data
+          .build()
+          .to(structure.cell)
+          .insert(StateTransforms.Model.TransformStructureConformation, {
+            transform: {
+              name: "matrix",
+              params: { data: transform, transpose: false },
+            },
+          });
+        await this.plugin.runTask(this.plugin.state.data.updateTree(update));
+      }
+    } catch (e) {
+      console.warn("Mol* superposition failed:", e);
+    }
+  }
+
   clearSelection(): void {
     try {
       const lociSelects = this.plugin?.managers.interactivity.lociSelects as
@@ -326,6 +461,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     this.status.set("loading");
     this.errorMessage.set("");
     this.cleanupSubscription();
+    const superposeKey = this.superposeKey();
 
     try {
       if (!this.viewer) {
@@ -364,11 +500,20 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         this.hookSelection();
       }
 
+      // Grab this first, since loading would otherwise re-frame the scene.
+      const keptCamera = superposeKey ? this.cameraSnapshot() : null;
+
       await this.viewer.loadStructureFromData(source.content, source.format, {
         dataLabel: source.label,
       });
 
+      const transform = superposeKey
+        ? this.superpositionFor(superposeKey)
+        : null;
+      if (transform) await this.applySuperposition(transform);
       await this.applyRepresentation();
+      // Only a placed structure keeps the old camera; a new reference is framed.
+      if (keptCamera && transform) this.restoreCamera(keptCamera);
       await this.relaxCameraClipping();
       this.applyTopRegion();
       this.status.set("loaded");
@@ -686,7 +831,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
         }
       }
 
-      if (this.colorTheme() === "chain-a") await this.applyChainColors();
+      if (this.colorTheme() === "binder-target") await this.applyChainColors();
     } catch {
       /* non-critical — default visual still shows */
     }
@@ -701,14 +846,15 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       ) ?? [];
     if (components.length === 0) return;
 
+    const binderChain = this.resolvedBinderChain();
     const layers = [
       {
-        color: CHAIN_A_STRUCTURE_COLOR,
-        expression: chainQuery(MS.core.rel.eq),
+        color: BINDER_STRUCTURE_COLOR,
+        expression: chainQuery(MS.core.rel.eq, binderChain),
       },
       {
-        color: OTHER_CHAINS_STRUCTURE_COLOR,
-        expression: chainQuery(MS.core.rel.neq),
+        color: TARGET_STRUCTURE_COLOR,
+        expression: chainQuery(MS.core.rel.neq, binderChain),
       },
     ];
 

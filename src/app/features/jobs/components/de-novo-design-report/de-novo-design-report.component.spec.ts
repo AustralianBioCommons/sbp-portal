@@ -25,7 +25,10 @@ class MolstarViewerStubComponent {
   representation = input<"cartoon" | "cartoon-and-sticks">(
     "cartoon-and-sticks"
   );
-  colorTheme = input<"default" | "plddt" | "chain-a">("default");
+  colorTheme = input<"default" | "plddt" | "binder-target">("default");
+  binderChainId = input("A");
+  designLength = input<number | null>(null);
+  superposeKey = input("");
   showSequencePanel = input(true);
   enablePicking = input(true);
   hint = input("");
@@ -65,8 +68,38 @@ const statsCsv =
   "1,demo-binder_l135_s866737_mpnn3,135,GEMGVHDFLL,0.85\n" +
   "2,demo-binder_l135_s866737_mpnn2,135,GVMSVYDFLL,0.85\n";
 
-const PDB =
-  "ATOM      1  N   ALA A   1      32.9 -38.3 -22.6  1.00 82.8    N\n";
+/** A CA line with the columns where the PDB format fixes them. */
+function ca(serial: number, chain: string, seq: number, x: number): string {
+  return (
+    "ATOM  " +
+    String(serial).padStart(5) +
+    "  CA  ALA " +
+    chain +
+    String(seq).padStart(4) +
+    "    " +
+    x.toFixed(3).padStart(8) +
+    "   0.000".padStart(8) +
+    "   0.000".padStart(8) +
+    "  1.00 82.80           C"
+  );
+}
+
+/**
+ * BindCraft order: chain A is the target, chain B the 2-residue binder.
+ * `shift` moves the whole complex, as a fresh prediction would.
+ */
+function bindCraftPdb(shift = 0): string {
+  return [
+    ca(1, "A", 1, 0 + shift),
+    ca(2, "A", 2, 10 + shift),
+    ca(3, "A", 3, 20 + shift),
+    ca(4, "A", 4, 30 + shift),
+    ca(5, "B", 1, 5 + shift),
+    ca(6, "B", 2, 6 + shift),
+  ].join("\n");
+}
+
+const PDB = bindCraftPdb();
 
 describe("DeNovoDesignReportComponent", () => {
   let fixture: ComponentFixture<DeNovoDesignReportComponent>;
@@ -111,7 +144,9 @@ describe("DeNovoDesignReportComponent", () => {
   beforeEach(async () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getResultFileText",
+      "getArchiveEntries",
     ]);
+    resultsService.getArchiveEntries.and.returnValue(of([]));
     respondWith({
       [STATS_KEY]: statsCsv,
       [`${RANKED}/1_demo-binder_l135_s866737_mpnn3_model1.pdb`]: PDB,
@@ -160,26 +195,72 @@ describe("DeNovoDesignReportComponent", () => {
     expect(viewer()!.structureSource()?.format).toBe("pdb");
   });
 
-  it("colours chain A apart from the rest, in cartoon", () => {
+  it("sets the binder apart from the target, in cartoon", () => {
     render();
 
-    expect(viewer()!.colorTheme()).toBe("chain-a");
+    expect(viewer()!.colorTheme()).toBe("binder-target");
     expect(viewer()!.representation()).toBe("cartoon");
+    // BindCraft writes the target first, so chain B holds the binder.
+    expect(viewer()!.binderChainId()).toBe("B");
   });
 
-  it("names both legend colours the viewer uses", () => {
+  it("names the legend after the target and the selected design", () => {
     render();
 
-    expect(component.chainLegend.map((band) => band.label)).toEqual([
-      "Chain A",
-      "Other chains",
+    expect(component.chainLegend().map((band) => band.label)).toEqual([
+      "Target",
+      "demo-binder_l135_s866737_mpnn3",
     ]);
-    expect(component.chainLegend[0].color).not.toBe(
-      component.chainLegend[1].color
+    expect(component.chainLegend()[0].color).not.toBe(
+      component.chainLegend()[1].color
     );
     const legend = fixture.nativeElement.textContent as string;
-    expect(legend).toContain("Chain A");
-    expect(legend).toContain("Other chains");
+    expect(legend).toContain("Target");
+    expect(legend).toContain("demo-binder_l135_s866737_mpnn3");
+  });
+
+  it("renames the binder band as the selection changes", () => {
+    render();
+
+    table()!.rowSelected.emit(component.rows()[1]);
+    fixture.detectChanges();
+
+    expect(component.chainLegend()[1].label).toBe(
+      "demo-binder_l135_s866737_mpnn2"
+    );
+  });
+
+  // --- Keeping the target still between selections ------------------------
+
+  it("tells the viewer which chain the pipeline puts the binder on", () => {
+    render();
+
+    expect(viewer()!.binderChainId()).toBe("B");
+    // The design's own length is what settles it when chains are ambiguous.
+    expect(viewer()!.designLength()).toBe(135);
+  });
+
+  it("gives designs of one run a shared key, so they line up on each other", () => {
+    render();
+
+    const key = viewer()!.superposeKey();
+    expect(key).toBe(RUN);
+
+    table()!.rowSelected.emit(component.rows()[1]);
+    fixture.detectChanges();
+    expect(viewer()!.superposeKey()).toBe(key);
+  });
+
+  it("starts a new key when the run changes", () => {
+    render();
+
+    fixture.componentRef.setInput(
+      "runId",
+      "99999999-2222-4333-8444-555555555555"
+    );
+    fixture.detectChanges();
+
+    expect(viewer()!.superposeKey()).not.toBe(RUN);
   });
 
   it("loads the structure of whichever row is selected", () => {
@@ -570,16 +651,19 @@ describe("DeNovoDesignReportComponent", () => {
     );
   });
 
-  it("hands over for a de novo workflow it cannot render yet", () => {
+  it("hands over for a de novo tool no adapter is registered for", () => {
     const unavailable = jasmine.createSpy("unavailable");
     fixture = TestBed.createComponent(DeNovoDesignReportComponent);
     component = fixture.componentInstance;
     component.unavailable.subscribe(unavailable);
     fixture.componentRef.setInput("runId", RUN);
-    fixture.componentRef.setInput("tool", "RFdiffusion");
+    fixture.componentRef.setInput("tool", "BoltzGen");
     fixture.componentRef.setInput("files", files);
     fixture.detectChanges();
 
+    // No adapter, so nothing is even looked for.
+    expect(component.adapter()).toBeNull();
+    expect(component.missingResults()).toBeNull();
     expect(unavailable).toHaveBeenCalled();
     expect(resultsService.getResultFileText).not.toHaveBeenCalled();
   });
@@ -671,5 +755,122 @@ describe("DeNovoDesignReportComponent", () => {
 
     expect(unavailable).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain("Loading designs...");
+  });
+
+  // --- RFdiffusion, whose designs live inside one tarball -------------------
+
+  describe("an RFdiffusion run", () => {
+    const RFD_CSV = `${RUN}/results/ranked_designs.csv`;
+    const RFD_ARCHIVE = `${RUN}/results/ranked_designs.tar.gz`;
+    const RFD_ENTRY = "ranked_designs/1_fold_3_seq_0_af2pred.pdb";
+
+    const rfdFiles: ResultFileRef[] = [
+      {
+        label: "ranked_designs.csv",
+        key: RFD_CSV,
+        url: "https://s3.test/ranked_designs.csv?sig=1",
+        category: "stats_csv",
+      },
+      {
+        label: "ranked_designs.tar.gz",
+        key: RFD_ARCHIVE,
+        url: "https://s3.test/ranked_designs.tar.gz?sig=1",
+        category: "pdb",
+      },
+    ];
+
+    // Columns as the real ranked_designs.csv writes them.
+    const rfdCsv =
+      "rank,description,fold_id,seq_id,mpnn_score,af2_pae_interaction," +
+      "af2_pae_overall,af2_pae_binder,af2_pae_target,af2_plddt_overall," +
+      "af2_plddt_binder,af2_plddt_target,seq_length,sequence\n" +
+      "1,fold_3_seq_0_af2pred,3,0,2.48,27.06,15.75,9.51,3.78,91.3,87.18,92.78,10,GEMGVHDFLL\n" +
+      "2,fold_0_seq_1_af2pred,0,1,2.10,27.15,16.52,14.15,3.83,88.1,72.52,92.42,10,GVMSVYDFLL\n";
+
+    const renderRfd = () => {
+      respondWith({ [RFD_CSV]: rfdCsv, [RFD_ARCHIVE]: PDB });
+      resultsService.getArchiveEntries.and.returnValue(
+        of([RFD_ENTRY, "ranked_designs/2_fold_0_seq_1_af2pred.pdb"])
+      );
+      render({ tool: "RFdiffusion", files: rfdFiles });
+    };
+
+    it("builds the table from the ranked designs csv", () => {
+      renderRfd();
+
+      expect(resultsService.getResultFileText).toHaveBeenCalledWith(
+        RUN,
+        RFD_CSV
+      );
+      expect(resultsService.getArchiveEntries).toHaveBeenCalledWith(
+        RUN,
+        RFD_ARCHIVE
+      );
+      expect(component.rows().length).toBe(2);
+      expect(
+        table()!
+          .columns()
+          .map((column) => column.heading)
+      ).toEqual([
+        "Rank",
+        "pLDDT",
+        "pLDDT (Binder)",
+        "PAE Interaction",
+        "Design Length",
+        "Design Sequence",
+        "Design name",
+      ]);
+    });
+
+    it("sets apart chain A, the opposite chain to BindCraft's", () => {
+      renderRfd();
+
+      // ProteinDJ diffuses the binder first; BindCraft writes the target first.
+      expect(viewer()!.binderChainId()).toBe("A");
+      expect(component.chainLegend()[0].label).toBe("Target");
+      expect(component.chainLegend()[1].label).toBe("fold_3_seq_0_af2pred");
+    });
+
+    it("reads the selected design out of the tarball, not as a key of its own", () => {
+      renderRfd();
+
+      // The top-ranked design is selected on load.
+      expect(resultsService.getResultFileText).toHaveBeenCalledWith(
+        RUN,
+        RFD_ARCHIVE,
+        RFD_ENTRY
+      );
+      expect(viewer()!.structureSource()?.content).toContain("ATOM");
+    });
+
+    it("still shows the table when the tarball cannot be listed", () => {
+      respondWith({ [RFD_CSV]: rfdCsv });
+      resultsService.getArchiveEntries.and.returnValue(
+        throwError(() => new Error("archive unreadable"))
+      );
+      render({ tool: "RFdiffusion", files: rfdFiles });
+
+      expect(component.rows().length).toBe(2);
+      expect(component.resultsError()).toBeNull();
+      expect(component.selectedRow()?.structure).toBeNull();
+      expect(fixture.nativeElement.textContent).toContain(
+        "No structure file was found for this design."
+      );
+    });
+
+    it("names the ranked csv when the run never produced one", () => {
+      const unavailable = jasmine.createSpy("unavailable");
+      respondWith({});
+      fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+      component = fixture.componentInstance;
+      component.unavailable.subscribe(unavailable);
+      fixture.componentRef.setInput("runId", RUN);
+      fixture.componentRef.setInput("tool", "RFdiffusion");
+      fixture.componentRef.setInput("files", []);
+      fixture.detectChanges();
+
+      expect(component.missingResults()).toBe("ranked_designs.csv");
+      expect(unavailable).toHaveBeenCalled();
+    });
   });
 });

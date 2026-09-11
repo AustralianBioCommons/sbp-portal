@@ -13,7 +13,7 @@ import {
 import type { WritableSignal } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { EMPTY, Subscription, catchError, finalize } from "rxjs";
+import { EMPTY, Subscription, catchError, finalize, forkJoin, of } from "rxjs";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowPath,
@@ -24,10 +24,10 @@ import {
   heroXMark,
 } from "@ng-icons/heroicons/outline";
 import {
-  CHAIN_A_COLOR,
+  BINDER_COLOR,
   MolstarViewerComponent,
-  OTHER_CHAINS_COLOR,
   StructureSource,
+  TARGET_COLOR,
 } from "../../../workflows/components/molstar-viewer/molstar-viewer.component";
 import { DesignResultsTableComponent } from "../design-results-table/design-results-table.component";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
@@ -39,6 +39,7 @@ import {
   getDeNovoDesignAdapter,
 } from "../../shared/de-novo-results.utils";
 import "../../shared/bindcraft-results.utils";
+import "../../shared/rfdiffusion-results.utils";
 
 @Component({
   selector: "app-de-novo-design-report",
@@ -77,10 +78,21 @@ export class DeNovoDesignReportComponent {
   private readonly document = inject(DOCUMENT);
 
   readonly adapter = computed(() => getDeNovoDesignAdapter(this.tool()));
-  readonly columns = computed(() => this.adapter()?.columns ?? []);
 
   readonly rows = signal<DesignRow[]>([]);
   readonly resultsError = signal<string | null>(null);
+
+  /** Kept so an adapter that varies its columns can read the file again. */
+  private readonly resultsText = signal<string | null>(null);
+
+  readonly columns = computed(() => {
+    const adapter = this.adapter();
+    if (!adapter) return [];
+    const text = this.resultsText();
+    return text !== null && adapter.columnsFor
+      ? adapter.columnsFor(text)
+      : adapter.columns;
+  });
 
   readonly selectedId = signal<string | null>(null);
   readonly structureSource = signal<StructureSource | null>(null);
@@ -100,8 +112,28 @@ export class DeNovoDesignReportComponent {
     () => this.adapter()?.findResultsArtifact(this.files()) ?? null
   );
 
+  readonly structureArchive = computed(
+    () => this.adapter()?.findStructureArchive?.(this.files()) ?? null
+  );
+
   readonly selectedRow = computed(
     () => this.rows().find((row) => row.id === this.selectedId()) ?? null
+  );
+
+  /** The chain the pipeline usually writes the binder to. */
+  readonly binderChainId = computed(() => this.adapter()?.binderChainId ?? "A");
+
+  /** Confirms that chain when exactly one chain is this long. */
+  readonly designLength = computed(() => {
+    const key = this.adapter()?.designLengthKey;
+    const raw = key ? (this.selectedRow()?.values[key] ?? "").trim() : "";
+    const length = Number(raw);
+    return raw && Number.isFinite(length) ? length : null;
+  });
+
+  /** Designs of one run line up on each other; a new run starts over. */
+  readonly superposeKey = computed(() =>
+    this.resultsArtifact() ? this.runId() : ""
   );
 
   /** Null until the files have loaded, so no message flashes. */
@@ -175,10 +207,10 @@ export class DeNovoDesignReportComponent {
   private dragStartX = 0;
   private dragStartPanelWidth = 0;
 
-  readonly chainLegend = [
-    { label: "Chain A", color: CHAIN_A_COLOR },
-    { label: "Other chains", color: OTHER_CHAINS_COLOR },
-  ];
+  readonly chainLegend = computed(() => [
+    { label: "Target", color: TARGET_COLOR },
+    { label: this.selectedRow()?.label ?? "Binder", color: BINDER_COLOR },
+  ]);
 
   /** Tooltip instructions. */
   readonly viewerHelp = [
@@ -201,14 +233,16 @@ export class DeNovoDesignReportComponent {
       const runId = this.runId();
       const adapter = this.adapter();
       const artifact = this.resultsArtifact();
+      const archive = this.structureArchive();
       if (!adapter || !artifact) {
         this.cancelResultsFetch();
         this.rows.set([]);
+        this.resultsText.set(null);
         this.selectedId.set(null);
         this.resultsError.set(null);
         return;
       }
-      this.loadResults(runId, artifact.key);
+      this.loadResults(runId, artifact.key, archive);
     });
 
     effect(() => {
@@ -225,7 +259,8 @@ export class DeNovoDesignReportComponent {
         runId,
         structure.key,
         structure.format,
-        structure.label
+        structure.label,
+        structure.entry
       );
     });
 
@@ -332,9 +367,18 @@ export class DeNovoDesignReportComponent {
    * `finalize` covers every outcome, cancellation included, so the flag cannot
    * stick. Only one fetch per flag may be live at a time — see the callers.
    */
-  private fetchText(runId: string, key: string, busy: WritableSignal<boolean>) {
+  private fetchText(
+    runId: string,
+    key: string,
+    busy: WritableSignal<boolean>,
+    entry?: string
+  ) {
     busy.set(true);
-    return this.resultsService.getResultFileText(runId, key).pipe(
+    // Only structures inside an archive have an entry; the rest read the object.
+    const content$ = entry
+      ? this.resultsService.getResultFileText(runId, key, entry)
+      : this.resultsService.getResultFileText(runId, key);
+    return content$.pipe(
       takeUntilDestroyed(this.destroyRef),
       finalize(() => busy.set(false))
     );
@@ -351,26 +395,50 @@ export class DeNovoDesignReportComponent {
     this.structureFetch = null;
   }
 
-  private loadResults(runId: string, key: string): void {
+  private loadResults(
+    runId: string,
+    key: string,
+    archive: ResultFileRef | null
+  ): void {
     this.cancelResultsFetch();
     this.resultsError.set(null);
     this.rows.set([]);
+    this.resultsText.set(null);
     this.selectedId.set(null);
 
-    this.resultsFetch = this.fetchText(runId, key, this.resultsLoading)
+    // If the archive cannot be read the table still works, the rows just have
+    // no structure to show, so this is not a results failure.
+    const entries$ = archive
+      ? this.resultsService.getArchiveEntries(runId, archive.key).pipe(
+          catchError((err) => {
+            console.error("Error listing design structures:", err);
+            return of<string[]>([]);
+          })
+        )
+      : of<string[]>([]);
+
+    this.resultsLoading.set(true);
+    this.resultsFetch = forkJoin({
+      content: this.resultsService.getResultFileText(runId, key),
+      entries: entries$,
+    })
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.resultsLoading.set(false)),
         catchError((err) => {
           console.error("Error loading design results:", err);
           this.resultsError.set("Failed to load the design results file.");
           return EMPTY;
         })
       )
-      .subscribe((content) => {
-        const rows = this.adapter()?.parseRows(content, this.files()) ?? [];
+      .subscribe(({ content, entries }) => {
+        const rows =
+          this.adapter()?.parseRows(content, this.files(), entries) ?? [];
         if (rows.length === 0) {
           this.resultsError.set("The design results file contains no designs.");
           return;
         }
+        this.resultsText.set(content);
         this.rows.set(rows);
         // Show the top-ranked design first.
         this.selectedId.set(rows[0].id);
@@ -381,13 +449,19 @@ export class DeNovoDesignReportComponent {
     runId: string,
     key: string,
     format: StructureSource["format"],
-    label: string
+    label: string,
+    entry?: string
   ): void {
     this.cancelStructureFetch();
     this.structureError.set(null);
     this.structureSource.set(null);
 
-    this.structureFetch = this.fetchText(runId, key, this.structureLoading)
+    this.structureFetch = this.fetchText(
+      runId,
+      key,
+      this.structureLoading,
+      entry
+    )
       .pipe(
         catchError((err) => {
           console.error("Error loading structure file:", err);
