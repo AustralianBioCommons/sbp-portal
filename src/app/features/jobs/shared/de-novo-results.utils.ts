@@ -27,7 +27,6 @@ export interface DesignStructure {
   key: string;
   label: string;
   format: StructureFormat;
-  entry?: string;
 }
 
 /** One design: the cells to show plus the structure the viewer loads for it. */
@@ -62,16 +61,8 @@ export interface DeNovoDesignAdapter {
    * than one set. `columns` is used until the file has loaded.
    */
   columnsFor?(text: string): readonly DesignColumn[];
-  /** The archive holding this run's structures, for a workflow that ships one
-   *  instead of a file per design. What is inside it reaches `parseRows`. */
-  findStructureArchive?(files: readonly ResultFileRef[]): ResultFileRef | null;
-  /** Rows in file order, each paired with its structure. `archiveEntries` is
-   *  empty when the workflow has no `findStructureArchive`. */
-  parseRows(
-    text: string,
-    files: readonly ResultFileRef[],
-    archiveEntries?: readonly string[]
-  ): DesignRow[];
+  /** Rows in file order, each paired with its structure. */
+  parseRows(text: string, files: readonly ResultFileRef[]): DesignRow[];
 }
 
 const adapters = new Map<string, DeNovoDesignAdapter>();

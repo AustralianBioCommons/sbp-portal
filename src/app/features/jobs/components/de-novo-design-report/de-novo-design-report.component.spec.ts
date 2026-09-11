@@ -144,9 +144,7 @@ describe("DeNovoDesignReportComponent", () => {
   beforeEach(async () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getResultFileText",
-      "getArchiveEntries",
     ]);
-    resultsService.getArchiveEntries.and.returnValue(of([]));
     respondWith({
       [STATS_KEY]: statsCsv,
       [`${RANKED}/1_demo-binder_l135_s866737_mpnn3_model1.pdb`]: PDB,
@@ -761,8 +759,7 @@ describe("DeNovoDesignReportComponent", () => {
 
   describe("an RFdiffusion run", () => {
     const RFD_CSV = `${RUN}/results/ranked_designs.csv`;
-    const RFD_ARCHIVE = `${RUN}/results/ranked_designs.tar.gz`;
-    const RFD_ENTRY = "ranked_designs/1_fold_3_seq_0_af2pred.pdb";
+    const RFD_DESIGN = `${RUN}/results/ranked_designs/1_fold_3_seq_0_af2pred.pdb`;
 
     const rfdFiles: ResultFileRef[] = [
       {
@@ -772,26 +769,22 @@ describe("DeNovoDesignReportComponent", () => {
         category: "stats_csv",
       },
       {
-        label: "ranked_designs.tar.gz",
-        key: RFD_ARCHIVE,
-        url: "https://s3.test/ranked_designs.tar.gz?sig=1",
+        label: "1_fold_3_seq_0_af2pred.pdb",
+        key: RFD_DESIGN,
+        url: "https://s3.test/1.pdb?sig=1",
         category: "pdb",
       },
     ];
 
     // Columns as the real ranked_designs.csv writes them.
     const rfdCsv =
-      "rank,description,fold_id,seq_id,mpnn_score,af2_pae_interaction," +
-      "af2_pae_overall,af2_pae_binder,af2_pae_target,af2_plddt_overall," +
-      "af2_plddt_binder,af2_plddt_target,seq_length,sequence\n" +
-      "1,fold_3_seq_0_af2pred,3,0,2.48,27.06,15.75,9.51,3.78,91.3,87.18,92.78,10,GEMGVHDFLL\n" +
-      "2,fold_0_seq_1_af2pred,0,1,2.10,27.15,16.52,14.15,3.83,88.1,72.52,92.42,10,GVMSVYDFLL\n";
+      "rank,description,fold_id,seq_id,af2_pae_interaction," +
+      "af2_plddt_overall,af2_plddt_binder,seq_length,sequence\n" +
+      "1,fold_3_seq_0_af2pred,3,0,27.06,91.3,87.18,10,GEMGVHDFLL\n" +
+      "2,fold_0_seq_1_af2pred,0,1,27.15,88.1,72.52,10,GVMSVYDFLL\n";
 
     const renderRfd = () => {
-      respondWith({ [RFD_CSV]: rfdCsv, [RFD_ARCHIVE]: PDB });
-      resultsService.getArchiveEntries.and.returnValue(
-        of([RFD_ENTRY, "ranked_designs/2_fold_0_seq_1_af2pred.pdb"])
-      );
+      respondWith({ [RFD_CSV]: rfdCsv, [RFD_DESIGN]: PDB });
       render({ tool: "RFdiffusion", files: rfdFiles });
     };
 
@@ -801,10 +794,6 @@ describe("DeNovoDesignReportComponent", () => {
       expect(resultsService.getResultFileText).toHaveBeenCalledWith(
         RUN,
         RFD_CSV
-      );
-      expect(resultsService.getArchiveEntries).toHaveBeenCalledWith(
-        RUN,
-        RFD_ARCHIVE
       );
       expect(component.rows().length).toBe(2);
       expect(
@@ -831,24 +820,20 @@ describe("DeNovoDesignReportComponent", () => {
       expect(component.chainLegend()[1].label).toBe("fold_3_seq_0_af2pred");
     });
 
-    it("reads the selected design out of the tarball, not as a key of its own", () => {
+    it("reads the design's own published file", () => {
       renderRfd();
 
       // The top-ranked design is selected on load.
       expect(resultsService.getResultFileText).toHaveBeenCalledWith(
         RUN,
-        RFD_ARCHIVE,
-        RFD_ENTRY
+        RFD_DESIGN
       );
       expect(viewer()!.structureSource()?.content).toContain("ATOM");
     });
 
-    it("still shows the table when the tarball cannot be listed", () => {
+    it("still shows the table when no design file was published", () => {
       respondWith({ [RFD_CSV]: rfdCsv });
-      resultsService.getArchiveEntries.and.returnValue(
-        throwError(() => new Error("archive unreadable"))
-      );
-      render({ tool: "RFdiffusion", files: rfdFiles });
+      render({ tool: "RFdiffusion", files: [rfdFiles[0]] });
 
       expect(component.rows().length).toBe(2);
       expect(component.resultsError()).toBeNull();

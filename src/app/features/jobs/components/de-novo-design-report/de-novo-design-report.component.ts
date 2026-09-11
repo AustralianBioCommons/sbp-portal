@@ -13,7 +13,7 @@ import {
 import type { WritableSignal } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { EMPTY, Subscription, catchError, finalize, forkJoin, of } from "rxjs";
+import { EMPTY, Subscription, catchError, finalize } from "rxjs";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowPath,
@@ -110,10 +110,6 @@ export class DeNovoDesignReportComponent {
 
   readonly resultsArtifact = computed(
     () => this.adapter()?.findResultsArtifact(this.files()) ?? null
-  );
-
-  readonly structureArchive = computed(
-    () => this.adapter()?.findStructureArchive?.(this.files()) ?? null
   );
 
   readonly selectedRow = computed(
@@ -233,7 +229,6 @@ export class DeNovoDesignReportComponent {
       const runId = this.runId();
       const adapter = this.adapter();
       const artifact = this.resultsArtifact();
-      const archive = this.structureArchive();
       if (!adapter || !artifact) {
         this.cancelResultsFetch();
         this.rows.set([]);
@@ -242,7 +237,7 @@ export class DeNovoDesignReportComponent {
         this.resultsError.set(null);
         return;
       }
-      this.loadResults(runId, artifact.key, archive);
+      this.loadResults(runId, artifact.key);
     });
 
     effect(() => {
@@ -259,8 +254,7 @@ export class DeNovoDesignReportComponent {
         runId,
         structure.key,
         structure.format,
-        structure.label,
-        structure.entry
+        structure.label
       );
     });
 
@@ -367,18 +361,9 @@ export class DeNovoDesignReportComponent {
    * `finalize` covers every outcome, cancellation included, so the flag cannot
    * stick. Only one fetch per flag may be live at a time — see the callers.
    */
-  private fetchText(
-    runId: string,
-    key: string,
-    busy: WritableSignal<boolean>,
-    entry?: string
-  ) {
+  private fetchText(runId: string, key: string, busy: WritableSignal<boolean>) {
     busy.set(true);
-    // Only structures inside an archive have an entry; the rest read the object.
-    const content$ = entry
-      ? this.resultsService.getResultFileText(runId, key, entry)
-      : this.resultsService.getResultFileText(runId, key);
-    return content$.pipe(
+    return this.resultsService.getResultFileText(runId, key).pipe(
       takeUntilDestroyed(this.destroyRef),
       finalize(() => busy.set(false))
     );
@@ -395,45 +380,23 @@ export class DeNovoDesignReportComponent {
     this.structureFetch = null;
   }
 
-  private loadResults(
-    runId: string,
-    key: string,
-    archive: ResultFileRef | null
-  ): void {
+  private loadResults(runId: string, key: string): void {
     this.cancelResultsFetch();
     this.resultsError.set(null);
     this.rows.set([]);
     this.resultsText.set(null);
     this.selectedId.set(null);
 
-    // If the archive cannot be read the table still works, the rows just have
-    // no structure to show, so this is not a results failure.
-    const entries$ = archive
-      ? this.resultsService.getArchiveEntries(runId, archive.key).pipe(
-          catchError((err) => {
-            console.error("Error listing design structures:", err);
-            return of<string[]>([]);
-          })
-        )
-      : of<string[]>([]);
-
-    this.resultsLoading.set(true);
-    this.resultsFetch = forkJoin({
-      content: this.resultsService.getResultFileText(runId, key),
-      entries: entries$,
-    })
+    this.resultsFetch = this.fetchText(runId, key, this.resultsLoading)
       .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.resultsLoading.set(false)),
         catchError((err) => {
           console.error("Error loading design results:", err);
           this.resultsError.set("Failed to load the design results file.");
           return EMPTY;
         })
       )
-      .subscribe(({ content, entries }) => {
-        const rows =
-          this.adapter()?.parseRows(content, this.files(), entries) ?? [];
+      .subscribe((content) => {
+        const rows = this.adapter()?.parseRows(content, this.files()) ?? [];
         if (rows.length === 0) {
           this.resultsError.set("The design results file contains no designs.");
           return;
@@ -449,19 +412,13 @@ export class DeNovoDesignReportComponent {
     runId: string,
     key: string,
     format: StructureSource["format"],
-    label: string,
-    entry?: string
+    label: string
   ): void {
     this.cancelStructureFetch();
     this.structureError.set(null);
     this.structureSource.set(null);
 
-    this.structureFetch = this.fetchText(
-      runId,
-      key,
-      this.structureLoading,
-      entry
-    )
+    this.structureFetch = this.fetchText(runId, key, this.structureLoading)
       .pipe(
         catchError((err) => {
           console.error("Error loading structure file:", err);

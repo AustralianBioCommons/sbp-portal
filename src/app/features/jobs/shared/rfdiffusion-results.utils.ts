@@ -9,7 +9,7 @@ import {
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
 
 const RESULTS_FILE_NAME = "ranked_designs.csv";
-const ARCHIVE_FILE_NAME = "ranked_designs.tar.gz";
+const RANKED_DESIGNS_DIR = "/results/ranked_designs/";
 
 /** Rank, then the metric columns, then the design itself. */
 const LEADING_COLUMNS: readonly DesignColumn[] = [
@@ -109,49 +109,37 @@ export function findRfDiffusionResultsArtifact(
 }
 
 /**
- * Every design's PDB lives inside this one tarball, since ProteinDJ never
- * publishes them separately, so the viewer reads them out of it.
- */
-export function findRfDiffusionStructureArchive(
-  files: readonly ResultFileRef[]
-): ResultFileRef | null {
-  return (
-    files.find((file) =>
-      resultFilenames(file).some(
-        (name) => name.toLowerCase() === ARCHIVE_FILE_NAME
-      )
-    ) ?? null
-  );
-}
-
-/**
  * `ranked_designs/01_fold_0_seq_1_af2pred.pdb`. The rank prefix is padded out to
  * the width of the design count, so compare it as a number.
  */
-const RANKED_MEMBER =
-  /(?:^|\/)(\d+)_fold_(\d+)_seq_(\d+)_(?:af2|boltz)pred\.pdb$/i;
+const RANKED_DESIGN = /^(\d+)_fold_(\d+)_seq_(\d+)_(?:af2|boltz)pred\.pdb$/i;
 
-interface RankedMember {
-  entry: string;
+interface RankedDesign {
+  file: ResultFileRef;
   rank: number;
   /** `fold_<id>_seq_<id>`, which identifies the design on its own. */
   designId: string;
 }
 
-function parseRankedMembers(entries: readonly string[]): RankedMember[] {
-  const members: RankedMember[] = [];
+/** The published designs, the only structures a row can map onto. */
+function findRankedDesigns(files: readonly ResultFileRef[]): RankedDesign[] {
+  const designs: RankedDesign[] = [];
 
-  for (const entry of entries) {
-    const match = RANKED_MEMBER.exec(entry);
+  for (const file of files) {
+    if (!file.key.toLowerCase().includes(RANKED_DESIGNS_DIR)) continue;
+    const match = resultFilenames(file)
+      .map((name) => RANKED_DESIGN.exec(name))
+      .find((candidate) => candidate !== null);
     if (!match) continue;
-    members.push({
-      entry,
+
+    designs.push({
+      file,
       rank: Number(match[1]),
       designId: `fold_${Number(match[2])}_seq_${Number(match[3])}`,
     });
   }
 
-  return members;
+  return designs;
 }
 
 /** `0`, `1.0` and ` 2 ` all mean an id the filenames write as a plain integer. */
@@ -166,45 +154,38 @@ function normaliseId(value: string): string | null {
  * Matches on fold and sequence id, which identify the design outright. Rank is
  * only a fallback, since ranking can drop designs and shift it.
  */
-function matchMember(
+function matchDesign(
   row: Record<string, string>,
-  members: readonly RankedMember[]
-): RankedMember | null {
+  designs: readonly RankedDesign[]
+): RankedDesign | null {
   const foldId = normaliseId(row["fold_id"] ?? "");
   const seqId = normaliseId(row["seq_id"] ?? "");
 
   if (foldId !== null && seqId !== null) {
     const designId = `fold_${foldId}_seq_${seqId}`;
-    const byDesign = members.find((member) => member.designId === designId);
+    const byDesign = designs.find((design) => design.designId === designId);
     if (byDesign) return byDesign;
   }
 
   const rank = normaliseId(row["rank"] ?? "");
   if (rank === null) return null;
-  return members.find((member) => member.rank === Number(rank)) ?? null;
+  return designs.find((design) => design.rank === Number(rank)) ?? null;
 }
 
 export function parseRfDiffusionDesigns(
   rows: ReadonlyArray<Record<string, string>>,
-  archive: ResultFileRef | null,
-  archiveEntries: readonly string[]
+  files: readonly ResultFileRef[]
 ): DesignRow[] {
-  const members = archive ? parseRankedMembers(archiveEntries) : [];
+  const designs = findRankedDesigns(files);
 
   return rows.map((row, index) => {
     const rank = (row["rank"] ?? "").trim();
     const description = (row["description"] ?? "").trim();
-    const member = archive ? matchMember(row, members) : null;
+    const design = matchDesign(row, designs);
 
-    const structure: DesignStructure | null =
-      member && archive
-        ? {
-            key: archive.key,
-            label: member.entry.split("/").pop() ?? member.entry,
-            format: "pdb",
-            entry: member.entry,
-          }
-        : null;
+    const structure: DesignStructure | null = design
+      ? { key: design.file.key, label: design.file.label, format: "pdb" }
+      : null;
 
     return {
       // The index keeps ids unique even when rank or description repeat.
@@ -224,14 +205,9 @@ export const rfDiffusionAdapter: DeNovoDesignAdapter = {
   binderChainId: "A",
   designLengthKey: "seq_length",
   findResultsArtifact: findRfDiffusionResultsArtifact,
-  findStructureArchive: findRfDiffusionStructureArchive,
   columnsFor: (text) => findRfDiffusionColumns(parseCsvTable(text).headers),
-  parseRows: (text, files, archiveEntries) =>
-    parseRfDiffusionDesigns(
-      parseCsvTable(text).rows,
-      findRfDiffusionStructureArchive(files),
-      archiveEntries ?? []
-    ),
+  parseRows: (text, files) =>
+    parseRfDiffusionDesigns(parseCsvTable(text).rows, files),
 };
 
 registerDeNovoDesignAdapter(rfDiffusionAdapter);

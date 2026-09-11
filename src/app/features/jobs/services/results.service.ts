@@ -34,12 +34,6 @@ export interface ResultDownloadsResponse {
   zipCategories?: string[];
 }
 
-export interface ResultArchiveEntriesResponse {
-  runId: string;
-  key: string;
-  entries: string[];
-}
-
 export interface ResultLogsResponse {
   runId: string;
   logs?: string | string[] | null;
@@ -78,32 +72,12 @@ export class ResultsService {
     );
   }
 
-  /**
-   * Read one artifact as text. Via the API, since S3 serves no CORS headers.
-   * With `entry`, reads that one file out of the archive at `key` instead.
-   */
-  getResultFileText(
-    runId: string,
-    key: string,
-    entry?: string
-  ): Observable<string> {
+  /** Read one artifact as text. Via the API, since S3 serves no CORS headers. */
+  getResultFileText(runId: string, key: string): Observable<string> {
     return this.http.get(
       `${this.resultsUrl}/${encodeURIComponent(runId)}/file`,
-      {
-        params: entry ? { key, entry } : { key },
-        responseType: "text",
-      }
+      { params: { key }, responseType: "text" }
     );
-  }
-
-  /** Names of the files in one archive, to read back with `getResultFileText`. */
-  getArchiveEntries(runId: string, key: string): Observable<string[]> {
-    return this.http
-      .get<ResultArchiveEntriesResponse>(
-        `${this.resultsUrl}/${encodeURIComponent(runId)}/archive`,
-        { params: { key } }
-      )
-      .pipe(map((response) => response.entries ?? []));
   }
 
   getJobDownloads(runId: string): Observable<ResultDownloadsResponse> {
