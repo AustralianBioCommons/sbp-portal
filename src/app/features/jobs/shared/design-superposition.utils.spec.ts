@@ -2,6 +2,7 @@ import { Mat4, Vec3 } from "molstar/lib/mol-math/linear-algebra";
 
 import {
   CaAtom,
+  chainResidueCounts,
   findBinderChain,
   superposeOnTargetChains,
   targetChains,
@@ -12,6 +13,22 @@ describe("chain roles", () => {
     ["A", 74],
     ["B", 115],
   ]);
+
+  it("counts the residues in each chain", () => {
+    const atoms: CaAtom[] = [
+      { chain: "A", seq: 1, x: 0, y: 0, z: 0 },
+      { chain: "A", seq: 2, x: 1, y: 0, z: 0 },
+      { chain: "B", seq: 1, x: 2, y: 0, z: 0 },
+    ];
+
+    expect(chainResidueCounts(atoms)).toEqual(
+      new Map([
+        ["A", 2],
+        ["B", 1],
+      ])
+    );
+    expect(chainResidueCounts([]).size).toBe(0);
+  });
 
   it("names the binder from the design's own length", () => {
     // RFdiffusion writes the binder as chain A, BindCraft as chain B, so the

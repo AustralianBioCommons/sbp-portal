@@ -391,11 +391,13 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     );
   }
 
-  private async applySuperposition(transform: Mat4): Promise<void> {
-    if (!this.plugin) return;
+  /** True only if the structure was really moved, so the camera can be kept. */
+  private async applySuperposition(transform: Mat4): Promise<boolean> {
+    if (!this.plugin) return false;
     try {
       const structures =
         this.plugin.managers.structure.hierarchy.current?.structures ?? [];
+      if (structures.length === 0) return false;
       for (const structure of structures) {
         const update = this.plugin.state.data
           .build()
@@ -408,8 +410,10 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
           });
         await this.plugin.runTask(this.plugin.state.data.updateTree(update));
       }
+      return true;
     } catch (e) {
       console.warn("Mol* superposition failed:", e);
+      return false;
     }
   }
 
@@ -510,10 +514,13 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       const transform = superposeKey
         ? this.superpositionFor(superposeKey)
         : null;
-      if (transform) await this.applySuperposition(transform);
+      const placed = transform
+        ? await this.applySuperposition(transform)
+        : false;
       await this.applyRepresentation();
-      // Only a placed structure keeps the old camera; a new reference is framed.
-      if (keptCamera && transform) this.restoreCamera(keptCamera);
+      // Only a placed structure keeps the old camera; anything else is framed
+      // afresh, since leaving it would point the camera away from it.
+      if (keptCamera && placed) this.restoreCamera(keptCamera);
       await this.relaxCameraClipping();
       this.applyTopRegion();
       this.status.set("loaded");

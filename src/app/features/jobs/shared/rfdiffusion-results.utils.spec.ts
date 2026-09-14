@@ -77,10 +77,10 @@ describe("rfdiffusion results utils", () => {
       expect(keysFor(BOLTZ_HEADERS)).toEqual(keysOf(RFDIFFUSION_BOLTZ_COLUMNS));
     });
 
-    it("keeps the AF2 columns when a run carries both metric families", () => {
-      // pred_method = 'af2_boltz' scores designs twice.
+    it("prefers the Boltz columns when a run carries both metric families", () => {
+      // pred_method = 'af2_boltz' predicts twice and ranks on the Boltz pass.
       expect(keysFor([...AF2_HEADERS, ...BOLTZ_HEADERS])).toEqual(
-        keysOf(RFDIFFUSION_AF2_COLUMNS)
+        keysOf(RFDIFFUSION_BOLTZ_COLUMNS)
       );
     });
 
@@ -163,12 +163,14 @@ describe("rfdiffusion results utils", () => {
       expect(rows[0].structure).toBeNull();
     });
 
-    it("leaves a row without a structure when no file matches", () => {
+    it("never hands a row another design's file", () => {
+      // The only file shares rank 1 with the first row but is a different
+      // design, so neither row may claim it.
       const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, [
         design("1_fold_9_seq_9_af2pred.pdb"),
       ]);
 
-      // Rank 2 has no file of its own, and rank 1 is claimed by fold/seq.
+      expect(rows[0].structure).toBeNull();
       expect(rows[1].structure).toBeNull();
     });
 
@@ -178,6 +180,40 @@ describe("rfdiffusion results utils", () => {
       expect(rows.length).toBe(2);
       expect(rows[0].structure).toBeNull();
       expect(rows[0].values["af2_plddt_overall"]).toBe("91.3");
+    });
+
+    it("ignores a file in the ranked designs directory that is not a design", () => {
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, [
+        design("README.pdb"),
+        design("1_fold_3_seq_0_af2pred.pdb"),
+      ]);
+
+      expect(rows[0].structure?.key).toContain("1_fold_3_seq_0_af2pred.pdb");
+    });
+
+    it("leaves a row unpaired when its ids and rank are all unusable", () => {
+      const unusable = [
+        "rank,fold_id,seq_id,description",
+        "top,x,y,first",
+      ].join("\n");
+      const rows = parseRfDiffusionDesigns(
+        parseCsvTable(unusable).rows,
+        designs
+      );
+
+      expect(rows[0].structure).toBeNull();
+    });
+
+    it("names a row the CSV left without a description", () => {
+      // A row of only empty cells is dropped, so each keeps its seq_length.
+      const unnamed = ["rank,description,seq_length", "3,,114", ",,114"].join(
+        "\n"
+      );
+      const rows = parseRfDiffusionDesigns(parseCsvTable(unnamed).rows, []);
+
+      expect(rows[0].label).toBe("Design 3");
+      // No rank either, so the row's position names it.
+      expect(rows[1].label).toBe("Design 2");
     });
 
     it("keeps row ids unique when rank and description repeat", () => {

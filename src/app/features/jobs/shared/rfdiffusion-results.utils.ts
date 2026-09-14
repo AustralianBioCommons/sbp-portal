@@ -85,11 +85,12 @@ export const RFDIFFUSION_BOLTZ_COLUMNS = withMetrics(BOLTZ_COLUMNS);
 export function findRfDiffusionColumns(
   headers: readonly string[]
 ): readonly DesignColumn[] {
+  // 'af2_boltz' runs carry both families. Boltz runs last on what AF2 passed
+  // through, and ranks those designs, so its metrics are the ones beside Rank.
   const hasBoltz = headers.some((header) => header.startsWith("boltz_"));
-  const hasAf2 = headers.some((header) => header.startsWith("af2_"));
-  // 'af2_boltz' runs carry both; Boltz is the later, more refined stage.
-  const columns =
-    hasBoltz && !hasAf2 ? RFDIFFUSION_BOLTZ_COLUMNS : RFDIFFUSION_AF2_COLUMNS;
+  const columns = hasBoltz
+    ? RFDIFFUSION_BOLTZ_COLUMNS
+    : RFDIFFUSION_AF2_COLUMNS;
 
   const present = new Set(headers);
   return columns.filter((column) => present.has(column.key));
@@ -150,8 +151,9 @@ function normaliseId(value: string): string | null {
 }
 
 /**
- * Matches on fold and sequence id, which identify the design outright. Rank is
- * only a fallback, since ranking can drop designs and shift it.
+ * Matches on fold and sequence id, which identify the design outright. A row
+ * carrying them pairs on them alone: falling back to rank could hand it another
+ * design's file. Rank is only for rows the CSV left without ids.
  */
 function matchDesign(
   row: Record<string, string>,
@@ -162,8 +164,7 @@ function matchDesign(
 
   if (foldId !== null && seqId !== null) {
     const designId = `fold_${foldId}_seq_${seqId}`;
-    const byDesign = designs.find((design) => design.designId === designId);
-    if (byDesign) return byDesign;
+    return designs.find((design) => design.designId === designId) ?? null;
   }
 
   const rank = normaliseId(row["rank"] ?? "");
