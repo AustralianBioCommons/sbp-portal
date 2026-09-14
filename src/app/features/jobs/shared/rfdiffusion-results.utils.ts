@@ -29,22 +29,8 @@ const TRAILING_COLUMNS: readonly DesignColumn[] = [
   { key: "description", heading: "Design name", sortable: false },
 ];
 
-/** AlphaFold2 Initial Guess: pLDDT runs 0-100 and PAE is in Angstroms. */
+/** AlphaFold2 Initial Guess: PAE is in Angstroms and ipTM runs 0-1. */
 const AF2_COLUMNS: readonly DesignColumn[] = [
-  {
-    key: "af2_plddt_overall",
-    heading: "pLDDT",
-    numeric: true,
-    higherIsBetter: true,
-  },
-  // A good overall pLDDT can come from the target alone, so show the binder's
-  // own score next to it.
-  {
-    key: "af2_plddt_binder",
-    heading: "pLDDT (Binder)",
-    numeric: true,
-    higherIsBetter: true,
-  },
   // The AF2 ranking metric, so rank and this column agree.
   { key: "af2_pae_interaction", heading: "PAE Interaction", numeric: true },
   { key: "af2_iptm", heading: "ipTM", numeric: true, higherIsBetter: true },

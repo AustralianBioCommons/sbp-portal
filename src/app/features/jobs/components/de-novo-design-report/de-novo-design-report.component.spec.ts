@@ -778,10 +778,10 @@ describe("DeNovoDesignReportComponent", () => {
 
     // Columns as the real ranked_designs.csv writes them.
     const rfdCsv =
-      "rank,description,fold_id,seq_id,af2_pae_interaction," +
+      "rank,description,fold_id,seq_id,af2_pae_interaction,af2_iptm," +
       "af2_plddt_overall,af2_plddt_binder,seq_length,sequence\n" +
-      "1,fold_3_seq_0_af2pred,3,0,27.06,91.3,87.18,10,GEMGVHDFLL\n" +
-      "2,fold_0_seq_1_af2pred,0,1,27.15,88.1,72.52,10,GVMSVYDFLL\n";
+      "1,fold_3_seq_0_af2pred,3,0,27.06,0.13,91.3,87.18,10,GEMGVHDFLL\n" +
+      "2,fold_0_seq_1_af2pred,0,1,27.15,0.11,88.1,72.52,10,GVMSVYDFLL\n";
 
     const renderRfd = () => {
       respondWith({ [RFD_CSV]: rfdCsv, [RFD_DESIGN]: PDB });
@@ -802,9 +802,8 @@ describe("DeNovoDesignReportComponent", () => {
           .map((column) => column.heading)
       ).toEqual([
         "Rank",
-        "pLDDT",
-        "pLDDT (Binder)",
         "PAE Interaction",
+        "ipTM",
         "Design Length",
         "Design Sequence",
         "Design name",
