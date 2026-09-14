@@ -44,23 +44,50 @@ describe("rfdiffusion results utils", () => {
   });
 
   describe("choosing columns for the run's predictor", () => {
+    const AF2_HEADERS = [
+      "rank",
+      "description",
+      "seq_length",
+      "sequence",
+      "af2_plddt_overall",
+      "af2_plddt_binder",
+      "af2_pae_interaction",
+      "af2_iptm",
+    ];
+    const BOLTZ_HEADERS = [
+      "rank",
+      "description",
+      "seq_length",
+      "sequence",
+      "boltz_plddt",
+      "boltz_ipSAE_min",
+      "boltz_iptm",
+    ];
+
+    const keysFor = (headers: string[]) =>
+      findRfDiffusionColumns(headers).map((column) => column.key);
+    const keysOf = (columns: readonly { key: string }[]) =>
+      columns.map((column) => column.key);
+
     it("uses the AF2 columns for an AF2 run", () => {
-      expect(findRfDiffusionColumns(["rank", "af2_plddt_overall"])).toBe(
-        RFDIFFUSION_AF2_COLUMNS
-      );
+      expect(keysFor(AF2_HEADERS)).toEqual(keysOf(RFDIFFUSION_AF2_COLUMNS));
     });
 
     it("uses the Boltz columns for a Boltz run", () => {
-      expect(findRfDiffusionColumns(["rank", "boltz_plddt"])).toBe(
-        RFDIFFUSION_BOLTZ_COLUMNS
-      );
+      expect(keysFor(BOLTZ_HEADERS)).toEqual(keysOf(RFDIFFUSION_BOLTZ_COLUMNS));
     });
 
     it("keeps the AF2 columns when a run carries both metric families", () => {
       // pred_method = 'af2_boltz' scores designs twice.
-      expect(
-        findRfDiffusionColumns(["rank", "af2_plddt_overall", "boltz_plddt"])
-      ).toBe(RFDIFFUSION_AF2_COLUMNS);
+      expect(keysFor([...AF2_HEADERS, ...BOLTZ_HEADERS])).toEqual(
+        keysOf(RFDIFFUSION_AF2_COLUMNS)
+      );
+    });
+
+    it("drops a metric the CSV does not carry", () => {
+      const headers = AF2_HEADERS.filter((header) => header !== "af2_iptm");
+      expect(keysFor(headers)).not.toContain("af2_iptm");
+      expect(keysFor(headers)).toContain("af2_pae_interaction");
     });
   });
 

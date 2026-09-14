@@ -29,10 +29,7 @@ const TRAILING_COLUMNS: readonly DesignColumn[] = [
   { key: "description", heading: "Design name", sortable: false },
 ];
 
-/**
- * AlphaFold2 Initial Guess: pLDDT runs 0-100 and PAE is in Angstroms. The ranked
- * CSV has no af2_iptm, so PAE is what describes the interface.
- */
+/** AlphaFold2 Initial Guess: pLDDT runs 0-100 and PAE is in Angstroms. */
 const AF2_COLUMNS: readonly DesignColumn[] = [
   {
     key: "af2_plddt_overall",
@@ -50,6 +47,7 @@ const AF2_COLUMNS: readonly DesignColumn[] = [
   },
   // The AF2 ranking metric, so rank and this column agree.
   { key: "af2_pae_interaction", heading: "PAE Interaction", numeric: true },
+  { key: "af2_iptm", heading: "ipTM", numeric: true, higherIsBetter: true },
 ];
 
 /** Boltz-2 scores pLDDT and ipSAE 0-1, so these are not the AF2 columns rescaled. */
@@ -90,9 +88,11 @@ export function findRfDiffusionColumns(
   const hasBoltz = headers.some((header) => header.startsWith("boltz_"));
   const hasAf2 = headers.some((header) => header.startsWith("af2_"));
   // 'af2_boltz' runs carry both; Boltz is the later, more refined stage.
-  return hasBoltz && !hasAf2
-    ? RFDIFFUSION_BOLTZ_COLUMNS
-    : RFDIFFUSION_AF2_COLUMNS;
+  const columns =
+    hasBoltz && !hasAf2 ? RFDIFFUSION_BOLTZ_COLUMNS : RFDIFFUSION_AF2_COLUMNS;
+
+  const present = new Set(headers);
+  return columns.filter((column) => present.has(column.key));
 }
 
 /** The ranked CSV, the table every other column is read from. */
@@ -142,7 +142,6 @@ function findRankedDesigns(files: readonly ResultFileRef[]): RankedDesign[] {
   return designs;
 }
 
-/** `0`, `1.0` and ` 2 ` all mean an id the filenames write as a plain integer. */
 function normaliseId(value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -188,7 +187,6 @@ export function parseRfDiffusionDesigns(
       : null;
 
     return {
-      // The index keeps ids unique even when rank or description repeat.
       id: `${index}-${rank}-${description}`,
       label: description || `Design ${rank || index + 1}`,
       values: row,
