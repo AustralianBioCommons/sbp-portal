@@ -24,10 +24,10 @@ import {
   heroXMark,
 } from "@ng-icons/heroicons/outline";
 import {
-  CHAIN_A_COLOR,
+  BINDER_COLOR,
   MolstarViewerComponent,
-  OTHER_CHAINS_COLOR,
   StructureSource,
+  TARGET_COLOR,
 } from "../../../workflows/components/molstar-viewer/molstar-viewer.component";
 import { DesignResultsTableComponent } from "../design-results-table/design-results-table.component";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
@@ -39,6 +39,7 @@ import {
   getDeNovoDesignAdapter,
 } from "../../shared/de-novo-results.utils";
 import "../../shared/bindcraft-results.utils";
+import "../../shared/rfdiffusion-results.utils";
 
 @Component({
   selector: "app-de-novo-design-report",
@@ -77,12 +78,23 @@ export class DeNovoDesignReportComponent {
   private readonly document = inject(DOCUMENT);
 
   readonly adapter = computed(() => getDeNovoDesignAdapter(this.tool()));
-  readonly columns = computed(() => this.adapter()?.columns ?? []);
 
   readonly rows = signal<DesignRow[]>([]);
   /** A stats file that loaded fine but ranked nothing: not an error. */
   readonly resultsEmpty = signal(false);
   readonly resultsError = signal<string | null>(null);
+
+  /** Kept so an adapter that varies its columns can read the file again. */
+  private readonly resultsText = signal<string | null>(null);
+
+  readonly columns = computed(() => {
+    const adapter = this.adapter();
+    if (!adapter) return [];
+    const text = this.resultsText();
+    return text !== null && adapter.columnsFor
+      ? adapter.columnsFor(text)
+      : adapter.columns;
+  });
 
   readonly selectedId = signal<string | null>(null);
   readonly structureSource = signal<StructureSource | null>(null);
@@ -104,6 +116,22 @@ export class DeNovoDesignReportComponent {
 
   readonly selectedRow = computed(
     () => this.rows().find((row) => row.id === this.selectedId()) ?? null
+  );
+
+  /** The chain the pipeline usually writes the binder to. */
+  readonly binderChainId = computed(() => this.adapter()?.binderChainId ?? "A");
+
+  /** Confirms that chain when exactly one chain is this long. */
+  readonly designLength = computed(() => {
+    const key = this.adapter()?.designLengthKey;
+    const raw = key ? (this.selectedRow()?.values[key] ?? "").trim() : "";
+    const length = Number(raw);
+    return raw && Number.isFinite(length) ? length : null;
+  });
+
+  /** Designs of one run line up on each other; a new run starts over. */
+  readonly superposeKey = computed(() =>
+    this.resultsArtifact() ? this.runId() : ""
   );
 
   /** Null until the files have loaded, so no message flashes. */
@@ -183,10 +211,10 @@ export class DeNovoDesignReportComponent {
   private dragStartX = 0;
   private dragStartPanelWidth = 0;
 
-  readonly chainLegend = [
-    { label: "Chain A", color: CHAIN_A_COLOR },
-    { label: "Other chains", color: OTHER_CHAINS_COLOR },
-  ];
+  readonly chainLegend = computed(() => [
+    { label: "Target", color: TARGET_COLOR },
+    { label: this.selectedRow()?.label ?? "Binder", color: BINDER_COLOR },
+  ]);
 
   /** Tooltip instructions. */
   readonly viewerHelp = [
@@ -212,6 +240,7 @@ export class DeNovoDesignReportComponent {
       if (!adapter || !artifact) {
         this.cancelResultsFetch();
         this.rows.set([]);
+        this.resultsText.set(null);
         this.selectedId.set(null);
         this.resultsError.set(null);
         this.resultsEmpty.set(false);
@@ -365,6 +394,7 @@ export class DeNovoDesignReportComponent {
     this.resultsError.set(null);
     this.resultsEmpty.set(false);
     this.rows.set([]);
+    this.resultsText.set(null);
     this.selectedId.set(null);
 
     this.resultsFetch = this.fetchText(runId, key, this.resultsLoading)
@@ -381,6 +411,7 @@ export class DeNovoDesignReportComponent {
           this.resultsEmpty.set(true);
           return;
         }
+        this.resultsText.set(content);
         this.rows.set(rows);
         // Show the top-ranked design first.
         this.selectedId.set(rows[0].id);

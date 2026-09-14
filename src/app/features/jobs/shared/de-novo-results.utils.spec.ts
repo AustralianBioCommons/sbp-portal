@@ -152,8 +152,9 @@ describe("the adapter registry", () => {
     expect(getDeNovoDesignAdapter("  bindcraft ")?.tool).toBe("bindcraft");
   });
 
-  it("returns null for a workflow the report cannot render yet", () => {
-    expect(getDeNovoDesignAdapter("rfdiffusion")).toBeNull();
+  it("returns null for an unregistered tool, and for no tool at all", () => {
+    expect(getDeNovoDesignAdapter("boltzgen")).toBeNull();
+    expect(getDeNovoDesignAdapter("")).toBeNull();
     expect(getDeNovoDesignAdapter(null)).toBeNull();
     expect(getDeNovoDesignAdapter(undefined)).toBeNull();
   });
@@ -163,6 +164,7 @@ describe("the adapter registry", () => {
       tool: "test-tool",
       columns: [{ key: "rank", heading: "Rank" }],
       resultsFileName: "results.csv",
+      binderChainId: "A",
       findResultsArtifact: () => null,
       parseRows: () => [],
     });

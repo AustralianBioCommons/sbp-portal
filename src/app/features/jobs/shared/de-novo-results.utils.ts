@@ -47,8 +47,20 @@ export interface DeNovoDesignAdapter {
   columns: readonly DesignColumn[];
   /** Names the results file in the empty state, e.g. "_final_design_stats.csv". */
   resultsFileName: string;
+  /**
+   * Chain the binder is written to; everything else is the target. The two
+   * pipelines disagree on this, so it cannot be guessed.
+   */
+  binderChainId: string;
+  /** Column holding the binder's length, used to double-check that chain. */
+  designLengthKey?: string;
   /** The run's results table, or null when it has not produced one. */
   findResultsArtifact(files: readonly ResultFileRef[]): ResultFileRef | null;
+  /**
+   * Picks columns from the results file, for a workflow that can produce more
+   * than one set. `columns` is used until the file has loaded.
+   */
+  columnsFor?(text: string): readonly DesignColumn[];
   /** Rows in file order, each paired with its structure. */
   parseRows(text: string, files: readonly ResultFileRef[]): DesignRow[];
 }
@@ -62,7 +74,7 @@ export function registerDeNovoDesignAdapter(
   adapters.set(adapter.tool, adapter);
 }
 
-/** Null for a de novo workflow the report cannot render yet, e.g. RFdiffusion. */
+/** Null for a de novo workflow the report cannot show yet. */
 export function getDeNovoDesignAdapter(
   tool: string | null | undefined
 ): DeNovoDesignAdapter | null {
