@@ -80,6 +80,8 @@ export class DeNovoDesignReportComponent {
   readonly adapter = computed(() => getDeNovoDesignAdapter(this.tool()));
 
   readonly rows = signal<DesignRow[]>([]);
+  /** A stats file that loaded fine but ranked nothing: not an error. */
+  readonly resultsEmpty = signal(false);
   readonly resultsError = signal<string | null>(null);
 
   /** Kept so an adapter that varies its columns can read the file again. */
@@ -139,13 +141,19 @@ export class DeNovoDesignReportComponent {
     return this.resultsArtifact() ? null : this.adapter()!.resultsFileName;
   });
 
+  /**
+   * The workflow only writes ranked designs and their stats once at least one
+   * survives in silico QC, so a missing artifact or an empty stats file both
+   * mean the same thing: nothing passed, not that something is broken.
+   */
+  readonly noDesignsAvailable = computed(
+    () => !!this.missingResults() || this.resultsEmpty()
+  );
+
   readonly coreUnavailable = computed(
     () =>
       !this.loading() &&
-      (!!this.filesError() ||
-        !this.adapter() ||
-        !!this.missingResults() ||
-        !!this.resultsError())
+      (!!this.filesError() || !this.adapter() || !!this.resultsError())
   );
 
   // The designs table panel
@@ -235,6 +243,7 @@ export class DeNovoDesignReportComponent {
         this.resultsText.set(null);
         this.selectedId.set(null);
         this.resultsError.set(null);
+        this.resultsEmpty.set(false);
         return;
       }
       this.loadResults(runId, artifact.key);
@@ -383,6 +392,7 @@ export class DeNovoDesignReportComponent {
   private loadResults(runId: string, key: string): void {
     this.cancelResultsFetch();
     this.resultsError.set(null);
+    this.resultsEmpty.set(false);
     this.rows.set([]);
     this.resultsText.set(null);
     this.selectedId.set(null);
@@ -398,7 +408,7 @@ export class DeNovoDesignReportComponent {
       .subscribe((content) => {
         const rows = this.adapter()?.parseRows(content, this.files()) ?? [];
         if (rows.length === 0) {
-          this.resultsError.set("The design results file contains no designs.");
+          this.resultsEmpty.set(true);
           return;
         }
         this.resultsText.set(content);
