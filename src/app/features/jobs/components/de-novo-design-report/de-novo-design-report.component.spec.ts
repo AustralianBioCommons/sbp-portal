@@ -852,18 +852,16 @@ describe("DeNovoDesignReportComponent", () => {
     });
 
     it("names the ranked csv when the run never produced one", () => {
-      const unavailable = jasmine.createSpy("unavailable");
       respondWith({});
       fixture = TestBed.createComponent(DeNovoDesignReportComponent);
       component = fixture.componentInstance;
-      component.unavailable.subscribe(unavailable);
       fixture.componentRef.setInput("runId", RUN);
       fixture.componentRef.setInput("tool", "RFdiffusion");
       fixture.componentRef.setInput("files", []);
       fixture.detectChanges();
 
       expect(component.missingResults()).toBe("ranked_designs.csv");
-      expect(unavailable).toHaveBeenCalled();
+      expect(component.noDesignsAvailable()).toBeTrue();
     });
   });
 });
