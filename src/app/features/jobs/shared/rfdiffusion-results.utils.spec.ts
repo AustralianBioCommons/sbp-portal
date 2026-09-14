@@ -3,7 +3,6 @@ import {
   RFDIFFUSION_BOLTZ_COLUMNS,
   findRfDiffusionColumns,
   findRfDiffusionResultsArtifact,
-  findRfDiffusionStructureArchive,
   parseRfDiffusionDesigns,
   rfDiffusionAdapter,
 } from "./rfdiffusion-results.utils";
@@ -20,7 +19,10 @@ function file(key: string, category = "pdb"): ResultFileRef {
 }
 
 const resultsFile = file("run-1/results/ranked_designs.csv", "stats_csv");
-const archiveFile = file("run-1/results/ranked_designs.tar.gz");
+/** One published design, as the pipeline names it. */
+function design(name: string): ResultFileRef {
+  return file(`run-1/results/ranked_designs/${name}`);
+}
 
 describe("rfdiffusion results utils", () => {
   it("registers itself under the tool id the job reports", () => {
@@ -29,16 +31,15 @@ describe("rfdiffusion results utils", () => {
   });
 
   describe("finding artifacts", () => {
-    it("finds the ranked CSV and the structure tarball", () => {
-      const files = [resultsFile, archiveFile, file("run-1/results/other.csv")];
+    it("finds the ranked CSV", () => {
+      const files = [resultsFile, file("run-1/results/other.csv")];
       expect(findRfDiffusionResultsArtifact(files)).toBe(resultsFile);
-      expect(findRfDiffusionStructureArchive(files)).toBe(archiveFile);
     });
 
-    it("returns null when the run published neither", () => {
-      const files = [file("run-1/results/all_designs.csv")];
-      expect(findRfDiffusionResultsArtifact(files)).toBeNull();
-      expect(findRfDiffusionStructureArchive(files)).toBeNull();
+    it("returns null when the run published none", () => {
+      expect(
+        findRfDiffusionResultsArtifact([file("run-1/results/all_designs.csv")])
+      ).toBeNull();
     });
   });
 
@@ -63,66 +64,47 @@ describe("rfdiffusion results utils", () => {
     });
   });
 
-  describe("pairing designs with archive members", () => {
+  describe("pairing designs with their published files", () => {
     const csv = [
       "rank,fold_id,seq_id,description,sequence,seq_length,af2_plddt_overall",
       "1,3,0,fold_3_seq_0_af2pred,MKTAY,5,91.3",
       "2,0,1,fold_0_seq_1_af2pred,MKTAW,5,88.1",
     ].join("\n");
 
-    const entries = [
-      "ranked_designs/1_fold_3_seq_0_af2pred.pdb",
-      "ranked_designs/2_fold_0_seq_1_af2pred.pdb",
+    const designs = [
+      design("1_fold_3_seq_0_af2pred.pdb"),
+      design("2_fold_0_seq_1_af2pred.pdb"),
     ];
 
-    it("points each row at its member of the tarball, not a key of its own", () => {
-      const rows = parseRfDiffusionDesigns(
-        parseCsvTable(csv).rows,
-        archiveFile,
-        entries
-      );
+    it("points each row at its own published file", () => {
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, designs);
 
       expect(rows.length).toBe(2);
       expect(rows[0].structure).toEqual({
-        // The archive is the object; the design is a member inside it.
-        key: archiveFile.key,
-        label: "1_fold_3_seq_0_af2pred.pdb",
+        key: designs[0].key,
+        label: designs[0].label,
         format: "pdb",
-        entry: "ranked_designs/1_fold_3_seq_0_af2pred.pdb",
       });
-      expect(rows[1].structure?.entry).toBe(
-        "ranked_designs/2_fold_0_seq_1_af2pred.pdb"
-      );
+      expect(rows[1].structure?.key).toBe(designs[1].key);
     });
 
     it("matches on fold and sequence id, not on the rank prefix", () => {
       // Ranks here disagree with the prefixes, so only fold/seq can pair them.
       const shuffled = [
-        "ranked_designs/07_fold_0_seq_1_af2pred.pdb",
-        "ranked_designs/09_fold_3_seq_0_af2pred.pdb",
+        design("07_fold_0_seq_1_af2pred.pdb"),
+        design("09_fold_3_seq_0_af2pred.pdb"),
       ];
-      const rows = parseRfDiffusionDesigns(
-        parseCsvTable(csv).rows,
-        archiveFile,
-        shuffled
-      );
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, shuffled);
 
-      expect(rows[0].structure?.entry).toBe(
-        "ranked_designs/09_fold_3_seq_0_af2pred.pdb"
-      );
-      expect(rows[1].structure?.entry).toBe(
-        "ranked_designs/07_fold_0_seq_1_af2pred.pdb"
-      );
+      expect(rows[0].structure?.key).toBe(shuffled[1].key);
+      expect(rows[1].structure?.key).toBe(shuffled[0].key);
     });
 
-    it("pairs Boltz-predicted members too", () => {
-      const boltz = ["ranked_designs/1_fold_3_seq_0_boltzpred.pdb"];
-      const rows = parseRfDiffusionDesigns(
-        parseCsvTable(csv).rows,
-        archiveFile,
-        boltz
-      );
-      expect(rows[0].structure?.entry).toBe(boltz[0]);
+    it("pairs Boltz-predicted designs too", () => {
+      const boltz = [design("1_fold_3_seq_0_boltzpred.pdb")];
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, boltz);
+
+      expect(rows[0].structure?.key).toBe(boltz[0].key);
     });
 
     it("tolerates ids the CSV wrote as floats", () => {
@@ -130,45 +112,42 @@ describe("rfdiffusion results utils", () => {
         "rank,fold_id,seq_id,description",
         "1,3.0,0.0,fold_3_seq_0_af2pred",
       ].join("\n");
-      const rows = parseRfDiffusionDesigns(
-        parseCsvTable(floats).rows,
-        archiveFile,
-        entries
-      );
-      expect(rows[0].structure?.entry).toBe(
-        "ranked_designs/1_fold_3_seq_0_af2pred.pdb"
-      );
+      const rows = parseRfDiffusionDesigns(parseCsvTable(floats).rows, designs);
+
+      expect(rows[0].structure?.key).toBe(designs[0].key);
     });
 
     it("falls back to rank, zero padding and all, when the CSV has no ids", () => {
       const noIds = ["rank,description", "2,second"].join("\n");
       // Padded to the design count's width, so rank compares as a number.
       const padded = [
-        "ranked_designs/001_fold_3_seq_0_af2pred.pdb",
-        "ranked_designs/002_fold_0_seq_1_af2pred.pdb",
+        design("001_fold_3_seq_0_af2pred.pdb"),
+        design("002_fold_0_seq_1_af2pred.pdb"),
       ];
-      const rows = parseRfDiffusionDesigns(
-        parseCsvTable(noIds).rows,
-        archiveFile,
-        padded
-      );
-      expect(rows[0].structure?.entry).toBe(
-        "ranked_designs/002_fold_0_seq_1_af2pred.pdb"
-      );
+      const rows = parseRfDiffusionDesigns(parseCsvTable(noIds).rows, padded);
+
+      expect(rows[0].structure?.key).toBe(padded[1].key);
     });
 
-    it("leaves a row without a structure when no member matches", () => {
-      const rows = parseRfDiffusionDesigns(
-        parseCsvTable(csv).rows,
-        archiveFile,
-        ["ranked_designs/1_fold_9_seq_9_af2pred.pdb"]
-      );
-      // Rank 2 has no member of its own, and rank 1 is claimed by fold/seq.
+    it("ignores a PDB published outside the ranked designs directory", () => {
+      const elsewhere = [file("run-1/results/1_fold_3_seq_0_af2pred.pdb")];
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, elsewhere);
+
+      expect(rows[0].structure).toBeNull();
+    });
+
+    it("leaves a row without a structure when no file matches", () => {
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, [
+        design("1_fold_9_seq_9_af2pred.pdb"),
+      ]);
+
+      // Rank 2 has no file of its own, and rank 1 is claimed by fold/seq.
       expect(rows[1].structure).toBeNull();
     });
 
-    it("still lists the designs when the archive is missing entirely", () => {
-      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, null, []);
+    it("still lists the designs when nothing was published", () => {
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, []);
+
       expect(rows.length).toBe(2);
       expect(rows[0].structure).toBeNull();
       expect(rows[0].values["af2_plddt_overall"]).toBe("91.3");
@@ -176,11 +155,8 @@ describe("rfdiffusion results utils", () => {
 
     it("keeps row ids unique when rank and description repeat", () => {
       const duplicates = ["rank,description", "1,same", "1,same"].join("\n");
-      const rows = parseRfDiffusionDesigns(
-        parseCsvTable(duplicates).rows,
-        null,
-        []
-      );
+      const rows = parseRfDiffusionDesigns(parseCsvTable(duplicates).rows, []);
+
       expect(rows[0].id).not.toBe(rows[1].id);
     });
   });
