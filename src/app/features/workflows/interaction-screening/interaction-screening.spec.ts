@@ -15,7 +15,12 @@ import InteractionScreeningComponent from "./interaction-screening";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const VALID_QUERY = ">querySeq1\nARNDCQEGHILKMFPSTWYV";
+// At least 10 query×target pairs are required, so the query side lists 10
+// unique headers against a single target (10 × 1 = 10).
+const VALID_QUERY = Array.from(
+  { length: 10 },
+  (_, i) => `>querySeq${i}\nARNDCQEGHILKMFPSTWYV`
+).join("\n");
 const VALID_TARGET = ">targetSeq1\nARNDCQEGHILKMFPSTWYV";
 
 const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
@@ -370,11 +375,34 @@ describe("InteractionScreeningComponent", () => {
   });
 
   it("should not show product error when combination count is below the limit", () => {
-    fillValidForm(); // 1 × 1 = 1
+    fillValidForm(); // 10 × 1 = 10
     fixture.detectChanges();
 
     expect(component.hasProductError()).toBe(false);
     expect(component.getProductError()).toBe("");
+  });
+
+  // ── 13b. hasMinProductError / getMinProductError ──────────────────────
+
+  it("should show min-product error when query × target < 10", () => {
+    component.form.controls.jobName.setValue("job");
+    component.form.controls.queryFasta.setValue(VALID_TARGET); // 1 entry
+    component.form.controls.targetFasta.setValue(">t1\nARNDC"); // 1 × 1 = 1
+    fixture.detectChanges();
+
+    expect(component.hasMinProductError()).toBe(true);
+    const msg = component.getMinProductError();
+    expect(msg).toBe(
+      "Minimum 10 interactions at once. Please use the Single Prediction workflow for individual predictions."
+    );
+  });
+
+  it("should not show min-product error when combination count meets the limit", () => {
+    fillValidForm(); // 10 × 1 = 10
+    fixture.detectChanges();
+
+    expect(component.hasMinProductError()).toBe(false);
+    expect(component.getMinProductError()).toBe("");
   });
 
   // ── 14. selectedToolLabel computed ────────────────────────────────────────
@@ -391,7 +419,7 @@ describe("InteractionScreeningComponent", () => {
     const summary = component.formSummary();
     expect(summary.find((i) => i.label === "Job Name")?.value).toBe("my-job");
     expect(summary.find((i) => i.label === "Query Sequences")?.value).toContain(
-      "1"
+      "10"
     );
     expect(
       summary.find((i) => i.label === "Target Sequences")?.value
@@ -435,6 +463,16 @@ describe("InteractionScreeningComponent", () => {
       (_, i) => `>t${i}\nARNDC`
     ).join("\n");
     component.form.setValue({ jobName: "job", queryFasta, targetFasta });
+    fixture.detectChanges();
+    expect(component.getFormValidationSummary().errorCount).toBe(1);
+  });
+
+  it("should count the min-product error in errorCount", () => {
+    component.form.setValue({
+      jobName: "job",
+      queryFasta: VALID_TARGET,
+      targetFasta: ">t1\nARNDC",
+    });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
   });
@@ -604,7 +642,8 @@ describe("InteractionScreeningComponent", () => {
     it("applies the fetched multipliers and remaining balance", () => {
       // getWorkflowCredits / getMyCredit resolve synchronously in beforeEach.
       expect(component["toolMultipliers"]()["boltz"]).toBe(2);
-      expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(2);
+      // Multiplier (2) × the workflow's 10-pair minimum.
+      expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(20);
       // colabfold has no multiplier, so its credits stay unset.
       expect(component.tools.find((t) => t.id === "colabfold")?.credits).toBe(
         undefined

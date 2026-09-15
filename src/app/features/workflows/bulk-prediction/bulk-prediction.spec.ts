@@ -18,8 +18,15 @@ import BulkPredictionComponent from "./bulk-prediction";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const VALID_FASTA = ">seq1\nARNDCQEGHILKMFPSTWYV";
-const VALID_MULTIMER_FASTA = ">multimer1\nARNDCQ:EGHILK";
+// At least 10 entries are required, so "valid" fixtures below list 10 unique headers.
+const VALID_FASTA = Array.from(
+  { length: 10 },
+  (_, i) => `>seq${i}\nARNDCQEGHILKMFPSTWYV`
+).join("\n");
+const VALID_MULTIMER_FASTA =
+  Array.from({ length: 9 }, (_, i) => `>seq${i}\nARNDCQEGHILKMFPSTWYV`).join(
+    "\n"
+  ) + "\n>multimer1\nARNDCQ:EGHILK";
 
 const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
   success: true,
@@ -363,15 +370,6 @@ describe("BulkPredictionComponent", () => {
     expect(jobItem?.value).toBe("");
   });
 
-  it("should use singular 'sequence' when FASTA has exactly one entry", () => {
-    component.form.setValue({ jobName: "bulk-job", fasta: VALID_FASTA });
-    const summary = component.formSummary();
-    const fastaItem = summary.find(
-      (item) => item.fieldName === "fasta_entries"
-    );
-    expect(fastaItem?.value).toBe("1 sequence");
-  });
-
   // ── 13. Submission — missing s3Key branch ─────────────────────────────
 
   it("should show error when dataset upload returns no s3Key", () => {
@@ -442,15 +440,12 @@ describe("BulkPredictionComponent", () => {
   // ── 18. formSummary — plural and invalid FASTA ────────────────────────
 
   it("should use plural 'sequences' when FASTA has more than one entry", () => {
-    component.form.setValue({
-      jobName: "bulk-job",
-      fasta: ">seq1\nARNDCQ\n>seq2\nEGHILK",
-    });
+    component.form.setValue({ jobName: "bulk-job", fasta: VALID_FASTA });
     const summary = component.formSummary();
     const fastaItem = summary.find(
       (item) => item.fieldName === "fasta_entries"
     );
-    expect(fastaItem?.value).toBe("2 sequences");
+    expect(fastaItem?.value).toBe("10 sequences");
   });
 
   it("should leave fasta_entries value empty in formSummary when FASTA is invalid", () => {
@@ -498,12 +493,10 @@ describe("BulkPredictionComponent", () => {
     it("computes tool multiplier × number of FASTA entries", () => {
       component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
       component.selectTool("boltz");
-      component.form.controls.fasta.setValue(
-        ">seq1\nARNDCQEGHILKMFPSTWYV\n>seq2\nVYWTSPFMKLIHGEQCDNRA"
-      );
+      component.form.controls.fasta.setValue(VALID_FASTA);
       fixture.detectChanges();
 
-      expect(component.creditCost()).toBe(2);
+      expect(component.creditCost()).toBe(10);
     });
 
     it("returns null when the FASTA input is empty or invalid", () => {
@@ -518,9 +511,7 @@ describe("BulkPredictionComponent", () => {
     it("flags insufficient credits when the cost exceeds the balance", () => {
       component["toolMultipliers"].set({ boltz: 1 });
       component.selectTool("boltz");
-      component.form.controls.fasta.setValue(
-        ">seq1\nARNDCQEGHILKMFPSTWYV\n>seq2\nVYWTSPFMKLIHGEQCDNRA"
-      );
+      component.form.controls.fasta.setValue(VALID_FASTA);
       component["creditsRemaining"].set(1);
       fixture.detectChanges();
 
@@ -530,9 +521,7 @@ describe("BulkPredictionComponent", () => {
     it("does not flag insufficient when the balance is unknown", () => {
       component["toolMultipliers"].set({ boltz: 1 });
       component.selectTool("boltz");
-      component.form.controls.fasta.setValue(
-        ">seq1\nARNDCQEGHILKMFPSTWYV\n>seq2\nVYWTSPFMKLIHGEQCDNRA"
-      );
+      component.form.controls.fasta.setValue(VALID_FASTA);
       component["creditsRemaining"].set(null);
       fixture.detectChanges();
 
@@ -546,7 +535,8 @@ describe("BulkPredictionComponent", () => {
     it("applies tool multipliers and the remaining balance when authenticated", () => {
       expect(creditsService.getWorkflowCredits).toHaveBeenCalled();
       expect(creditsService.getMyCredit).toHaveBeenCalled();
-      expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(2);
+      // Multiplier (2) × the workflow's 10-entry minimum.
+      expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(20);
       expect(component.creditsRemaining()).toBe(100);
     });
 

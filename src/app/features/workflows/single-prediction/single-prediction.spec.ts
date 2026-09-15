@@ -879,16 +879,16 @@ describe("SinglePredictionComponent", () => {
     expect(rowId).toBeDefined();
   });
 
-  it("should enforce the 2000 size limit for AlphaFold2", () => {
-    const rowId = fillValidProteinRow("A".repeat(1999));
+  it("should enforce the 1000 size limit for AlphaFold2", () => {
+    const rowId = fillValidProteinRow("A".repeat(999));
     component.selectTool("alphafold2");
-    expect(component.predictionSizeLimit()).toBe(2000);
+    expect(component.predictionSizeLimit()).toBe(1000);
     expect(component.isStep1Valid()).toBe(true);
 
-    component.updateRowSequence(rowId, "A".repeat(2000));
+    component.updateRowSequence(rowId, "A".repeat(1000));
     expect(component.isStep1Valid()).toBe(false);
     expect(component.inputSummaryErrors()).toContain(
-      jasmine.stringContaining("must be less than 2000")
+      jasmine.stringContaining("must be less than 1000")
     );
   });
 

@@ -101,7 +101,7 @@ const LIGAND_FIXED_SIZE = 30;
 
 /** Total prediction size limits (exclusive upper bound) per tool. */
 const PREDICTION_SIZE_LIMIT_DEFAULT = 4000;
-const PREDICTION_SIZE_LIMIT_ALPHAFOLD2 = 2000;
+const PREDICTION_SIZE_LIMIT_ALPHAFOLD2 = 1000;
 const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
 
 /** Exclusive upper bound for the random seed (enforces a maximum of 8 digits). */

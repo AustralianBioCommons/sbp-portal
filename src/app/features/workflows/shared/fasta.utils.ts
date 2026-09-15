@@ -294,14 +294,17 @@ export interface BulkFastaValidationResult {
 }
 
 const BULK_FASTA_REGEX = /^[ARNDCQEGHILKMFPSTWYV:]+$/;
+export const MIN_BULK_ENTRIES = 10;
 const MAX_BULK_ENTRIES = 1000;
 const MAX_AA_LENGTH = 1000;
+
+const BULK_MIN_ENTRIES_MESSAGE = `Minimum ${MIN_BULK_ENTRIES} predictions at once. Please use the Single Prediction workflow for individual predictions.`;
 
 /**
  * Validates a multi-FASTA input for bulk protein structure prediction.
  * - Each entry must have a unique FASTA header.
  * - Sequences may contain the 20 canonical amino acids and ":" as a multimer chain delimiter.
- * - At most 1000 FASTA entries are allowed.
+ * - At least 10 and at most 1000 FASTA entries are allowed.
  * - Each entry must not exceed 1000 amino-acid characters (colons excluded from the count).
  */
 export function validateBulkFastaProtein(
@@ -417,6 +420,14 @@ export function validateBulkFastaProtein(
         sequenceCount: 0,
       };
     }
+  }
+
+  if (headers.size < MIN_BULK_ENTRIES) {
+    return {
+      valid: false,
+      errorMessage: BULK_MIN_ENTRIES_MESSAGE,
+      sequenceCount: headers.size,
+    };
   }
 
   return { valid: true, sequenceCount: headers.size };

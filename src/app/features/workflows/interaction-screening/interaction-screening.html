@@ -13,7 +13,9 @@
     This workflow screens all pairwise interactions between the provided query
     sequences and target sequences. Each query–target pair is evaluated using
     the selected structure prediction tool (Boltz or ColabFold) to predict
-    structural geometry.</span
+    structural geometry. Between 10 and 1000 query–target pairs are required per
+    run; for fewer than 10 interactions, use the Single Prediction workflow
+    instead.</span
   >
   <app-workflow-form
     [sections]="sections"
@@ -154,6 +156,10 @@
             } @if (hasProductError()) {
             <p class="mt-2 text-xs text-red-600" role="alert">
               {{ getProductError() }}
+            </p>
+            } @if (hasMinProductError()) {
+            <p class="mt-2 text-xs text-red-600" role="alert">
+              {{ getMinProductError() }}
             </p>
             } @if (hasDuplicateSequencesError()) {
             <p class="mt-2 text-xs text-red-600" role="alert">

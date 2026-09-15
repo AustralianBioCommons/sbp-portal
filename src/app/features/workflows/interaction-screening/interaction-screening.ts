@@ -45,6 +45,7 @@ function multiFastaValidator(
 }
 
 const MAX_SEQUENCE_PRODUCT = 1000;
+const MIN_SEQUENCE_PRODUCT = 10;
 
 function maxProductValidator(max: number): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -55,6 +56,19 @@ function maxProductValidator(max: number): ValidatorFn {
     if (!queryResult.valid || !targetResult.valid) return null;
     const product = queryResult.sequenceCount * targetResult.sequenceCount;
     return product >= max ? { maxProduct: { actual: product, max } } : null;
+  };
+}
+
+/** The marginal cost only gets cheap in a large batch; smaller ones belong in Single Prediction. */
+function minProductValidator(min: number): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const queryVal = group.get("queryFasta")?.value ?? "";
+    const targetVal = group.get("targetFasta")?.value ?? "";
+    const queryResult = validateMultiFastaProtein(queryVal);
+    const targetResult = validateMultiFastaProtein(targetVal);
+    if (!queryResult.valid || !targetResult.valid) return null;
+    const product = queryResult.sequenceCount * targetResult.sequenceCount;
+    return product < min ? { minProduct: { actual: product, min } } : null;
   };
 }
 
@@ -105,6 +119,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   private fb = inject(NonNullableFormBuilder);
 
   protected readonly workflowCategory = "interaction-screening" as const;
+  protected override readonly minimumQuantity = MIN_SEQUENCE_PRODUCT;
 
   /**
    * Credit cost of the run: tool multiplier × (query entries × target entries).
@@ -130,6 +145,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     {
       validators: [
         maxProductValidator(MAX_SEQUENCE_PRODUCT),
+        minProductValidator(MIN_SEQUENCE_PRODUCT),
         uniqueSequencesValidator,
       ],
     }
@@ -224,11 +240,13 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     rowCount: number;
   } {
     const productError = !!this.form.errors?.["maxProduct"];
+    const minProductError = !!this.form.errors?.["minProduct"];
     const errorCount =
       (this.form.controls.jobName.valid ? 0 : 1) +
       (this.form.controls.queryFasta.valid ? 0 : 1) +
       (this.form.controls.targetFasta.valid ? 0 : 1) +
-      (productError ? 1 : 0);
+      (productError ? 1 : 0) +
+      (minProductError ? 1 : 0);
     return { valid: this.isFormValid(), errorCount, rowCount: 3 };
   }
 
@@ -271,6 +289,16 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     return `Too many sequence combinations: ${
       err.actual
     } pairs (query × target). The maximum is ${err.max - 1}`;
+  }
+
+  hasMinProductError(): boolean {
+    return !!this.form.errors?.["minProduct"];
+  }
+
+  getMinProductError(): string {
+    const err = this.form.errors?.["minProduct"];
+    if (!err) return "";
+    return `Minimum ${err.min} interactions at once. Please use the Single Prediction workflow for individual predictions.`;
   }
 
   hasDuplicateSequencesError(): boolean {

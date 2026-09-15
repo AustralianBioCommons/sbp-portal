@@ -55,6 +55,14 @@ export abstract class WorkflowPageBase implements OnInit {
   protected abstract readonly selectedTool: Signal<WorkflowTool>;
   abstract readonly creditCost: Signal<number | null>;
 
+  /**
+   * Smallest batch this workflow can actually submit (e.g. bulk/interaction
+   * enforce a minimum entry count). The tool-selection chip's "from N
+   * credits" price reflects this floor rather than a lone unit, since a
+   * 1-unit run isn't submittable there.
+   */
+  protected readonly minimumQuantity: number = 1;
+
   protected readonly toolMultipliers = signal<
     Partial<Record<WorkflowTool, number>>
   >({});
@@ -130,7 +138,7 @@ export abstract class WorkflowPageBase implements OnInit {
           for (const tool of this.tools) {
             const multiplier = config.toolMultipliers[tool.id];
             if (multiplier != null) {
-              tool.credits = multiplier;
+              tool.credits = multiplier * this.minimumQuantity;
             }
           }
           this.cdr.markForCheck();
