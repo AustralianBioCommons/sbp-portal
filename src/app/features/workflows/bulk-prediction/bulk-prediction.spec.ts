@@ -24,10 +24,9 @@ const VALID_FASTA = Array.from(
   (_, i) => `>seq${i}\nARNDCQEGHILKMFPSTWYV`
 ).join("\n");
 const VALID_MULTIMER_FASTA =
-  Array.from(
-    { length: 9 },
-    (_, i) => `>seq${i}\nARNDCQEGHILKMFPSTWYV`
-  ).join("\n") + "\n>multimer1\nARNDCQ:EGHILK";
+  Array.from({ length: 9 }, (_, i) => `>seq${i}\nARNDCQEGHILKMFPSTWYV`).join(
+    "\n"
+  ) + "\n>multimer1\nARNDCQ:EGHILK";
 
 const MOCK_FASTA_RESPONSE: FastaUploadResponse = {
   success: true,
