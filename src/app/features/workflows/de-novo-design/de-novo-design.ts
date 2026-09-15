@@ -397,12 +397,12 @@ export default class DeNovoDesignComponent
     if (count < 50) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `Structure has only ${count} residue(s). Minimum 50 residues required`,
+        [errorKey]: `The target structure must be at least 50 amino acids. Please upload a larger structure.`,
       });
     } else if (count > 300) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `Structure has ${count} residues. Maximum 300 residues allowed`,
+        [errorKey]: `The target structure must be 300 amino acids or less. Please upload a smaller structure. This structure can be trimmed to a smaller region using PyMOL or ChimeraX to satisfy the size limit.`,
       });
     } else {
       const updated = { ...currentErrors };
