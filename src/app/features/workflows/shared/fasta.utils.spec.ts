@@ -401,17 +401,39 @@ describe("fasta.utils", () => {
       expect(result.errorMessage).toContain("exceeding the maximum of 1000");
     });
 
-    it("accepts a single valid entry", () => {
-      expect(validateBulkFastaProtein(">seq1\nMKTAYIAK")).toEqual({
+    it("rejects fewer than 10 entries", () => {
+      const result = validateBulkFastaProtein(
+        ">seq1\nMKTAYIAK\n>seq2\nACDEFGHIK"
+      );
+      expect(result).toEqual({
+        valid: false,
+        errorMessage:
+          "Minimum 10 predictions at once. Please use the Single Prediction workflow for individual predictions.",
+        sequenceCount: 2,
+      });
+    });
+
+    it("accepts exactly 10 valid entries", () => {
+      const fasta = Array.from(
+        { length: 10 },
+        (_, i) => `>seq${i}\nMKTAYIAK`
+      ).join("\n");
+      expect(validateBulkFastaProtein(fasta)).toEqual({
         valid: true,
-        sequenceCount: 1,
+        sequenceCount: 10,
       });
     });
 
     it("accepts multiple valid entries with a multimer chain delimiter", () => {
-      expect(
-        validateBulkFastaProtein(">seq1\nMKTAYIAK:ACDEFGHIK\n>seq2\nACDEFGHIK")
-      ).toEqual({ valid: true, sequenceCount: 2 });
+      const entries = Array.from(
+        { length: 9 },
+        (_, i) => `>seq${i}\nACDEFGHIK`
+      );
+      entries.push(">seq9\nMKTAYIAK:ACDEFGHIK");
+      expect(validateBulkFastaProtein(entries.join("\n"))).toEqual({
+        valid: true,
+        sequenceCount: 10,
+      });
     });
   });
 
