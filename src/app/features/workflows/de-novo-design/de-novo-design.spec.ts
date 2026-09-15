@@ -478,14 +478,14 @@ describe("DeNovoDesignComponent", () => {
     it("flags a structure that is too small", () => {
       component.onSequenceLengthDetected(10);
       expect(component.getRowFieldError("row1", "starting_pdb")).toContain(
-        "Minimum 50"
+        "upload a larger structure"
       );
     });
 
     it("flags a structure that is too large", () => {
       component.onSequenceLengthDetected(400);
       expect(component.getRowFieldError("row1", "starting_pdb")).toContain(
-        "Maximum 300"
+        "upload a smaller structure"
       );
     });
 
