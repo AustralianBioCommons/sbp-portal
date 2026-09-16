@@ -29,23 +29,24 @@ import {
   StructureSource,
   TARGET_COLOR,
 } from "../../../workflows/components/molstar-viewer/molstar-viewer.component";
-import { DesignResultsTableComponent } from "../design-results-table/design-results-table.component";
+import { JobResultsTableComponent } from "../job-results-table/job-results-table.component";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
 import { TooltipComponent } from "../../../../components/tooltip/tooltip.component";
 import { ResultsService } from "../../services/results.service";
 import { ResultFileRef } from "../../shared/prediction-results.utils";
 import {
-  DesignRow,
-  getDeNovoDesignAdapter,
-} from "../../shared/de-novo-results.utils";
+  ReportRow,
+  getJobResultsAdapter,
+} from "../../shared/job-results-report.utils";
 import "../../shared/bindcraft-results.utils";
 import "../../shared/rfdiffusion-results.utils";
+import "../../shared/interaction-screening-results.utils";
 
 @Component({
-  selector: "app-de-novo-design-report",
+  selector: "app-job-results-report",
   imports: [
     MolstarViewerComponent,
-    DesignResultsTableComponent,
+    JobResultsTableComponent,
     LoadingComponent,
     TooltipComponent,
     NgIconComponent,
@@ -60,11 +61,13 @@ import "../../shared/rfdiffusion-results.utils";
       heroXMark,
     }),
   ],
-  templateUrl: "./de-novo-design-report.component.html",
-  styleUrl: "./de-novo-design-report.component.scss",
+  templateUrl: "./job-results-report.component.html",
+  styleUrl: "./job-results-report.component.scss",
 })
-export class DeNovoDesignReportComponent {
+export class JobResultsReportComponent {
   runId = input.required<string>();
+  /** Normalised workflow name; picks the adapter together with `tool`. */
+  workflow = input<string>("");
   tool = input<string>("");
   files = input<readonly ResultFileRef[]>([]);
   filesLoading = input(false);
@@ -77,9 +80,11 @@ export class DeNovoDesignReportComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
 
-  readonly adapter = computed(() => getDeNovoDesignAdapter(this.tool()));
+  readonly adapter = computed(() =>
+    getJobResultsAdapter(this.workflow(), this.tool())
+  );
 
-  readonly rows = signal<DesignRow[]>([]);
+  readonly rows = signal<ReportRow[]>([]);
   /** A stats file that loaded fine but ranked nothing: not an error. */
   readonly resultsEmpty = signal(false);
   readonly resultsError = signal<string | null>(null);
@@ -118,20 +123,23 @@ export class DeNovoDesignReportComponent {
     () => this.rows().find((row) => row.id === this.selectedId()) ?? null
   );
 
-  /** The chain the pipeline usually writes the binder to. */
-  readonly binderChainId = computed(() => this.adapter()?.binderChainId ?? "A");
+  /** The chain the pipeline usually writes the highlighted molecule to. */
+  readonly primaryChainId = computed(
+    () => this.adapter()?.primaryChainId ?? "A"
+  );
 
   /** Confirms that chain when exactly one chain is this long. */
-  readonly designLength = computed(() => {
-    const key = this.adapter()?.designLengthKey;
+  readonly primaryLength = computed(() => {
+    const key = this.adapter()?.primaryLengthKey;
     const raw = key ? (this.selectedRow()?.values[key] ?? "").trim() : "";
     const length = Number(raw);
     return raw && Number.isFinite(length) ? length : null;
   });
 
-  /** Designs of one run line up on each other; a new run starts over. */
+  /** Rows of one run line up on each other; a new run starts over. Empty
+   *  where the adapter's rows share nothing to superpose on. */
   readonly superposeKey = computed(() =>
-    this.resultsArtifact() ? this.runId() : ""
+    this.adapter()?.superpose && this.resultsArtifact() ? this.runId() : ""
   );
 
   /** Null until the files have loaded, so no message flashes. */
@@ -142,12 +150,17 @@ export class DeNovoDesignReportComponent {
   });
 
   /**
-   * The workflow only writes ranked designs and their stats once at least one
-   * survives in silico QC, so a missing artifact or an empty stats file both
-   * mean the same thing: nothing passed, not that something is broken.
+   * A workflow only writes its ranked rows and their stats once at least one
+   * survives filtering, so a missing artifact and an empty stats file both mean
+   * the same thing: nothing passed, not that something is broken.
    */
-  readonly noDesignsAvailable = computed(
+  readonly noResultsAvailable = computed(
     () => !!this.missingResults() || this.resultsEmpty()
+  );
+
+  readonly emptyMessage = computed(
+    () =>
+      this.adapter()?.emptyMessage ?? "No results are available for this run."
   );
 
   readonly coreUnavailable = computed(
@@ -163,7 +176,7 @@ export class DeNovoDesignReportComponent {
   private readonly keyboardResizeStep = 24;
 
   private readonly panelElement =
-    viewChild<ElementRef<HTMLElement>>("designsPanel");
+    viewChild<ElementRef<HTMLElement>>("reportPanel");
 
   /** Width in pixels, 0 is collapsed, null follows the default share. */
   readonly panelWidth = signal<number | null>(null);
@@ -188,9 +201,14 @@ export class DeNovoDesignReportComponent {
 
   readonly panelWidthText = computed(() => `${this.panelWidthNow()} pixels`);
 
+  readonly panelTitle = computed(
+    () => this.adapter()?.panelHeading ?? "Results"
+  );
+
   readonly panelHeading = computed(() => {
     const count = this.rows().length;
-    return count ? `Ranked designs (${count})` : "Ranked designs";
+    const title = this.panelTitle();
+    return count ? `${title} (${count})` : title;
   });
 
   readonly isPanelOpen = computed(() => this.panelWidth() !== 0);
@@ -211,10 +229,13 @@ export class DeNovoDesignReportComponent {
   private dragStartX = 0;
   private dragStartPanelWidth = 0;
 
-  readonly chainLegend = computed(() => [
-    { label: "Target", color: TARGET_COLOR },
-    { label: this.selectedRow()?.label ?? "Binder", color: BINDER_COLOR },
-  ]);
+  readonly chainLegend = computed(() =>
+    (this.adapter()?.legend ?? []).map((band) => ({
+      // A band without a label of its own takes the selected row's.
+      label: band.label ?? this.selectedRow()?.label ?? "",
+      color: band.band === "primary" ? BINDER_COLOR : TARGET_COLOR,
+    }))
+  );
 
   /** Tooltip instructions. */
   readonly viewerHelp = [
@@ -225,7 +246,7 @@ export class DeNovoDesignReportComponent {
     "- SHIFT + scroll to slice through the front of the structure",
     "- Use the button above to reset the view",
     "",
-    "Select a row in the table below to show that design here.",
+    "Select a row in the table below to show that structure here.",
   ].join("\n");
 
   constructor() {
@@ -289,7 +310,7 @@ export class DeNovoDesignReportComponent {
     this.destroyRef.onDestroy(() => this.releaseDragListeners());
   }
 
-  onRowSelected(row: DesignRow): void {
+  onRowSelected(row: ReportRow): void {
     this.selectedId.set(row.id);
   }
 
@@ -361,7 +382,7 @@ export class DeNovoDesignReportComponent {
 
   onViewerLoadError(): void {
     if (!this.structureSource()) return;
-    this.structureError.set("Failed to load the design structure file.");
+    this.structureError.set("Failed to load the structure file.");
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -400,8 +421,8 @@ export class DeNovoDesignReportComponent {
     this.resultsFetch = this.fetchText(runId, key, this.resultsLoading)
       .pipe(
         catchError((err) => {
-          console.error("Error loading design results:", err);
-          this.resultsError.set("Failed to load the design results file.");
+          console.error("Error loading results:", err);
+          this.resultsError.set("Failed to load the results file.");
           return EMPTY;
         })
       )
@@ -413,7 +434,7 @@ export class DeNovoDesignReportComponent {
         }
         this.resultsText.set(content);
         this.rows.set(rows);
-        // Show the top-ranked design first.
+        // Show the top-ranked row first.
         this.selectedId.set(rows[0].id);
       });
   }
@@ -432,7 +453,7 @@ export class DeNovoDesignReportComponent {
       .pipe(
         catchError((err) => {
           console.error("Error loading structure file:", err);
-          this.structureError.set("Failed to load the design structure file.");
+          this.structureError.set("Failed to load the structure file.");
           return EMPTY;
         })
       )

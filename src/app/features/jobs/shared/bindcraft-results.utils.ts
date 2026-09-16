@@ -1,15 +1,15 @@
 import {
-  DeNovoDesignAdapter,
-  DesignColumn,
-  DesignRow,
-  DesignStructure,
+  JobResultsAdapter,
+  ReportColumn,
+  ReportRow,
+  ReportStructure,
   parseCsvTable,
-  registerDeNovoDesignAdapter,
-} from "./de-novo-results.utils";
+  registerJobResultsAdapter,
+} from "./job-results-report.utils";
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
 
 /** The table, in display order. A new column is just another entry here. */
-export const BINDCRAFT_COLUMNS: readonly DesignColumn[] = [
+export const BINDCRAFT_COLUMNS: readonly ReportColumn[] = [
   // Rank 1 holds the highest ipTM, so both open on the same ordering.
   { key: "Rank", heading: "Rank", emphasised: true, numeric: true },
   {
@@ -52,7 +52,7 @@ export function findBindCraftStatsArtifact(
 /** `1_design_model1.pdb` split into its rank and the rest. */
 const RANKED_PDB = /^(\d+)_(.+)\.pdb$/i;
 
-interface RankedStructure extends DesignStructure {
+interface RankedStructure extends ReportStructure {
   rank: string;
   /** Filename with the rank prefix and extension removed. */
   stem: string;
@@ -94,7 +94,7 @@ function matchStructure(
   rank: string,
   design: string,
   structures: readonly RankedStructure[]
-): DesignStructure | null {
+): ReportStructure | null {
   if (!design) return null;
 
   const byDesign = structures.filter(
@@ -110,7 +110,7 @@ function matchStructure(
 export function parseBindCraftDesigns(
   rows: ReadonlyArray<Record<string, string>>,
   files: readonly ResultFileRef[]
-): DesignRow[] {
+): ReportRow[] {
   const structures = findRankedStructures(files);
 
   return rows.map((row, index) => {
@@ -126,15 +126,27 @@ export function parseBindCraftDesigns(
   });
 }
 
-export const bindCraftAdapter: DeNovoDesignAdapter = {
+export const bindCraftAdapter: JobResultsAdapter = {
+  workflow: "de novo design",
   tool: "bindcraft",
   columns: BINDCRAFT_COLUMNS,
   resultsFileName: STATS_SUFFIX,
-  binderChainId: "B",
-  designLengthKey: "Length",
+  primaryChainId: "B",
+  primaryLengthKey: "Length",
+  panelHeading: "Ranked designs",
+  emptyMessage:
+    "No designs passed in silico quality control criteria. Consider choosing " +
+    "different hotspots or increasing the number of trajectories.",
+  // The binder band takes the selected design's own name.
+  legend: [
+    { label: "Target", band: "secondary" },
+    { label: null, band: "primary" },
+  ],
+  // Every design targets the same protein, so they line up on it.
+  superpose: true,
   findResultsArtifact: findBindCraftStatsArtifact,
   parseRows: (text, files) =>
     parseBindCraftDesigns(parseCsvTable(text).rows, files),
 };
 
-registerDeNovoDesignAdapter(bindCraftAdapter);
+registerJobResultsAdapter(bindCraftAdapter);

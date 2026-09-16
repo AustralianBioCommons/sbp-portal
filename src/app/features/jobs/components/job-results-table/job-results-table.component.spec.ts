@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { DesignResultsTableComponent } from "./design-results-table.component";
-import { DesignColumn, DesignRow } from "../../shared/de-novo-results.utils";
+import { JobResultsTableComponent } from "./job-results-table.component";
+import { ReportColumn, ReportRow } from "../../shared/job-results-report.utils";
 
-const columns: DesignColumn[] = [
+const columns: ReportColumn[] = [
   { key: "Rank", heading: "Rank", emphasised: true, numeric: true },
   { key: "Score", heading: "ipTM", numeric: true },
   { key: "Design", heading: "Design name" },
 ];
 
 /** `count` designs, ranked 1..count with a score that falls as the rank rises. */
-const makeRows = (count: number): DesignRow[] =>
+const makeRows = (count: number): ReportRow[] =>
   Array.from({ length: count }, (_, index) => ({
     id: `design-${index + 1}`,
     label: `design-${index + 1}`,
@@ -22,12 +22,12 @@ const makeRows = (count: number): DesignRow[] =>
     structure: null,
   }));
 
-describe("DesignResultsTableComponent", () => {
-  let fixture: ComponentFixture<DesignResultsTableComponent>;
-  let component: DesignResultsTableComponent;
+describe("JobResultsTableComponent", () => {
+  let fixture: ComponentFixture<JobResultsTableComponent>;
+  let component: JobResultsTableComponent;
 
-  const render = (rows: DesignRow[]) => {
-    fixture = TestBed.createComponent(DesignResultsTableComponent);
+  const render = (rows: ReportRow[]) => {
+    fixture = TestBed.createComponent(JobResultsTableComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput("columns", columns);
     fixture.componentRef.setInput("rows", rows);
@@ -49,7 +49,7 @@ describe("DesignResultsTableComponent", () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DesignResultsTableComponent],
+      imports: [JobResultsTableComponent],
     }).compileComponents();
   });
 
@@ -98,7 +98,7 @@ describe("DesignResultsTableComponent", () => {
   it("says so when there is nothing to show", () => {
     render([]);
 
-    expect(bodyRows()[0].textContent).toContain("No designs to display");
+    expect(bodyRows()[0].textContent).toContain("No rows to display");
   });
 
   // ── Sorting ───────────────────────────────────────────────────────────────
@@ -147,7 +147,7 @@ describe("DesignResultsTableComponent", () => {
   });
 
   it("opens a higher-is-better column descending, so the best rows lead", () => {
-    fixture = TestBed.createComponent(DesignResultsTableComponent);
+    fixture = TestBed.createComponent(JobResultsTableComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput("columns", [
       columns[0],
@@ -177,7 +177,7 @@ describe("DesignResultsTableComponent", () => {
   });
 
   it("offers no sort on a column with no meaningful order", () => {
-    fixture = TestBed.createComponent(DesignResultsTableComponent);
+    fixture = TestBed.createComponent(JobResultsTableComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput("columns", [
       columns[0],
@@ -236,7 +236,7 @@ describe("DesignResultsTableComponent", () => {
 
   it("emits the row a click selects", () => {
     render(makeRows(3));
-    const selected: DesignRow[] = [];
+    const selected: ReportRow[] = [];
     component.rowSelected.subscribe((row) => selected.push(row));
 
     bodyRows()[1].click();
@@ -246,7 +246,7 @@ describe("DesignResultsTableComponent", () => {
 
   it("emits on Enter and on Space, so the table works from the keyboard", () => {
     render(makeRows(3));
-    const selected: DesignRow[] = [];
+    const selected: ReportRow[] = [];
     component.rowSelected.subscribe((row) => selected.push(row));
 
     bodyRows()[0].dispatchEvent(

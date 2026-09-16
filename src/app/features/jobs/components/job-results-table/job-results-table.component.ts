@@ -6,28 +6,28 @@ import {
   heroArrowsUpDown,
 } from "@ng-icons/heroicons/outline";
 import {
-  DesignColumn,
-  DesignRow,
+  ReportColumn,
+  ReportRow,
   SortDirection,
-  sortDesignRows,
-} from "../../shared/de-novo-results.utils";
+  sortReportRows,
+} from "../../shared/job-results-report.utils";
 
 @Component({
-  selector: "app-design-results-table",
+  selector: "app-job-results-table",
   imports: [NgIconComponent],
   providers: [provideIcons({ heroArrowDown, heroArrowUp, heroArrowsUpDown })],
-  templateUrl: "./design-results-table.component.html",
-  styleUrl: "./design-results-table.component.scss",
+  templateUrl: "./job-results-table.component.html",
+  styleUrl: "./job-results-table.component.scss",
 })
-export class DesignResultsTableComponent {
-  columns = input.required<readonly DesignColumn[]>();
-  rows = input.required<readonly DesignRow[]>();
+export class JobResultsTableComponent {
+  columns = input.required<readonly ReportColumn[]>();
+  rows = input.required<readonly ReportRow[]>();
 
   selectedId = input<string | null>(null);
   caption = input("Designs");
   framed = input(true);
 
-  rowSelected = output<DesignRow>();
+  rowSelected = output<ReportRow>();
 
   readonly sortKey = signal<string | null>(null);
   readonly sortDirection = signal<SortDirection>("asc");
@@ -36,10 +36,10 @@ export class DesignResultsTableComponent {
     const key = this.sortKey();
     const column = this.columns().find((candidate) => candidate.key === key);
     if (!column) return [...this.rows()];
-    return sortDesignRows(this.rows(), column, this.sortDirection());
+    return sortReportRows(this.rows(), column, this.sortDirection());
   });
 
-  toggleSort(column: DesignColumn): void {
+  toggleSort(column: ReportColumn): void {
     if (this.sortKey() === column.key) {
       this.sortDirection.update((direction) =>
         direction === "asc" ? "desc" : "asc"
@@ -50,23 +50,23 @@ export class DesignResultsTableComponent {
     }
   }
 
-  isSortable(column: DesignColumn): boolean {
+  isSortable(column: ReportColumn): boolean {
     return column.sortable !== false;
   }
 
-  ariaSort(column: DesignColumn): "ascending" | "descending" | "none" {
+  ariaSort(column: ReportColumn): "ascending" | "descending" | "none" {
     if (this.sortKey() !== column.key) return "none";
     return this.sortDirection() === "asc" ? "ascending" : "descending";
   }
 
-  sortIcon(column: DesignColumn): string {
+  sortIcon(column: ReportColumn): string {
     if (this.sortKey() !== column.key) return "heroArrowsUpDown";
     return this.sortDirection() === "asc" ? "heroArrowUp" : "heroArrowDown";
   }
 
   cellClasses(
-    column: DesignColumn,
-    row: DesignRow,
+    column: ReportColumn,
+    row: ReportRow,
     first: boolean,
     last: boolean
   ): string {
@@ -82,11 +82,11 @@ export class DesignResultsTableComponent {
     return classes.join(" ");
   }
 
-  select(row: DesignRow): void {
+  select(row: ReportRow): void {
     this.rowSelected.emit(row);
   }
 
-  selectByKey(row: DesignRow, event: Event): void {
+  selectByKey(row: ReportRow, event: Event): void {
     event.preventDefault();
     this.select(row);
   }

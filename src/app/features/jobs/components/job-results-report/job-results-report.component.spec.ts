@@ -3,8 +3,8 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { Subject, of, throwError } from "rxjs";
 
-import { DeNovoDesignReportComponent } from "./de-novo-design-report.component";
-import { DesignResultsTableComponent } from "../design-results-table/design-results-table.component";
+import { JobResultsReportComponent } from "./job-results-report.component";
+import { JobResultsTableComponent } from "../job-results-table/job-results-table.component";
 import { ResultsService } from "../../services/results.service";
 import {
   MolstarViewerComponent,
@@ -101,9 +101,9 @@ function bindCraftPdb(shift = 0): string {
 
 const PDB = bindCraftPdb();
 
-describe("DeNovoDesignReportComponent", () => {
-  let fixture: ComponentFixture<DeNovoDesignReportComponent>;
-  let component: DeNovoDesignReportComponent;
+describe("JobResultsReportComponent", () => {
+  let fixture: ComponentFixture<JobResultsReportComponent>;
+  let component: JobResultsReportComponent;
   let resultsService: jasmine.SpyObj<ResultsService>;
 
   /** Answers each key with its own fixture, so order of requests does not matter. */
@@ -117,15 +117,20 @@ describe("DeNovoDesignReportComponent", () => {
 
   const render = (
     inputs: Partial<{
+      workflow: string;
       tool: string;
       files: ResultFileRef[];
       filesLoading: boolean;
       filesError: string | null;
     }> = {}
   ) => {
-    fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+    fixture = TestBed.createComponent(JobResultsReportComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput("runId", RUN);
+    fixture.componentRef.setInput(
+      "workflow",
+      inputs.workflow ?? "de novo design"
+    );
     fixture.componentRef.setInput("tool", inputs.tool ?? "BindCraft");
     fixture.componentRef.setInput("files", inputs.files ?? files);
     fixture.componentRef.setInput("filesLoading", inputs.filesLoading ?? false);
@@ -138,8 +143,8 @@ describe("DeNovoDesignReportComponent", () => {
       ?.componentInstance as MolstarViewerStubComponent | undefined;
 
   const table = () =>
-    fixture.debugElement.query(By.directive(DesignResultsTableComponent))
-      ?.componentInstance as DesignResultsTableComponent | undefined;
+    fixture.debugElement.query(By.directive(JobResultsTableComponent))
+      ?.componentInstance as JobResultsTableComponent | undefined;
 
   beforeEach(async () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
@@ -152,11 +157,11 @@ describe("DeNovoDesignReportComponent", () => {
     });
 
     await TestBed.configureTestingModule({
-      imports: [DeNovoDesignReportComponent],
+      imports: [JobResultsReportComponent],
       providers: [{ provide: ResultsService, useValue: resultsService }],
     })
       // The real viewer needs WebGL, which the test browser lacks.
-      .overrideComponent(DeNovoDesignReportComponent, {
+      .overrideComponent(JobResultsReportComponent, {
         remove: { imports: [MolstarViewerComponent] },
         add: { imports: [MolstarViewerStubComponent] },
       })
@@ -289,7 +294,7 @@ describe("DeNovoDesignReportComponent", () => {
     expect(component.rows().length).toBe(2);
     expect(viewer()!.structureSource()).toBeNull();
     expect(fixture.nativeElement.textContent).toContain(
-      "No structure file was found for this design"
+      "No structure file was found for this row"
     );
   });
 
@@ -370,7 +375,7 @@ describe("DeNovoDesignReportComponent", () => {
   /** Width changes on the panel are animated; tests measure the end state. */
   const settleLayout = () => {
     const panel = fixture.nativeElement.querySelector(
-      "#designs-panel"
+      "#report-panel"
     ) as HTMLElement;
     panel.style.transition = "none";
   };
@@ -387,9 +392,7 @@ describe("DeNovoDesignReportComponent", () => {
     expect(component.panelWidth()).toBeNull();
     expect(component.panelStyleWidth()).toBe("60%");
     expect(divider()).not.toBeNull();
-    expect(
-      fixture.nativeElement.querySelector("#designs-panel")
-    ).not.toBeNull();
+    expect(fixture.nativeElement.querySelector("#report-panel")).not.toBeNull();
     // The panel draws the card, so the table drops its frame.
     expect(table()!.framed()).toBeFalse();
   });
@@ -399,7 +402,7 @@ describe("DeNovoDesignReportComponent", () => {
     const heading = () =>
       (
         fixture.nativeElement.querySelector(
-          "#designs-panel span.flex-1"
+          "#report-panel span.flex-1"
         ) as HTMLElement
       ).textContent!.trim();
 
@@ -439,7 +442,7 @@ describe("DeNovoDesignReportComponent", () => {
     render();
     const clipped = () =>
       fixture.nativeElement.querySelector(
-        "#designs-panel .overflow-hidden"
+        "#report-panel .overflow-hidden"
       ) as HTMLElement;
     const close = () =>
       clipped().querySelector('button[title="Close"]') as HTMLButtonElement;
@@ -473,7 +476,7 @@ describe("DeNovoDesignReportComponent", () => {
     fixture.detectChanges();
 
     const pill = fixture.nativeElement.querySelector(
-      "#designs-panel button"
+      "#report-panel button"
     ) as HTMLElement;
     const controls = fixture.nativeElement.querySelector(
       "section div.absolute.right-4"
@@ -495,7 +498,7 @@ describe("DeNovoDesignReportComponent", () => {
       host.style.width = `${width}px`;
       fixture.detectChanges();
 
-      const panel = host.querySelector("#designs-panel") as HTMLElement;
+      const panel = host.querySelector("#report-panel") as HTMLElement;
       const close = panel.querySelector('button[title="Close"]') as HTMLElement;
       // The card clips overflow, so anything past its right edge is lost.
       expect(close.getBoundingClientRect().right).toBeLessThanOrEqual(
@@ -515,7 +518,7 @@ describe("DeNovoDesignReportComponent", () => {
     expect(component.isPanelOpen()).toBeFalse();
     expect(divider()).toBeNull();
     const pill = fixture.nativeElement.querySelector(
-      "#designs-panel button"
+      "#report-panel button"
     ) as HTMLButtonElement;
     expect(pill.textContent).toContain("Ranked designs");
 
@@ -540,7 +543,7 @@ describe("DeNovoDesignReportComponent", () => {
   it("reports its rendered width before anything drags it", () => {
     render();
     const panel = fixture.nativeElement.querySelector(
-      "#designs-panel"
+      "#report-panel"
     ) as HTMLElement;
 
     // The panel follows a share of the container until a drag sets pixels.
@@ -635,10 +638,11 @@ describe("DeNovoDesignReportComponent", () => {
 
   it("shows the QC message instead of the packaged report when the run has no stats file", () => {
     const unavailable = jasmine.createSpy("unavailable");
-    fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+    fixture = TestBed.createComponent(JobResultsReportComponent);
     component = fixture.componentInstance;
     component.unavailable.subscribe(unavailable);
     fixture.componentRef.setInput("runId", RUN);
+    fixture.componentRef.setInput("workflow", "de novo design");
     fixture.componentRef.setInput("tool", "BindCraft");
     fixture.componentRef.setInput("files", [files[1]]);
     fixture.detectChanges();
@@ -651,10 +655,11 @@ describe("DeNovoDesignReportComponent", () => {
 
   it("hands over for a de novo tool no adapter is registered for", () => {
     const unavailable = jasmine.createSpy("unavailable");
-    fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+    fixture = TestBed.createComponent(JobResultsReportComponent);
     component = fixture.componentInstance;
     component.unavailable.subscribe(unavailable);
     fixture.componentRef.setInput("runId", RUN);
+    fixture.componentRef.setInput("workflow", "de novo design");
     fixture.componentRef.setInput("tool", "BoltzGen");
     fixture.componentRef.setInput("files", files);
     fixture.detectChanges();
@@ -671,21 +676,20 @@ describe("DeNovoDesignReportComponent", () => {
 
     render();
 
-    expect(component.resultsError()).toBe(
-      "Failed to load the design results file."
-    );
+    expect(component.resultsError()).toBe("Failed to load the results file.");
     expect(fixture.nativeElement.textContent).toContain(
-      "Failed to load the design results file."
+      "Failed to load the results file."
     );
   });
 
   it("shows the QC message for a stats file with a header and no designs", () => {
     respondWith({ [STATS_KEY]: "Rank,Design\n" });
     const unavailable = jasmine.createSpy("unavailable");
-    fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+    fixture = TestBed.createComponent(JobResultsReportComponent);
     component = fixture.componentInstance;
     component.unavailable.subscribe(unavailable);
     fixture.componentRef.setInput("runId", RUN);
+    fixture.componentRef.setInput("workflow", "de novo design");
     fixture.componentRef.setInput("tool", "BindCraft");
     fixture.componentRef.setInput("files", files);
     fixture.detectChanges();
@@ -704,7 +708,7 @@ describe("DeNovoDesignReportComponent", () => {
     render();
 
     expect(component.structureError()).toBe(
-      "Failed to load the design structure file."
+      "Failed to load the structure file."
     );
   });
 
@@ -726,7 +730,7 @@ describe("DeNovoDesignReportComponent", () => {
     fixture.detectChanges();
 
     expect(component.structureError()).toBe(
-      "Failed to load the design structure file."
+      "Failed to load the structure file."
     );
   });
 
@@ -751,17 +755,18 @@ describe("DeNovoDesignReportComponent", () => {
 
   it("waits quietly while the file list is still loading", () => {
     const unavailable = jasmine.createSpy("unavailable");
-    fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+    fixture = TestBed.createComponent(JobResultsReportComponent);
     component = fixture.componentInstance;
     component.unavailable.subscribe(unavailable);
     fixture.componentRef.setInput("runId", RUN);
+    fixture.componentRef.setInput("workflow", "de novo design");
     fixture.componentRef.setInput("tool", "BindCraft");
     fixture.componentRef.setInput("files", []);
     fixture.componentRef.setInput("filesLoading", true);
     fixture.detectChanges();
 
     expect(unavailable).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toContain("Loading designs...");
+    expect(fixture.nativeElement.textContent).toContain("Loading results...");
   });
 
   // --- RFdiffusion, whose designs live inside one tarball -------------------
@@ -847,21 +852,117 @@ describe("DeNovoDesignReportComponent", () => {
       expect(component.resultsError()).toBeNull();
       expect(component.selectedRow()?.structure).toBeNull();
       expect(fixture.nativeElement.textContent).toContain(
-        "No structure file was found for this design."
+        "No structure file was found for this row."
       );
     });
 
     it("names the ranked csv when the run never produced one", () => {
       respondWith({});
-      fixture = TestBed.createComponent(DeNovoDesignReportComponent);
+      fixture = TestBed.createComponent(JobResultsReportComponent);
       component = fixture.componentInstance;
       fixture.componentRef.setInput("runId", RUN);
+      fixture.componentRef.setInput("workflow", "de novo design");
       fixture.componentRef.setInput("tool", "RFdiffusion");
       fixture.componentRef.setInput("files", []);
       fixture.detectChanges();
 
       expect(component.missingResults()).toBe("ranked_designs.csv");
-      expect(component.noDesignsAvailable()).toBeTrue();
+      expect(component.noResultsAvailable()).toBeTrue();
+    });
+  });
+  // ── Interaction screening ──────────────────────────────────────────────────
+
+  describe("an interaction screening run", () => {
+    const IS_CSV = `${RUN}/collect/boltz_confidence_scores_full.csv`;
+    const IS_CIF = `${RUN}/boltz_predictions/cif/seq1-seq3_model_0.cif`;
+
+    const isFiles: ResultFileRef[] = [
+      {
+        key: IS_CSV,
+        label: "boltz_confidence_scores_full.csv",
+        url: `https://s3.test/${IS_CSV}`,
+        category: "stats_csv",
+      },
+      {
+        key: IS_CIF,
+        label: "seq1-seq3_model_0.cif",
+        url: `https://s3.test/${IS_CIF}`,
+        category: "pdb",
+      },
+    ];
+
+    // Two pairs scored, one kept: the score filter dropped the other.
+    const isCsv = [
+      "id,model_input_id,iptm,ptm,int_chain_map,str_chain_map",
+      "seq1-seq3,seq1-seq3,0.58,0.68,0:1,A:B",
+      "seq1-seq4,seq1-seq4,0.11,0.42,0:1,A:B",
+    ].join("\n");
+
+    const renderIs = (files = isFiles) =>
+      render({ workflow: "interaction screening", tool: "boltz", files });
+
+    it("lists only the pairs a structure was published for", () => {
+      respondWith({ [IS_CSV]: isCsv, [IS_CIF]: PDB });
+      renderIs();
+
+      expect(component.rows().map((row) => row.id)).toEqual(["seq1-seq3"]);
+      expect(component.columns().map((column) => column.heading)).toEqual([
+        "Query ID",
+        "Target ID",
+        "ipSAE",
+        "ipTM",
+        "pTM",
+      ]);
+    });
+
+    it("shows the selected pair's complex, coloured query against target", () => {
+      respondWith({ [IS_CSV]: isCsv, [IS_CIF]: PDB });
+      renderIs();
+
+      expect(viewer()!.colorTheme()).toBe("binder-target");
+      expect(viewer()!.binderChainId()).toBe("A");
+      expect(viewer()!.structureSource()?.format).toBe("mmcif");
+      expect(component.chainLegend().map((band) => band.label)).toEqual([
+        "Query",
+        "Target",
+      ]);
+    });
+
+    it("does not line the complexes up on each other", () => {
+      respondWith({ [IS_CSV]: isCsv, [IS_CIF]: PDB });
+      renderIs();
+
+      expect(component.superposeKey()).toBe("");
+    });
+
+    it("heads the panel with the interactions it kept", () => {
+      respondWith({ [IS_CSV]: isCsv, [IS_CIF]: PDB });
+      renderIs();
+
+      expect(component.panelHeading()).toBe("Interactions (1)");
+    });
+
+    it("says so, without failing, when nothing passed the score filter", () => {
+      respondWith({ [IS_CSV]: isCsv });
+      renderIs([isFiles[0]]);
+
+      expect(component.rows()).toEqual([]);
+      expect(component.resultsError()).toBeNull();
+      expect(component.noResultsAvailable()).toBeTrue();
+      expect(fixture.nativeElement.textContent).toContain(
+        "No high confidence interactions were identified."
+      );
+    });
+
+    it("says the same when the run published no scores table at all", () => {
+      respondWith({});
+      renderIs([]);
+
+      expect(component.resultsError()).toBeNull();
+      expect(component.noResultsAvailable()).toBeTrue();
+      expect(fixture.nativeElement.textContent).toContain(
+        "No high confidence interactions were identified."
+      );
     });
   });
 });
