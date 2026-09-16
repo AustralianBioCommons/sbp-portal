@@ -213,7 +213,7 @@ export function parseInteractionRows(
         ...row,
         [QUERY_KEY]: query,
         [TARGET_KEY]: target,
-        [IPSAE_KEY]: ipsaeHeader ? row[ipsaeHeader] ?? "" : "",
+        [IPSAE_KEY]: ipsaeHeader ? row[ipsaeHeader] : "",
       },
       structure: {
         key: structure.key,

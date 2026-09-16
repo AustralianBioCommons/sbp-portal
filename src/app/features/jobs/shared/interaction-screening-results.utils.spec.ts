@@ -200,10 +200,68 @@ describe("interaction screening results utils", () => {
       ]);
     });
 
+    it("ignores a stray file in the prediction folder", () => {
+      const text = scoresCsv([["seq1-seq3", "0.58", "0.68"]]);
+      const stray = file(`${RUN}/boltz_predictions/cif/seq1-seq3.cif`);
+
+      expect(parse(text, [scoresFile, stray])).toEqual([]);
+    });
+
+    it("yields no rows when the table has no id column", () => {
+      const text = ["model_input_id,iptm,ptm", "seq1-seq3,0.58,0.68"].join(
+        "\n"
+      );
+
+      expect(parse(text, [scoresFile, cif("seq1-seq3")])).toEqual([]);
+    });
+
     it("ignores the other tool's prediction folder", () => {
       const text = scoresCsv([["seq1-seq3", "0.58", "0.68"]]);
 
       expect(parse(text, [scoresFile, pdb("seq1-seq3")])).toEqual([]);
+    });
+  });
+
+  describe("ids the grid cannot explain", () => {
+    const parse = (text: string, files: readonly ResultFileRef[]) =>
+      interactionScreeningBoltzAdapter.parseRows(text, files);
+
+    /** Splits the ids of a run whose every pair was published. */
+    const splitOf = (ids: readonly string[]) => {
+      const text = scoresCsv(ids.map((id) => [id, "0.5", "0.6"]));
+      return parse(text, [scoresFile, ...ids.map(cif)]).map((row) => [
+        row.values["queryId"],
+        row.values["targetId"],
+      ]);
+    };
+
+    it("falls back to the first hyphen when the pairs are not a full grid", () => {
+      // 3 pairs cannot be a query set times a target set.
+      expect(splitOf(["seq1-t1", "seq1-t2", "seq2-t1"])).toEqual([
+        ["seq1", "t1"],
+        ["seq1", "t2"],
+        ["seq2", "t1"],
+      ]);
+    });
+
+    it("rejects a split that is the right size but misses a pair", () => {
+      // 2x2 by count, but b-y is absent and c-y is not in the grid.
+      expect(splitOf(["a-x", "a-y", "b-x", "c-y"])).toEqual([
+        ["a", "x"],
+        ["a", "y"],
+        ["b", "x"],
+        ["c", "y"],
+      ]);
+    });
+
+    it("keeps an unpaired id whole, rather than inventing a target", () => {
+      // A bulk prediction table would look like this; it belongs to another
+      // adapter, but reaching this one must not throw.
+      expect(splitOf(["seq1"])).toEqual([["seq1", ""]]);
+    });
+
+    it("handles a header that starts with a hyphen", () => {
+      expect(splitOf(["-seq3"])).toEqual([["", "seq3"]]);
     });
   });
 
