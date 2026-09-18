@@ -83,8 +83,21 @@
       <p class="text-sm">{{ error() }}</p>
     </div>
     } @else if (job(); as selectedJob) {
-    <div class="text-4xl font-semibold text-gray-900">
-      {{ selectedJob.jobName }}
+    <div class="flex flex-wrap items-center gap-4">
+      <h1 class="text-4xl font-semibold text-gray-900 wrap-break-word">
+        {{ selectedJob.jobName }}
+      </h1>
+      <span
+        [class]="getStatusClass(selectedJob.status)"
+        class="mt-1.5 inline-flex items-center justify-center rounded-full px-2 py-1 text-sm font-semibold"
+      >
+        @if (selectedJob.status === 'In progress') {
+        <span
+          class="mr-1.5 h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600"
+          aria-hidden="true"
+        ></span>
+        } {{ selectedJob.status }}
+      </span>
     </div>
     <div class="relative w-full rounded-lg border bg-white shadow-sm">
       <div class="p-6 space-y-6">
@@ -143,15 +156,16 @@
                 [filesError]="filesError()"
                 (unavailable)="onInteractiveReportUnavailable()"
               ></app-single-prediction-report>
-              } @else if (isDeNovoDesign() && !reportFallback()) {
-              <app-de-novo-design-report
+              } @else if (hasResultsReport() && !reportFallback()) {
+              <app-job-results-report
                 [runId]="selectedJob.id"
+                [workflow]="reportWorkflow()"
                 [tool]="selectedJob.tool"
                 [files]="filesItems()"
                 [filesLoading]="filesLoading()"
                 [filesError]="filesError()"
                 (unavailable)="onInteractiveReportUnavailable()"
-              ></app-de-novo-design-report>
+              ></app-job-results-report>
               } @else { @if (reportError()) {
               <div
                 class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"

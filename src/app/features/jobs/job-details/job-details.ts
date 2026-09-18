@@ -28,8 +28,9 @@ import { LoadingComponent } from "../../../components/loading/loading.component"
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
-import { DeNovoDesignReportComponent } from "../components/de-novo-design-report/de-novo-design-report.component";
+import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
+import { statusTagClass } from "../shared/job-status.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import {
@@ -125,7 +126,7 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     DialogComponent,
     ButtonComponent,
     SinglePredictionReportComponent,
-    DeNovoDesignReportComponent,
+    JobResultsReportComponent,
   ],
   providers: [
     provideIcons({
@@ -192,6 +193,19 @@ export default class JobDetailsComponent implements OnInit {
     () => normalizeWorkflowName(this.job()?.workflow) === "de novo design"
   );
 
+  isInteractionScreening = computed(
+    () =>
+      normalizeWorkflowName(this.job()?.workflow) === "interaction screening"
+  );
+
+  /** Workflows the shared job results report can render. */
+  hasResultsReport = computed(
+    () => this.isDeNovoDesign() || this.isInteractionScreening()
+  );
+
+  /** What picks the report's adapter, alongside the job's tool. */
+  reportWorkflow = computed(() => normalizeWorkflowName(this.job()?.workflow));
+
   // Categories the backend bundles as one zip instead of listing individually.
   zipCategories = signal<string[]>([]);
   downloadingCategory = signal<string | null>(null);
@@ -210,7 +224,7 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   hasInteractiveReport = computed(
-    () => this.isSinglePrediction() || this.isDeNovoDesign()
+    () => this.isSinglePrediction() || this.hasResultsReport()
   );
 
   /** Sticky for the life of the job: flipping back would remount the failing
@@ -437,17 +451,21 @@ export default class JobDetailsComponent implements OnInit {
 
   getSummaryItems(job: JobListItem): Array<{ label: string; value: string }> {
     return [
+      { label: "Workflow type", value: job.workflow || "N/A" },
+      { label: "Tool", value: job.tool || "N/A" },
       {
         label: "Submitted date",
         value: this.datePipe.transform(job.submittedAt, "dd/MM/yyyy") ?? "",
       },
-      { label: "Tool", value: job.tool || "N/A" },
-      { label: "Status", value: job.status },
       {
-        label: "Score",
+        label: "Max score",
         value: job.score === null ? "N/A" : job.score.toFixed(3),
       },
     ];
+  }
+
+  getStatusClass(status: string): string {
+    return statusTagClass(status);
   }
 
   getFiles(job: JobListItem): string[] {

@@ -1,8 +1,8 @@
 // Selected row inset ring shadows
 $edge: var(--color-green-600, oklch(62.7% 0.194 149.214));
-$y: inset 0 2px 0 0 $edge, inset 0 -2px 0 0 $edge;
-$left: inset 2px 0 0 0 $edge;
-$right: inset -2px 0 0 0 $edge;
+$y: inset 0 1px 0 0 $edge, inset 0 -1px 0 0 $edge;
+$left: inset 1px 0 0 0 $edge;
+$right: inset -1px 0 0 0 $edge;
 
 .cap {
   box-shadow: $y;

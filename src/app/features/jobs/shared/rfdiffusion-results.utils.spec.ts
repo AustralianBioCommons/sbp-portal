@@ -6,7 +6,10 @@ import {
   parseRfDiffusionDesigns,
   rfDiffusionAdapter,
 } from "./rfdiffusion-results.utils";
-import { getDeNovoDesignAdapter, parseCsvTable } from "./de-novo-results.utils";
+import {
+  getJobResultsAdapter,
+  parseCsvTable,
+} from "./job-results-report.utils";
 import { ResultFileRef } from "./prediction-results.utils";
 
 function file(key: string, category = "pdb"): ResultFileRef {
@@ -26,8 +29,12 @@ function design(name: string): ResultFileRef {
 
 describe("rfdiffusion results utils", () => {
   it("registers itself under the tool id the job reports", () => {
-    expect(getDeNovoDesignAdapter("rfdiffusion")).toBe(rfDiffusionAdapter);
-    expect(getDeNovoDesignAdapter("RFdiffusion")).toBe(rfDiffusionAdapter);
+    expect(getJobResultsAdapter("de novo design", "rfdiffusion")).toBe(
+      rfDiffusionAdapter
+    );
+    expect(getJobResultsAdapter("de novo design", "RFdiffusion")).toBe(
+      rfDiffusionAdapter
+    );
   });
 
   describe("finding artifacts", () => {

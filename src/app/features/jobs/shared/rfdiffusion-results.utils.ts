@@ -1,23 +1,23 @@
 import {
-  DeNovoDesignAdapter,
-  DesignColumn,
-  DesignRow,
-  DesignStructure,
+  JobResultsAdapter,
+  ReportColumn,
+  ReportRow,
+  ReportStructure,
   parseCsvTable,
-  registerDeNovoDesignAdapter,
-} from "./de-novo-results.utils";
+  registerJobResultsAdapter,
+} from "./job-results-report.utils";
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
 
 const RESULTS_FILE_NAME = "ranked_designs.csv";
 const RANKED_DESIGNS_DIR = "/results/ranked_designs/";
 
 /** Rank, then the metric columns, then the design itself. */
-const LEADING_COLUMNS: readonly DesignColumn[] = [
+const LEADING_COLUMNS: readonly ReportColumn[] = [
   // ProteinDJ ranks by the run's own metric, so rank and that column agree.
   { key: "rank", heading: "Rank", emphasised: true, numeric: true },
 ];
 
-const TRAILING_COLUMNS: readonly DesignColumn[] = [
+const TRAILING_COLUMNS: readonly ReportColumn[] = [
   { key: "seq_length", heading: "Design Length", numeric: true },
   // Alphabetical order says nothing about a sequence or a generated name.
   {
@@ -30,14 +30,14 @@ const TRAILING_COLUMNS: readonly DesignColumn[] = [
 ];
 
 /** AlphaFold2 Initial Guess: PAE is in Angstroms and ipTM runs 0-1. */
-const AF2_COLUMNS: readonly DesignColumn[] = [
+const AF2_COLUMNS: readonly ReportColumn[] = [
   // The AF2 ranking metric, so rank and this column agree.
   { key: "af2_pae_interaction", heading: "PAE Interaction", numeric: true },
   { key: "af2_iptm", heading: "ipTM", numeric: true, higherIsBetter: true },
 ];
 
 /** Boltz-2 scores pLDDT and ipSAE 0-1, so these are not the AF2 columns rescaled. */
-const BOLTZ_COLUMNS: readonly DesignColumn[] = [
+const BOLTZ_COLUMNS: readonly ReportColumn[] = [
   { key: "boltz_plddt", heading: "pLDDT", numeric: true, higherIsBetter: true },
   {
     // Header case is the pipeline's own.
@@ -55,8 +55,8 @@ const BOLTZ_COLUMNS: readonly DesignColumn[] = [
 ];
 
 function withMetrics(
-  metrics: readonly DesignColumn[]
-): readonly DesignColumn[] {
+  metrics: readonly ReportColumn[]
+): readonly ReportColumn[] {
   return [...LEADING_COLUMNS, ...metrics, ...TRAILING_COLUMNS];
 }
 
@@ -70,7 +70,7 @@ export const RFDIFFUSION_BOLTZ_COLUMNS = withMetrics(BOLTZ_COLUMNS);
  */
 export function findRfDiffusionColumns(
   headers: readonly string[]
-): readonly DesignColumn[] {
+): readonly ReportColumn[] {
   // 'af2_boltz' runs carry both families. Boltz runs last on what AF2 passed
   // through, and ranks those designs, so its metrics are the ones beside Rank.
   const hasBoltz = headers.some((header) => header.startsWith("boltz_"));
@@ -161,7 +161,7 @@ function matchDesign(
 export function parseRfDiffusionDesigns(
   rows: ReadonlyArray<Record<string, string>>,
   files: readonly ResultFileRef[]
-): DesignRow[] {
+): ReportRow[] {
   const designs = findRankedDesigns(files);
 
   return rows.map((row, index) => {
@@ -169,7 +169,7 @@ export function parseRfDiffusionDesigns(
     const description = (row["description"] ?? "").trim();
     const design = matchDesign(row, designs);
 
-    const structure: DesignStructure | null = design
+    const structure: ReportStructure | null = design
       ? { key: design.file.key, label: design.file.label, format: "pdb" }
       : null;
 
@@ -182,17 +182,29 @@ export function parseRfDiffusionDesigns(
   });
 }
 
-export const rfDiffusionAdapter: DeNovoDesignAdapter = {
+export const rfDiffusionAdapter: JobResultsAdapter = {
+  workflow: "de novo design",
   tool: "rfdiffusion",
   columns: RFDIFFUSION_AF2_COLUMNS,
   resultsFileName: RESULTS_FILE_NAME,
   // ProteinDJ writes the binder first, the opposite way round to BindCraft.
-  binderChainId: "A",
-  designLengthKey: "seq_length",
+  primaryChainId: "A",
+  primaryLengthKey: "seq_length",
+  panelHeading: "Ranked designs",
+  emptyMessage:
+    "No designs passed in silico quality control criteria. Consider choosing " +
+    "different hotspots or increasing the number of trajectories.",
+  // The binder band takes the selected design's own name.
+  legend: [
+    { label: "Target", band: "secondary" },
+    { label: null, band: "primary" },
+  ],
+  // Every design targets the same protein, so they line up on it.
+  superpose: true,
   findResultsArtifact: findRfDiffusionResultsArtifact,
   columnsFor: (text) => findRfDiffusionColumns(parseCsvTable(text).headers),
   parseRows: (text, files) =>
     parseRfDiffusionDesigns(parseCsvTable(text).rows, files),
 };
 
-registerDeNovoDesignAdapter(rfDiffusionAdapter);
+registerJobResultsAdapter(rfDiffusionAdapter);
