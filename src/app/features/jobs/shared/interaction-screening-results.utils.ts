@@ -1,13 +1,12 @@
 /**
- * Interaction screening (WISPS). One row per query/target pair the run both
- * scored *and* published a complex for — the pipeline filters what it writes by
- * a score threshold, so the scores table is normally longer than this report.
- * Anything reading these rows should not assume they mirror the table.
+ * Interaction screening (WISPS). One row per pair the run scored *and* published
+ * a complex for, so the scores table is normally longer than the report.
  */
 
 import {
   ReportColumn,
   ReportRow,
+  ReportSources,
   JobResultsAdapter,
   parseCsvTable,
   registerJobResultsAdapter,
@@ -20,32 +19,38 @@ import {
 
 const WORKFLOW = "interaction screening";
 
-/** Every tool writes the collected table under this name. */
 const RESULTS_SUFFIX = "_confidence_scores_full.csv";
 const COLLECT_DIR = "/collect/";
 
-/** Derived from the pair id rather than read from the file. */
+/** Split out of the pair id rather than read from the file. */
 const QUERY_KEY = "queryId";
 const TARGET_KEY = "targetId";
+/** Replaces the two above when the pair id cannot be split. */
+const PAIR_KEY = "pairId";
 
-/**
- * ipSAE is not in the collected table yet — the pipeline writes it to
- * `ipsae/ipsae_scores.csv`, keyed by the same pair id. Read from the table when
- * it is there, and joined from that file otherwise.
- */
+/** Not in the collected table yet; joined from the pipeline's own file. */
 const IPSAE_KEY = "ipsae";
 const IPSAE_FILE = "ipsae_scores.csv";
 const IPSAE_DIR = "/ipsae/";
 
-const INTERACTION_COLUMNS: readonly ReportColumn[] = [
-  { key: QUERY_KEY, heading: "Query ID", emphasised: true },
-  { key: TARGET_KEY, heading: "Target ID" },
+const SCORE_COLUMNS: readonly ReportColumn[] = [
   { key: IPSAE_KEY, heading: "ipSAE", numeric: true, higherIsBetter: true },
   { key: "iptm", heading: "ipTM", numeric: true, higherIsBetter: true },
   { key: "ptm", heading: "pTM", numeric: true, higherIsBetter: true },
 ];
 
-/** The collected scores table, the row source for the whole report. */
+const INTERACTION_COLUMNS: readonly ReportColumn[] = [
+  { key: QUERY_KEY, heading: "Query ID", emphasised: true },
+  { key: TARGET_KEY, heading: "Target ID" },
+  ...SCORE_COLUMNS,
+];
+
+/** A heading that does not claim the pair id is one side of the pair. */
+const UNSPLIT_COLUMNS: readonly ReportColumn[] = [
+  { key: PAIR_KEY, heading: "Interaction", emphasised: true },
+  ...SCORE_COLUMNS,
+];
+
 export function findInteractionScoresArtifact(
   files: readonly ResultFileRef[]
 ): ResultFileRef | null {
@@ -60,7 +65,6 @@ export function findInteractionScoresArtifact(
   );
 }
 
-/** The per-pair ipSAE scores, which the collected table does not yet carry. */
 export function findIpsaeArtifact(
   files: readonly ResultFileRef[]
 ): ResultFileRef | null {
@@ -73,10 +77,7 @@ export function findIpsaeArtifact(
   );
 }
 
-/**
- * Pair id to ipSAE, from `Sample,<tool>`. The score column is named for the
- * tool that produced it, so it is taken by position rather than by name.
- */
+/** `Sample,<tool>`: the score column is named for the tool, so take it by position. */
 export function parseIpsaeScores(text: string | null): Map<string, string> {
   const scores = new Map<string, string>();
   if (!text) return scores;
@@ -96,7 +97,6 @@ export function parseIpsaeScores(text: string | null): Map<string, string> {
   return scores;
 }
 
-/** The header carrying ipSAE, whatever case the pipeline writes it in. */
 function findIpsaeHeader(headers: readonly string[]): string | null {
   return (
     headers.find((header) => header.trim().toLowerCase() === "ipsae") ?? null
@@ -107,6 +107,49 @@ function findIpsaeHeader(headers: readonly string[]): string | null {
 interface PairSplit {
   queries: Set<string>;
   targets: Set<string>;
+}
+
+export function parseSubmittedHeaders(
+  fasta: string | null | undefined
+): string[] {
+  if (!fasta) return [];
+  return fasta
+    .split("\n")
+    .filter((line) => line.startsWith(">"))
+    .map((line) => line.slice(1).trim())
+    .filter((header) => header.length > 0);
+}
+
+/**
+ * The boundary has to fall so that both halves are headers the run was given.
+ * WISPS writes `<query>-<target>`, so the first half is the query. Null if any
+ * pair is unexplained, or explained more than one way.
+ */
+function splitFromHeaders(
+  ids: readonly string[],
+  headers: readonly string[]
+): PairSplit | null {
+  if (headers.length === 0) return null;
+  const known = new Set(headers);
+  const queries = new Set<string>();
+  const targets = new Set<string>();
+
+  for (const id of ids) {
+    let found: [string, string] | null = null;
+    for (let index = 0; index < id.length; index++) {
+      if (id[index] !== "-") continue;
+      const query = id.slice(0, index);
+      const target = id.slice(index + 1);
+      if (!known.has(query) || !known.has(target)) continue;
+      if (found) return null;
+      found = [query, target];
+    }
+    if (!found) return null;
+    queries.add(found[0]);
+    targets.add(found[1]);
+  }
+
+  return queries.size > 0 ? { queries, targets } : null;
 }
 
 /** Every id has exactly one hyphen, so the boundary is not in doubt. */
@@ -129,20 +172,23 @@ function sameSet(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 }
 
 /**
- * Splits `<query>-<target>` ids when the boundary can be known. Headers are free
- * text and may hold hyphens of their own (`anne-1-anne-3`), so the boundary is
- * read from the grid: the run pairs every query with every target, and a split
- * is valid when its query and target sets reproduce the ids exactly.
+ * Headers are free text and may hold hyphens (`anne-1-anne-3`), so the boundary
+ * is read from the grid: the run pairs every query with every target, and a
+ * split is valid when its sets reproduce the ids exactly.
  *
- * Several splits can be valid at once — `anne-1-t1`/`anne-1-t2` is one query
- * `anne-1` against two targets, and equally one query `anne` against `1-t1` and
- * `1-t2`. Nothing in the ids says which, so this returns null rather than pick,
- * and the report shows the pair id whole. The fix is upstream: the collected
- * table should carry the query and target ids the pipeline already knows.
+ * Two splits can both be valid — `anne-1-t1`/`anne-1-t2` reads as `anne-1`
+ * against `t1`/`t2`, and equally as `anne` against `1-t1`/`1-t2`. Null in that
+ * case; the fix is upstream, where the query and target ids are already known.
  */
-function findPairSplit(ids: readonly string[]): PairSplit | null {
+function findPairSplit(
+  ids: readonly string[],
+  headers: readonly string[] = []
+): PairSplit | null {
   const unique = [...new Set(ids)].filter((id) => id.length > 0);
   if (unique.length === 0) return null;
+
+  const submitted = splitFromHeaders(unique, headers);
+  if (submitted) return submitted;
 
   const only = splitAtOnlyHyphen(unique);
   if (only) return only;
@@ -185,6 +231,19 @@ function findPairSplit(ids: readonly string[]): PairSplit | null {
   return found;
 }
 
+/** The columns this run can fill, given whether its ids can be split. */
+export function interactionColumns(
+  text: string,
+  submittedFasta?: string | null
+): readonly ReportColumn[] {
+  const { rows } = parseCsvTable(text);
+  const split = findPairSplit(
+    rows.map((row) => (row["id"] ?? "").trim()),
+    parseSubmittedHeaders(submittedFasta)
+  );
+  return split ? INTERACTION_COLUMNS : UNSPLIT_COLUMNS;
+}
+
 /** Splits one id, or keeps it whole when the boundary is not knowable. */
 function splitPairId(
   id: string,
@@ -203,11 +262,10 @@ function splitPairId(
     }
   }
 
-  // Showing the pair whole beats showing a confident guess at the wrong split.
-  return { query: id, target: "" };
+  // Unshown: the table drops to its `Interaction` column in this case.
+  return { query: "", target: "" };
 }
 
-/** Where one tool writes its complexes, and how their filenames are built. */
 interface StructureLayout {
   directory: string;
   /** Captures the pair id, then the model's rank among that pair's outputs. */
@@ -217,24 +275,18 @@ interface StructureLayout {
 
 const BOLTZ_LAYOUT: StructureLayout = {
   directory: "/boltz_predictions/cif/",
-  // Greedy, so an id ending in `_model_0` still yields the whole id. Model 0 is
-  // Boltz's best.
+  // Greedy, so an id ending in `_model_0` still yields the whole id.
   pattern: /^(.+)_model_(\d+)\.cif$/i,
   format: "mmcif",
 };
 
 const COLABFOLD_LAYOUT: StructureLayout = {
   directory: "/colabfold_predictions/pdb/",
-  // ColabFold can publish ranks 001-005; 001 is the top-ranked one.
   pattern: /^(.+?)_unrelaxed_rank_(\d+)(?:_.*)?\.pdb$/i,
   format: "pdb",
 };
 
-/**
- * Pair id to its best complex, for the pairs this run actually published. A tool
- * may write several models per pair, so the lowest rank wins rather than
- * whichever file the download list happened to end on.
- */
+/** Lowest rank wins, so several models per pair cannot turn into file order. */
 function findStructures(
   files: readonly ResultFileRef[],
   layout: StructureLayout
@@ -257,21 +309,21 @@ function findStructures(
   return new Map([...best].map(([id, entry]) => [id, entry.file]));
 }
 
-/**
- * Rows for the pairs with a structure to show. The run filters what it writes
- * by a score threshold, so the table normally lists more pairs than it kept.
- */
 export function parseInteractionRows(
   text: string,
   files: readonly ResultFileRef[],
   layout: StructureLayout,
-  ipsaeText: string | null = null
+  sources?: ReportSources | null
 ): ReportRow[] {
+  const { extraText = null, submittedFasta = null } = sources ?? {};
   const { headers, rows } = parseCsvTable(text);
   const structures = findStructures(files, layout);
   const ipsaeHeader = findIpsaeHeader(headers);
-  const ipsaeScores = parseIpsaeScores(ipsaeText);
-  const split = findPairSplit(rows.map((row) => (row["id"] ?? "").trim()));
+  const ipsaeScores = parseIpsaeScores(extraText);
+  const split = findPairSplit(
+    rows.map((row) => (row["id"] ?? "").trim()),
+    parseSubmittedHeaders(submittedFasta)
+  );
 
   const reportRows: ReportRow[] = [];
 
@@ -289,8 +341,8 @@ export function parseInteractionRows(
         ...row,
         [QUERY_KEY]: query,
         [TARGET_KEY]: target,
-        // The collected table wins once it carries the column; until then the
-        // score is joined from the pipeline's own per-pair file.
+        [PAIR_KEY]: id,
+        // The collected table wins once it carries the column.
         [IPSAE_KEY]: ipsaeHeader ? row[ipsaeHeader] : ipsaeScores.get(id) ?? "",
       },
       structure: {
@@ -325,8 +377,12 @@ function interactionAdapter(
     superpose: false,
     findResultsArtifact: findInteractionScoresArtifact,
     findExtraArtifact: findIpsaeArtifact,
-    parseRows: (text, files, ipsaeText) =>
-      parseInteractionRows(text, files, layout, ipsaeText),
+    // The submitted headers settle an otherwise ambiguous pair id.
+    needsSubmittedInputs: true,
+    columnsFor: (text, sources) =>
+      interactionColumns(text, sources?.submittedFasta),
+    parseRows: (text, files, sources) =>
+      parseInteractionRows(text, files, layout, sources),
   };
 }
 

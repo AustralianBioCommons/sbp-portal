@@ -149,7 +149,11 @@ describe("JobResultsReportComponent", () => {
   beforeEach(async () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getResultFileText",
+      "getJobSettingParams",
     ]);
+    resultsService.getJobSettingParams.and.returnValue(
+      of({ runId: RUN, settingParams: {} })
+    );
     respondWith({
       [STATS_KEY]: statsCsv,
       [`${RANKED}/1_demo-binder_l135_s866737_mpnn3_model1.pdb`]: PDB,

@@ -49,6 +49,14 @@ export interface ReportLegendBand {
   band: "primary" | "secondary";
 }
 
+/** Everything a row can be built from beyond the results table itself. */
+export interface ReportSources {
+  /** Body of `findExtraArtifact`, or null when there is none to read. */
+  extraText?: string | null;
+  /** The run's submitted FASTA, when the adapter asked for it. */
+  submittedFasta?: string | null;
+}
+
 /** What one workflow contributes: its table, and how a row finds a structure. */
 export interface JobResultsAdapter {
   /** Normalised workflow name, as `normalizeWorkflowName` reports it. */
@@ -85,16 +93,20 @@ export interface JobResultsAdapter {
    */
   findExtraArtifact?(files: readonly ResultFileRef[]): ResultFileRef | null;
   /**
+   * Whether the report should also read the run's submitted form, for an
+   * adapter that cannot interpret its outputs without the original inputs.
+   */
+  needsSubmittedInputs?: boolean;
+  /**
    * Picks columns from the results file, for a workflow that can produce more
    * than one set. `columns` is used until the file has loaded.
    */
-  columnsFor?(text: string): readonly ReportColumn[];
-  /** Rows in file order, each paired with its structure. `extraText` is the
-   *  body of `findExtraArtifact`, or null when there is none to read. */
+  columnsFor?(text: string, sources?: ReportSources): readonly ReportColumn[];
+  /** Rows in file order, each paired with its structure. */
   parseRows(
     text: string,
     files: readonly ResultFileRef[],
-    extraText?: string | null
+    sources?: ReportSources
   ): ReportRow[];
 }
 

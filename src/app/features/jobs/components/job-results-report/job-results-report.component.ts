@@ -13,7 +13,15 @@ import {
 import type { WritableSignal } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { EMPTY, Subscription, catchError, finalize, forkJoin, of } from "rxjs";
+import {
+  EMPTY,
+  Subscription,
+  catchError,
+  finalize,
+  forkJoin,
+  map,
+  of,
+} from "rxjs";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowPath,
@@ -36,6 +44,7 @@ import { ResultsService } from "../../services/results.service";
 import { ResultFileRef } from "../../shared/prediction-results.utils";
 import {
   ReportRow,
+  ReportSources,
   getJobResultsAdapter,
 } from "../../shared/job-results-report.utils";
 import "../../shared/bindcraft-results.utils";
@@ -91,13 +100,14 @@ export class JobResultsReportComponent {
 
   /** Kept so an adapter that varies its columns can read the file again. */
   private readonly resultsText = signal<string | null>(null);
+  private readonly resultsSources = signal<ReportSources>({});
 
   readonly columns = computed(() => {
     const adapter = this.adapter();
     if (!adapter) return [];
     const text = this.resultsText();
     return text !== null && adapter.columnsFor
-      ? adapter.columnsFor(text)
+      ? adapter.columnsFor(text, this.resultsSources())
       : adapter.columns;
   });
 
@@ -425,6 +435,7 @@ export class JobResultsReportComponent {
     this.resultsEmpty.set(false);
     this.rows.set([]);
     this.resultsText.set(null);
+    this.resultsSources.set({});
     this.selectedId.set(null);
 
     // The joined file is optional: a run that never wrote one still renders,
@@ -438,10 +449,23 @@ export class JobResultsReportComponent {
         )
       : of(null);
 
+    // Some adapters cannot read their outputs without the original inputs. The
+    // form goes in the same batch, so the rows are parsed once, with everything.
+    const submitted$ = this.adapter()?.needsSubmittedInputs
+      ? this.resultsService.getJobSettingParams(runId).pipe(
+          map((response) => this.readSubmittedFasta(response.settingParams)),
+          catchError((err) => {
+            console.warn("Could not read the submitted form:", err);
+            return of(null);
+          })
+        )
+      : of(null);
+
     this.resultsLoading.set(true);
     this.resultsFetch = forkJoin([
       this.resultsService.getResultFileText(runId, key),
       extra$,
+      submitted$,
     ])
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -452,18 +476,28 @@ export class JobResultsReportComponent {
           return EMPTY;
         })
       )
-      .subscribe(([content, extra]) => {
+      .subscribe(([content, extraText, submittedFasta]) => {
+        const sources: ReportSources = { extraText, submittedFasta };
         const rows =
-          this.adapter()?.parseRows(content, this.files(), extra) ?? [];
+          this.adapter()?.parseRows(content, this.files(), sources) ?? [];
         if (rows.length === 0) {
           this.resultsEmpty.set(true);
           return;
         }
         this.resultsText.set(content);
+        this.resultsSources.set(sources);
         this.rows.set(rows);
         // Show the top-ranked row first.
         this.selectedId.set(rows[0].id);
       });
+  }
+
+  /** The FASTA the run was submitted with, if the form still carries it. */
+  private readSubmittedFasta(
+    settingParams: Record<string, unknown> | null | undefined
+  ): string | null {
+    const value = settingParams?.["fastaContent"];
+    return typeof value === "string" && value.trim() ? value : null;
   }
 
   private loadStructure(

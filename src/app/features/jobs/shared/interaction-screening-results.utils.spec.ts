@@ -1,5 +1,6 @@
 import {
   findInteractionScoresArtifact,
+  interactionColumns,
   interactionScreeningBoltzAdapter,
   interactionScreeningColabFoldAdapter,
 } from "./interaction-screening-results.utils";
@@ -86,8 +87,13 @@ describe("interaction screening results utils", () => {
     const parse = (
       text: string,
       files: readonly ResultFileRef[],
-      ipsaeText: string | null = null
-    ) => interactionScreeningBoltzAdapter.parseRows(text, files, ipsaeText);
+      extraText: string | null = null,
+      submittedFasta: string | null = null
+    ) =>
+      interactionScreeningBoltzAdapter.parseRows(text, files, {
+        extraText,
+        submittedFasta,
+      });
 
     it("splits the pair id into its query and target", () => {
       const text = scoresCsv([["seq1-seq3", "0.58", "0.68"]]);
@@ -151,13 +157,13 @@ describe("interaction screening results utils", () => {
         ...ids.map((id) => pdb(id)),
       ]);
 
-      expect(
-        rows.map((row) => [row.values["queryId"], row.values["targetId"]])
-      ).toEqual([
-        ["anne-1-anne-3", ""],
-        ["anne-1-anne-4", ""],
-        ["anne-2-anne-3", ""],
-        ["anne-2-anne-4", ""],
+      expect(rows.map((row) => row.values["pairId"])).toEqual(ids);
+      expect(rows.every((row) => !row.values["queryId"])).toBeTrue();
+      expect(interactionColumns(text).map((c) => c.heading)).toEqual([
+        "Interaction",
+        "ipSAE",
+        "ipTM",
+        "pTM",
       ]);
       expect(rows[0].structure?.format).toBe("pdb");
     });
@@ -169,12 +175,39 @@ describe("interaction screening results utils", () => {
       const text = scoresCsv(ids.map((id) => [id, "0.35", "0.39"]));
       const rows = parse(text, [scoresFile, ...ids.map(cif)]);
 
+      expect(rows.map((row) => row.values["pairId"])).toEqual(ids);
+      expect(rows.every((row) => !row.values["queryId"])).toBeTrue();
+    });
+
+    it("splits an ambiguous pair once the submitted headers say how", () => {
+      const ids = ["anne-1-t1", "anne-1-t2"];
+      const text = scoresCsv(ids.map((id) => [id, "0.35", "0.39"]));
+      const fasta = [">anne-1", "AAA", ">t1", "CCC", ">t2", "DDD"].join("\n");
+      const rows = parse(text, [scoresFile, ...ids.map(cif)], null, fasta);
+
       expect(
         rows.map((row) => [row.values["queryId"], row.values["targetId"]])
       ).toEqual([
-        ["anne-1-t1", ""],
-        ["anne-1-t2", ""],
+        ["anne-1", "t1"],
+        ["anne-1", "t2"],
       ]);
+      expect(interactionColumns(text, fasta).map((c) => c.heading)).toEqual([
+        "Query ID",
+        "Target ID",
+        "ipSAE",
+        "ipTM",
+        "pTM",
+      ]);
+    });
+
+    it("ignores submitted headers that do not explain every pair", () => {
+      const ids = ["anne-1-t1", "anne-1-t2"];
+      const text = scoresCsv(ids.map((id) => [id, "0.35", "0.39"]));
+      // t2 is missing, so the headers cannot account for the second pair.
+      const fasta = [">anne-1", "AAA", ">t1", "CCC"].join("\n");
+      const rows = parse(text, [scoresFile, ...ids.map(cif)], null, fasta);
+
+      expect(rows.map((row) => row.values["pairId"])).toEqual(ids);
     });
 
     it("still splits a run the filter cut down to one pair", () => {
@@ -238,11 +271,11 @@ describe("interaction screening results utils", () => {
       ]);
       expect(boltz[0].structure?.key).toContain("seq1-seq3_model_0.cif");
 
-      const colabfold = interactionScreeningColabFoldAdapter.parseRows(
-        text,
-        [scoresFile, pdb("seq1-seq3", "001"), pdb("seq1-seq3", "005")],
-        null
-      );
+      const colabfold = interactionScreeningColabFoldAdapter.parseRows(text, [
+        scoresFile,
+        pdb("seq1-seq3", "001"),
+        pdb("seq1-seq3", "005"),
+      ]);
       expect(colabfold[0].structure?.key).toContain("rank_001");
     });
 
@@ -317,10 +350,10 @@ describe("interaction screening results utils", () => {
       ]);
     });
 
-    it("keeps an unpaired id whole, rather than inventing a target", () => {
+    it("does not invent a split for an unpaired id", () => {
       // A bulk prediction table would look like this; it belongs to another
       // adapter, but reaching this one must not throw.
-      expect(splitOf(["seq1"])).toEqual([["seq1", ""]]);
+      expect(splitOf(["seq1"])).toEqual([["", ""]]);
     });
 
     it("handles a header that starts with a hyphen", () => {
