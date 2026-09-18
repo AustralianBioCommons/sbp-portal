@@ -79,12 +79,23 @@ export interface JobResultsAdapter {
   /** The run's results table, or null when it has not produced one. */
   findResultsArtifact(files: readonly ResultFileRef[]): ResultFileRef | null;
   /**
+   * A second file joined onto the rows, for a workflow whose results table does
+   * not carry every column on its own. Fetched alongside the results table, and
+   * optional: a run that never wrote it still renders.
+   */
+  findExtraArtifact?(files: readonly ResultFileRef[]): ResultFileRef | null;
+  /**
    * Picks columns from the results file, for a workflow that can produce more
    * than one set. `columns` is used until the file has loaded.
    */
   columnsFor?(text: string): readonly ReportColumn[];
-  /** Rows in file order, each paired with its structure. */
-  parseRows(text: string, files: readonly ResultFileRef[]): ReportRow[];
+  /** Rows in file order, each paired with its structure. `extraText` is the
+   *  body of `findExtraArtifact`, or null when there is none to read. */
+  parseRows(
+    text: string,
+    files: readonly ResultFileRef[],
+    extraText?: string | null
+  ): ReportRow[];
 }
 
 /** One workflow's tool can only mean one report, so both parts key the map. */

@@ -13,7 +13,7 @@ import {
 import type { WritableSignal } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { EMPTY, Subscription, catchError, finalize } from "rxjs";
+import { EMPTY, Subscription, catchError, finalize, forkJoin, of } from "rxjs";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowPath,
@@ -117,6 +117,11 @@ export class JobResultsReportComponent {
 
   readonly resultsArtifact = computed(
     () => this.adapter()?.findResultsArtifact(this.files()) ?? null
+  );
+
+  /** A second file joined onto the rows, for adapters that need one. */
+  readonly extraArtifact = computed(
+    () => this.adapter()?.findExtraArtifact?.(this.files()) ?? null
   );
 
   readonly selectedRow = computed(
@@ -267,7 +272,7 @@ export class JobResultsReportComponent {
         this.resultsEmpty.set(false);
         return;
       }
-      this.loadResults(runId, artifact.key);
+      this.loadResults(runId, artifact.key, this.extraArtifact()?.key ?? null);
     });
 
     effect(() => {
@@ -410,7 +415,11 @@ export class JobResultsReportComponent {
     this.structureFetch = null;
   }
 
-  private loadResults(runId: string, key: string): void {
+  private loadResults(
+    runId: string,
+    key: string,
+    extraKey: string | null
+  ): void {
     this.cancelResultsFetch();
     this.resultsError.set(null);
     this.resultsEmpty.set(false);
@@ -418,16 +427,34 @@ export class JobResultsReportComponent {
     this.resultsText.set(null);
     this.selectedId.set(null);
 
-    this.resultsFetch = this.fetchText(runId, key, this.resultsLoading)
+    // The joined file is optional: a run that never wrote one still renders,
+    // just without the columns it would have filled.
+    const extra$ = extraKey
+      ? this.resultsService.getResultFileText(runId, extraKey).pipe(
+          catchError((err) => {
+            console.warn("Could not read the joined results file:", err);
+            return of(null);
+          })
+        )
+      : of(null);
+
+    this.resultsLoading.set(true);
+    this.resultsFetch = forkJoin([
+      this.resultsService.getResultFileText(runId, key),
+      extra$,
+    ])
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.resultsLoading.set(false)),
         catchError((err) => {
           console.error("Error loading results:", err);
           this.resultsError.set("Failed to load the results file.");
           return EMPTY;
         })
       )
-      .subscribe((content) => {
-        const rows = this.adapter()?.parseRows(content, this.files()) ?? [];
+      .subscribe(([content, extra]) => {
+        const rows =
+          this.adapter()?.parseRows(content, this.files(), extra) ?? [];
         if (rows.length === 0) {
           this.resultsEmpty.set(true);
           return;
