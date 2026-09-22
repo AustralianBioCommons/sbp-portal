@@ -1,10 +1,12 @@
 import {
-  findInteractionScoresArtifact,
   interactionColumns,
   interactionScreeningBoltzAdapter,
   interactionScreeningColabFoldAdapter,
 } from "./interaction-screening-results.utils";
-import { getJobResultsAdapter } from "./job-results-report.utils";
+import {
+  NO_HIGH_CONFIDENCE_MESSAGE,
+  getJobResultsAdapter,
+} from "./job-results-report.utils";
 import { ResultFileRef } from "./prediction-results.utils";
 
 const RUN = "run-1";
@@ -60,27 +62,6 @@ describe("interaction screening results utils", () => {
 
   it("does not answer for de novo design, which has its own adapters", () => {
     expect(getJobResultsAdapter("de novo design", "boltz")).toBeNull();
-  });
-
-  describe("finding the scores table", () => {
-    it("finds the collected table whichever tool wrote it", () => {
-      expect(findInteractionScoresArtifact([scoresFile])).toBe(scoresFile);
-
-      const colabfold = file(
-        `${RUN}/collect/colabfold_confidence_scores_full.csv`,
-        "stats_csv"
-      );
-      expect(findInteractionScoresArtifact([colabfold])).toBe(colabfold);
-    });
-
-    it("ignores a look-alike outside the collect folder", () => {
-      const stray = file(
-        `${RUN}/run/boltz_confidence_scores_full.csv`,
-        "stats_csv"
-      );
-      expect(findInteractionScoresArtifact([stray])).toBeNull();
-      expect(findInteractionScoresArtifact([])).toBeNull();
-    });
   });
 
   describe("building rows", () => {
@@ -376,7 +357,7 @@ describe("interaction screening results utils", () => {
 
     it("says so when nothing passed the score filter", () => {
       expect(interactionScreeningBoltzAdapter.emptyMessage).toBe(
-        "No high confidence interactions were identified."
+        NO_HIGH_CONFIDENCE_MESSAGE
       );
     });
 

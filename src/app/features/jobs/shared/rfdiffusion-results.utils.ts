@@ -4,6 +4,7 @@ import {
   ReportRow,
   ReportStructure,
   parseCsvTable,
+  NO_DESIGNS_MESSAGE,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
@@ -191,9 +192,7 @@ export const rfDiffusionAdapter: JobResultsAdapter = {
   primaryChainId: "A",
   primaryLengthKey: "seq_length",
   panelHeading: "Ranked designs",
-  emptyMessage:
-    "No designs passed in silico quality control criteria. Consider choosing " +
-    "different hotspots or increasing the number of trajectories.",
+  emptyMessage: NO_DESIGNS_MESSAGE,
   // The binder band takes the selected design's own name.
   legend: [
     { label: "Target", band: "secondary" },

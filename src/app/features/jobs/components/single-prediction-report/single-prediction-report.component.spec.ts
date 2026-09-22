@@ -207,7 +207,7 @@ describe("SinglePredictionReportComponent", () => {
     render();
 
     expect(component.structureError()).toBe(
-      "Failed to load the predicted structure file."
+      "Failed to load the structure file."
     );
     expect(component.loading()).toBeFalse();
   });
@@ -240,14 +240,41 @@ describe("SinglePredictionReportComponent", () => {
     expect(component.structureError()).toBe("The structure file is empty.");
   });
 
-  it("names the artifacts that are missing", () => {
+  it("gives up only when the structure itself is missing", () => {
     render([files[2]]);
 
-    expect(component.missingArtifacts()).toEqual([
-      "a structure file (.cif/.pdb)",
-      "a PAE matrix (*_pae_0.tsv)",
-    ]);
+    expect(component.missingStructure()).toBeTrue();
+    expect(component.coreUnavailable()).toBeTrue();
     expect(resultsService.getResultFileText).not.toHaveBeenCalled();
+  });
+
+  it("renders the structure for a run that published no PAE", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    render([files[0]]);
+    component.unavailable.subscribe(unavailable);
+
+    expect(component.missingStructure()).toBeFalse();
+    expect(component.structureSource()?.content).toBe(STRUCTURE_TEXT);
+    expect(component.paeMatrix()).toBeNull();
+    expect(component.coreUnavailable()).toBeFalse();
+    expect(unavailable).not.toHaveBeenCalled();
+  });
+
+  it("keeps the structure when the PAE file cannot be read", () => {
+    const unavailable = jasmine.createSpy("unavailable");
+    spyOn(console, "error");
+    resultsService.getResultFileText.and.callFake((_runId, key) =>
+      key === PAE_KEY
+        ? throwError(() => new Error("pae failed"))
+        : of(STRUCTURE_TEXT)
+    );
+    render();
+    component.unavailable.subscribe(unavailable);
+
+    expect(component.paeError()).toBe("Failed to load the PAE matrix file.");
+    expect(component.structureSource()?.content).toBe(STRUCTURE_TEXT);
+    expect(component.coreUnavailable()).toBeFalse();
+    expect(unavailable).not.toHaveBeenCalled();
   });
 
   // --- Single loading gate --------------------------------------------------
@@ -448,7 +475,7 @@ describe("SinglePredictionReportComponent", () => {
     fixture.detectChanges();
 
     expect(component.structureError()).toBe(
-      "Failed to load the predicted structure file."
+      "Failed to load the structure file."
     );
     expect(component.coreUnavailable()).toBeTrue();
     expect(unavailable).toHaveBeenCalled();
@@ -460,7 +487,7 @@ describe("SinglePredictionReportComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "Failed to load the predicted structure file."
+      "Failed to load the structure file."
     );
     expect(
       fixture.debugElement.query(By.directive(MolstarViewerStubComponent))

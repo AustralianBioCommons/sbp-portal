@@ -38,6 +38,7 @@ import {
   TARGET_COLOR,
 } from "../../../workflows/components/molstar-viewer/molstar-viewer.component";
 import { JobResultsTableComponent } from "../job-results-table/job-results-table.component";
+import { PlddtLegendComponent } from "../plddt-legend/plddt-legend.component";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
 import { TooltipComponent } from "../../../../components/tooltip/tooltip.component";
 import { ResultsService } from "../../services/results.service";
@@ -50,12 +51,14 @@ import {
 import "../../shared/bindcraft-results.utils";
 import "../../shared/rfdiffusion-results.utils";
 import "../../shared/interaction-screening-results.utils";
+import "../../shared/bulk-prediction-results.utils";
 
 @Component({
   selector: "app-job-results-report",
   imports: [
     MolstarViewerComponent,
     JobResultsTableComponent,
+    PlddtLegendComponent,
     LoadingComponent,
     TooltipComponent,
     NgIconComponent,
@@ -244,6 +247,12 @@ export class JobResultsReportComponent {
   private dragStartX = 0;
   private dragStartPanelWidth = 0;
 
+  readonly colorTheme = computed(
+    () => this.adapter()?.colorTheme ?? "binder-target"
+  );
+
+  readonly showPlddtLegend = computed(() => this.colorTheme() === "plddt");
+
   readonly chainLegend = computed(() =>
     (this.adapter()?.legend ?? []).map((band) => ({
       // A band without a label of its own takes the selected row's.
@@ -406,7 +415,11 @@ export class JobResultsReportComponent {
    * `finalize` covers every outcome, cancellation included, so the flag cannot
    * stick. Only one fetch per flag may be live at a time — see the callers.
    */
-  private fetchText(runId: string, key: string, busy: WritableSignal<boolean>) {
+  private fetchFlagged(
+    runId: string,
+    key: string,
+    busy: WritableSignal<boolean>
+  ) {
     busy.set(true);
     return this.resultsService.getResultFileText(runId, key).pipe(
       takeUntilDestroyed(this.destroyRef),
@@ -510,7 +523,7 @@ export class JobResultsReportComponent {
     this.structureError.set(null);
     this.structureSource.set(null);
 
-    this.structureFetch = this.fetchText(runId, key, this.structureLoading)
+    this.structureFetch = this.fetchFlagged(runId, key, this.structureLoading)
       .pipe(
         catchError((err) => {
           console.error("Error loading structure file:", err);

@@ -112,13 +112,13 @@ describe("JobDetailsComponent", () => {
     finalDesignCount: 3,
   };
 
-  /** Interaction screening and de novo design now render their own report, so
-   *  the packaged iframe needs a workflow that has none. */
+  /** Every workflow the portal names now renders its own report, so the
+   *  packaged iframe is what a run it does not recognise falls back to. */
   const packagedReportJob: JobListItem = {
     ...mockJob,
     id: "job-packaged",
-    jobName: "Bulk prediction run",
-    workflow: "Bulk Prediction",
+    jobName: "Unrecognised run",
+    workflow: "Some Other Workflow",
   };
 
   const fallbackJob: JobListItem = {
@@ -1304,7 +1304,8 @@ describe("JobDetailsComponent", () => {
   it("shows the de novo view, not the packaged report, for a de novo run", () => {
     renderDeNovoDesign();
 
-    expect(component.isDeNovoDesign()).toBeTrue();
+    expect(component.workflowName()).toBe("de novo design");
+    expect(component.hasResultsReport()).toBeTrue();
     expect(component.isSinglePrediction()).toBeFalse();
     expect(resultsReport()).not.toBeNull();
     expect(resultsService.getJobReport).not.toHaveBeenCalled();
@@ -1325,7 +1326,7 @@ describe("JobDetailsComponent", () => {
   it("shows the same report for an interaction screening run", () => {
     render();
 
-    expect(component.isInteractionScreening()).toBeTrue();
+    expect(component.workflowName()).toBe("interaction screening");
     expect(component.hasResultsReport()).toBeTrue();
     expect(resultsReport()).not.toBeNull();
     expect(resultsService.getJobReport).not.toHaveBeenCalled();
@@ -1340,11 +1341,23 @@ describe("JobDetailsComponent", () => {
     expect(report.runId()).toBe(mockJob.id);
   });
 
-  it("leaves bulk prediction on the packaged report for now", () => {
+  // --- The bulk prediction view ----------------------------------------------
+  it("shows the same report for a bulk prediction run", () => {
     renderBulkPrediction();
 
-    expect(component.hasResultsReport()).toBeFalse();
-    expect(resultsReport()).toBeNull();
+    expect(component.workflowName()).toBe("bulk prediction");
+    expect(component.hasResultsReport()).toBeTrue();
+    expect(resultsReport()).not.toBeNull();
+    expect(resultsService.getJobReport).not.toHaveBeenCalled();
+  });
+
+  it("hands that view the normalised bulk workflow and its tool", () => {
+    renderBulkPrediction();
+    const report = resultsReport().componentInstance;
+
+    expect(report.workflow()).toBe("bulk prediction");
+    expect(report.tool()).toBe("Colabfold");
+    expect(report.runId()).toBe(bulkPredictionJob.id);
   });
 
   it("falls back to the packaged report when the de novo view cannot render", () => {

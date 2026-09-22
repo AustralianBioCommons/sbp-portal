@@ -77,7 +77,9 @@ export interface JobResultsAdapter {
   panelHeading: string;
   /** Shown instead of the report when the run ranked nothing. */
   emptyMessage: string;
-  /** Colour key above the viewer, in display order. */
+  /** Viewer palette; `binder-target` by default. `plddt` ignores `legend`. */
+  colorTheme?: "binder-target" | "plddt";
+  /** Colour key above the viewer, in display order. Empty under `plddt`. */
   legend: readonly ReportLegendBand[];
   /**
    * Whether rows are variants of one complex, so the viewer can line them up
@@ -109,6 +111,16 @@ export interface JobResultsAdapter {
     sources?: ReportSources
   ): ReportRow[];
 }
+
+/** Shown by both de novo design tools when the ranker kept nothing. */
+export const NO_DESIGNS_MESSAGE =
+  "No designs passed in silico quality control criteria. Consider choosing " +
+  "different hotspots or increasing the number of trajectories.";
+
+/** Shown by both WISPS workflows when the score filter kept nothing. */
+export const NO_HIGH_CONFIDENCE_MESSAGE =
+  "No high confidence interactions were identified. The scores for every " +
+  "sequence the run did evaluate are listed under the Files tab.";
 
 /** One workflow's tool can only mean one report, so both parts key the map. */
 function adapterKey(workflow: string, tool: string): string {

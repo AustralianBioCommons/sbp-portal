@@ -14,11 +14,10 @@
   </div>
   } @else if (loading()) {
   <app-loading message="Loading results..." [inline]="true"></app-loading>
-  } @else if (missingArtifacts().length > 0) {
+  } @else if (missingStructure()) {
   <p class="text-sm text-gray-900 wrap-break-word">
-    This run is missing {{ missingArtifacts().join(" and ") }}, so the structure
-    and PAE view cannot be shown. The individual output files are listed under
-    the Files tab.
+    This run is missing a structure file (.cif/.pdb), so the results cannot be
+    shown. The individual output files are listed under the Files tab.
   </p>
   } @else {
   <div class="space-y-12">
@@ -56,22 +55,7 @@
           <p class="wrap-break-word">{{ structureError() }}</p>
         </div>
         } @else {
-        <!-- Equal shares spanning the viewer; min-w-0 stops the labels sizing them. -->
-        <ul class="flex items-end gap-x-2">
-          @for (band of plddtLegend; track band.label) {
-          <li class="min-w-0 flex-1 space-y-2">
-            <p class="text-center text-xs text-gray-600">
-              <span class="font-medium text-gray-900">{{ band.label }}</span>
-              ({{ band.range }})
-            </p>
-            <div
-              class="h-2 rounded-full"
-              [style.background]="band.color"
-              aria-hidden="true"
-            ></div>
-          </li>
-          }
-        </ul>
+        <app-plddt-legend></app-plddt-legend>
 
         <div class="relative h-128 overflow-hidden rounded-lg border bg-white">
           <app-molstar-viewer

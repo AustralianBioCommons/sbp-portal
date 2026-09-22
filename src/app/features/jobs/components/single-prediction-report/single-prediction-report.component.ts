@@ -22,6 +22,7 @@ import {
   StructureSource,
 } from "../../../workflows/components/molstar-viewer/molstar-viewer.component";
 import { ChainMatrixComponent } from "../chain-matrix/chain-matrix.component";
+import { PlddtLegendComponent } from "../plddt-legend/plddt-legend.component";
 import { MsaCoverageComponent } from "../msa-coverage/msa-coverage.component";
 import { PaeMatrixComponent } from "../pae-matrix/pae-matrix.component";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
@@ -56,6 +57,7 @@ import {
     PaeMatrixComponent,
     MsaCoverageComponent,
     ChainMatrixComponent,
+    PlddtLegendComponent,
     LoadingComponent,
     TooltipComponent,
     NgIconComponent,
@@ -187,24 +189,16 @@ export class SinglePredictionReportComponent {
     "- Clear the selection with the (×) button in the corner of the block",
   ].join("\n");
 
-  /** Hexes taken from Mol*'s plddt-confidence theme, so the legend cannot drift. */
-  readonly plddtLegend = [
-    { label: "Very high", range: "pLDDT > 90", color: "#0053d6" },
-    { label: "High", range: "90 > pLDDT > 70", color: "#65cbf3" },
-    { label: "Low", range: "70 > pLDDT > 50", color: "#ffdb13" },
-    { label: "Very low", range: "pLDDT < 50", color: "#ff7d45" },
-  ];
-
   /** Hands the page over to the packaged report. A missing score does not count. */
   unavailable = output<void>();
 
+  /** Only the structure is fatal; an unusable PAE just reports itself in its panel. */
   readonly coreUnavailable = computed(
     () =>
       !this.loading() &&
       (!!this.filesError() ||
-        this.missingArtifacts().length > 0 ||
+        this.missingStructure() ||
         !!this.structureError() ||
-        !!this.paeError() ||
         this.tokenMismatch())
   );
 
@@ -229,13 +223,11 @@ export class SinglePredictionReportComponent {
     return source ? countStructureTokens(source.content, source.format) : null;
   });
 
-  readonly missingArtifacts = computed(() => {
-    if (this.filesLoading() || this.filesError()) return [];
-    const missing: string[] = [];
-    if (!this.structureArtifact()) missing.push("a structure file (.cif/.pdb)");
-    if (!this.paeArtifact()) missing.push("a PAE matrix (*_pae_0.tsv)");
-    return missing;
-  });
+  /** Nothing to render without it. A missing PAE leaves the rest standing. */
+  readonly missingStructure = computed(
+    () =>
+      !this.filesLoading() && !this.filesError() && !this.structureArtifact()
+  );
 
   constructor() {
     effect(() => {
@@ -336,13 +328,14 @@ export class SinglePredictionReportComponent {
    */
   onViewerLoadError(): void {
     if (!this.structureSource()) return;
-    this.structureError.set("Failed to load the predicted structure file.");
+    this.structureError.set("Failed to load the structure file.");
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
 
-  /** `finalize` covers success, failure and unsubscribe, so the count cannot stick. */
-  private fetchText(runId: string, key: string): Observable<string> {
+  /** Counted into `pendingRequests`, so the view waits for every fetch. `finalize`
+   *  covers success, failure and unsubscribe, so the count cannot stick. */
+  private fetchCounted(runId: string, key: string): Observable<string> {
     this.pendingRequests.update((count) => count + 1);
     return this.resultsService.getResultFileText(runId, key).pipe(
       takeUntilDestroyed(this.destroyRef),
@@ -362,14 +355,12 @@ export class SinglePredictionReportComponent {
     this.residueIndex.set([]);
     this.indexReported.set(false);
 
-    this.fetchText(runId, key)
+    this.fetchCounted(runId, key)
       .pipe(
         catchError((err) => {
           console.error("Error loading structure file:", err);
           if (request === this.structureRequest) {
-            this.structureError.set(
-              "Failed to load the predicted structure file."
-            );
+            this.structureError.set("Failed to load the structure file.");
           }
           return EMPTY;
         })
@@ -388,7 +379,7 @@ export class SinglePredictionReportComponent {
     this.msaError.set(null);
     this.msaCoverage.set(null);
 
-    this.fetchText(runId, key)
+    this.fetchCounted(runId, key)
       .pipe(
         catchError((err) => {
           console.error("Error loading the MSA:", err);
@@ -417,7 +408,7 @@ export class SinglePredictionReportComponent {
     target: WritableSignal<ChainPairScore[]>,
     current: () => ResultFileRef | null
   ): void {
-    this.fetchText(runId, key)
+    this.fetchCounted(runId, key)
       .pipe(
         catchError((err) => {
           console.warn(`Could not load per-chain scores from ${key}:`, err);
@@ -439,7 +430,7 @@ export class SinglePredictionReportComponent {
   ): void {
     const target = metric === "ptm" ? this.ptm : this.iptm;
 
-    this.fetchText(runId, key)
+    this.fetchCounted(runId, key)
       .pipe(
         catchError((err) => {
           console.warn(`Could not load the ${metric} score:`, err);
@@ -460,7 +451,7 @@ export class SinglePredictionReportComponent {
     this.paeError.set(null);
     this.paeMatrix.set(null);
 
-    this.fetchText(runId, key)
+    this.fetchCounted(runId, key)
       .pipe(
         catchError((err) => {
           console.error("Error loading PAE matrix:", err);

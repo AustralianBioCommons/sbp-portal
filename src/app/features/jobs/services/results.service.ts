@@ -5,11 +5,6 @@ import normalizeUrlPath from "als-normalize-urlpath";
 import { map, Observable } from "rxjs";
 import { environment } from "../../../../environments/environment";
 
-interface ResultReportPreviewResponse {
-  runId: string;
-  url: string;
-}
-
 export interface ResultDownloadItem {
   label: string;
   key: string;
@@ -203,19 +198,6 @@ export class ResultsService {
             return null;
           }
           return this.getSafeReportResourceUrl(response.report.url);
-        })
-      );
-  }
-
-  getJobReportResourceUrl(runId: string): Observable<SafeResourceUrl> {
-    return this.http
-      .post<ResultReportPreviewResponse>(
-        `${this.getJobReportUrl(runId)}/preview`,
-        {}
-      )
-      .pipe(
-        map((response) => {
-          return this.getSafeReportResourceUrl(response.url);
         })
       );
   }

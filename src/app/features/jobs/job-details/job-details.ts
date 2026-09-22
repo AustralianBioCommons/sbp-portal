@@ -17,8 +17,9 @@ import {
   heroArrowLeft,
   heroBookOpen,
   heroChartBarSquare,
-  heroCommandLine,
   heroCog6Tooth,
+  heroCommandLine,
+  heroExclamationCircle,
   heroExclamationTriangle,
   heroFolder,
   heroTrash,
@@ -89,6 +90,13 @@ const ALLOWED_SETTING_KEYS_BY_WORKFLOW: Record<string, Set<string>> = {
   ]),
 };
 
+/** Workflows the shared job results report renders; single prediction has its own. */
+const RESULTS_REPORT_WORKFLOWS = new Set([
+  "de novo design",
+  "interaction screening",
+  "bulk prediction",
+]);
+
 /** Workflows whose form is plain text (no file to browse for) — the raw FASTA
  *  is submitted directly, so it's shown inline. Older jobs submitted before
  *  fastaContent existed fall back to the fastaS3Uri download link. */
@@ -134,8 +142,9 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
       heroArrowLeft,
       heroBookOpen,
       heroChartBarSquare,
-      heroCommandLine,
       heroCog6Tooth,
+      heroCommandLine,
+      heroExclamationCircle,
       heroExclamationTriangle,
       heroFolder,
       heroTrash,
@@ -185,26 +194,16 @@ export default class JobDetailsComponent implements OnInit {
       !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
   );
 
+  /** Normalised name; also what picks the report's adapter, alongside the tool. */
+  workflowName = computed(() => normalizeWorkflowName(this.job()?.workflow));
+
   isSinglePrediction = computed(
-    () => normalizeWorkflowName(this.job()?.workflow) === "single prediction"
+    () => this.workflowName() === "single prediction"
   );
 
-  isDeNovoDesign = computed(
-    () => normalizeWorkflowName(this.job()?.workflow) === "de novo design"
+  hasResultsReport = computed(() =>
+    RESULTS_REPORT_WORKFLOWS.has(this.workflowName())
   );
-
-  isInteractionScreening = computed(
-    () =>
-      normalizeWorkflowName(this.job()?.workflow) === "interaction screening"
-  );
-
-  /** Workflows the shared job results report can render. */
-  hasResultsReport = computed(
-    () => this.isDeNovoDesign() || this.isInteractionScreening()
-  );
-
-  /** What picks the report's adapter, alongside the job's tool. */
-  reportWorkflow = computed(() => normalizeWorkflowName(this.job()?.workflow));
 
   // Categories the backend bundles as one zip instead of listing individually.
   zipCategories = signal<string[]>([]);
@@ -770,7 +769,7 @@ export default class JobDetailsComponent implements OnInit {
       return [];
     }
 
-    const workflowName = normalizeWorkflowName(this.job()?.workflow);
+    const workflowName = this.workflowName();
     const allowedKeys = ALLOWED_SETTING_KEYS_BY_WORKFLOW[workflowName];
 
     const fastaContentValue = settingParams["fastaContent"];

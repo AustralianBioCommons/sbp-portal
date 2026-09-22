@@ -969,4 +969,93 @@ describe("JobResultsReportComponent", () => {
       );
     });
   });
+  // ── Bulk prediction ────────────────────────────────────────────────────────
+
+  describe("a bulk prediction run", () => {
+    const BP_CSV = `${RUN}/collect/boltz_confidence_scores_full.csv`;
+    const BP_CIF = `${RUN}/boltz_predictions/cif/protein1_model_0.cif`;
+
+    const bpFiles: ResultFileRef[] = [
+      {
+        key: BP_CSV,
+        label: "boltz_confidence_scores_full.csv",
+        url: `https://s3.test/${BP_CSV}`,
+        category: "stats_csv",
+      },
+      {
+        key: BP_CIF,
+        label: "protein1_model_0.cif",
+        url: `https://s3.test/${BP_CIF}`,
+        category: "pdb",
+      },
+    ];
+
+    // Two sequences scored, one kept: the score filter dropped the other.
+    const bpCsv = [
+      "id,model_input_id,iptm,ptm,int_chain_map,str_chain_map",
+      "protein1,protein1,,0.91,0:1,A:B",
+      "protein2,protein2,,0.12,0:1,A:B",
+    ].join("\n");
+
+    const renderBp = (files = bpFiles) =>
+      render({ workflow: "bulk prediction", tool: "boltz", files });
+
+    it("lists only the sequences a structure was published for", () => {
+      respondWith({ [BP_CSV]: bpCsv, [BP_CIF]: PDB });
+      renderBp();
+
+      expect(component.rows().map((row) => row.id)).toEqual(["protein1"]);
+      expect(component.columns().map((column) => column.heading)).toEqual([
+        "Query ID",
+        "Target ID",
+        "pTM",
+      ]);
+    });
+
+    it("previews the row's own structure file", () => {
+      respondWith({ [BP_CSV]: bpCsv, [BP_CIF]: PDB });
+      renderBp();
+
+      expect(resultsService.getResultFileText).toHaveBeenCalledWith(
+        RUN,
+        BP_CIF
+      );
+      expect(viewer()!.structureSource()?.content).toBe(PDB);
+      expect(viewer()!.structureSource()?.format).toBe("mmcif");
+    });
+
+    it("colours by confidence, and keys the viewer on pLDDT", () => {
+      respondWith({ [BP_CSV]: bpCsv, [BP_CIF]: PDB });
+      renderBp();
+
+      expect(viewer()!.colorTheme()).toBe("plddt");
+      expect(component.chainLegend()).toEqual([]);
+      const key = fixture.nativeElement.textContent as string;
+      expect(key).toContain("Very high");
+      expect(key).toContain("pLDDT < 50");
+    });
+
+    it("says so, without failing, when nothing passed the score filter", () => {
+      respondWith({ [BP_CSV]: bpCsv });
+      renderBp([bpFiles[0]]);
+
+      expect(component.rows()).toEqual([]);
+      expect(component.resultsError()).toBeNull();
+      expect(component.noResultsAvailable()).toBeTrue();
+      expect(fixture.nativeElement.textContent).toContain(
+        "No high confidence interactions were identified."
+      );
+    });
+
+    it("says the same when the run published no scores table at all", () => {
+      respondWith({});
+      renderBp([]);
+
+      expect(component.resultsError()).toBeNull();
+      expect(component.noResultsAvailable()).toBeTrue();
+      expect(fixture.nativeElement.textContent).toContain(
+        "No high confidence interactions were identified."
+      );
+    });
+  });
 });

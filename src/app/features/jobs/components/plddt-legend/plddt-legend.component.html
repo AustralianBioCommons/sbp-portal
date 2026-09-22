@@ -1,0 +1,15 @@
+<ul class="flex items-end gap-x-2">
+  @for (band of bands; track band.label) {
+  <li class="min-w-0 flex-1 space-y-2">
+    <p class="text-center text-xs text-gray-600">
+      <span class="font-medium text-gray-900">{{ band.label }}</span>
+      ({{ band.range }})
+    </p>
+    <div
+      class="h-2 rounded-full"
+      [style.background]="band.color"
+      aria-hidden="true"
+    ></div>
+  </li>
+  }
+</ul>
