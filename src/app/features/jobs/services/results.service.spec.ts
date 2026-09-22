@@ -194,6 +194,40 @@ describe("ResultsService", () => {
     );
   });
 
+  it("should read one result file as text", () => {
+    service
+      .getResultFileText("job/1", "run/collect/scores.csv")
+      .subscribe((body) => expect(body).toBe("id,ptm\nseq1,0.91\n"));
+
+    const req = httpMock.expectOne(
+      (request) =>
+        request.url === `${environment.apiBaseUrl}/api/results/job%2F1/file` &&
+        request.params.get("key") === "run/collect/scores.csv"
+    );
+    expect(req.request.method).toBe("GET");
+    expect(req.request.responseType).toBe("text");
+    req.flush("id,ptm\nseq1,0.91\n");
+  });
+
+  it("should build the encoded download-category URL", () => {
+    expect(service.getDownloadCategoryUrl("job/1", "pdb files")).toBe(
+      `${environment.apiBaseUrl}/api/results/job%2F1/download-category/pdb%20files`
+    );
+  });
+
+  it("should download one category as a blob", () => {
+    service
+      .downloadCategory("job/1", "pdb")
+      .subscribe((response) => expect(response.status).toBe(200));
+
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/download-category/pdb`
+    );
+    expect(req.request.method).toBe("GET");
+    expect(req.request.responseType).toBe("blob");
+    req.flush(new Blob(["zip"]));
+  });
+
   it("should fetch downloads", () => {
     service.getJobDownloads("job/1").subscribe((response) => {
       expect(response.downloads.length).toBe(1);
