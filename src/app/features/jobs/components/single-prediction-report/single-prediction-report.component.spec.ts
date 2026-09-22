@@ -508,19 +508,59 @@ describe("SinglePredictionReportComponent", () => {
     expect(component.structureError()).toBeNull();
   });
 
-  // --- Token index vs matrix size -------------------------------------------
+  // --- Superseded responses -------------------------------------------------
 
-  it("accepts an index that lines up with the matrix", () => {
-    const unavailable = jasmine.createSpy("unavailable");
+  it("drops a PAE response for a matrix the run has moved off", () => {
+    const stale = new Subject<string>();
+    resultsService.getResultFileText.and.callFake((_runId, key) =>
+      key === PAE_KEY ? stale.asObservable() : of(STRUCTURE_TEXT)
+    );
     render();
-    component.unavailable.subscribe(unavailable);
 
-    component.onResidueIndexDetected(residues);
+    // A second PAE artifact supersedes the first before it answers.
+    const nextPae: ResultFileRef = {
+      label: "sample_1_pae.tsv",
+      key: "run-1/boltz/sample/paes/sample_1_pae.tsv",
+      url: "https://s3.test/sample_1_pae.tsv?sig=1",
+      category: "stats_csv",
+    };
+    resultsService.getResultFileText.and.callFake((_runId, key) =>
+      key === nextPae.key ? of(PAE_TSV) : of(STRUCTURE_TEXT)
+    );
+    fixture.componentRef.setInput("files", [files[0], nextPae]);
     fixture.detectChanges();
 
-    expect(component.tokenMismatch()).toBeFalse();
-    expect(unavailable).not.toHaveBeenCalled();
+    stale.next("9\t9\n9\t9\n");
+    stale.complete();
+    fixture.detectChanges();
+
+    // The live matrix stands; the superseded body is ignored.
+    expect(component.paeMatrix()?.size).toBe(3);
+    expect(component.paeError()).toBeNull();
   });
+
+  it("drops an alignment response for a file the run has moved off", () => {
+    const stale = new Subject<string>();
+    resultsService.getResultFileText.and.callFake((_runId, key) => {
+      if (key === MSA_KEY) return stale.asObservable();
+      if (key === PAE_KEY) return of(PAE_TSV);
+      return of(STRUCTURE_TEXT);
+    });
+    render([...files, msaFile]);
+
+    // Drop the alignment from the run before its body arrives.
+    fixture.componentRef.setInput("files", files);
+    fixture.detectChanges();
+
+    stale.next("not an alignment");
+    stale.complete();
+    fixture.detectChanges();
+
+    expect(component.msaCoverage()).toBeNull();
+    expect(component.msaError()).toBeNull();
+  });
+
+  // --- Token index vs matrix size -------------------------------------------
 
   const cif = (rows: string[]) =>
     [
@@ -549,85 +589,16 @@ describe("SinglePredictionReportComponent", () => {
     return unavailable;
   };
 
-  it("falls back on the first render when the counts disagree", () => {
+  // The matrix panel detects a size mismatch itself: it warns, and refuses
+  // selection, so the structure beside it is still worth showing.
+  it("keeps the structure when the matrix size disagrees with it", () => {
     const unavailable = renderWithStructure(
       cif(["ATOM 1 CA MET 1 A", "ATOM 2 CA GLY 2 A"])
     );
 
-    expect(component.residueIndex()).toEqual([]);
-    expect(component.tokenMismatch()).toBeTrue();
-    expect(unavailable).toHaveBeenCalled();
-  });
-
-  it("keeps a run whose ligand atoms make up the matrix", () => {
-    const unavailable = renderWithStructure(
-      cif(["ATOM 1 CA MET 1 A", "HETATM 2 C7 LIG 1 B", "HETATM 3 C8 LIG 1 B"])
-    );
-
-    expect(component.tokenMismatch()).toBeFalse();
+    expect(component.structureSource()).not.toBeNull();
+    expect(component.paeMatrix()?.size).toBe(3);
+    expect(component.coreUnavailable()).toBeFalse();
     expect(unavailable).not.toHaveBeenCalled();
-  });
-
-  it("accepts a plain polymer run counted from the file", () => {
-    const unavailable = renderWithStructure(
-      cif(["ATOM 1 CA MET 1 A", "ATOM 2 CA GLY 2 A", "ATOM 3 CA SER 3 A"])
-    );
-
-    expect(component.tokenMismatch()).toBeFalse();
-    expect(unavailable).not.toHaveBeenCalled();
-  });
-
-  it("gives up the interactive view when a ligand leaves the index short", () => {
-    const unavailable = jasmine.createSpy("unavailable");
-    render();
-    component.unavailable.subscribe(unavailable);
-
-    // A ligand is scored per atom, so the 3x3 matrix outruns two residues.
-    component.onResidueIndexDetected(residues.slice(0, 2));
-    fixture.detectChanges();
-
-    expect(component.tokenMismatch()).toBeTrue();
-    expect(component.coreUnavailable()).toBeTrue();
-    expect(unavailable).toHaveBeenCalled();
-  });
-
-  it("gives up when a ligand-only run reports one entry per residue", () => {
-    const unavailable = jasmine.createSpy("unavailable");
-    render();
-    component.unavailable.subscribe(unavailable);
-
-    // A single ligand residue against a matrix of per-atom tokens.
-    component.onResidueIndexDetected([{ chain: "B", seq: 1 }]);
-    fixture.detectChanges();
-
-    expect(component.tokenMismatch()).toBeTrue();
-    expect(unavailable).toHaveBeenCalled();
-  });
-
-  it("waits for the viewer's index before judging the matrix", () => {
-    const unavailable = jasmine.createSpy("unavailable");
-    render();
-    component.unavailable.subscribe(unavailable);
-    fixture.detectChanges();
-
-    // An index that has not arrived yet is not a mismatch.
-    expect(component.paeMatrix()).not.toBeNull();
-    expect(component.residueIndex()).toEqual([]);
-    expect(component.tokenMismatch()).toBeFalse();
-    expect(unavailable).not.toHaveBeenCalled();
-  });
-
-  it("re-checks the index when the run changes", () => {
-    render();
-    component.onResidueIndexDetected(residues);
-    expect(component.tokenMismatch()).toBeFalse();
-
-    fixture.componentRef.setInput("runId", "run-2");
-    fixture.detectChanges();
-
-    // A new structure load clears the index until the viewer reports again.
-    expect(component.tokenMismatch()).toBeFalse();
-    component.onResidueIndexDetected(residues.slice(0, 1));
-    expect(component.tokenMismatch()).toBeTrue();
   });
 });

@@ -40,7 +40,7 @@ export const BOLTZ_LAYOUT: StructureLayout = {
 
 export const COLABFOLD_LAYOUT: StructureLayout = {
   directory: "/colabfold_predictions/pdb/",
-  pattern: /^(.+?)_unrelaxed_rank_(\d+)(?:_.*)?\.pdb$/i,
+  pattern: /^(.+)_unrelaxed_rank_(\d+)(?:_.*)?\.pdb$/i,
   format: "pdb",
 };
 

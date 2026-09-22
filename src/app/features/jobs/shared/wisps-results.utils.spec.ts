@@ -63,6 +63,22 @@ describe("wisps results utils", () => {
       expect([...structures.keys()]).toEqual(["seq1"]);
     });
 
+    it("keeps an id that holds the tool's own rank suffix", () => {
+      const pdb = file(
+        `${RUN}/colabfold_predictions/pdb/my_unrelaxed_rank_001_unrelaxed_rank_001_alphafold2_ptm_model_3_seed_000.pdb`
+      );
+      const structures = findWispsStructures([pdb], COLABFOLD_LAYOUT);
+
+      expect([...structures.keys()]).toEqual(["my_unrelaxed_rank_001"]);
+    });
+
+    it("keeps a Boltz id that holds the tool's own model suffix", () => {
+      const cif = file(`${RUN}/boltz_predictions/cif/seq_model_1_model_0.cif`);
+      const structures = findWispsStructures([cif], BOLTZ_LAYOUT);
+
+      expect([...structures.keys()]).toEqual(["seq_model_1"]);
+    });
+
     it("ignores files published outside the tool's own folder", () => {
       const stray = file(`${RUN}/other/seq1_model_0.cif`);
       expect(findWispsStructures([stray], BOLTZ_LAYOUT).size).toBe(0);

@@ -36,7 +36,6 @@ import {
   ResidueRef,
   ResultFileRef,
   buildChainPairMatrix,
-  countStructureTokens,
   findChainwiseArtifact,
   findMetricArtifact,
   findMsaArtifact,
@@ -91,8 +90,6 @@ export class SinglePredictionReportComponent {
   );
 
   readonly residueIndex = signal<ResidueRef[]>([]);
-  /** The viewer reports its index after the structure loads, not before. */
-  private readonly indexReported = signal(false);
   readonly selectedIndices = signal<number[]>([]);
   /** Fresh object each request so an identical selection still re-applies. */
   readonly viewerSelectionRequest = signal<{ tokens: string } | null>(null);
@@ -198,30 +195,8 @@ export class SinglePredictionReportComponent {
       !this.loading() &&
       (!!this.filesError() ||
         this.missingStructure() ||
-        !!this.structureError() ||
-        this.tokenMismatch())
+        !!this.structureError())
   );
-
-  /**
-   * The matrix and structure have different token counts, which would offset labels
-   * and highlights. Use the structure count while loading, with the viewer index as
-   * a backstop.
-   */
-  readonly tokenMismatch = computed(() => {
-    const matrix = this.paeMatrix();
-    if (!matrix) return false;
-
-    const counted = this.expectedTokens();
-    if (counted !== null && counted !== matrix.size) return true;
-
-    return this.indexReported() && this.residueIndex().length !== matrix.size;
-  });
-
-  /** Rows implied by the structure, or null if they can't be counted. */
-  private readonly expectedTokens = computed(() => {
-    const source = this.structureSource();
-    return source ? countStructureTokens(source.content, source.format) : null;
-  });
 
   /** Nothing to render without it. A missing PAE leaves the rest standing. */
   readonly missingStructure = computed(
@@ -318,7 +293,6 @@ export class SinglePredictionReportComponent {
 
   onResidueIndexDetected(residues: ResidueRef[]): void {
     this.residueIndex.set(residues);
-    this.indexReported.set(true);
   }
 
   /**
@@ -353,7 +327,6 @@ export class SinglePredictionReportComponent {
     this.structureError.set(null);
     this.structureSource.set(null);
     this.residueIndex.set([]);
-    this.indexReported.set(false);
 
     this.fetchCounted(runId, key)
       .pipe(
