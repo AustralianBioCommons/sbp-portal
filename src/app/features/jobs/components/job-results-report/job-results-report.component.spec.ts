@@ -1043,7 +1043,7 @@ describe("JobResultsReportComponent", () => {
       expect(component.resultsError()).toBeNull();
       expect(component.noResultsAvailable()).toBeTrue();
       expect(fixture.nativeElement.textContent).toContain(
-        "No high confidence interactions were identified."
+        "No high confidence predictions were identified."
       );
     });
 
@@ -1054,7 +1054,7 @@ describe("JobResultsReportComponent", () => {
       expect(component.resultsError()).toBeNull();
       expect(component.noResultsAvailable()).toBeTrue();
       expect(fixture.nativeElement.textContent).toContain(
-        "No high confidence interactions were identified."
+        "No high confidence predictions were identified."
       );
     });
   });

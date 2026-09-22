@@ -9,7 +9,7 @@ import {
   ReportSources,
   JobResultsAdapter,
   parseCsvTable,
-  NO_HIGH_CONFIDENCE_MESSAGE,
+  NO_INTERACTIONS_MESSAGE,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
@@ -313,7 +313,7 @@ function interactionAdapter(
     // WISPS writes the query first and the target second, for every pair.
     primaryChainId: "A",
     panelHeading: "Interactions",
-    emptyMessage: NO_HIGH_CONFIDENCE_MESSAGE,
+    emptyMessage: NO_INTERACTIONS_MESSAGE,
     legend: [
       { label: "Query", band: "primary" },
       { label: "Target", band: "secondary" },

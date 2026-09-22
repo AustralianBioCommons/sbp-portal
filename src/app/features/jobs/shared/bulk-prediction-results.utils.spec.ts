@@ -3,7 +3,7 @@ import {
   bulkPredictionColabFoldAdapter,
 } from "./bulk-prediction-results.utils";
 import {
-  NO_HIGH_CONFIDENCE_MESSAGE,
+  NO_PREDICTIONS_MESSAGE,
   getJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef } from "./prediction-results.utils";
@@ -142,7 +142,7 @@ describe("bulk prediction results utils", () => {
 
     it("says nothing passed when the run published no structures", () => {
       expect(bulkPredictionBoltzAdapter.emptyMessage).toBe(
-        NO_HIGH_CONFIDENCE_MESSAGE
+        NO_PREDICTIONS_MESSAGE
       );
     });
   });

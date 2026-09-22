@@ -4,7 +4,7 @@ import {
   interactionScreeningColabFoldAdapter,
 } from "./interaction-screening-results.utils";
 import {
-  NO_HIGH_CONFIDENCE_MESSAGE,
+  NO_INTERACTIONS_MESSAGE,
   getJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef } from "./prediction-results.utils";
@@ -357,7 +357,7 @@ describe("interaction screening results utils", () => {
 
     it("says so when nothing passed the score filter", () => {
       expect(interactionScreeningBoltzAdapter.emptyMessage).toBe(
-        NO_HIGH_CONFIDENCE_MESSAGE
+        NO_INTERACTIONS_MESSAGE
       );
     });
 

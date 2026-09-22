@@ -3,7 +3,7 @@ import {
   ReportRow,
   JobResultsAdapter,
   parseCsvTable,
-  NO_HIGH_CONFIDENCE_MESSAGE,
+  NO_PREDICTIONS_MESSAGE,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef } from "./prediction-results.utils";
@@ -78,7 +78,7 @@ function bulkPredictionAdapter(
     resultsFileName: WISPS_RESULTS_SUFFIX,
     primaryChainId: "A",
     panelHeading: "Predictions",
-    emptyMessage: NO_HIGH_CONFIDENCE_MESSAGE,
+    emptyMessage: NO_PREDICTIONS_MESSAGE,
     colorTheme: "plddt",
     // The pLDDT key replaces a per-chain one.
     legend: [],

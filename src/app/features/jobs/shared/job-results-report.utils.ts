@@ -117,10 +117,14 @@ export const NO_DESIGNS_MESSAGE =
   "No designs passed in silico quality control criteria. Consider choosing " +
   "different hotspots or increasing the number of trajectories.";
 
-/** Shown by both WISPS workflows when the score filter kept nothing. */
-export const NO_HIGH_CONFIDENCE_MESSAGE =
-  "No high confidence interactions were identified. The scores for every " +
-  "sequence the run did evaluate are listed under the Files tab.";
+const SCORES_IN_FILES =
+  "Scores for everything the run evaluated are listed under the Files tab.";
+
+/** Interaction screening: the score filter kept no pairs. */
+export const NO_INTERACTIONS_MESSAGE = `No high confidence interactions were identified. ${SCORES_IN_FILES}`;
+
+/** Bulk prediction: the score filter kept no structures. */
+export const NO_PREDICTIONS_MESSAGE = `No high confidence predictions were identified. ${SCORES_IN_FILES}`;
 
 /** One workflow's tool can only mean one report, so both parts key the map. */
 function adapterKey(workflow: string, tool: string): string {
