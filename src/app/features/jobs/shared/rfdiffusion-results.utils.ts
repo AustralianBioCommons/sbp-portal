@@ -207,3 +207,7 @@ export const rfDiffusionAdapter: JobResultsAdapter = {
 };
 
 registerJobResultsAdapter(rfDiffusionAdapter);
+// BindCraft now runs through the same ProteinDJ-based pipeline as RFdiffusion,
+// so its output is identical (same CSV, PDB naming and chain layout) — reuse
+// this adapter rather than maintaining a second, now-stale one.
+registerJobResultsAdapter({ ...rfDiffusionAdapter, tool: "bindcraft" });

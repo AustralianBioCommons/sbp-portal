@@ -39,34 +39,38 @@ class MolstarViewerStubComponent {
 }
 
 const RUN = "11111111-2222-4333-8444-555555555555";
-const STATS_KEY = `${RUN}/ranker/demo-binder_final_design_stats.csv`;
-const RANKED = `${RUN}/ranker/demo-binder_Ranked`;
+// BindCraft now runs through the same ProteinDJ pipeline as RFdiffusion, so
+// both tools share this results format (see rfdiffusion-results.utils.ts).
+const STATS_KEY = `${RUN}/results/ranked_designs.csv`;
+const RANKED = `${RUN}/results/ranked_designs`;
 
 const files: ResultFileRef[] = [
   {
-    label: "demo-binder_final_design_stats.csv",
+    label: "ranked_designs.csv",
     key: STATS_KEY,
-    url: "https://s3.test/stats.csv?sig=1",
+    url: "https://s3.test/ranked_designs.csv?sig=1",
     category: "stats_csv",
   },
   {
-    label: "1_demo-binder_l135_s866737_mpnn3_model1.pdb",
-    key: `${RANKED}/1_demo-binder_l135_s866737_mpnn3_model1.pdb`,
+    label: "1_fold_3_seq_0_af2pred.pdb",
+    key: `${RANKED}/1_fold_3_seq_0_af2pred.pdb`,
     url: "https://s3.test/1.pdb?sig=1",
     category: "pdb",
   },
   {
-    label: "2_demo-binder_l135_s866737_mpnn2_model1.pdb",
-    key: `${RANKED}/2_demo-binder_l135_s866737_mpnn2_model1.pdb`,
+    label: "2_fold_0_seq_1_af2pred.pdb",
+    key: `${RANKED}/2_fold_0_seq_1_af2pred.pdb`,
     url: "https://s3.test/2.pdb?sig=1",
     category: "pdb",
   },
 ];
 
+// Columns as the real ranked_designs.csv writes them.
 const statsCsv =
-  "Rank,Design,Length,Sequence,Average_i_pTM\n" +
-  "1,demo-binder_l135_s866737_mpnn3,135,GEMGVHDFLL,0.85\n" +
-  "2,demo-binder_l135_s866737_mpnn2,135,GVMSVYDFLL,0.85\n";
+  "rank,description,fold_id,seq_id,af2_pae_interaction,af2_iptm," +
+  "af2_plddt_overall,af2_plddt_binder,seq_length,sequence\n" +
+  "1,fold_3_seq_0_af2pred,3,0,27.06,0.13,91.3,87.18,135,GEMGVHDFLL\n" +
+  "2,fold_0_seq_1_af2pred,0,1,27.15,0.11,88.1,72.52,135,GVMSVYDFLL\n";
 
 /** A CA line with the columns where the PDB format fixes them. */
 function ca(serial: number, chain: string, seq: number, x: number): string {
@@ -85,21 +89,21 @@ function ca(serial: number, chain: string, seq: number, x: number): string {
 }
 
 /**
- * BindCraft order: chain A is the target, chain B the 2-residue binder.
- * `shift` moves the whole complex, as a fresh prediction would.
+ * ProteinDJ order: chain A is the binder, chain B the target. `shift` moves
+ * the whole complex, as a fresh prediction would.
  */
-function bindCraftPdb(shift = 0): string {
+function rankedDesignPdb(shift = 0): string {
   return [
     ca(1, "A", 1, 0 + shift),
     ca(2, "A", 2, 10 + shift),
-    ca(3, "A", 3, 20 + shift),
-    ca(4, "A", 4, 30 + shift),
-    ca(5, "B", 1, 5 + shift),
-    ca(6, "B", 2, 6 + shift),
+    ca(3, "B", 1, 20 + shift),
+    ca(4, "B", 2, 30 + shift),
+    ca(5, "B", 3, 5 + shift),
+    ca(6, "B", 4, 6 + shift),
   ].join("\n");
 }
 
-const PDB = bindCraftPdb();
+const PDB = rankedDesignPdb();
 
 describe("JobResultsReportComponent", () => {
   let fixture: ComponentFixture<JobResultsReportComponent>;
@@ -156,8 +160,8 @@ describe("JobResultsReportComponent", () => {
     );
     respondWith({
       [STATS_KEY]: statsCsv,
-      [`${RANKED}/1_demo-binder_l135_s866737_mpnn3_model1.pdb`]: PDB,
-      [`${RANKED}/2_demo-binder_l135_s866737_mpnn2_model1.pdb`]: `${PDB}ATOM 2\n`,
+      [`${RANKED}/1_fold_3_seq_0_af2pred.pdb`]: PDB,
+      [`${RANKED}/2_fold_0_seq_1_af2pred.pdb`]: `${PDB}ATOM 2\n`,
     });
 
     await TestBed.configureTestingModule({
@@ -187,6 +191,7 @@ describe("JobResultsReportComponent", () => {
         .map((column) => column.heading)
     ).toEqual([
       "Rank",
+      "PAE Interaction",
       "ipTM",
       "Design Length",
       "Design Sequence",
@@ -207,8 +212,8 @@ describe("JobResultsReportComponent", () => {
 
     expect(viewer()!.colorTheme()).toBe("binder-target");
     expect(viewer()!.representation()).toBe("cartoon");
-    // BindCraft writes the target first, so chain B holds the binder.
-    expect(viewer()!.binderChainId()).toBe("B");
+    // ProteinDJ writes the binder first, so chain A holds it.
+    expect(viewer()!.binderChainId()).toBe("A");
   });
 
   it("names the legend after the target and the selected design", () => {
@@ -216,14 +221,14 @@ describe("JobResultsReportComponent", () => {
 
     expect(component.chainLegend().map((band) => band.label)).toEqual([
       "Target",
-      "demo-binder_l135_s866737_mpnn3",
+      "fold_3_seq_0_af2pred",
     ]);
     expect(component.chainLegend()[0].color).not.toBe(
       component.chainLegend()[1].color
     );
     const legend = fixture.nativeElement.textContent as string;
     expect(legend).toContain("Target");
-    expect(legend).toContain("demo-binder_l135_s866737_mpnn3");
+    expect(legend).toContain("fold_3_seq_0_af2pred");
   });
 
   it("renames the binder band as the selection changes", () => {
@@ -232,9 +237,7 @@ describe("JobResultsReportComponent", () => {
     table()!.rowSelected.emit(component.rows()[1]);
     fixture.detectChanges();
 
-    expect(component.chainLegend()[1].label).toBe(
-      "demo-binder_l135_s866737_mpnn2"
-    );
+    expect(component.chainLegend()[1].label).toBe("fold_0_seq_1_af2pred");
   });
 
   // --- Keeping the target still between selections ------------------------
@@ -242,7 +245,7 @@ describe("JobResultsReportComponent", () => {
   it("tells the viewer which chain the pipeline puts the binder on", () => {
     render();
 
-    expect(viewer()!.binderChainId()).toBe("B");
+    expect(viewer()!.binderChainId()).toBe("A");
     // The design's own length is what settles it when chains are ambiguous.
     expect(viewer()!.designLength()).toBe(135);
   });
@@ -278,7 +281,7 @@ describe("JobResultsReportComponent", () => {
 
     expect(resultsService.getResultFileText).toHaveBeenCalledWith(
       RUN,
-      `${RANKED}/2_demo-binder_l135_s866737_mpnn2_model1.pdb`
+      `${RANKED}/2_fold_0_seq_1_af2pred.pdb`
     );
     expect(viewer()!.structureSource()?.content).toContain("ATOM 2");
   });
@@ -719,7 +722,7 @@ describe("JobResultsReportComponent", () => {
   it("reports an empty structure file", () => {
     respondWith({
       [STATS_KEY]: statsCsv,
-      [`${RANKED}/1_demo-binder_l135_s866737_mpnn3_model1.pdb`]: "   ",
+      [`${RANKED}/1_fold_3_seq_0_af2pred.pdb`]: "   ",
     });
 
     render();

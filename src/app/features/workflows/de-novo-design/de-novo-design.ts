@@ -13,7 +13,6 @@ import {
   computed,
   inject,
   OnDestroy,
-  OnInit,
   Signal,
   signal,
 } from "@angular/core";
@@ -28,7 +27,7 @@ import { TooltipComponent } from "../../../components/tooltip/tooltip.component"
 import { MolstarViewerComponent } from "../components/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../components/length-range-slider/length-range-slider.component";
 
-import { filter, startWith, Subscription, take } from "rxjs";
+import { startWith, Subscription } from "rxjs";
 import { FormFieldComponent } from "../components/form-field/form-field.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
@@ -44,7 +43,6 @@ import { CreditSummaryComponent } from "../components/credit-summary/credit-summ
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
 import { DatasetUploadService } from "../services/dataset-upload.service";
 import { PdbUploadService } from "../services/pdb-upload.service";
-import { SchemaLoaderService } from "../services/schema-loader.service";
 import { InputSchemaField } from "../services/input-schema.service";
 import { getErrorMessage } from "../../../core/utils/error.utils";
 import {
@@ -59,6 +57,14 @@ interface ToolChip extends ToolOption {
 
 /** Both bindcraft and rfdiffusion only support up to this many hotspot residues. */
 const MAX_HOTSPOT_RESIDUES = 8;
+
+/** Overall bounds offered by the length-range slider. */
+const PDB_SEQUENCE_MIN = 65;
+const PDB_SEQUENCE_MAX = 150;
+
+/** Default binder length range, mirroring the bindflow pipeline's own defaults. */
+const DEFAULT_MIN_LENGTH = 65;
+const DEFAULT_MAX_LENGTH = 150;
 
 @Component({
   selector: "app-de-novo-design",
@@ -93,25 +99,16 @@ const MAX_HOTSPOT_RESIDUES = 8;
 })
 export default class DeNovoDesignComponent
   extends WorkflowPageBase
-  implements OnInit, OnDestroy
+  implements OnDestroy
 {
-  // // Make Object available in template
-  Object = Object;
-
   // Document reference (SSR-safe; avoids touching the global directly)
   private readonly document = inject(DOCUMENT);
-  // Schema loader service
-  public schemaLoader = inject(SchemaLoaderService);
   // Dataset upload service
   private datasetUploadService = inject(DatasetUploadService);
   // PDB upload service
   private pdbUploadService = inject(PdbUploadService);
 
   protected readonly workflowCategory = "de-novo-design" as const;
-
-  // Schema URLs for bindflow workflow
-  private readonly inputSchemaUrl =
-    "https://raw.githubusercontent.com/AustralianBioCommons/sbp-bindflow/refs/heads/dev/assets/schema_input.json";
 
   // Job Name (reactive form field)
   private readonly fb = inject(NonNullableFormBuilder);
@@ -134,28 +131,35 @@ export default class DeNovoDesignComponent
     return jobNameErrorMessage(this.form.controls.jobName.errors);
   }
 
-  // Form data and validation
-  formData = signal<Record<string, unknown>>({});
+  // Field-level validation errors, keyed by field name.
   formErrors = signal<{ [key: string]: string }>({});
+
+  getFieldError(fieldName: string): string | null {
+    return this.formErrors()[fieldName] || null;
+  }
+
+  hasFieldError(fieldName: string): boolean {
+    return this.getFieldError(fieldName) !== null;
+  }
+
+  /** Returns true when any field inside the collapsible config section has a validation error. */
+  hasConfigSectionErrors(): boolean {
+    if (this.hasJobNameError()) return true;
+    return (
+      this.hasFieldError("target_hotspot_residues") ||
+      this.hasFieldError("starting_pdb")
+    );
+  }
+
   readonly isFormValid = computed<boolean>(() => {
     this.jobName();
     if (this.form.controls.jobName.invalid) return false;
     if (Object.keys(this.formErrors()).length > 0) return false;
-    const rows = this.schemaLoader.inputRows();
-    if (rows.length === 0) return false;
-    const requiredFields = this.schemaLoader.requiredInputFields();
-    return rows.every((row) =>
-      requiredFields.every((field) => {
-        if (
-          field.name === "binder_name" ||
-          field.name === "id" ||
-          field.name === "chains"
-        )
-          return true;
-        const value = row.values[field.name];
-        return value !== undefined && value !== null && value !== "";
-      })
-    );
+    if (!this.startingPdb()) return false;
+    if (!this.targetHotspotResidues().trim()) return false;
+    const designs = this.numberOfDesigns();
+    if (!Number.isInteger(designs) || designs < 1) return false;
+    return true;
   });
 
   // Tools
@@ -196,10 +200,7 @@ export default class DeNovoDesignComponent
     return Array.isArray(params) && params.length > 0;
   });
 
-  // Step data inputs
   // Step 1: Input configuration
-  inputSequence = signal<string>("");
-  inputFileName = signal<string>("");
 
   /** Raw local File for the starting_pdb field – shown in Mol* viewer immediately.
    *  Actual upload to S3 is deferred until the user clicks Next. */
@@ -213,13 +214,46 @@ export default class DeNovoDesignComponent
    *  Used to skip re-upload when the user navigates Back then Next again. */
   private uploadedPdbFile = signal<File | null>(null);
 
-  /** Schema default max_length — drives the range slider upper bound. */
-  pdbSequenceLength = signal<number>(300);
-  /** Schema default min_length — drives the range slider lower bound. */
-  pdbSequenceMin = signal<number>(0);
+  /** Value submitted as `starting_pdb` — the local filename until upload,
+   *  then the S3 URI returned by the upload. */
+  startingPdb = signal<string>("");
 
   /** True while the PDB file is being uploaded to S3 on Next click. */
   isPdbUploading = signal(false);
+
+  /** Comma-separated chain+residue tokens, e.g. "A56,A57". */
+  targetHotspotResidues = signal<string>("");
+
+  /** Binder length range (residues). */
+  minLength = signal<number>(DEFAULT_MIN_LENGTH);
+  maxLength = signal<number>(DEFAULT_MAX_LENGTH);
+
+  /** Overall bounds offered by the length-range slider. */
+  readonly pdbSequenceMin = PDB_SEQUENCE_MIN;
+  readonly pdbSequenceLength = PDB_SEQUENCE_MAX;
+
+  /** Number of designs — mirrored into both max_trajectories and
+   *  number_of_final_designs (see onNumberOfDesignsChange). */
+  numberOfDesigns = signal<number>(1);
+
+  /** Static field descriptor for the hotspot residues input, rendered via app-form-field. */
+  readonly hotspotResiduesField: InputSchemaField = {
+    name: "target_hotspot_residues",
+    type: "string",
+    label: "Target Hotspot Residues",
+    required: true,
+  };
+
+  /** Static field descriptor for the number-of-designs input, shared by both
+   *  tools now that BindCraft generates exactly this many designs directly,
+   *  the same as RFDiffusion. */
+  readonly numberOfDesignsField: InputSchemaField = {
+    name: "max_trajectories",
+    type: "number",
+    label: "Number of Designs",
+    required: true,
+    validation: { integer: true, min: 1 },
+  };
 
   /** Default width (px) of the config panel when opened. */
   readonly defaultPanelWidth = 300;
@@ -292,34 +326,37 @@ export default class DeNovoDesignComponent
   }
 
   /** Called when user picks a .pdb file via the custom picker.
-   *  Sets the local viewer file and marks the form field value with the
+   *  Sets the local viewer file and marks the field value with the
    *  filename so required validation passes before the real upload. */
-  onPdbFilePicked(file: File, rowId: string): void {
+  onPdbFilePicked(file: File): void {
     const validation = this.pdbUploadService.validatePdbFile(file);
     if (!validation.valid) {
       this.showError(validation.error ?? "Invalid PDB file.");
       return;
     }
     // If replacing an existing file, clear only structure-derived fields;
-    // min_length, max_length, and pdbSequenceLength stay at schema defaults.
+    // min_length, max_length stay at their current values.
     if (this.localPdbFile()) {
-      this.updateRowValue(rowId, "target_hotspot_residues", "");
+      this.targetHotspotResidues.set("");
       this.programmaticViewerSelection.set("");
     }
     this.localPdbFile.set(file);
     // New file picked — reset upload tracking so Next will upload this file.
     this.uploadedPdbFile.set(null);
-    // Use filename as placeholder value so schema required-check passes.
-    this.updateRowValueWithValidation(rowId, "starting_pdb", file.name);
+    // Use filename as placeholder value so required validation passes.
+    this.startingPdb.set(file.name);
+    this.validateStartingPdbField();
   }
 
-  clearLocalPdb(rowId: string): void {
+  clearLocalPdb(): void {
     this.localPdbFile.set(null);
     this.uploadedPdbFile.set(null);
     this.pdbResidueMap.set(null);
     this.programmaticViewerSelection.set("");
-    this.updateRowValueWithValidation(rowId, "starting_pdb", "");
-    this.updateRowValueWithValidation(rowId, "target_hotspot_residues", "");
+    this.startingPdb.set("");
+    this.targetHotspotResidues.set("");
+    this.validateStartingPdbField();
+    this.validateHotspotResiduesField();
   }
 
   /** Receives the chain→residue map emitted by the Mol* viewer after it
@@ -379,85 +416,51 @@ export default class DeNovoDesignComponent
   /** Called when the user manually edits the target_hotspot_residues field.
    *  Updates the value, validates against the PDB, and pushes the new
    *  selection string to the Mol* viewer. */
-  onHotspotResiduesManualChange(rowId: string, value: unknown): void {
+  onHotspotResiduesManualChange(value: unknown): void {
     const residues = (value as string) ?? "";
-    this.updateRowValueWithValidation(
-      rowId,
-      "target_hotspot_residues",
-      residues
-    );
+    this.targetHotspotResidues.set(residues);
+    this.validateHotspotResiduesField();
     this.programmaticViewerSelection.set(residues);
   }
 
+  onLengthRangeChange(range: { min: number; max: number }): void {
+    this.minLength.set(range.min);
+    this.maxLength.set(range.max);
+  }
+
+  /** Called when the user edits the "Number of Designs" field. Mirrors the
+   *  value into bindflow's number_of_final_designs so the QC-pass target
+   *  never gates the run below the requested count — the run is bounded to
+   *  exactly this many, not an open-ended search for passing designs. */
+  onNumberOfDesignsChange(value: unknown): void {
+    const num = typeof value === "number" ? value : Number(value);
+    this.numberOfDesigns.set(Number.isFinite(num) ? num : 0);
+    this.validateNumberOfDesignsField();
+  }
+
+  /** Called when the user selects residues in the Mol* viewer. */
+  onResiduesSelected(residues: string): void {
+    this.targetHotspotResidues.set(residues);
+    this.validateHotspotResiduesField();
+  }
+
   onSequenceLengthDetected(count: number): void {
-    const rowId = this.schemaLoader.inputRows()[0]?.id;
-    if (!rowId) return;
-    const errorKey = `${rowId}_starting_pdb`;
     const currentErrors = this.formErrors();
     if (count < 50) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a larger structure.`,
+        starting_pdb: `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a larger structure.`,
       });
     } else if (count > 300) {
       this.formErrors.set({
         ...currentErrors,
-        [errorKey]: `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a smaller structure. Structures can be trimmed using PyMOL or ChimeraX to satisfy the size limit.`,
+        starting_pdb: `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a smaller structure. Structures can be trimmed using PyMOL or ChimeraX to satisfy the size limit.`,
       });
     } else {
       const updated = { ...currentErrors };
-      delete updated[errorKey];
+      delete updated["starting_pdb"];
       this.formErrors.set(updated);
     }
-  }
-
-  onLengthRangeChange(
-    rowId: string,
-    range: { min: number; max: number }
-  ): void {
-    this.updateRowValueWithValidation(rowId, "min_length", range.min);
-    this.updateRowValueWithValidation(rowId, "max_length", range.max);
-  }
-
-  /** Called when the user edits the "Number of Trajectories" field. Mirrors
-   *  the value into bindflow's number_of_final_designs so the QC-pass target
-   *  never gates the run below the requested trajectory count — the run is
-   *  bounded to exactly max_trajectories, not an open-ended search for
-   *  passing designs. */
-  onTrajectoryCountChange(rowId: string, value: unknown): void {
-    this.updateRowValueWithValidation(rowId, "max_trajectories", value);
-    this.updateRowValueWithValidation(rowId, "number_of_final_designs", value);
-  }
-
-  /** "Trajectories" is a BindCraft concept (retry until N pass QC, capped at
-   *  max_trajectories) — RFDiffusion has no such loop, it generates exactly
-   *  this many designs directly, so the shared field reads differently
-   *  per tool. */
-  trajectoryFieldLabel(): string {
-    return this.selectedTool() === "bindcraft"
-      ? "Number of Trajectories"
-      : "Number of Final Designs";
-  }
-
-  /** Returns the max_trajectories field with its label swapped for the
-   *  currently selected tool (see trajectoryFieldLabel). */
-  getTrajectoryField(field: InputSchemaField): InputSchemaField {
-    return { ...field, label: this.trajectoryFieldLabel() };
-  }
-
-  /** Called when the user selects residues in the Mol* viewer. */
-  onResiduesSelected(rowId: string, residues: string): void {
-    this.updateRowValueWithValidation(
-      rowId,
-      "target_hotspot_residues",
-      residues
-    );
-  }
-
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input?.files?.[0];
-    this.inputFileName.set(file ? file.name : "");
   }
 
   // Single-page form sections (rendered + tracked by app-workflow-form)
@@ -482,39 +485,11 @@ export default class DeNovoDesignComponent
 
   private subscription = new Subscription();
 
-  override ngOnInit() {
-    // Credit bootstrap lives in the base class.
-    super.ngOnInit();
-
-    // Wait for Auth0 to initialize before making HTTP requests
-    // Use take(1) and filter to only react once when loading is complete
-    this.subscription.add(
-      this.auth.isLoading$
-        .pipe(
-          filter((isLoading) => !isLoading),
-          take(1)
-        )
-        .subscribe(() => {
-          this.loadInputSchema();
-        })
-    );
-
-    // Fallback: If auth doesn't initialize within 5 seconds, load anyway
-    setTimeout(() => {
-      if (!this.schemaLoader.inputSchemaData()) {
-        console.log("Fallback: Loading schema without waiting for auth...");
-        this.loadInputSchema();
-      }
-    }, 5000);
-  }
-
-  /** Credit cost of the run: tool multiplier × number of trajectories. */
+  /** Credit cost of the run: tool multiplier × number of designs. */
   readonly creditCost = computed<number | null>(() => {
     const multiplier = this.toolMultipliers()[this.selectedTool()];
     if (multiplier == null) return null;
-    const rowId = this.schemaLoader.inputRows()[0]?.id;
-    if (!rowId) return null;
-    const count = this.getRowNumberValue(rowId, "max_trajectories", 0);
+    const count = this.numberOfDesigns();
     if (!Number.isInteger(count) || count < 1) return null;
     return multiplier * count;
   });
@@ -526,67 +501,54 @@ export default class DeNovoDesignComponent
     this.document.removeEventListener("mouseup", this.onDocumentMouseUp);
   }
 
-  loadInputSchema() {
-    this.schemaLoader.loadInputSchema(
-      this.inputSchemaUrl,
-      () => {
-        // Success callback: initialize form data
-        const defaultValues = this.schemaLoader.generateDefaultValues();
-
-        // max_trajectories is the user-facing "number of trajectories" dial;
-        // number_of_final_designs is mirrored to the same value so bindflow's
-        // QC-pass target never gates the run below the requested trajectory
-        // count (see onTrajectoryCountChange).
-        defaultValues["max_trajectories"] = 1;
-        defaultValues["number_of_final_designs"] = 1;
-
-        this.initializeFormData(defaultValues);
-
-        // Seed slider bounds from schema defaults so they never change with PDB load.
-        if (typeof defaultValues["max_length"] === "number") {
-          this.pdbSequenceLength.set(defaultValues["max_length"] as number);
-        }
-        if (typeof defaultValues["min_length"] === "number") {
-          this.pdbSequenceMin.set(defaultValues["min_length"] as number);
-        }
-
-        // Initialize table with one default row
-        this.schemaLoader.initializeDefaultRow(() => {
-          // After row is created, update it with default values
-          const rows = this.schemaLoader.inputRows();
-          if (rows.length > 0) {
-            const firstRowId = rows[0].id;
-            this.schemaLoader.updateRowValue(firstRowId, "max_trajectories", 1);
-            this.schemaLoader.updateRowValue(
-              firstRowId,
-              "number_of_final_designs",
-              1
-            );
-          }
-
-          // After row is created, sync to form data
-          this.syncRowsToFormData();
-        });
-      },
-      (error) => {
-        console.error("Failed to load schema:", error);
-      }
-    );
-  }
-
   protected validateAll(): void {
     this.form.markAllAsTouched();
-    this.validateAllRequiredFields();
-    for (const row of this.schemaLoader.inputRows()) {
-      this.validateRowField(row.id, "target_hotspot_residues");
+    this.validateStartingPdbField();
+    this.validateHotspotResiduesField();
+    this.validateNumberOfDesignsField();
+  }
+
+  private validateStartingPdbField(): void {
+    if (this.startingPdb()) return;
+    this.formErrors.set({
+      ...this.formErrors(),
+      starting_pdb: "Target PDB file is required",
+    });
+  }
+
+  validateHotspotResiduesField(): void {
+    const value = this.targetHotspotResidues();
+    const errors = { ...this.formErrors() };
+    if (!value.trim()) {
+      errors["target_hotspot_residues"] = "Target Hotspot Residues is required";
+    } else {
+      const customError = this.validateHotspotResidues(value);
+      if (customError) {
+        errors["target_hotspot_residues"] = customError;
+      } else {
+        delete errors["target_hotspot_residues"];
+      }
     }
+    this.formErrors.set(errors);
+  }
+
+  validateNumberOfDesignsField(): void {
+    const value = this.numberOfDesigns();
+    const errors = { ...this.formErrors() };
+    if (!Number.isInteger(value) || value < 1) {
+      errors[
+        "max_trajectories"
+      ] = `${this.numberOfDesignsField.label} must be a whole number of at least 1`;
+    } else {
+      delete errors["max_trajectories"];
+    }
+    this.formErrors.set(errors);
   }
 
   protected performSubmit(): void {
     const file = this.localPdbFile();
-    const rowId = this.schemaLoader.inputRows()[0]?.id;
 
-    if (file && rowId && file !== this.uploadedPdbFile()) {
+    if (file && file !== this.uploadedPdbFile()) {
       this.isPdbUploading.set(true);
       this.workflowSubmission.isSubmitting.set(true);
       this.subscription.add(
@@ -607,7 +569,7 @@ export default class DeNovoDesignComponent
                 response.fileId ??
                 response.fileName ??
                 file.name;
-              this.updateRowValueWithValidation(rowId, "starting_pdb", s3Uri);
+              this.startingPdb.set(s3Uri);
               this.uploadedPdbFile.set(file);
               this.isPdbUploading.set(false);
               this.doSubmitWorkflow();
@@ -645,26 +607,28 @@ export default class DeNovoDesignComponent
   }
 
   private doSubmitWorkflow(): void {
-    const rawFormData = this.getFormData();
-    const formData = {
-      ...rawFormData,
-      id: this.jobName(),
-      sample_id: this.jobName(),
-      binder_name: this.jobName(),
-      runName: this.jobName(),
+    const jobName = this.jobName();
+    const numberOfDesigns = this.numberOfDesigns();
+    const formData: Record<string, unknown> = {
+      id: jobName,
+      sample_id: jobName,
+      binder_name: jobName,
+      runName: jobName,
+      starting_pdb: this.startingPdb(),
+      target_hotspot_residues: this.targetHotspotResidues(),
+      min_length: this.minLength(),
+      max_length: this.maxLength(),
+      max_trajectories: numberOfDesigns,
+      number_of_final_designs: numberOfDesigns,
     };
 
     // BindCraft submits a target chain list derived from the selected hotspot
     // residues (deduplicated, e.g. "A12,A13" -> "A"). RFDiffusion doesn't take
     // a chains input at all, so it's omitted from the payload entirely.
-    const formDataRecord = formData as Record<string, unknown>;
     if (this.selectedTool() === "bindcraft") {
-      const hotspotResidues =
-        (formDataRecord["target_hotspot_residues"] as string) ?? "";
-      formDataRecord["chains"] =
-        this.extractChainsForSubmission(hotspotResidues);
-    } else {
-      delete formDataRecord["chains"];
+      formData["chains"] = this.extractChainsForSubmission(
+        this.targetHotspotResidues()
+      );
     }
 
     this.workflowSubmission.isSubmitting.set(true);
@@ -673,9 +637,7 @@ export default class DeNovoDesignComponent
     // the CSV-samplesheet-generating dataset upload and reuse the PDB's own S3
     // URI (already synced into formData.starting_pdb) as the launch's s3InputKey.
     if (this.selectedTool() === "rfdiffusion") {
-      const s3InputKey = (formData as Record<string, unknown>)[
-        "starting_pdb"
-      ] as string | undefined;
+      const s3InputKey = formData["starting_pdb"] as string | undefined;
       if (!s3InputKey) {
         console.error("No PDB file uploaded for rfdiffusion submission");
         this.workflowSubmission.isSubmitting.set(false);
@@ -687,7 +649,7 @@ export default class DeNovoDesignComponent
         ...formData,
         workflow: "de-novo-design",
         tool: this.selectedTool(),
-      };
+      } as DeNovoDesignPayload;
 
       this.workflowSubmission.submitWorkflowWithDataset(
         workflowFormData,
@@ -724,7 +686,7 @@ export default class DeNovoDesignComponent
             ...formData,
             workflow: "de-novo-design",
             tool: this.selectedTool(),
-          };
+          } as DeNovoDesignPayload;
 
           this.workflowSubmission.submitWorkflowWithDataset(
             workflowFormData,
@@ -751,228 +713,6 @@ export default class DeNovoDesignComponent
       });
   }
 
-  // Initialize form data with default values from schema
-  private initializeFormData(defaultValues: Record<string, unknown>): void {
-    this.formData.set(defaultValues);
-  }
-
-  // Update form data for a specific field
-  updateFieldValue(fieldName: string, value: unknown): void {
-    const currentData = this.formData();
-    const updatedData = { ...currentData, [fieldName]: value };
-    this.formData.set(updatedData);
-    this.validateField(fieldName, value);
-  }
-
-  // Handle input events
-  onInputChange(fieldName: string, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.updateFieldValue(fieldName, target.value);
-  }
-
-  // Handle number input events
-  onNumberChange(fieldName: string, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const value = target.value ? parseInt(target.value, 10) : null;
-    this.updateFieldValue(fieldName, value);
-  }
-
-  // Handle select change events
-  onSelectChange(fieldName: string, event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.updateFieldValue(fieldName, target.value);
-  }
-
-  // Handle boolean select change events
-  onBooleanChange(fieldName: string, event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.updateFieldValue(fieldName, target.value === "true");
-  }
-
-  // Handle file input events
-  onFileChange(fieldName: string, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    this.updateFieldValue(fieldName, file);
-  }
-
-  // Validate a single field
-  private validateField(fieldName: string, value: unknown): void {
-    const currentErrors = this.formErrors();
-    const field = this.schemaLoader
-      .inputSchemaFields()
-      .find((f) => f.name === fieldName);
-
-    if (!field) {
-      return;
-    }
-
-    const validationResult = this.schemaLoader[
-      "inputSchemaService"
-    ].validateFieldValue(field, value);
-
-    if (validationResult.valid) {
-      // Remove the error for this field
-      const updatedErrors = { ...currentErrors };
-      delete updatedErrors[fieldName];
-      this.formErrors.set(updatedErrors);
-    } else {
-      this.formErrors.set({
-        ...currentErrors,
-        [fieldName]: validationResult.errors[0] || "Invalid value",
-      });
-    }
-  }
-
-  // Public method for template to validate single field (called on blur events)
-  validateSingleField(fieldName: string): void {
-    const currentData = this.formData();
-    const value = currentData[fieldName];
-    this.validateField(fieldName, value);
-  }
-
-  // Validate all required fields and show errors
-  private validateAllRequiredFields(): void {
-    const requiredFields = this.schemaLoader.requiredInputFields();
-    const currentData = this.formData();
-
-    // Validate each required field to show specific errors
-    for (const field of requiredFields) {
-      if (
-        field.name === "binder_name" ||
-        field.name === "id" ||
-        field.name === "chains"
-      )
-        continue;
-      const value = currentData[field.name];
-      this.validateField(field.name, value);
-    }
-    this.form.markAllAsTouched();
-  }
-
-  // Get current form data for submission
-  getFormData(): Record<string, unknown> {
-    // Get current form data from UI fields
-    const currentData = this.formData();
-
-    // Get optional fields with their default values
-    const optionalFields = this.schemaLoader.optionalInputFields();
-    const optionalDefaults: Record<string, unknown> = {};
-
-    optionalFields.forEach((field) => {
-      // Only add if not already in form data
-      if (!(field.name in currentData)) {
-        if (field.default !== undefined) {
-          optionalDefaults[field.name] = field.default;
-        } else {
-          // Use type-based defaults
-          switch (field.type) {
-            case "string":
-              optionalDefaults[field.name] = "";
-              break;
-            case "number":
-              optionalDefaults[field.name] = field.validation?.min || 0;
-              break;
-            case "boolean":
-              optionalDefaults[field.name] = false;
-              break;
-            case "array":
-              optionalDefaults[field.name] = [];
-              break;
-            case "object":
-              optionalDefaults[field.name] = {};
-              break;
-            default:
-              optionalDefaults[field.name] = "";
-          }
-        }
-      }
-    });
-
-    // Merge current data with optional defaults (without pipeline)
-    return {
-      ...optionalDefaults,
-      ...currentData,
-    };
-  }
-
-  // Form summary for step 3
-  formSummary = computed(() => {
-    const data = this.formData();
-    const fields = this.schemaLoader.inputSchemaFields();
-    const localPdb = this.localPdbFile();
-    const summary: {
-      label: string;
-      value: string;
-      fieldName: string;
-      url?: string;
-    }[] = [];
-
-    // Fields to exclude from summary
-    const excludedFields = [
-      "settings_filters",
-      "settings_advanced",
-      "binder_name",
-      "id",
-      "chains",
-      // Mirrored from max_trajectories (see onTrajectoryCountChange) —
-      // showing both would duplicate the same value under two labels.
-      "number_of_final_designs",
-    ];
-
-    fields.forEach((field) => {
-      // Skip excluded fields
-      if (excludedFields.includes(field.name)) {
-        return;
-      }
-
-      const value = data[field.name];
-      const isEmpty = value === undefined || value === null || value === "";
-      let displayValue = "";
-      let downloadUrl: string | undefined;
-
-      if (!isEmpty) {
-        displayValue = String(value);
-
-        if (field.name === "starting_pdb") {
-          // Show only the filename; optionally link to the file if it's an HTTP URL.
-          const rawPath = String(value);
-          displayValue = localPdb?.name ?? this.extractFilename(rawPath);
-          downloadUrl = rawPath.startsWith("http") ? rawPath : undefined;
-        } else if (field.type === "boolean") {
-          displayValue = value ? "Yes" : "No";
-        } else if (field.type === "number") {
-          displayValue = String(value);
-        } else if (Array.isArray(value)) {
-          displayValue = value.join(", ");
-        } else if (typeof value === "object") {
-          displayValue = JSON.stringify(value);
-        }
-      } else if (localPdb && field.name === "starting_pdb") {
-        // A file is staged locally but not yet reflected in the form data.
-        displayValue = localPdb.name;
-      }
-
-      summary.push({
-        label:
-          field.name === "max_trajectories"
-            ? this.trajectoryFieldLabel()
-            : field.label || field.name,
-        value: displayValue,
-        fieldName: field.name,
-        ...(downloadUrl ? { url: downloadUrl } : {}),
-      });
-    });
-
-    summary.unshift({
-      label: "Job Name",
-      value: this.jobName(),
-      fieldName: "id",
-    });
-
-    return summary;
-  });
-
   /** Extract just the filename from a path, S3 URI, or HTTP URL. */
   private extractFilename(path: string): string {
     if (!path) return path;
@@ -980,143 +720,55 @@ export default class DeNovoDesignComponent
     return parts.filter((p) => p.length > 0).pop() ?? path;
   }
 
-  // Get summary of configuration for display
-  getConfigurationSummary() {
-    return {
-      tool: this.selectedToolLabel(),
-      hasParameters: this.selectedToolHasParams(),
-      totalFields: this.schemaLoader.inputSchemaFields().length,
-      filledFields: this.formSummary().length,
-      requiredFields: this.schemaLoader.requiredInputFields().length,
-    };
-  }
+  // Form summary for the review step
+  formSummary = computed(() => {
+    const localPdb = this.localPdbFile();
+    const startingPdbValue = this.startingPdb();
+    const summary: {
+      label: string;
+      value: string;
+      fieldName: string;
+      url?: string;
+    }[] = [];
 
-  // Reset form to default values
-  resetForm(): void {
-    const defaultValues = this.schemaLoader.generateDefaultValues();
-    if (Object.keys(defaultValues).length > 0) {
-      defaultValues["max_trajectories"] = 1;
-      defaultValues["number_of_final_designs"] = 1;
-      this.initializeFormData(defaultValues);
+    let pdbDisplayValue = "";
+    let pdbUrl: string | undefined;
+    if (localPdb) {
+      pdbDisplayValue = localPdb.name;
+    } else if (startingPdbValue) {
+      pdbDisplayValue = this.extractFilename(startingPdbValue);
+      pdbUrl = startingPdbValue.startsWith("http")
+        ? startingPdbValue
+        : undefined;
     }
-  }
 
-  // Sync all row data to formData for validation system
-  private syncRowsToFormData(): void {
-    const rowValues = this.schemaLoader.getFirstRowValues();
-    if (Object.keys(rowValues).length > 0) {
-      // Preserve existing formData (like default URLs) and merge with row values
-      const currentData = this.formData();
-      this.formData.set({ ...currentData, ...rowValues });
-    }
-  }
+    summary.push({
+      label: "Job Name",
+      value: this.jobName(),
+      fieldName: "id",
+    });
+    summary.push({
+      label: "Target PDB",
+      value: pdbDisplayValue,
+      fieldName: "starting_pdb",
+      ...(pdbUrl ? { url: pdbUrl } : {}),
+    });
+    summary.push({
+      label: "Target Hotspot Residues",
+      value: this.targetHotspotResidues(),
+      fieldName: "target_hotspot_residues",
+    });
+    summary.push({
+      label: "Binder Length Range",
+      value: `${this.minLength()} - ${this.maxLength()}`,
+      fieldName: "length_range",
+    });
+    summary.push({
+      label: this.numberOfDesignsField.label,
+      value: String(this.numberOfDesigns()),
+      fieldName: "max_trajectories",
+    });
 
-  // Update row value (single row only)
-  updateRowValue(rowId: string, fieldName: string, value: unknown): void {
-    this.schemaLoader.updateRowValue(rowId, fieldName, value);
-    // Sync row data to formData for validation
-    this.syncRowsToFormData();
-  }
-
-  // Get value for a specific row and field
-  getRowValue(rowId: string, fieldName: string): unknown {
-    return this.schemaLoader.getRowValue(rowId, fieldName);
-  }
-
-  getRowNumberValue(
-    rowId: string,
-    fieldName: string,
-    defaultVal: number
-  ): number {
-    const val = this.getRowValue(rowId, fieldName);
-    if (typeof val === "number" && Number.isFinite(val)) return val;
-    if (typeof val === "string" && val !== "") {
-      const n = Number(val);
-      if (Number.isFinite(n)) return n;
-    }
-    return defaultVal;
-  }
-
-  // Row-level validation methods
-  validateRowField(rowId: string, fieldName: string): void {
-    const value = this.getRowValue(rowId, fieldName);
-    const field = this.schemaLoader
-      .inputSchemaFields()
-      .find((f) => f.name === fieldName);
-
-    if (!field) return;
-
-    const validationResult = this.schemaLoader[
-      "inputSchemaService"
-    ].validateFieldValue(field, value);
-    const errorKey = `${rowId}_${fieldName}`;
-    const currentErrors = this.formErrors();
-
-    if (validationResult.valid) {
-      // Custom field-level validators (PDB-aware).
-      let customError: string | null = null;
-      if (fieldName === "target_hotspot_residues") {
-        customError = this.validateHotspotResidues(value as string);
-      }
-      if (customError) {
-        this.formErrors.set({ ...currentErrors, [errorKey]: customError });
-        return;
-      }
-      // Remove error for this specific cell
-      const updatedErrors = { ...currentErrors };
-      delete updatedErrors[errorKey];
-      this.formErrors.set(updatedErrors);
-    } else {
-      // Add error for this specific cell
-      this.formErrors.set({
-        ...currentErrors,
-        [errorKey]: validationResult.errors[0] || "Invalid value",
-      });
-    }
-  }
-
-  // Get validation error for a specific cell
-  getRowFieldError(rowId: string, fieldName: string): string | null {
-    const errorKey = `${rowId}_${fieldName}`;
-    return this.formErrors()[errorKey] || null;
-  }
-
-  // Check if a specific cell has an error
-  hasRowFieldError(rowId: string, fieldName: string): boolean {
-    return this.getRowFieldError(rowId, fieldName) !== null;
-  }
-
-  /** Returns true when any field inside the collapsible config section has a validation error. */
-  hasConfigSectionErrors(rowId: string): boolean {
-    if (this.hasJobNameError()) return true;
-    return ["target_hotspot_residues", "min_length", "max_length"].some((f) =>
-      this.hasRowFieldError(rowId, f)
-    );
-  }
-
-  // Update row value with validation
-  updateRowValueWithValidation(
-    rowId: string,
-    fieldName: string,
-    value: unknown
-  ): void {
-    this.updateRowValue(rowId, fieldName, value);
-    this.validateRowField(rowId, fieldName);
-  }
-
-  // Get overall form validation status
-  getFormValidationSummary(): {
-    valid: boolean;
-    errorCount: number;
-    rowCount: number;
-  } {
-    const errors = this.formErrors();
-    const rows = this.schemaLoader.inputRows();
-
-    return {
-      valid: this.isFormValid(),
-      errorCount: Object.keys(errors).length,
-      rowCount: rows.length,
-    };
-  }
+    return summary;
+  });
 }
