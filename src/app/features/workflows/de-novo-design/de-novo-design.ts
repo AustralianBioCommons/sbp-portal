@@ -536,8 +536,9 @@ export default class DeNovoDesignComponent
     const value = this.numberOfDesigns();
     const errors = { ...this.formErrors() };
     if (!Number.isInteger(value) || value < 1) {
-      errors["max_trajectories"] =
-        `${this.numberOfDesignsField.label} must be a whole number of at least 1`;
+      errors[
+        "max_trajectories"
+      ] = `${this.numberOfDesignsField.label} must be a whole number of at least 1`;
     } else {
       delete errors["max_trajectories"];
     }
