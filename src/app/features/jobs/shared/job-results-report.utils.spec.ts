@@ -6,7 +6,7 @@ import {
   registerJobResultsAdapter,
   sortReportRows,
 } from "./job-results-report.utils";
-import "./bindcraft-results.utils";
+import "./rfdiffusion-results.utils";
 
 const row = (id: string, values: Record<string, string>): ReportRow => ({
   id,

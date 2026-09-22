@@ -47,7 +47,6 @@ import {
   ReportSources,
   getJobResultsAdapter,
 } from "../../shared/job-results-report.utils";
-import "../../shared/bindcraft-results.utils";
 import "../../shared/rfdiffusion-results.utils";
 import "../../shared/interaction-screening-results.utils";
 
