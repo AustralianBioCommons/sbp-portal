@@ -77,7 +77,9 @@ export interface JobResultsAdapter {
   panelHeading: string;
   /** Shown instead of the report when the run ranked nothing. */
   emptyMessage: string;
-  /** Colour key above the viewer, in display order. */
+  /** Viewer palette; `binder-target` by default. `plddt` ignores `legend`. */
+  colorTheme?: "binder-target" | "plddt";
+  /** Colour key above the viewer, in display order. Empty under `plddt`. */
   legend: readonly ReportLegendBand[];
   /**
    * Whether rows are variants of one complex, so the viewer can line them up
@@ -109,6 +111,20 @@ export interface JobResultsAdapter {
     sources?: ReportSources
   ): ReportRow[];
 }
+
+/** Shown by both de novo design tools when the ranker kept nothing. */
+export const NO_DESIGNS_MESSAGE =
+  "No designs passed in silico quality control criteria. Consider choosing " +
+  "different hotspots or increasing the number of trajectories.";
+
+const SCORES_IN_FILES =
+  "Scores for everything the run evaluated are listed under the Files tab.";
+
+/** Interaction screening: the score filter kept no pairs. */
+export const NO_INTERACTIONS_MESSAGE = `No high confidence interactions were identified. ${SCORES_IN_FILES}`;
+
+/** Bulk prediction: the score filter kept no structures. */
+export const NO_PREDICTIONS_MESSAGE = `No high confidence predictions were identified. ${SCORES_IN_FILES}`;
 
 /** One workflow's tool can only mean one report, so both parts key the map. */
 function adapterKey(workflow: string, tool: string): string {

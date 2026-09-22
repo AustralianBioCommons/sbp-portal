@@ -9,18 +9,20 @@ import {
   ReportSources,
   JobResultsAdapter,
   parseCsvTable,
+  NO_INTERACTIONS_MESSAGE,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
+import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
 import {
-  ResultFileRef,
-  StructureFormat,
-  resultFilenames,
-} from "./prediction-results.utils";
+  BOLTZ_LAYOUT,
+  COLABFOLD_LAYOUT,
+  StructureLayout,
+  WISPS_RESULTS_SUFFIX,
+  findWispsScoresArtifact,
+  findWispsStructures,
+} from "./wisps-results.utils";
 
 const WORKFLOW = "interaction screening";
-
-const RESULTS_SUFFIX = "_confidence_scores_full.csv";
-const COLLECT_DIR = "/collect/";
 
 /** Split out of the pair id rather than read from the file. */
 const QUERY_KEY = "queryId";
@@ -50,20 +52,6 @@ const UNSPLIT_COLUMNS: readonly ReportColumn[] = [
   { key: PAIR_KEY, heading: "Interaction", emphasised: true },
   ...SCORE_COLUMNS,
 ];
-
-export function findInteractionScoresArtifact(
-  files: readonly ResultFileRef[]
-): ResultFileRef | null {
-  return (
-    files.find(
-      (file) =>
-        file.key.toLowerCase().includes(COLLECT_DIR) &&
-        resultFilenames(file).some((name) =>
-          name.toLowerCase().endsWith(RESULTS_SUFFIX)
-        )
-    ) ?? null
-  );
-}
 
 export function findIpsaeArtifact(
   files: readonly ResultFileRef[]
@@ -266,49 +254,6 @@ function splitPairId(
   return { query: "", target: "" };
 }
 
-interface StructureLayout {
-  directory: string;
-  /** Captures the pair id, then the model's rank among that pair's outputs. */
-  pattern: RegExp;
-  format: StructureFormat;
-}
-
-const BOLTZ_LAYOUT: StructureLayout = {
-  directory: "/boltz_predictions/cif/",
-  // Greedy, so an id ending in `_model_0` still yields the whole id.
-  pattern: /^(.+)_model_(\d+)\.cif$/i,
-  format: "mmcif",
-};
-
-const COLABFOLD_LAYOUT: StructureLayout = {
-  directory: "/colabfold_predictions/pdb/",
-  pattern: /^(.+?)_unrelaxed_rank_(\d+)(?:_.*)?\.pdb$/i,
-  format: "pdb",
-};
-
-/** Lowest rank wins, so several models per pair cannot turn into file order. */
-function findStructures(
-  files: readonly ResultFileRef[],
-  layout: StructureLayout
-): Map<string, ResultFileRef> {
-  const best = new Map<string, { file: ResultFileRef; rank: number }>();
-
-  for (const file of files) {
-    if (!file.key.toLowerCase().includes(layout.directory)) continue;
-    // Case intact: the pair id carries the user's own header case.
-    const match = resultFilenames(file)
-      .map((name) => layout.pattern.exec(name))
-      .find((candidate) => candidate !== null);
-    if (!match) continue;
-
-    const rank = Number(match[2]);
-    const current = best.get(match[1]);
-    if (!current || rank < current.rank) best.set(match[1], { file, rank });
-  }
-
-  return new Map([...best].map(([id, entry]) => [id, entry.file]));
-}
-
 export function parseInteractionRows(
   text: string,
   files: readonly ResultFileRef[],
@@ -317,7 +262,7 @@ export function parseInteractionRows(
 ): ReportRow[] {
   const { extraText = null, submittedFasta = null } = sources ?? {};
   const { headers, rows } = parseCsvTable(text);
-  const structures = findStructures(files, layout);
+  const structures = findWispsStructures(files, layout);
   const ipsaeHeader = findIpsaeHeader(headers);
   const ipsaeScores = parseIpsaeScores(extraText);
   const split = findPairSplit(
@@ -364,18 +309,18 @@ function interactionAdapter(
     workflow: WORKFLOW,
     tool,
     columns: INTERACTION_COLUMNS,
-    resultsFileName: RESULTS_SUFFIX,
+    resultsFileName: WISPS_RESULTS_SUFFIX,
     // WISPS writes the query first and the target second, for every pair.
     primaryChainId: "A",
     panelHeading: "Interactions",
-    emptyMessage: "No high confidence interactions were identified.",
+    emptyMessage: NO_INTERACTIONS_MESSAGE,
     legend: [
       { label: "Query", band: "primary" },
       { label: "Target", band: "secondary" },
     ],
     // Each row is a different pair of proteins, with nothing to line up on.
     superpose: false,
-    findResultsArtifact: findInteractionScoresArtifact,
+    findResultsArtifact: findWispsScoresArtifact,
     findExtraArtifact: findIpsaeArtifact,
     // The submitted headers settle an otherwise ambiguous pair id.
     needsSubmittedInputs: true,

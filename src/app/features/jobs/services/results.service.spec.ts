@@ -194,55 +194,38 @@ describe("ResultsService", () => {
     );
   });
 
-  it("should return a trusted resource URL from the report endpoint URL", () => {
-    service.getJobReportResourceUrl("job/1").subscribe((response) => {
-      expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
-        `${environment.apiBaseUrl}/api/results/job%2F1/report?token=test-token`
-      );
-    });
+  it("should read one result file as text", () => {
+    service
+      .getResultFileText("job/1", "run/collect/scores.csv")
+      .subscribe((body) => expect(body).toBe("id,ptm\nseq1,0.91\n"));
 
-    const previewReq = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/results/job%2F1/report/preview`
+    const req = httpMock.expectOne(
+      (request) =>
+        request.url === `${environment.apiBaseUrl}/api/results/job%2F1/file` &&
+        request.params.get("key") === "run/collect/scores.csv"
     );
-    expect(previewReq.request.method).toBe("POST");
-    previewReq.flush({
-      runId: "job/1",
-      url: "/api/results/job%2F1/report?token=test-token",
-    });
+    expect(req.request.method).toBe("GET");
+    expect(req.request.responseType).toBe("text");
+    req.flush("id,ptm\nseq1,0.91\n");
   });
 
-  it("should allow cross-origin https preview report URLs", () => {
-    service.getJobReportResourceUrl("job/1").subscribe((response) => {
-      expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
-        "https://reports.example.test/job-1/report.html"
-      );
-    });
-
-    const previewReq = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/results/job%2F1/report/preview`
+  it("should build the encoded download-category URL", () => {
+    expect(service.getDownloadCategoryUrl("job/1", "pdb files")).toBe(
+      `${environment.apiBaseUrl}/api/results/job%2F1/download-category/pdb%20files`
     );
-    expect(previewReq.request.method).toBe("POST");
-    previewReq.flush({
-      runId: "job/1",
-      url: "https://reports.example.test/job-1/report.html",
-    });
   });
 
-  it("should sanitize cross-origin http report URLs to about:blank", () => {
-    service.getJobReportResourceUrl("job/1").subscribe((response) => {
-      expect(sanitizer.sanitize(SecurityContext.RESOURCE_URL, response)).toBe(
-        "about:blank"
-      );
-    });
+  it("should download one category as a blob", () => {
+    service
+      .downloadCategory("job/1", "pdb")
+      .subscribe((response) => expect(response.status).toBe(200));
 
-    const previewReq = httpMock.expectOne(
-      `${environment.apiBaseUrl}/api/results/job%2F1/report/preview`
+    const req = httpMock.expectOne(
+      `${environment.apiBaseUrl}/api/results/job%2F1/download-category/pdb`
     );
-    expect(previewReq.request.method).toBe("POST");
-    previewReq.flush({
-      runId: "job/1",
-      url: "http://reports.example.test/job-1/report.html",
-    });
+    expect(req.request.method).toBe("GET");
+    expect(req.request.responseType).toBe("blob");
+    req.flush(new Blob(["zip"]));
   });
 
   it("should fetch downloads", () => {
