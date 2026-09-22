@@ -17,8 +17,9 @@ import {
   heroArrowLeft,
   heroBookOpen,
   heroChartBarSquare,
-  heroCommandLine,
   heroCog6Tooth,
+  heroCommandLine,
+  heroExclamationCircle,
   heroExclamationTriangle,
   heroFolder,
   heroTrash,
@@ -28,8 +29,9 @@ import { LoadingComponent } from "../../../components/loading/loading.component"
 import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
-import { DeNovoDesignReportComponent } from "../components/de-novo-design-report/de-novo-design-report.component";
+import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
+import { statusTagClass } from "../shared/job-status.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import {
@@ -88,6 +90,13 @@ const ALLOWED_SETTING_KEYS_BY_WORKFLOW: Record<string, Set<string>> = {
   ]),
 };
 
+/** Workflows the shared job results report renders; single prediction has its own. */
+const RESULTS_REPORT_WORKFLOWS = new Set([
+  "de novo design",
+  "interaction screening",
+  "bulk prediction",
+]);
+
 /** Workflows whose form is plain text (no file to browse for) — the raw FASTA
  *  is submitted directly, so it's shown inline. Older jobs submitted before
  *  fastaContent existed fall back to the fastaS3Uri download link. */
@@ -125,7 +134,7 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     DialogComponent,
     ButtonComponent,
     SinglePredictionReportComponent,
-    DeNovoDesignReportComponent,
+    JobResultsReportComponent,
   ],
   providers: [
     provideIcons({
@@ -133,8 +142,9 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
       heroArrowLeft,
       heroBookOpen,
       heroChartBarSquare,
-      heroCommandLine,
       heroCog6Tooth,
+      heroCommandLine,
+      heroExclamationCircle,
       heroExclamationTriangle,
       heroFolder,
       heroTrash,
@@ -184,12 +194,15 @@ export default class JobDetailsComponent implements OnInit {
       !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
   );
 
+  /** Normalised name; also what picks the report's adapter, alongside the tool. */
+  workflowName = computed(() => normalizeWorkflowName(this.job()?.workflow));
+
   isSinglePrediction = computed(
-    () => normalizeWorkflowName(this.job()?.workflow) === "single prediction"
+    () => this.workflowName() === "single prediction"
   );
 
-  isDeNovoDesign = computed(
-    () => normalizeWorkflowName(this.job()?.workflow) === "de novo design"
+  hasResultsReport = computed(() =>
+    RESULTS_REPORT_WORKFLOWS.has(this.workflowName())
   );
 
   // Categories the backend bundles as one zip instead of listing individually.
@@ -210,7 +223,7 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   hasInteractiveReport = computed(
-    () => this.isSinglePrediction() || this.isDeNovoDesign()
+    () => this.isSinglePrediction() || this.hasResultsReport()
   );
 
   /** Sticky for the life of the job: flipping back would remount the failing
@@ -437,17 +450,21 @@ export default class JobDetailsComponent implements OnInit {
 
   getSummaryItems(job: JobListItem): Array<{ label: string; value: string }> {
     return [
+      { label: "Workflow type", value: job.workflow || "N/A" },
+      { label: "Tool", value: job.tool || "N/A" },
       {
         label: "Submitted date",
         value: this.datePipe.transform(job.submittedAt, "dd/MM/yyyy") ?? "",
       },
-      { label: "Tool", value: job.tool || "N/A" },
-      { label: "Status", value: job.status },
       {
-        label: "Score",
+        label: "Max score",
         value: job.score === null ? "N/A" : job.score.toFixed(3),
       },
     ];
+  }
+
+  getStatusClass(status: string): string {
+    return statusTagClass(status);
   }
 
   getFiles(job: JobListItem): string[] {
@@ -752,7 +769,7 @@ export default class JobDetailsComponent implements OnInit {
       return [];
     }
 
-    const workflowName = normalizeWorkflowName(this.job()?.workflow);
+    const workflowName = this.workflowName();
     const allowedKeys = ALLOWED_SETTING_KEYS_BY_WORKFLOW[workflowName];
 
     const fastaContentValue = settingParams["fastaContent"];

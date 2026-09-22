@@ -7,43 +7,12 @@ import { AuthService } from "../../../core/services/auth.service";
 import { CreditsService } from "../../../core/services/credits.service";
 import { DatasetUploadService } from "../services/dataset-upload.service";
 import { PdbUploadService } from "../services/pdb-upload.service";
-import {
-  InputRow,
-  SchemaLoaderService,
-} from "../services/schema-loader.service";
-import { InputSchemaField } from "../services/input-schema.service";
 import { WorkflowSubmissionService } from "../services/workflow-submission.service";
 import DeNovoDesignComponent from "./de-novo-design";
-
-function requiredField(name: string): InputSchemaField {
-  return { name } as unknown as InputSchemaField;
-}
-
-function field(partial: Partial<InputSchemaField>): InputSchemaField {
-  return { name: "unnamed", type: "string", ...partial } as InputSchemaField;
-}
-
-function rowWith(values: Record<string, unknown>): InputRow {
-  return { id: "row1", values };
-}
 
 describe("DeNovoDesignComponent", () => {
   let component: DeNovoDesignComponent;
   let fixture: ComponentFixture<DeNovoDesignComponent>;
-  let schemaLoader: {
-    inputSchemaData: ReturnType<typeof signal<unknown>>;
-    inputSchemaFields: ReturnType<typeof signal<InputSchemaField[]>>;
-    requiredInputFields: ReturnType<typeof signal<InputSchemaField[]>>;
-    optionalInputFields: ReturnType<typeof signal<InputSchemaField[]>>;
-    inputRows: ReturnType<typeof signal<InputRow[]>>;
-    loadInputSchema: jasmine.Spy;
-    initializeDefaultRow: jasmine.Spy;
-    generateDefaultValues: jasmine.Spy;
-    getFirstRowValues: jasmine.Spy;
-    getRowValue: jasmine.Spy;
-    updateRowValue: jasmine.Spy;
-    inputSchemaService: { validateFieldValue: jasmine.Spy };
-  };
   let datasetUpload: jasmine.SpyObj<DatasetUploadService>;
   let pdbUpload: jasmine.SpyObj<PdbUploadService>;
   let workflowSubmission: {
@@ -56,47 +25,6 @@ describe("DeNovoDesignComponent", () => {
   let credits: jasmine.SpyObj<CreditsService>;
 
   beforeEach(async () => {
-    schemaLoader = {
-      inputSchemaData: signal<unknown>(null),
-      inputSchemaFields: signal<InputSchemaField[]>([]),
-      requiredInputFields: signal<InputSchemaField[]>([]),
-      optionalInputFields: signal<InputSchemaField[]>([]),
-      inputRows: signal<InputRow[]>([]),
-      loadInputSchema: jasmine.createSpy("loadInputSchema"),
-      initializeDefaultRow: jasmine.createSpy("initializeDefaultRow"),
-      generateDefaultValues: jasmine
-        .createSpy("generateDefaultValues")
-        .and.returnValue({}),
-      getFirstRowValues: jasmine
-        .createSpy("getFirstRowValues")
-        .and.callFake(() => {
-          const rows = schemaLoader.inputRows();
-          return rows.length ? { ...rows[0].values } : {};
-        }),
-      getRowValue: jasmine
-        .createSpy("getRowValue")
-        .and.callFake((rowId: string, name: string) => {
-          const row = schemaLoader.inputRows().find((r) => r.id === rowId);
-          return row?.values[name] ?? "";
-        }),
-      updateRowValue: jasmine
-        .createSpy("updateRowValue")
-        .and.callFake((rowId: string, name: string, value: unknown) => {
-          schemaLoader.inputRows.update((rows) =>
-            rows.map((r) =>
-              r.id === rowId
-                ? { ...r, values: { ...r.values, [name]: value } }
-                : r
-            )
-          );
-        }),
-      inputSchemaService: {
-        validateFieldValue: jasmine
-          .createSpy("validateFieldValue")
-          .and.returnValue({ valid: true, errors: [] }),
-      },
-    };
-
     const authService: {
       isAuthenticated$: Observable<boolean>;
       isLoading$: Observable<boolean>;
@@ -134,6 +62,7 @@ describe("DeNovoDesignComponent", () => {
       "validatePdbFile",
       "uploadPdbFile",
     ]);
+    pdbUpload.validatePdbFile.and.returnValue({ valid: true });
 
     await TestBed.configureTestingModule({
       imports: [DeNovoDesignComponent],
@@ -142,7 +71,6 @@ describe("DeNovoDesignComponent", () => {
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: CreditsService, useValue: credits },
-        { provide: SchemaLoaderService, useValue: schemaLoader },
         { provide: DatasetUploadService, useValue: datasetUpload },
         { provide: PdbUploadService, useValue: pdbUpload },
         { provide: WorkflowSubmissionService, useValue: workflowSubmission },
@@ -155,6 +83,15 @@ describe("DeNovoDesignComponent", () => {
 
   it("should create", () => {
     expect(component).toBeTruthy();
+  });
+
+  it("defaults the binder length range to 65-150", () => {
+    expect(component.minLength()).toBe(65);
+    expect(component.maxLength()).toBe(150);
+  });
+
+  it("defaults the number of designs to 1", () => {
+    expect(component.numberOfDesigns()).toBe(1);
   });
 
   describe("tool selection", () => {
@@ -175,6 +112,13 @@ describe("DeNovoDesignComponent", () => {
       component.selectTool("bindcraft");
       expect(component.selectedTool()).toBe("bindcraft");
     });
+
+    it("uses the same number-of-designs label for both tools", () => {
+      component.selectTool("bindcraft");
+      expect(component.numberOfDesignsField.label).toBe("Number of Designs");
+      component.selectTool("rfdiffusion");
+      expect(component.numberOfDesignsField.label).toBe("Number of Designs");
+    });
   });
 
   describe("job name errors", () => {
@@ -192,13 +136,14 @@ describe("DeNovoDesignComponent", () => {
 
   describe("isFormValid (derived)", () => {
     beforeEach(() => {
-      schemaLoader.requiredInputFields.set([requiredField("starting_pdb")]);
-      schemaLoader.inputRows.set([rowWith({ starting_pdb: "target.pdb" })]);
       component.form.controls.jobName.setValue("valid-job");
+      component.startingPdb.set("target.pdb");
+      component.targetHotspotResidues.set("A56");
+      component.numberOfDesigns.set(1);
       component.formErrors.set({});
     });
 
-    it("is true when job name is valid, the row is complete, and there are no errors", () => {
+    it("is true when all required fields are filled and there are no errors", () => {
       expect(component.isFormValid()).toBe(true);
     });
 
@@ -207,28 +152,23 @@ describe("DeNovoDesignComponent", () => {
       expect(component.isFormValid()).toBe(false);
     });
 
-    it("is false when a required row field is empty", () => {
-      schemaLoader.inputRows.set([rowWith({ starting_pdb: "" })]);
+    it("is false when no PDB has been uploaded", () => {
+      component.startingPdb.set("");
       expect(component.isFormValid()).toBe(false);
     });
 
-    it("ignores binder_name, id, and chains required fields", () => {
-      schemaLoader.requiredInputFields.set([
-        requiredField("binder_name"),
-        requiredField("id"),
-        requiredField("chains"),
-      ]);
-      schemaLoader.inputRows.set([rowWith({})]);
-      expect(component.isFormValid()).toBe(true);
+    it("is false when hotspot residues are empty", () => {
+      component.targetHotspotResidues.set("");
+      expect(component.isFormValid()).toBe(false);
+    });
+
+    it("is false when the number of designs is invalid", () => {
+      component.numberOfDesigns.set(0);
+      expect(component.isFormValid()).toBe(false);
     });
 
     it("is false when a field-level error is present", () => {
-      component.formErrors.set({ row1_chains: "Invalid chain" });
-      expect(component.isFormValid()).toBe(false);
-    });
-
-    it("is false when there are no input rows", () => {
-      schemaLoader.inputRows.set([]);
+      component.formErrors.set({ target_hotspot_residues: "Invalid" });
       expect(component.isFormValid()).toBe(false);
     });
   });
@@ -278,17 +218,12 @@ describe("DeNovoDesignComponent", () => {
   });
 
   describe("PDB file handling", () => {
-    beforeEach(() => {
-      schemaLoader.inputSchemaFields.set([field({ name: "starting_pdb" })]);
-      schemaLoader.inputRows.set([rowWith({})]);
-    });
-
     it("rejects an invalid PDB file", () => {
       pdbUpload.validatePdbFile.and.returnValue({
         valid: false,
         error: "bad file",
       });
-      component.onPdbFilePicked(new File([""], "x.pdb"), "row1");
+      component.onPdbFilePicked(new File([""], "x.pdb"));
       expect(component.showAlert()).toBe(true);
       expect(component.localPdbFile()).toBeNull();
     });
@@ -296,25 +231,27 @@ describe("DeNovoDesignComponent", () => {
     it("accepts a valid PDB file", () => {
       pdbUpload.validatePdbFile.and.returnValue({ valid: true });
       const file = new File(["data"], "target.pdb");
-      component.onPdbFilePicked(file, "row1");
+      component.onPdbFilePicked(file);
       expect(component.localPdbFile()).toBe(file);
-      expect(component.getRowValue("row1", "starting_pdb")).toBe("target.pdb");
+      expect(component.startingPdb()).toBe("target.pdb");
     });
 
     it("clears structure-derived fields when replacing an existing file", () => {
       pdbUpload.validatePdbFile.and.returnValue({ valid: true });
       component.localPdbFile.set(new File(["old"], "old.pdb"));
       component.programmaticViewerSelection.set("A10");
-      component.onPdbFilePicked(new File(["new"], "new.pdb"), "row1");
+      component.onPdbFilePicked(new File(["new"], "new.pdb"));
       expect(component.programmaticViewerSelection()).toBe("");
+      expect(component.targetHotspotResidues()).toBe("");
     });
 
     it("clears the local PDB state", () => {
       component.localPdbFile.set(new File(["x"], "x.pdb"));
       component.pdbResidueMap.set(new Map([["A", new Set([1])]]));
-      component.clearLocalPdb("row1");
+      component.clearLocalPdb();
       expect(component.localPdbFile()).toBeNull();
       expect(component.pdbResidueMap()).toBeNull();
+      expect(component.startingPdb()).toBe("");
     });
 
     it("stores the detected residue map, or null when empty", () => {
@@ -326,133 +263,78 @@ describe("DeNovoDesignComponent", () => {
     });
   });
 
-  describe("row field validation", () => {
-    beforeEach(() => {
-      schemaLoader.inputSchemaFields.set([
-        field({ name: "some_field" }),
-        field({ name: "target_hotspot_residues" }),
-      ]);
-      schemaLoader.inputRows.set([rowWith({})]);
-    });
-
+  describe("hotspot residue validation", () => {
     it("passes a valid hotspot residue", () => {
       component.pdbResidueMap.set(new Map([["A", new Set([56])]]));
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "A56"
-      );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toBeNull();
+      component.onHotspotResiduesManualChange("A56");
+      expect(component.getFieldError("target_hotspot_residues")).toBeNull();
     });
 
     it("rejects a malformed hotspot token", () => {
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "zzz"
+      component.onHotspotResiduesManualChange("zzz");
+      expect(component.getFieldError("target_hotspot_residues")).toContain(
+        "Invalid format"
       );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toContain("Invalid format");
     });
 
     it("rejects a hotspot chain missing from the PDB", () => {
       component.pdbResidueMap.set(new Map([["A", new Set([56])]]));
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "B12"
+      component.onHotspotResiduesManualChange("B12");
+      expect(component.getFieldError("target_hotspot_residues")).toContain(
+        "not found in PDB"
       );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toContain("not found in PDB");
     });
 
     it("rejects a hotspot residue missing from its chain", () => {
       component.pdbResidueMap.set(new Map([["A", new Set([56])]]));
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "A99"
+      component.onHotspotResiduesManualChange("A99");
+      expect(component.getFieldError("target_hotspot_residues")).toContain(
+        "Residue 99"
       );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toContain("Residue 99");
     });
 
     it("rejects a hotspot range end missing from its chain", () => {
       component.pdbResidueMap.set(new Map([["A", new Set([12])]]));
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "A12-A14"
+      component.onHotspotResiduesManualChange("A12-A14");
+      expect(component.getFieldError("target_hotspot_residues")).toContain(
+        "End residue 14"
       );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toContain("End residue 14");
     });
 
     it("accepts exactly 8 hotspot residues", () => {
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "A1,A2,A3,A4,A5,A6,A7,A8"
-      );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toBeNull();
+      component.onHotspotResiduesManualChange("A1,A2,A3,A4,A5,A6,A7,A8");
+      expect(component.getFieldError("target_hotspot_residues")).toBeNull();
     });
 
     it("rejects more than 8 individual hotspot residues", () => {
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "A1,A2,A3,A4,A5,A6,A7,A8,A9"
+      component.onHotspotResiduesManualChange("A1,A2,A3,A4,A5,A6,A7,A8,A9");
+      expect(component.getFieldError("target_hotspot_residues")).toContain(
+        "Too many hotspot residues"
       );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toContain("Too many hotspot residues");
     });
 
     it("rejects a range that expands past 8 residues", () => {
-      component.updateRowValueWithValidation(
-        "row1",
-        "target_hotspot_residues",
-        "A1-A9"
+      component.onHotspotResiduesManualChange("A1-A9");
+      expect(component.getFieldError("target_hotspot_residues")).toContain(
+        "Too many hotspot residues"
       );
-      expect(
-        component.getRowFieldError("row1", "target_hotspot_residues")
-      ).toContain("Too many hotspot residues");
     });
 
-    it("sets an error when the schema validator rejects the value", () => {
-      schemaLoader.inputSchemaService.validateFieldValue.and.returnValue({
-        valid: false,
-        errors: ["required"],
-      });
-      component.updateRowValueWithValidation("row1", "some_field", "A");
-      expect(component.getRowFieldError("row1", "some_field")).toBe("required");
+    it("requires a value", () => {
+      component.validateHotspotResiduesField();
+      expect(component.getFieldError("target_hotspot_residues")).toContain(
+        "required"
+      );
     });
 
     it("reports config-section errors including the job name", () => {
       component.form.controls.jobName.setValue("1bad");
       component.form.controls.jobName.markAsTouched();
-      expect(component.hasConfigSectionErrors("row1")).toBe(true);
+      expect(component.hasConfigSectionErrors()).toBe(true);
     });
   });
 
   describe("field-driven handlers", () => {
-    beforeEach(() => {
-      schemaLoader.inputSchemaFields.set([
-        field({ name: "target_hotspot_residues" }),
-        field({ name: "min_length", type: "number" }),
-        field({ name: "max_length", type: "number" }),
-      ]);
-      schemaLoader.inputRows.set([rowWith({})]);
-    });
-
     it("pushes viewer selection on manual hotspot change", () => {
       component.pdbResidueMap.set(
         new Map([
@@ -460,202 +342,93 @@ describe("DeNovoDesignComponent", () => {
           ["B", new Set([12])],
         ])
       );
-      component.onHotspotResiduesManualChange("row1", "A56,B12");
-      expect(component.getRowValue("row1", "target_hotspot_residues")).toBe(
-        "A56,B12"
-      );
+      component.onHotspotResiduesManualChange("A56,B12");
+      expect(component.targetHotspotResidues()).toBe("A56,B12");
       expect(component.programmaticViewerSelection()).toBe("A56,B12");
     });
 
     it("updates hotspot residues when selected in the viewer", () => {
       component.pdbResidueMap.set(new Map([["A", new Set([56])]]));
-      component.onResiduesSelected("row1", "A56");
-      expect(component.getRowValue("row1", "target_hotspot_residues")).toBe(
-        "A56"
-      );
+      component.onResiduesSelected("A56");
+      expect(component.targetHotspotResidues()).toBe("A56");
     });
 
     it("flags a structure that is too small", () => {
       component.onSequenceLengthDetected(10);
-      expect(component.getRowFieldError("row1", "starting_pdb")).toContain(
-        "Minimum 50"
+      expect(component.getFieldError("starting_pdb")).toContain(
+        "upload a larger structure"
       );
     });
 
     it("flags a structure that is too large", () => {
       component.onSequenceLengthDetected(400);
-      expect(component.getRowFieldError("row1", "starting_pdb")).toContain(
-        "Maximum 300"
+      expect(component.getFieldError("starting_pdb")).toContain(
+        "upload a smaller structure"
       );
     });
 
     it("clears the length error for an in-range structure", () => {
       component.onSequenceLengthDetected(10);
       component.onSequenceLengthDetected(150);
-      expect(component.getRowFieldError("row1", "starting_pdb")).toBeNull();
+      expect(component.getFieldError("starting_pdb")).toBeNull();
     });
 
     it("updates min and max on length range change", () => {
-      component.onLengthRangeChange("row1", { min: 60, max: 120 });
-      expect(component.getRowValue("row1", "min_length")).toBe(60);
-      expect(component.getRowValue("row1", "max_length")).toBe(120);
+      component.onLengthRangeChange({ min: 60, max: 120 });
+      expect(component.minLength()).toBe(60);
+      expect(component.maxLength()).toBe(120);
     });
 
-    it("captures the selected input file name", () => {
-      const file = new File(["x"], "seq.fasta");
-      component.onFileSelected({
-        target: { files: [file] },
-      } as unknown as Event);
-      expect(component.inputFileName()).toBe("seq.fasta");
+    it("validates the number of designs", () => {
+      component.onNumberOfDesignsChange(0);
+      expect(component.getFieldError("max_trajectories")).toContain(
+        "whole number"
+      );
+      component.onNumberOfDesignsChange(5);
+      expect(component.numberOfDesigns()).toBe(5);
+      expect(component.getFieldError("max_trajectories")).toBeNull();
     });
   });
 
-  describe("form data handlers", () => {
+  describe("formSummary", () => {
     beforeEach(() => {
-      schemaLoader.inputSchemaFields.set([
-        field({ name: "text_field", type: "string" }),
-        field({ name: "num_field", type: "number" }),
-        field({ name: "bool_field", type: "boolean" }),
-      ]);
-    });
-
-    it("updates and validates a field value", () => {
-      component.updateFieldValue("text_field", "hello");
-      expect(component.formData()["text_field"]).toBe("hello");
-    });
-
-    it("handles text, number, select and boolean inputs", () => {
-      component.onInputChange("text_field", {
-        target: { value: "abc" },
-      } as unknown as Event);
-      component.onNumberChange("num_field", {
-        target: { value: "42" },
-      } as unknown as Event);
-      component.onSelectChange("text_field", {
-        target: { value: "opt" },
-      } as unknown as Event);
-      component.onBooleanChange("bool_field", {
-        target: { value: "true" },
-      } as unknown as Event);
-
-      expect(component.formData()["num_field"]).toBe(42);
-      expect(component.formData()["text_field"]).toBe("opt");
-      expect(component.formData()["bool_field"]).toBe(true);
-    });
-
-    it("stores a chosen file on file change", () => {
-      const file = new File(["x"], "f.pdb");
-      component.onFileChange("text_field", {
-        target: { files: [file] },
-      } as unknown as Event);
-      expect(component.formData()["text_field"]).toBe(file);
-    });
-
-    it("records a validation error for an invalid field", () => {
-      schemaLoader.inputSchemaService.validateFieldValue.and.returnValue({
-        valid: false,
-        errors: ["bad value"],
-      });
-      component.updateFieldValue("text_field", "x");
-      expect(component.formErrors()["text_field"]).toBe("bad value");
-    });
-
-    it("ignores unknown fields on validation", () => {
-      component.validateSingleField("does_not_exist");
-      expect(component.formErrors()["does_not_exist"]).toBeUndefined();
-    });
-  });
-
-  describe("getFormData", () => {
-    it("merges optional field defaults with current form data", () => {
-      schemaLoader.optionalInputFields.set([
-        field({ name: "already", type: "string" }),
-        field({ name: "str", type: "string" }),
-        field({ name: "num", type: "number", validation: { min: 7 } }),
-        field({ name: "flag", type: "boolean" }),
-        field({ name: "arr", type: "array" }),
-        field({ name: "obj", type: "object" }),
-        field({ name: "preset", type: "string", default: "def" }),
-      ]);
-      component.formData.set({ already: "kept" });
-
-      const data = component.getFormData();
-      expect(data["already"]).toBe("kept");
-      expect(data["str"]).toBe("");
-      expect(data["num"]).toBe(7);
-      expect(data["flag"]).toBe(false);
-      expect(data["arr"]).toEqual([]);
-      expect(data["obj"]).toEqual({});
-      expect(data["preset"]).toBe("def");
-    });
-  });
-
-  describe("formSummary and configuration", () => {
-    beforeEach(() => {
-      schemaLoader.inputSchemaFields.set([
-        field({ name: "starting_pdb", type: "string", label: "Target PDB" }),
-        field({ name: "flag", type: "boolean", label: "Flag" }),
-        field({ name: "count", type: "number", label: "Count" }),
-        field({ name: "settings_filters", type: "string" }),
-      ]);
-      schemaLoader.requiredInputFields.set([requiredField("starting_pdb")]);
       component.form.controls.jobName.setValue("job-1");
+      component.targetHotspotResidues.set("A56");
+      component.minLength.set(65);
+      component.maxLength.set(150);
+      component.numberOfDesigns.set(3);
     });
 
-    it("builds a summary excluding hidden fields and formatting values", () => {
-      component.formData.set({
-        starting_pdb: "https://host/path/model.pdb",
-        flag: true,
-        count: 5,
-        settings_filters: "hidden",
-      });
-
+    it("summarizes the job name, hotspot residues, length range, and design count", () => {
       const summary = component.formSummary();
       const byField = new Map(summary.map((s) => [s.fieldName, s]));
 
       expect(byField.get("id")?.value).toBe("job-1");
-      expect(byField.get("settings_filters")).toBeUndefined();
-      expect(byField.get("flag")?.value).toBe("Yes");
-      expect(byField.get("count")?.value).toBe("5");
-      expect(byField.get("starting_pdb")?.value).toBe("model.pdb");
-      expect(byField.get("starting_pdb")?.url).toBe(
-        "https://host/path/model.pdb"
-      );
+      expect(byField.get("target_hotspot_residues")?.value).toBe("A56");
+      expect(byField.get("length_range")?.value).toBe("65 - 150");
+      expect(byField.get("max_trajectories")?.value).toBe("3");
+    });
+
+    it("shows the s3 URI as a download link once the PDB is uploaded", () => {
+      component.startingPdb.set("https://host/path/model.pdb");
+      const summary = component.formSummary();
+      const pdb = summary.find((s) => s.fieldName === "starting_pdb");
+      expect(pdb?.value).toBe("model.pdb");
+      expect(pdb?.url).toBe("https://host/path/model.pdb");
     });
 
     it("prefers the local file name for the starting PDB", () => {
-      component.formData.set({ starting_pdb: "" });
       component.localPdbFile.set(new File(["x"], "local.pdb"));
       const summary = component.formSummary();
       const pdb = summary.find((s) => s.fieldName === "starting_pdb");
       expect(pdb?.value).toBe("local.pdb");
     });
-
-    it("summarizes the configuration", () => {
-      const cfg = component.getConfigurationSummary();
-      expect(cfg.tool).toBe("BindCraft");
-      expect(cfg.totalFields).toBe(4);
-      expect(cfg.requiredFields).toBe(1);
-    });
   });
 
-  describe("row number values and credit cost", () => {
-    beforeEach(() => {
-      schemaLoader.inputRows.set([rowWith({})]);
-    });
-
-    it("reads numeric, numeric-string and fallback values", () => {
-      component.updateRowValue("row1", "n", 5);
-      expect(component.getRowNumberValue("row1", "n", 0)).toBe(5);
-      component.updateRowValue("row1", "n", "7");
-      expect(component.getRowNumberValue("row1", "n", 0)).toBe(7);
-      component.updateRowValue("row1", "n", "abc");
-      expect(component.getRowNumberValue("row1", "n", 3)).toBe(3);
-    });
-
-    it("computes credit cost from multiplier and trajectory count", () => {
+  describe("credit cost", () => {
+    it("computes credit cost from multiplier and design count", () => {
       component["toolMultipliers"].set({ bindcraft: 10 });
-      component.updateRowValue("row1", "max_trajectories", 2);
+      component.numberOfDesigns.set(2);
       expect(component.creditCost()).toBe(20);
     });
 
@@ -664,76 +437,25 @@ describe("DeNovoDesignComponent", () => {
       expect(component.creditCost()).toBeNull();
     });
 
-    it("returns null credit cost when there are no rows", () => {
-      schemaLoader.inputRows.set([]);
+    it("returns null credit cost when the design count is invalid", () => {
       component["toolMultipliers"].set({ bindcraft: 10 });
+      component.numberOfDesigns.set(0);
       expect(component.creditCost()).toBeNull();
     });
   });
 
-  describe("section validity and validation summary", () => {
+  describe("section validity", () => {
     it("marks input-config and review by form validity, others always valid", () => {
-      schemaLoader.requiredInputFields.set([]);
-      schemaLoader.inputRows.set([rowWith({})]);
       component.form.controls.jobName.setValue("job-1");
-      expect(component.isSectionValid("input-config")).toBe(true);
       expect(component.isSectionValid("select-tool")).toBe(true);
       expect(component.isSectionValid("tool-settings")).toBe(true);
-    });
-
-    it("summarizes form validation state", () => {
-      schemaLoader.inputRows.set([rowWith({})]);
-      component.formErrors.set({ row1_chains: "err" });
-      const summary = component.getFormValidationSummary();
-      expect(summary.errorCount).toBe(1);
-      expect(summary.rowCount).toBe(1);
-    });
-  });
-
-  describe("loadInputSchema", () => {
-    it("seeds form data and slider bounds on success", () => {
-      schemaLoader.inputRows.set([rowWith({})]);
-      schemaLoader.generateDefaultValues.and.returnValue({
-        max_length: 250,
-        min_length: 40,
-      });
-      schemaLoader.loadInputSchema.and.callFake(
-        (_url: string, onSuccess: () => void) => onSuccess()
-      );
-      schemaLoader.initializeDefaultRow.and.callFake((cb: () => void) => cb());
-
-      component.loadInputSchema();
-
-      expect(component.pdbSequenceLength()).toBe(250);
-      expect(component.pdbSequenceMin()).toBe(40);
-      expect(schemaLoader.updateRowValue).toHaveBeenCalledWith(
-        "row1",
-        "max_trajectories",
-        1
-      );
-      expect(schemaLoader.updateRowValue).toHaveBeenCalledWith(
-        "row1",
-        "number_of_final_designs",
-        1
-      );
-    });
-
-    it("logs on failure", () => {
-      const errorSpy = spyOn(console, "error");
-      schemaLoader.loadInputSchema.and.callFake(
-        (_url: string, _onSuccess: () => void, onError: (e: unknown) => void) =>
-          onError(new Error("boom"))
-      );
-      component.loadInputSchema();
-      expect(errorSpy).toHaveBeenCalled();
     });
   });
 
   describe("submission", () => {
     beforeEach(() => {
-      schemaLoader.inputSchemaFields.set([field({ name: "starting_pdb" })]);
-      schemaLoader.inputRows.set([rowWith({})]);
       component.form.controls.jobName.setValue("job-1");
+      component.targetHotspotResidues.set("A12,A13");
     });
 
     it("uploads the PDB then the dataset then launches the workflow", () => {
@@ -753,7 +475,6 @@ describe("DeNovoDesignComponent", () => {
     });
 
     it("derives deduplicated chains from hotspot residues for bindcraft", () => {
-      component.formData.set({ target_hotspot_residues: "A12,A13" });
       datasetUpload.uploadDataset.and.returnValue(
         of({ message: "", success: true, s3Key: "key-123" })
       );
@@ -769,10 +490,8 @@ describe("DeNovoDesignComponent", () => {
 
     it("omits chains from the payload for rfdiffusion", () => {
       component.selectTool("rfdiffusion");
-      component.formData.set({
-        target_hotspot_residues: "A12,B5",
-        starting_pdb: "s3://bucket/target.pdb",
-      });
+      component.startingPdb.set("s3://bucket/target.pdb");
+      component.targetHotspotResidues.set("A12,B5");
 
       component["performSubmit"]();
 
@@ -814,19 +533,6 @@ describe("DeNovoDesignComponent", () => {
       expect(component.showAlert()).toBe(true);
     });
 
-    it("validates all required fields, skipping binder_name and id", () => {
-      schemaLoader.inputSchemaFields.set([field({ name: "starting_pdb" })]);
-      schemaLoader.requiredInputFields.set([
-        requiredField("binder_name"),
-        requiredField("id"),
-        requiredField("starting_pdb"),
-      ]);
-      component["validateAll"]();
-      expect(
-        schemaLoader.inputSchemaService.validateFieldValue
-      ).toHaveBeenCalled();
-    });
-
     it("surfaces an error if the PDB upload fails", () => {
       component.localPdbFile.set(new File(["data"], "target.pdb"));
       pdbUpload.uploadPdbFile.and.returnValue(
@@ -840,6 +546,7 @@ describe("DeNovoDesignComponent", () => {
     });
 
     it("submits directly when no local PDB is staged", () => {
+      component.startingPdb.set("s3://bucket/target.pdb");
       datasetUpload.uploadDataset.and.returnValue(
         of({ message: "", success: true, s3Key: "key-123" })
       );
@@ -849,6 +556,7 @@ describe("DeNovoDesignComponent", () => {
     });
 
     it("shows an error when the dataset upload returns no key", () => {
+      component.startingPdb.set("s3://bucket/target.pdb");
       datasetUpload.uploadDataset.and.returnValue(
         of({ message: "", success: true })
       );
@@ -860,6 +568,7 @@ describe("DeNovoDesignComponent", () => {
     });
 
     it("shows an error when the dataset upload fails", () => {
+      component.startingPdb.set("s3://bucket/target.pdb");
       datasetUpload.uploadDataset.and.returnValue(
         throwError(() => new Error("dataset failed"))
       );
@@ -867,23 +576,23 @@ describe("DeNovoDesignComponent", () => {
       expect(component.showAlert()).toBe(true);
     });
 
-    it("validateAll marks the form touched and validates rows", () => {
-      component["validateAll"]();
-      expect(component.form.controls.jobName.touched).toBe(true);
+    it("blocks an rfdiffusion submission with no PDB uploaded", () => {
+      component.selectTool("rfdiffusion");
+      component["performSubmit"]();
+      expect(component.showAlert()).toBe(true);
+      expect(
+        workflowSubmission.submitWorkflowWithDataset
+      ).not.toHaveBeenCalled();
     });
 
-    it("resets the form to schema defaults", () => {
-      schemaLoader.generateDefaultValues.and.returnValue({ foo: "bar" });
-      component.resetForm();
-      expect(component.formData()["max_trajectories"]).toBe(1);
-      expect(component.formData()["number_of_final_designs"]).toBe(1);
+    it("validateAll marks the form touched", () => {
+      component["validateAll"]();
+      expect(component.form.controls.jobName.touched).toBe(true);
     });
   });
 
   describe("lifecycle", () => {
-    it("loads the schema on init and tears down on destroy", () => {
-      component.ngOnInit();
-      expect(schemaLoader.loadInputSchema).toHaveBeenCalled();
+    it("tears down on destroy without throwing", () => {
       expect(() => component.ngOnDestroy()).not.toThrow();
     });
   });

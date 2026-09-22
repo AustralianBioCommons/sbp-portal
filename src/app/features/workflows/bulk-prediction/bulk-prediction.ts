@@ -25,6 +25,7 @@ import {
   ToolSelectionComponent,
 } from "../components/tool-selection/tool-selection.component";
 import {
+  MIN_BULK_ENTRIES,
   parseMultiFasta,
   validateBulkFastaProtein,
 } from "../shared/fasta.utils";
@@ -72,6 +73,7 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
   private fb = inject(NonNullableFormBuilder);
 
   protected readonly workflowCategory = "bulk-prediction" as const;
+  protected override readonly minimumQuantity = MIN_BULK_ENTRIES;
 
   /** Credit cost of the run: tool multiplier × number of FASTA entries. */
   readonly creditCost = computed<number | null>(() => {

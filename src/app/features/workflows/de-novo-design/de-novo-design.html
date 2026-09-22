@@ -45,11 +45,7 @@
         heading="Input Configuration"
         description="Configure input parameters based on the workflow schema."
       >
-        @if (schemaLoader.inputSchemaData() &&
-        schemaLoader.inputSchemaFields().length > 0) {
         <div class="space-y-4">
-          @for (row of schemaLoader.inputRows(); track row.id; let i = $index) {
-
           <!-- PDB viewer + right-side sliding config panel -->
           <div class="w-full overflow-hidden rounded-lg border">
             <!-- PDB file header — always visible above the viewer -->
@@ -74,7 +70,7 @@
                 class="sr-only"
                 accept=".pdb"
                 [disabled]="isPdbUploading()"
-                (change)="$any($event.target).files?.[0] && onPdbFilePicked($any($event.target).files[0], row.id)"
+                (change)="$any($event.target).files?.[0] && onPdbFilePicked($any($event.target).files[0])"
               />
               <app-button
                 type="button"
@@ -104,25 +100,19 @@
                   [disabled]="isPdbUploading()"
                   [roundBottomRight]="panelWidth() === 0"
                   [externalSelection]="programmaticViewerSelection()"
-                  (filePicked)="onPdbFilePicked($event, row.id)"
-                  (residuesSelected)="onResiduesSelected(row.id, $event)"
+                  (filePicked)="onPdbFilePicked($event)"
+                  (residuesSelected)="onResiduesSelected($event)"
                   (structureResiduesDetected)="onStructureResiduesDetected($event)"
                   (sequenceLengthDetected)="onSequenceLengthDetected($event)"
                 ></app-molstar-viewer>
 
                 <!-- starting_pdb error — overlaid on viewer, takes no layout space -->
-                @if (hasRowFieldError(row.id, 'starting_pdb')) {
+                @if (hasFieldError('starting_pdb')) {
                 <div
-                  class="absolute top-4 left-4 right-4 z-10 flex items-center gap-2 rounded-md border border-red-200 bg-red-50/95 px-3 py-2.5 shadow-sm backdrop-blur-sm"
+                  class="absolute top-28 left-4 right-4 z-10 flex items-center gap-2 rounded-md border border-red-200 bg-red-50/95 px-3 py-2.5 shadow-sm backdrop-blur-sm"
                 >
-                  <ng-icon
-                    name="heroXCircleSolid"
-                    size="20"
-                    class="shrink-0 text-red-500"
-                    aria-hidden="true"
-                  ></ng-icon>
                   <p class="text-sm text-red-500">
-                    {{ getRowFieldError(row.id, 'starting_pdb') }}
+                    {{ getFieldError('starting_pdb') }}
                   </p>
                 </div>
                 }
@@ -165,18 +155,18 @@
                 <button
                   type="button"
                   class="absolute top-4 right-0 z-10 bg-white flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 p-2 text-sm font-medium shadow-md transition-colors focus:outline-none"
-                  [class]="hasConfigSectionErrors(row.id) ? 'border-red-500 text-red-600 hover:bg-red-50' : 'border-gray-300  hover:bg-gray-50'"
+                  [class]="hasConfigSectionErrors() ? 'border-red-500 text-red-600 hover:bg-red-50' : 'border-gray-300  hover:bg-gray-50'"
                   (click)="panelWidth.set(defaultPanelWidth)"
                   title="Open Input Configuration"
                 >
                   <ng-icon
                     name="heroChevronDoubleLeft"
                     class="h-4 w-4"
-                    [class]="hasConfigSectionErrors(row.id) ? 'text-red-400' : 'text-gray-500'"
+                    [class]="hasConfigSectionErrors() ? 'text-red-400' : 'text-gray-500'"
                     aria-hidden="true"
                   ></ng-icon>
                   <span>Input Configuration</span>
-                  @if (hasConfigSectionErrors(row.id)) {
+                  @if (hasConfigSectionErrors()) {
                   <span
                     class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold leading-none text-white"
                     aria-label="Has errors"
@@ -251,62 +241,45 @@
                         </p>
                         }
                       </div>
-                      @for (field of schemaLoader.requiredInputFields(); track
-                      field.name) { @if (field.name === 'starting_pdb' ||
-                      field.name === 'max_length' || field.name ===
-                      'binder_name' || field.name === 'id' || field.name ===
-                      'number_of_final_designs' || field.name ===
-                      'max_trajectories' || field.name === 'chains') {
-                      <!-- skip: chains are derived from hotspot residues at submission time -->
-                      } @else if (field.name === 'min_length') {
+
+                      <!-- Target Hotspot Residues -->
+                      <app-form-field
+                        [field]="hotspotResiduesField"
+                        [value]="targetHotspotResidues()"
+                        [hasError]="hasFieldError('target_hotspot_residues')"
+                        [errorMessage]="getFieldError('target_hotspot_residues') || ''"
+                        tooltip="Type residues as ChainResidue, e.g. A100,A101,B200. Or click residues in the viewer to add them here."
+                        (valueChange)="onHotspotResiduesManualChange($event)"
+                        (fieldBlur)="validateHotspotResiduesField()"
+                      ></app-form-field>
+
+                      <!-- Binder Length Range -->
                       <div>
                         <p class="block text-sm font-medium mb-1">
                           Binder Length Range
                           <span class="text-red-500">*</span>
                         </p>
                         <app-length-range-slider
-                          [min]="pdbSequenceMin()"
-                          [max]="pdbSequenceLength()"
-                          [minValue]="getRowNumberValue(row.id, 'min_length', 65)"
-                          [maxValue]="getRowNumberValue(row.id, 'max_length', 65)"
+                          [min]="pdbSequenceMin"
+                          [max]="pdbSequenceLength"
+                          [minValue]="minLength()"
+                          [maxValue]="maxLength()"
                           [disabled]="isPdbUploading()"
-                          (rangeChange)="onLengthRangeChange(row.id, $event)"
+                          (rangeChange)="onLengthRangeChange($event)"
                         ></app-length-range-slider>
                       </div>
-                      } @else if (field.name === 'target_hotspot_residues') {
-                      <app-form-field
-                        [field]="field"
-                        [value]="getRowValue(row.id, field.name)"
-                        [hasError]="hasRowFieldError(row.id, field.name)"
-                        [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                        tooltip="Type residues as ChainResidue, e.g. A100,A101,B200. Or click residues in the viewer to add them here."
-                        (valueChange)="onHotspotResiduesManualChange(row.id, $event)"
-                        (fieldBlur)="validateRowField(row.id, field.name)"
-                      ></app-form-field>
-                      } @else {
-                      <app-form-field
-                        [field]="field"
-                        [value]="getRowValue(row.id, field.name)"
-                        [hasError]="hasRowFieldError(row.id, field.name)"
-                        [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                        (valueChange)="updateRowValueWithValidation(row.id, field.name, $event)"
-                        (fieldBlur)="validateRowField(row.id, field.name)"
-                      ></app-form-field>
-                      } }
 
-                      <!-- Number of trajectories + credits -->
+                      <!-- Number of Designs + credits -->
                       <div class="flex flex-col gap-4">
-                        @for (field of schemaLoader.requiredInputFields(); track
-                        field.name) { @if (field.name === 'max_trajectories') {
                         <app-form-field
-                          [field]="getTrajectoryField(field)"
-                          [value]="getRowValue(row.id, field.name)"
-                          [hasError]="hasRowFieldError(row.id, field.name)"
-                          [errorMessage]="getRowFieldError(row.id, field.name) || ''"
-                          (valueChange)="onTrajectoryCountChange(row.id, $event)"
-                          (fieldBlur)="validateRowField(row.id, field.name)"
+                          [field]="numberOfDesignsField"
+                          [value]="numberOfDesigns()"
+                          [hasError]="hasFieldError('max_trajectories')"
+                          [errorMessage]="getFieldError('max_trajectories') || ''"
+                          (valueChange)="onNumberOfDesignsChange($event)"
+                          (fieldBlur)="validateNumberOfDesignsField()"
                         ></app-form-field>
-                        } } @if (creditsEnabled) {
+                        @if (creditsEnabled) {
                         <app-credit-summary
                           [total]="creditCost()"
                           [remaining]="creditsRemaining()"
@@ -319,10 +292,7 @@
               </div>
             </div>
           </div>
-
-          }
         </div>
-        }
       </app-step-content>
     </div>
 

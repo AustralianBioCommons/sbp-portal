@@ -9,7 +9,7 @@
       <caption class="sr-only">
         {{
           caption()
-        }}. Select a row to show that design in the structure viewer.
+        }}. Select a row to show that structure in the viewer.
       </caption>
       <thead class="bg-sky-900 text-white">
         <tr>
@@ -53,7 +53,7 @@
             [attr.colspan]="columns().length"
             class="px-4 py-8 text-center text-sm text-gray-500"
           >
-            No designs to display.
+            No rows to display.
           </td>
         </tr>
         } @else { @for (row of sortedRows(); track row.id) {

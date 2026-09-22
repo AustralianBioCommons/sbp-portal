@@ -1,14 +1,14 @@
 import {
-  DesignColumn,
-  DesignRow,
-  getDeNovoDesignAdapter,
+  ReportColumn,
+  ReportRow,
+  getJobResultsAdapter,
   parseCsvTable,
-  registerDeNovoDesignAdapter,
-  sortDesignRows,
-} from "./de-novo-results.utils";
-import "./bindcraft-results.utils";
+  registerJobResultsAdapter,
+  sortReportRows,
+} from "./job-results-report.utils";
+import "./rfdiffusion-results.utils";
 
-const row = (id: string, values: Record<string, string>): DesignRow => ({
+const row = (id: string, values: Record<string, string>): ReportRow => ({
   id,
   label: id,
   values,
@@ -75,13 +75,13 @@ describe("parseCsvTable", () => {
   });
 });
 
-describe("sortDesignRows", () => {
-  const numeric: DesignColumn = {
+describe("sortReportRows", () => {
+  const numeric: ReportColumn = {
     key: "Score",
     heading: "Score",
     numeric: true,
   };
-  const text: DesignColumn = { key: "Design", heading: "Design" };
+  const text: ReportColumn = { key: "Design", heading: "Design" };
 
   const rows = [
     row("a", { Score: "0.75", Design: "gamma" }),
@@ -90,7 +90,7 @@ describe("sortDesignRows", () => {
   ];
 
   it("sorts a numeric column by value, not by string order", () => {
-    expect(sortDesignRows(rows, numeric, "asc").map((r) => r.id)).toEqual([
+    expect(sortReportRows(rows, numeric, "asc").map((r) => r.id)).toEqual([
       "a",
       "c",
       "b",
@@ -98,7 +98,7 @@ describe("sortDesignRows", () => {
   });
 
   it("reverses on descending", () => {
-    expect(sortDesignRows(rows, numeric, "desc").map((r) => r.id)).toEqual([
+    expect(sortReportRows(rows, numeric, "desc").map((r) => r.id)).toEqual([
       "b",
       "c",
       "a",
@@ -106,7 +106,7 @@ describe("sortDesignRows", () => {
   });
 
   it("sorts a text column alphabetically", () => {
-    expect(sortDesignRows(rows, text, "asc").map((r) => r.id)).toEqual([
+    expect(sortReportRows(rows, text, "asc").map((r) => r.id)).toEqual([
       "b",
       "c",
       "a",
@@ -116,14 +116,14 @@ describe("sortDesignRows", () => {
   it("leaves blanks last in both directions", () => {
     const withBlank = [...rows, row("d", { Score: "", Design: "" })];
 
-    expect(sortDesignRows(withBlank, numeric, "asc").at(-1)!.id).toBe("d");
-    expect(sortDesignRows(withBlank, numeric, "desc").at(-1)!.id).toBe("d");
+    expect(sortReportRows(withBlank, numeric, "asc").at(-1)!.id).toBe("d");
+    expect(sortReportRows(withBlank, numeric, "desc").at(-1)!.id).toBe("d");
   });
 
   it("falls back to text order when a numeric column holds words", () => {
     const words = [row("a", { Score: "high" }), row("b", { Score: "a-few" })];
 
-    expect(sortDesignRows(words, numeric, "asc").map((r) => r.id)).toEqual([
+    expect(sortReportRows(words, numeric, "asc").map((r) => r.id)).toEqual([
       "b",
       "a",
     ]);
@@ -131,7 +131,7 @@ describe("sortDesignRows", () => {
 
   it("does not mutate the rows it was given", () => {
     const original = [...rows];
-    sortDesignRows(rows, numeric, "desc");
+    sortReportRows(rows, numeric, "desc");
 
     expect(rows).toEqual(original);
   });
@@ -139,7 +139,7 @@ describe("sortDesignRows", () => {
   it("treats two blanks as equal", () => {
     const blanks = [row("a", { Score: "" }), row("b", { Score: "" })];
 
-    expect(sortDesignRows(blanks, numeric, "asc").map((r) => r.id)).toEqual([
+    expect(sortReportRows(blanks, numeric, "asc").map((r) => r.id)).toEqual([
       "a",
       "b",
     ]);
@@ -147,28 +147,46 @@ describe("sortDesignRows", () => {
 });
 
 describe("the adapter registry", () => {
-  it("resolves a tool however the job reports its casing", () => {
-    expect(getDeNovoDesignAdapter("BindCraft")?.tool).toBe("bindcraft");
-    expect(getDeNovoDesignAdapter("  bindcraft ")?.tool).toBe("bindcraft");
+  it("resolves a workflow and tool however the job reports their casing", () => {
+    expect(getJobResultsAdapter("de novo design", "BindCraft")?.tool).toBe(
+      "bindcraft"
+    );
+    expect(
+      getJobResultsAdapter("  De Novo Design ", "  bindcraft ")?.tool
+    ).toBe("bindcraft");
   });
 
-  it("returns null for a workflow the report cannot render yet", () => {
-    expect(getDeNovoDesignAdapter("rfdiffusion")).toBeNull();
-    expect(getDeNovoDesignAdapter(null)).toBeNull();
-    expect(getDeNovoDesignAdapter(undefined)).toBeNull();
+  it("returns null for an unregistered tool, and for no tool at all", () => {
+    expect(getJobResultsAdapter("de novo design", "boltzgen")).toBeNull();
+    expect(getJobResultsAdapter("de novo design", "")).toBeNull();
+    expect(getJobResultsAdapter("de novo design", null)).toBeNull();
+    expect(getJobResultsAdapter("de novo design", undefined)).toBeNull();
+    expect(getJobResultsAdapter(null, "bindcraft")).toBeNull();
+  });
+
+  it("keeps one tool's adapters apart across workflows", () => {
+    expect(
+      getJobResultsAdapter("interaction screening", "bindcraft")
+    ).toBeNull();
   });
 
   it("accepts a newly registered workflow", () => {
-    registerDeNovoDesignAdapter({
+    registerJobResultsAdapter({
+      workflow: "test workflow",
       tool: "test-tool",
       columns: [{ key: "rank", heading: "Rank" }],
       resultsFileName: "results.csv",
+      primaryChainId: "A",
+      panelHeading: "Results",
+      emptyMessage: "Nothing here.",
+      legend: [{ label: "Binder", band: "primary" }],
+      superpose: true,
       findResultsArtifact: () => null,
       parseRows: () => [],
     });
 
-    expect(getDeNovoDesignAdapter("Test-Tool")?.resultsFileName).toBe(
-      "results.csv"
-    );
+    expect(
+      getJobResultsAdapter("Test Workflow", "Test-Tool")?.resultsFileName
+    ).toBe("results.csv");
   });
 });

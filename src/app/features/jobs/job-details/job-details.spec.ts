@@ -13,7 +13,7 @@ import {
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
-import { DeNovoDesignReportComponent } from "../components/de-novo-design-report/de-novo-design-report.component";
+import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { environment } from "../../../../environments/environment";
 
@@ -46,11 +46,12 @@ class SinglePredictionReportStubComponent {
 }
 
 @Component({
-  selector: "app-de-novo-design-report",
+  selector: "app-job-results-report",
   template: "",
 })
-class DeNovoDesignReportStubComponent {
+class JobResultsReportStubComponent {
   runId = input.required<string>();
+  workflow = input("");
   tool = input("");
   files = input<readonly ResultFileRef[]>([]);
   filesLoading = input(false);
@@ -109,6 +110,15 @@ describe("JobDetailsComponent", () => {
     submittedAt: "2026-03-12T10:00:00Z",
     score: 0.95,
     finalDesignCount: 3,
+  };
+
+  /** Every workflow the portal names now renders its own report, so the
+   *  packaged iframe is what a run it does not recognise falls back to. */
+  const packagedReportJob: JobListItem = {
+    ...mockJob,
+    id: "job-packaged",
+    jobName: "Unrecognised run",
+    workflow: "Some Other Workflow",
   };
 
   const fallbackJob: JobListItem = {
@@ -181,15 +191,12 @@ describe("JobDetailsComponent", () => {
     })
       .overrideComponent(JobDetailsComponent, {
         remove: {
-          imports: [
-            SinglePredictionReportComponent,
-            DeNovoDesignReportComponent,
-          ],
+          imports: [SinglePredictionReportComponent, JobResultsReportComponent],
         },
         add: {
           imports: [
             SinglePredictionReportStubComponent,
-            DeNovoDesignReportStubComponent,
+            JobResultsReportStubComponent,
           ],
         },
       })
@@ -277,6 +284,12 @@ describe("JobDetailsComponent", () => {
     fixture = TestBed.createComponent(JobDetailsComponent);
     component = fixture.componentInstance;
   });
+
+  /** Loads a job whose results tab is the packaged report iframe. */
+  const usePackagedReportJob = () => {
+    mockJobsService.getJob.and.returnValue(of(packagedReportJob));
+    routeId = packagedReportJob.id;
+  };
 
   /** Flush ngOnInit, the job-loading subscription, and the results effect. */
   const render = () => {
@@ -402,14 +415,17 @@ describe("JobDetailsComponent", () => {
   // --- Results panel --------------------------------------------------------
 
   it("should build and render the job report iframe", () => {
+    usePackagedReportJob();
     render();
 
-    expect(resultsService.getJobReport).toHaveBeenCalledWith(mockJob.id);
+    expect(resultsService.getJobReport).toHaveBeenCalledWith(
+      packagedReportJob.id
+    );
     const iframe = fixture.nativeElement.querySelector(
       "iframe"
     ) as HTMLIFrameElement;
     expect(iframe).not.toBeNull();
-    expect(iframe.title).toContain(mockJob.jobName);
+    expect(iframe.title).toContain(packagedReportJob.jobName);
   });
 
   it("should switch tabs and reset when the job changes", () => {
@@ -496,6 +512,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should stop loading when the report iframe loads", () => {
+    usePackagedReportJob();
     render();
     const iframe = fixture.nativeElement.querySelector(
       "iframe"
@@ -509,6 +526,7 @@ describe("JobDetailsComponent", () => {
   });
 
   it("should handle report iframe loading errors", () => {
+    usePackagedReportJob();
     render();
     const iframe = fixture.nativeElement.querySelector(
       "iframe"
@@ -528,6 +546,7 @@ describe("JobDetailsComponent", () => {
     resultsService.getJobReport.and.returnValue(
       throwError(() => new Error("report failed"))
     );
+    usePackagedReportJob();
     render();
 
     expect(component.reportUrl()).toBeNull();
@@ -537,6 +556,7 @@ describe("JobDetailsComponent", () => {
 
   it("should set reportError when getJobReport returns null", () => {
     resultsService.getJobReport.and.returnValue(of(null));
+    usePackagedReportJob();
     render();
 
     expect(component.reportUrl()).toBeNull();
@@ -721,8 +741,11 @@ describe("JobDetailsComponent", () => {
     const files = component.getFiles(fallbackJob);
     const citations = component.getCitations(fallbackJob);
 
-    expect(summaryItems[1].value).toBe("N/A");
-    expect(summaryItems[3].value).toBe("N/A");
+    const valueOf = (label: string) =>
+      summaryItems.find((item) => item.label === label)?.value;
+
+    expect(valueOf("Tool")).toBe("N/A");
+    expect(valueOf("Max score")).toBe("N/A");
     expect(files[0]).toBe("queued_job_summary.json");
     expect(citations[0]).toBe("Workflow methods and generated outputs.");
   });
@@ -1275,38 +1298,79 @@ describe("JobDetailsComponent", () => {
     fixture.detectChanges();
   };
 
-  const deNovoReport = () =>
-    fixture.debugElement.query(By.directive(DeNovoDesignReportStubComponent));
+  const resultsReport = () =>
+    fixture.debugElement.query(By.directive(JobResultsReportStubComponent));
 
   it("shows the de novo view, not the packaged report, for a de novo run", () => {
     renderDeNovoDesign();
 
-    expect(component.isDeNovoDesign()).toBeTrue();
+    expect(component.workflowName()).toBe("de novo design");
+    expect(component.hasResultsReport()).toBeTrue();
     expect(component.isSinglePrediction()).toBeFalse();
-    expect(deNovoReport()).not.toBeNull();
+    expect(resultsReport()).not.toBeNull();
     expect(resultsService.getJobReport).not.toHaveBeenCalled();
   });
 
   it("hands the de novo view the run, its tool and its files", () => {
     renderDeNovoDesign();
-    const report = deNovoReport().componentInstance;
+    const report = resultsReport().componentInstance;
 
     expect(report.runId()).toBe(deNovoDesignJob.id);
+    expect(report.workflow()).toBe("de novo design");
     expect(report.tool()).toBe("Bindcraft");
     expect(report.files()).toEqual(component.filesItems());
+  });
+
+  // --- The interaction screening view ----------------------------------------
+
+  it("shows the same report for an interaction screening run", () => {
+    render();
+
+    expect(component.workflowName()).toBe("interaction screening");
+    expect(component.hasResultsReport()).toBeTrue();
+    expect(resultsReport()).not.toBeNull();
+    expect(resultsService.getJobReport).not.toHaveBeenCalled();
+  });
+
+  it("hands that view the normalised workflow, so it picks the right adapter", () => {
+    render();
+    const report = resultsReport().componentInstance;
+
+    expect(report.workflow()).toBe("interaction screening");
+    expect(report.tool()).toBe("Boltz");
+    expect(report.runId()).toBe(mockJob.id);
+  });
+
+  // --- The bulk prediction view ----------------------------------------------
+  it("shows the same report for a bulk prediction run", () => {
+    renderBulkPrediction();
+
+    expect(component.workflowName()).toBe("bulk prediction");
+    expect(component.hasResultsReport()).toBeTrue();
+    expect(resultsReport()).not.toBeNull();
+    expect(resultsService.getJobReport).not.toHaveBeenCalled();
+  });
+
+  it("hands that view the normalised bulk workflow and its tool", () => {
+    renderBulkPrediction();
+    const report = resultsReport().componentInstance;
+
+    expect(report.workflow()).toBe("bulk prediction");
+    expect(report.tool()).toBe("Colabfold");
+    expect(report.runId()).toBe(bulkPredictionJob.id);
   });
 
   it("falls back to the packaged report when the de novo view cannot render", () => {
     renderDeNovoDesign();
 
-    deNovoReport().componentInstance.unavailable.emit();
+    resultsReport().componentInstance.unavailable.emit();
     fixture.detectChanges();
 
     expect(component.reportFallback()).toBeTrue();
     expect(resultsService.getJobReport).toHaveBeenCalledWith(
       deNovoDesignJob.id
     );
-    expect(deNovoReport()).toBeNull();
+    expect(resultsReport()).toBeNull();
     expect(fixture.nativeElement.querySelector("iframe")).not.toBeNull();
   });
 
@@ -1509,7 +1573,7 @@ describe("JobDetailsComponent", () => {
       component.getFilesByCategory().map((group) => group.category)
     ).toEqual(["Report"]);
 
-    const report = deNovoReport().componentInstance;
+    const report = resultsReport().componentInstance;
     expect(report.files()).toEqual(component.filesItems());
   });
 });

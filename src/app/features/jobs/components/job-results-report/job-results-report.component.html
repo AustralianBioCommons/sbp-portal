@@ -13,13 +13,9 @@
     <p class="wrap-break-word">{{ filesError() }}</p>
   </div>
   } @else if (loading()) {
-  <app-loading message="Loading designs..." [inline]="true"></app-loading>
-  } @else if (missingResults(); as missingFile) {
-  <p class="text-sm text-gray-900 wrap-break-word">
-    This run is missing its design results file ({{ missingFile }}), so the
-    designs cannot be shown. The individual output files are listed under the
-    Files tab.
-  </p>
+  <app-loading message="Loading results..." [inline]="true"></app-loading>
+  } @else if (noResultsAvailable()) {
+  <p class="text-sm text-gray-900 wrap-break-word">{{ emptyMessage() }}</p>
   } @else if (resultsError()) {
   <div
     class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
@@ -37,8 +33,11 @@
   <div class="space-y-2">
     <!-- Sits over the viewer's column; the table has the right. -->
     <div>
+      @if (showPlddtLegend()) {
+      <app-plddt-legend></app-plddt-legend>
+      } @else {
       <ul class="flex flex-wrap items-center gap-x-6 gap-y-2">
-        @for (band of chainLegend; track band.label) {
+        @for (band of chainLegend(); track $index) {
         <li class="flex items-center gap-2 text-xs font-medium">
           <span
             class="h-2 w-12 rounded-full"
@@ -49,6 +48,7 @@
         </li>
         }
       </ul>
+      }
     </div>
 
     <!-- Viewport height: the canvas has no height of its own, so a content-fit
@@ -59,7 +59,7 @@
       <!-- min-w-0 so the canvas cannot widen the column. -->
       <section
         class="relative min-w-48 flex-1 overflow-hidden"
-        aria-label="Design structure"
+        [attr.aria-label]="panelTitle() + ' structure'"
       >
         <app-molstar-viewer
           #viewer
@@ -69,7 +69,10 @@
           [enableUpload]="false"
           [roundBottomRight]="!isPanelOpen()"
           representation="cartoon"
-          colorTheme="chain-a"
+          [colorTheme]="colorTheme()"
+          [binderChainId]="primaryChainId()"
+          [designLength]="primaryLength()"
+          [superposeKey]="superposeKey()"
           [showSequencePanel]="false"
           [enablePicking]="false"
           hint=""
@@ -77,23 +80,26 @@
         ></app-molstar-viewer>
 
         @if (structureError()) {
-        <div
-          class="absolute inset-x-4 top-4 z-10 flex items-center gap-2 rounded border border-red-200 bg-red-50/95 p-4 text-sm text-red-800 shadow-sm"
-          role="alert"
-        >
-          <ng-icon
-            name="heroExclamationCircle"
-            size="20"
-            class="shrink-0 text-red-500"
-            aria-hidden="true"
-          ></ng-icon>
-          <p class="wrap-break-word">{{ structureError() }}</p>
+        <!-- Floats the standard banner over the canvas. -->
+        <div class="absolute inset-x-4 top-4 z-10 shadow-sm">
+          <div
+            class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+            role="alert"
+          >
+            <ng-icon
+              name="heroExclamationCircle"
+              size="20"
+              class="shrink-0 text-red-500"
+              aria-hidden="true"
+            ></ng-icon>
+            <p class="wrap-break-word">{{ structureError() }}</p>
+          </div>
         </div>
         } @else if (!selectedRow()?.structure) {
         <p
           class="absolute inset-0 z-10 flex items-center justify-center bg-white p-6 text-center text-sm text-gray-500"
         >
-          No structure file was found for this design.
+          No structure file was found for this row.
         </p>
         }
 
@@ -129,7 +135,7 @@
         class="relative w-1 shrink-0 cursor-col-resize select-none bg-gray-200 transition-colors hover:bg-sky-200 focus-visible:bg-sky-400 focus-visible:outline-none"
         role="separator"
         aria-orientation="vertical"
-        aria-label="Resize the designs panel"
+        [attr.aria-label]="'Resize the ' + panelTitle() + ' panel'"
         tabindex="0"
         [attr.aria-valuemin]="panelWidthRange().min"
         [attr.aria-valuemax]="panelWidthRange().max"
@@ -147,27 +153,27 @@
       }
 
       <div
-        #designsPanel
-        id="designs-panel"
+        #reportPanel
+        id="report-panel"
         class="relative min-w-0"
         [class]="isDragging() ? '' : 'transition-all duration-300 ease-in-out'"
         [style.width]="panelStyleWidth()"
         role="region"
-        aria-label="Ranked designs"
+        [attr.aria-label]="panelTitle()"
       >
         @if (!isPanelOpen()) {
         <button
           type="button"
           class="absolute right-0 top-4 z-10 flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 border-gray-300 bg-white p-2 text-sm font-medium shadow-md transition-colors hover:bg-gray-50 focus:outline-none"
           (click)="openPanel()"
-          title="Open the ranked designs"
+          [title]="'Open ' + panelTitle()"
         >
           <ng-icon
             name="heroChevronDoubleLeft"
             class="h-4 w-4 text-gray-500"
             aria-hidden="true"
           ></ng-icon>
-          <span>Ranked designs</span>
+          <span>{{ panelTitle() }}</span>
         </button>
         }
 
@@ -197,14 +203,14 @@
             </div>
 
             <div class="min-h-0 flex-1">
-              <app-design-results-table
-                caption="Ranked designs"
+              <app-job-results-table
+                [caption]="panelTitle()"
                 [framed]="false"
                 [columns]="columns()"
                 [rows]="rows()"
                 [selectedId]="selectedId()"
                 (rowSelected)="onRowSelected($event)"
-              ></app-design-results-table>
+              ></app-job-results-table>
             </div>
           </div>
         </div>

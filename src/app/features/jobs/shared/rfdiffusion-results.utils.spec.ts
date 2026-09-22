@@ -1,0 +1,233 @@
+import {
+  RFDIFFUSION_AF2_COLUMNS,
+  RFDIFFUSION_BOLTZ_COLUMNS,
+  findRfDiffusionColumns,
+  findRfDiffusionResultsArtifact,
+  parseRfDiffusionDesigns,
+  rfDiffusionAdapter,
+} from "./rfdiffusion-results.utils";
+import {
+  getJobResultsAdapter,
+  parseCsvTable,
+} from "./job-results-report.utils";
+import { ResultFileRef } from "./prediction-results.utils";
+
+function file(key: string, category = "pdb"): ResultFileRef {
+  return {
+    key,
+    label: key.split("/").pop() ?? key,
+    url: `https://s3.test/${key}`,
+    category,
+  };
+}
+
+const resultsFile = file("run-1/results/ranked_designs.csv", "stats_csv");
+/** One published design, as the pipeline names it. */
+function design(name: string): ResultFileRef {
+  return file(`run-1/results/ranked_designs/${name}`);
+}
+
+describe("rfdiffusion results utils", () => {
+  it("registers itself under the tool id the job reports", () => {
+    expect(getJobResultsAdapter("de novo design", "rfdiffusion")).toBe(
+      rfDiffusionAdapter
+    );
+    expect(getJobResultsAdapter("de novo design", "RFdiffusion")).toBe(
+      rfDiffusionAdapter
+    );
+  });
+
+  describe("finding artifacts", () => {
+    it("finds the ranked CSV", () => {
+      const files = [resultsFile, file("run-1/results/other.csv")];
+      expect(findRfDiffusionResultsArtifact(files)).toBe(resultsFile);
+    });
+
+    it("returns null when the run published none", () => {
+      expect(
+        findRfDiffusionResultsArtifact([file("run-1/results/all_designs.csv")])
+      ).toBeNull();
+    });
+  });
+
+  describe("choosing columns for the run's predictor", () => {
+    const AF2_HEADERS = [
+      "rank",
+      "description",
+      "seq_length",
+      "sequence",
+      "af2_plddt_overall",
+      "af2_plddt_binder",
+      "af2_pae_interaction",
+      "af2_iptm",
+    ];
+    const BOLTZ_HEADERS = [
+      "rank",
+      "description",
+      "seq_length",
+      "sequence",
+      "boltz_plddt",
+      "boltz_ipSAE_min",
+      "boltz_iptm",
+    ];
+
+    const keysFor = (headers: string[]) =>
+      findRfDiffusionColumns(headers).map((column) => column.key);
+    const keysOf = (columns: readonly { key: string }[]) =>
+      columns.map((column) => column.key);
+
+    it("uses the AF2 columns for an AF2 run", () => {
+      expect(keysFor(AF2_HEADERS)).toEqual(keysOf(RFDIFFUSION_AF2_COLUMNS));
+    });
+
+    it("uses the Boltz columns for a Boltz run", () => {
+      expect(keysFor(BOLTZ_HEADERS)).toEqual(keysOf(RFDIFFUSION_BOLTZ_COLUMNS));
+    });
+
+    it("prefers the Boltz columns when a run carries both metric families", () => {
+      // pred_method = 'af2_boltz' predicts twice and ranks on the Boltz pass.
+      expect(keysFor([...AF2_HEADERS, ...BOLTZ_HEADERS])).toEqual(
+        keysOf(RFDIFFUSION_BOLTZ_COLUMNS)
+      );
+    });
+
+    it("drops a metric the CSV does not carry", () => {
+      const headers = AF2_HEADERS.filter((header) => header !== "af2_iptm");
+      expect(keysFor(headers)).not.toContain("af2_iptm");
+      expect(keysFor(headers)).toContain("af2_pae_interaction");
+    });
+  });
+
+  describe("pairing designs with their published files", () => {
+    const csv = [
+      "rank,fold_id,seq_id,description,sequence,seq_length,af2_plddt_overall",
+      "1,3,0,fold_3_seq_0_af2pred,MKTAY,5,91.3",
+      "2,0,1,fold_0_seq_1_af2pred,MKTAW,5,88.1",
+    ].join("\n");
+
+    const designs = [
+      design("1_fold_3_seq_0_af2pred.pdb"),
+      design("2_fold_0_seq_1_af2pred.pdb"),
+    ];
+
+    it("points each row at its own published file", () => {
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, designs);
+
+      expect(rows.length).toBe(2);
+      expect(rows[0].structure).toEqual({
+        key: designs[0].key,
+        label: designs[0].label,
+        format: "pdb",
+      });
+      expect(rows[1].structure?.key).toBe(designs[1].key);
+    });
+
+    it("matches on fold and sequence id, not on the rank prefix", () => {
+      // Ranks here disagree with the prefixes, so only fold/seq can pair them.
+      const shuffled = [
+        design("07_fold_0_seq_1_af2pred.pdb"),
+        design("09_fold_3_seq_0_af2pred.pdb"),
+      ];
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, shuffled);
+
+      expect(rows[0].structure?.key).toBe(shuffled[1].key);
+      expect(rows[1].structure?.key).toBe(shuffled[0].key);
+    });
+
+    it("pairs Boltz-predicted designs too", () => {
+      const boltz = [design("1_fold_3_seq_0_boltzpred.pdb")];
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, boltz);
+
+      expect(rows[0].structure?.key).toBe(boltz[0].key);
+    });
+
+    it("tolerates ids the CSV wrote as floats", () => {
+      const floats = [
+        "rank,fold_id,seq_id,description",
+        "1,3.0,0.0,fold_3_seq_0_af2pred",
+      ].join("\n");
+      const rows = parseRfDiffusionDesigns(parseCsvTable(floats).rows, designs);
+
+      expect(rows[0].structure?.key).toBe(designs[0].key);
+    });
+
+    it("falls back to rank, zero padding and all, when the CSV has no ids", () => {
+      const noIds = ["rank,description", "2,second"].join("\n");
+      // Padded to the design count's width, so rank compares as a number.
+      const padded = [
+        design("001_fold_3_seq_0_af2pred.pdb"),
+        design("002_fold_0_seq_1_af2pred.pdb"),
+      ];
+      const rows = parseRfDiffusionDesigns(parseCsvTable(noIds).rows, padded);
+
+      expect(rows[0].structure?.key).toBe(padded[1].key);
+    });
+
+    it("ignores a PDB published outside the ranked designs directory", () => {
+      const elsewhere = [file("run-1/results/1_fold_3_seq_0_af2pred.pdb")];
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, elsewhere);
+
+      expect(rows[0].structure).toBeNull();
+    });
+
+    it("never hands a row another design's file", () => {
+      // The only file shares rank 1 with the first row but is a different
+      // design, so neither row may claim it.
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, [
+        design("1_fold_9_seq_9_af2pred.pdb"),
+      ]);
+
+      expect(rows[0].structure).toBeNull();
+      expect(rows[1].structure).toBeNull();
+    });
+
+    it("still lists the designs when nothing was published", () => {
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, []);
+
+      expect(rows.length).toBe(2);
+      expect(rows[0].structure).toBeNull();
+      expect(rows[0].values["af2_plddt_overall"]).toBe("91.3");
+    });
+
+    it("ignores a file in the ranked designs directory that is not a design", () => {
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, [
+        design("README.pdb"),
+        design("1_fold_3_seq_0_af2pred.pdb"),
+      ]);
+
+      expect(rows[0].structure?.key).toContain("1_fold_3_seq_0_af2pred.pdb");
+    });
+
+    it("leaves a row unpaired when its ids and rank are all unusable", () => {
+      const unusable = [
+        "rank,fold_id,seq_id,description",
+        "top,x,y,first",
+      ].join("\n");
+      const rows = parseRfDiffusionDesigns(
+        parseCsvTable(unusable).rows,
+        designs
+      );
+
+      expect(rows[0].structure).toBeNull();
+    });
+
+    it("names a row the CSV left without a description", () => {
+      // A row of only empty cells is dropped, so each keeps its seq_length.
+      const unnamed = ["rank,description,seq_length", "3,,114", ",,114"].join(
+        "\n"
+      );
+      const rows = parseRfDiffusionDesigns(parseCsvTable(unnamed).rows, []);
+
+      expect(rows[0].label).toBe("Design 3");
+      // No rank either, so the row's position names it.
+      expect(rows[1].label).toBe("Design 2");
+    });
+
+    it("keeps row ids unique when rank and description repeat", () => {
+      const duplicates = ["rank,description", "1,same", "1,same"].join("\n");
+      const rows = parseRfDiffusionDesigns(parseCsvTable(duplicates).rows, []);
+
+      expect(rows[0].id).not.toBe(rows[1].id);
+    });
+  });
+});

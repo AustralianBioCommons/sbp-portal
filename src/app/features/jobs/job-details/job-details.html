@@ -83,8 +83,21 @@
       <p class="text-sm">{{ error() }}</p>
     </div>
     } @else if (job(); as selectedJob) {
-    <div class="text-4xl font-semibold text-gray-900">
-      {{ selectedJob.jobName }}
+    <div class="flex flex-wrap items-center gap-4">
+      <h1 class="text-4xl font-semibold text-gray-900 wrap-break-word">
+        {{ selectedJob.jobName }}
+      </h1>
+      <span
+        [class]="getStatusClass(selectedJob.status)"
+        class="mt-1.5 inline-flex items-center justify-center rounded-full px-2 py-1 text-sm font-semibold"
+      >
+        @if (selectedJob.status === 'In progress') {
+        <span
+          class="mr-1.5 h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600"
+          aria-hidden="true"
+        ></span>
+        } {{ selectedJob.status }}
+      </span>
     </div>
     <div class="relative w-full rounded-lg border bg-white shadow-sm">
       <div class="p-6 space-y-6">
@@ -143,20 +156,28 @@
                 [filesError]="filesError()"
                 (unavailable)="onInteractiveReportUnavailable()"
               ></app-single-prediction-report>
-              } @else if (isDeNovoDesign() && !reportFallback()) {
-              <app-de-novo-design-report
+              } @else if (hasResultsReport() && !reportFallback()) {
+              <app-job-results-report
                 [runId]="selectedJob.id"
+                [workflow]="workflowName()"
                 [tool]="selectedJob.tool"
                 [files]="filesItems()"
                 [filesLoading]="filesLoading()"
                 [filesError]="filesError()"
                 (unavailable)="onInteractiveReportUnavailable()"
-              ></app-de-novo-design-report>
+              ></app-job-results-report>
               } @else { @if (reportError()) {
               <div
-                class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+                class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+                role="alert"
               >
-                {{ reportError() }}
+                <ng-icon
+                  name="heroExclamationCircle"
+                  size="20"
+                  class="shrink-0 text-red-500"
+                  aria-hidden="true"
+                ></ng-icon>
+                <p class="wrap-break-word">{{ reportError() }}</p>
               </div>
               } @else if (reportUrl(); as reportDocumentUrl) {
               <div class="relative overflow-hidden rounded border bg-white">
@@ -188,9 +209,16 @@
 
             @switch (activeTab()) { @case ("files") { @if (filesError()) {
             <div
-              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+              class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+              role="alert"
             >
-              {{ filesError() }}
+              <ng-icon
+                name="heroExclamationCircle"
+                size="20"
+                class="shrink-0 text-red-500"
+                aria-hidden="true"
+              ></ng-icon>
+              <p class="wrap-break-word">{{ filesError() }}</p>
             </div>
             } @else if (filesLoading()) {
             <app-loading message="Loading files..." [inline]="true" />
@@ -300,9 +328,16 @@
             </p>
             } } @case ("settings") { @if (settingsError()) {
             <div
-              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+              class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+              role="alert"
             >
-              {{ settingsError() }}
+              <ng-icon
+                name="heroExclamationCircle"
+                size="20"
+                class="shrink-0 text-red-500"
+                aria-hidden="true"
+              ></ng-icon>
+              <p class="wrap-break-word">{{ settingsError() }}</p>
             </div>
             } @else if (settingsLoading()) {
             <app-loading message="Loading settings..." [inline]="true" />
@@ -347,9 +382,16 @@
             </p>
             } } @case ("logs") { @if (logsError()) {
             <div
-              class="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800 wrap-break-word"
+              class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+              role="alert"
             >
-              {{ logsError() }}
+              <ng-icon
+                name="heroExclamationCircle"
+                size="20"
+                class="shrink-0 text-red-500"
+                aria-hidden="true"
+              ></ng-icon>
+              <p class="wrap-break-word">{{ logsError() }}</p>
             </div>
             } @else if (logsLoading()) {
             <app-loading message="Loading logs..." [inline]="true" />
