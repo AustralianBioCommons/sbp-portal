@@ -193,7 +193,7 @@ export const rfDiffusionAdapter: JobResultsAdapter = {
   panelHeading: "Ranked designs",
   emptyMessage:
     "No designs passed in silico quality control criteria. Consider choosing " +
-    "different hotspots or increasing the number of trajectories.",
+    "different hotspots or increasing the number of designs.",
   // The binder band takes the selected design's own name.
   legend: [
     { label: "Target", band: "secondary" },

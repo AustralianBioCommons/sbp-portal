@@ -272,7 +272,7 @@
                       <!-- Number of Designs + credits -->
                       <div class="flex flex-col gap-4">
                         <app-form-field
-                          [field]="numberOfDesignsField()"
+                          [field]="numberOfDesignsField"
                           [value]="numberOfDesigns()"
                           [hasError]="hasFieldError('max_trajectories')"
                           [errorMessage]="getFieldError('max_trajectories') || ''"

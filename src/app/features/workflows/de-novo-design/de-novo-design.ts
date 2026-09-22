@@ -244,25 +244,16 @@ export default class DeNovoDesignComponent
     required: true,
   };
 
-  /** "Trajectories" is a BindCraft concept (retry until N pass QC, capped at
-   *  max_trajectories) — RFDiffusion has no such loop, it generates exactly
-   *  this many designs directly, so the shared field reads differently
-   *  per tool. */
-  trajectoryFieldLabel(): string {
-    return this.selectedTool() === "bindcraft"
-      ? "Number of Trajectories"
-      : "Number of Final Designs";
-  }
-
-  /** Static field descriptor for the number-of-designs input, with its label
-   *  swapped for the currently selected tool (see trajectoryFieldLabel). */
-  readonly numberOfDesignsField = computed<InputSchemaField>(() => ({
+  /** Static field descriptor for the number-of-designs input, shared by both
+   *  tools now that BindCraft generates exactly this many designs directly,
+   *  the same as RFDiffusion. */
+  readonly numberOfDesignsField: InputSchemaField = {
     name: "max_trajectories",
     type: "number",
-    label: this.trajectoryFieldLabel(),
+    label: "Number of Designs",
     required: true,
     validation: { integer: true, min: 1 },
-  }));
+  };
 
   /** Default width (px) of the config panel when opened. */
   readonly defaultPanelWidth = 300;
@@ -545,9 +536,8 @@ export default class DeNovoDesignComponent
     const value = this.numberOfDesigns();
     const errors = { ...this.formErrors() };
     if (!Number.isInteger(value) || value < 1) {
-      errors[
-        "max_trajectories"
-      ] = `${this.trajectoryFieldLabel()} must be a whole number of at least 1`;
+      errors["max_trajectories"] =
+        `${this.numberOfDesignsField.label} must be a whole number of at least 1`;
     } else {
       delete errors["max_trajectories"];
     }
@@ -773,7 +763,7 @@ export default class DeNovoDesignComponent
       fieldName: "length_range",
     });
     summary.push({
-      label: this.trajectoryFieldLabel(),
+      label: this.numberOfDesignsField.label,
       value: String(this.numberOfDesigns()),
       fieldName: "max_trajectories",
     });

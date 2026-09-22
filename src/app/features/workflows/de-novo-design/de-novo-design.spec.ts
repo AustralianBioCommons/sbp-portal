@@ -113,11 +113,11 @@ describe("DeNovoDesignComponent", () => {
       expect(component.selectedTool()).toBe("bindcraft");
     });
 
-    it("swaps the number-of-designs label per tool", () => {
+    it("uses the same number-of-designs label for both tools", () => {
       component.selectTool("bindcraft");
-      expect(component.trajectoryFieldLabel()).toBe("Number of Trajectories");
+      expect(component.numberOfDesignsField.label).toBe("Number of Designs");
       component.selectTool("rfdiffusion");
-      expect(component.trajectoryFieldLabel()).toBe("Number of Final Designs");
+      expect(component.numberOfDesignsField.label).toBe("Number of Designs");
     });
   });
 
