@@ -59,8 +59,8 @@ interface ToolChip extends ToolOption {
 const MAX_HOTSPOT_RESIDUES = 8;
 
 /** Overall bounds offered by the length-range slider. */
-const PDB_SEQUENCE_MIN = 0;
-const PDB_SEQUENCE_MAX = 300;
+const PDB_SEQUENCE_MIN = 65;
+const PDB_SEQUENCE_MAX = 150;
 
 /** Default binder length range, mirroring the bindflow pipeline's own defaults. */
 const DEFAULT_MIN_LENGTH = 65;
