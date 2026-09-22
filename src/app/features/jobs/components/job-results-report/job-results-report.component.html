@@ -33,6 +33,9 @@
   <div class="space-y-2">
     <!-- Sits over the viewer's column; the table has the right. -->
     <div>
+      @if (showPlddtLegend()) {
+      <app-plddt-legend></app-plddt-legend>
+      } @else {
       <ul class="flex flex-wrap items-center gap-x-6 gap-y-2">
         @for (band of chainLegend(); track $index) {
         <li class="flex items-center gap-2 text-xs font-medium">
@@ -45,6 +48,7 @@
         </li>
         }
       </ul>
+      }
     </div>
 
     <!-- Viewport height: the canvas has no height of its own, so a content-fit
@@ -65,7 +69,7 @@
           [enableUpload]="false"
           [roundBottomRight]="!isPanelOpen()"
           representation="cartoon"
-          colorTheme="binder-target"
+          [colorTheme]="colorTheme()"
           [binderChainId]="primaryChainId()"
           [designLength]="primaryLength()"
           [superposeKey]="superposeKey()"
@@ -76,17 +80,20 @@
         ></app-molstar-viewer>
 
         @if (structureError()) {
-        <div
-          class="absolute inset-x-4 top-4 z-10 flex items-center gap-2 rounded border border-red-200 bg-red-50/95 p-4 text-sm text-red-800 shadow-sm"
-          role="alert"
-        >
-          <ng-icon
-            name="heroExclamationCircle"
-            size="20"
-            class="shrink-0 text-red-500"
-            aria-hidden="true"
-          ></ng-icon>
-          <p class="wrap-break-word">{{ structureError() }}</p>
+        <!-- Floats the standard banner over the canvas. -->
+        <div class="absolute inset-x-4 top-4 z-10 shadow-sm">
+          <div
+            class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+            role="alert"
+          >
+            <ng-icon
+              name="heroExclamationCircle"
+              size="20"
+              class="shrink-0 text-red-500"
+              aria-hidden="true"
+            ></ng-icon>
+            <p class="wrap-break-word">{{ structureError() }}</p>
+          </div>
         </div>
         } @else if (!selectedRow()?.structure) {
         <p
