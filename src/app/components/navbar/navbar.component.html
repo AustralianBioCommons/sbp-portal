@@ -33,7 +33,7 @@
 
       <!-- Nav Links -->
       <nav
-        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-biocommons-primary transition-all text-sm"
+        class="hidden lg:flex items-center gap-6 font-semibold text-biocommons-primary transition-all text-sm"
         aria-label="Main navigation"
       >
         <a
@@ -59,15 +59,15 @@
           Structure Prediction
         </a>
         <a
-          routerLink="/jobs"
+          routerLink="/my-jobs"
           class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
-            currentRoute() === '/jobs'
+            currentRoute() === '/my-jobs'
               ? 'border-biocommons-primary'
               : 'border-transparent hover:border-biocommons-primary/20'
           "
         >
-          Jobs
+          My Jobs
         </a>
       </nav>
     </div>

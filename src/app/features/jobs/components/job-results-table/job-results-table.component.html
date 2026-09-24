@@ -73,7 +73,7 @@
             class="p-4 text-sm text-gray-700"
             [class]="cellClasses(column, row, first, last)"
           >
-            {{ row.values[column.key] || "—" }}
+            {{ cellText(column, row) }}
           </td>
           }
         </tr>

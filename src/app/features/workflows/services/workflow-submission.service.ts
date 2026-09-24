@@ -132,7 +132,7 @@ export class WorkflowSubmissionService {
    */
   goToJobs(): void {
     this.showSuccessDialog.set(false);
-    this.router.navigate(["/jobs"]);
+    this.router.navigate(["/my-jobs"]);
   }
 
   /**

@@ -1,6 +1,7 @@
 import {
   bulkPredictionBoltzAdapter,
   bulkPredictionColabFoldAdapter,
+  derivePlddt,
 } from "./bulk-prediction-results.utils";
 import {
   NO_PREDICTIONS_MESSAGE,
@@ -58,30 +59,23 @@ describe("bulk prediction results utils", () => {
   });
 
   describe("building rows", () => {
-    it("splits the submitted id at its first hyphen", () => {
-      const text = scoresCsv([["seq1-seq3", "0.68"]]);
-      const rows = parse(text, [scoresFile, cif("seq1-seq3")]);
-
-      expect(rows.length).toBe(1);
-      expect(rows[0].values["queryId"]).toBe("seq1");
-      expect(rows[0].values["targetId"]).toBe("seq3");
-      expect(rows[0].values["ptm"]).toBe("0.68");
-    });
-
-    it("keeps a hyphen-free id whole, with no target", () => {
-      const text = scoresCsv([["protein1", "0.91"]]);
-      const rows = parse(text, [scoresFile, cif("protein1")]);
-
-      expect(rows[0].values["queryId"]).toBe("protein1");
-      expect(rows[0].values["targetId"]).toBe("");
-    });
-
-    it("gives the rest of a multi-hyphen id to the target", () => {
+    it("keeps the submitted header whole, hyphens and all", () => {
       const text = scoresCsv([["my-long-name", "0.42"]]);
       const rows = parse(text, [scoresFile, cif("my-long-name")]);
 
-      expect(rows[0].values["queryId"]).toBe("my");
-      expect(rows[0].values["targetId"]).toBe("long-name");
+      expect(rows.length).toBe(1);
+      expect(rows[0].values["id"]).toBe("my-long-name");
+      expect(rows[0].values["ptm"]).toBe("0.42");
+    });
+
+    it("puts Boltz's 0-1 pLDDT on the 0-100 scale", () => {
+      const text = [
+        "id,model_input_id,ptm,complex_plddt",
+        "seq1,seq1,0.55,0.5428716540336609",
+      ].join("\n");
+      const rows = parse(text, [scoresFile, cif("seq1")]);
+
+      expect(Number(rows[0].values["plddt"])).toBeCloseTo(54.287, 3);
     });
 
     it("pairs each row with the structure written for it", () => {
@@ -126,12 +120,34 @@ describe("bulk prediction results utils", () => {
     });
   });
 
+  describe("deriving pLDDT", () => {
+    it("takes ColabFold's own 0-100 value as it is", () => {
+      expect(derivePlddt({ plddt: "68.312" })).toBe("68.312");
+    });
+
+    it("scales Boltz's 0-1 value up to 0-100", () => {
+      expect(Number(derivePlddt({ complex_plddt: "0.5" }))).toBe(50);
+    });
+
+    it("prefers ColabFold's column if a table somehow carries both", () => {
+      expect(derivePlddt({ plddt: "68.312", complex_plddt: "0.5" })).toBe(
+        "68.312"
+      );
+    });
+
+    it("leaves the cell blank when neither tool reported one", () => {
+      expect(derivePlddt({})).toBe("");
+      expect(derivePlddt({ complex_plddt: "NA" })).toBe("");
+      expect(derivePlddt({ plddt: " ", complex_plddt: "" })).toBe("");
+    });
+  });
+
   describe("the report it configures", () => {
-    it("shows the query, the target and pTM", () => {
+    it("shows the query, pTM and pLDDT", () => {
       expect(bulkPredictionBoltzAdapter.columns.map((c) => c.heading)).toEqual([
         "Query ID",
-        "Target ID",
         "pTM",
+        "pLDDT",
       ]);
     });
 

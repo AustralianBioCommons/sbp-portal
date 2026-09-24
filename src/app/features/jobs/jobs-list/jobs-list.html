@@ -16,13 +16,21 @@
   (cancelled)="closeDeleteDialog()"
 ></app-dialog>
 
+<!-- System Health Warning -->
+@if (systemUnhealthy()) {
+<app-alert
+  type="warning"
+  position="fixed"
+  [message]="healthMessage() ?? 'Some workflow services are currently unavailable. Job status and logs may not be up to date until the service is restored.'"
+  [dismissible]="true"
+  (dismissed)="dismissHealthAlert()"
+></app-alert>
+}
+
 <div class="bg-gray-50 py-12">
   <div class="max-w-7xl px-6 mx-auto">
     <!-- Page Header -->
-    <div class="space-y-6">
-      <h1 class="text-4xl font-semibold">My Jobs</h1>
-      <p class="text-gray-600">View and manage submitted workflow runs</p>
-    </div>
+    <h1 class="text-4xl font-semibold mb-12">My Jobs</h1>
 
     @if (!authLoading()) { @if (!canExecuteWorkflows()) {
     <!-- Access Restricted -->
@@ -63,182 +71,222 @@
       }
     </div>
     } @else {
-    <!-- Search and Filter Bar -->
-    <div
-      class="sticky top-14 z-20 -mx-6 px-6 before:content-[''] before:absolute before:inset-y-0 before:left-0 before:w-6 before:bg-gray-50 after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-6 after:bg-gray-50"
-    >
-      <div class="bg-gray-50 pt-6 rounded-b-lg">
-        <div class="bg-white mt-6 mb-6 shadow-sm rounded-lg border p-4">
-          <div
-            class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
-          >
-            <!-- Search Input -->
-            <div class="w-full md:w-2/3">
-              <label for="search" class="mb-1 block text-sm font-medium">
-                Search
-              </label>
-              <div
-                class="flex h-10 w-full text-sm flex-1 items-center justify-between rounded-md border border-gray-300 bg-white pl-4 pr-2 focus-within:ring-2 focus-within:ring-sky-100"
-              >
-                <input
-                  type="text"
-                  id="search"
-                  class="flex-1 focus:outline-none"
-                  [ngModel]="searchQuery()"
-                  (ngModelChange)="onSearch($event)"
-                  placeholder="Search by job name, theme, workflow type or tool…"
-                />
-                <button
-                  type="button"
-                  class="flex items-center justify-center rounded-full p-1 transition-all hover:bg-gray-200"
-                  aria-label="Search"
-                >
-                  <ng-icon name="heroMagnifyingGlass" size="16"></ng-icon>
-                </button>
-              </div>
-            </div>
-
-            <!-- Status Filter + Clear -->
-            <div class="flex items-end gap-4 w-full md:w-1/3">
-              <div class="flex-1">
-                <p class="mb-1 block text-sm font-medium">Filter</p>
-                <app-dropdown-menu
-                  [isOpen]="showStatusDropdown()"
-                  (isOpenChange)="showStatusDropdown.set($event)"
-                >
-                  <ng-template #trigger>
-                    <button
-                      type="button"
-                      (click)="toggleStatusDropdown()"
-                      [attr.aria-expanded]="showStatusDropdown()"
-                      aria-haspopup="true"
-                      class="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-4 focus-within:ring-2 focus-within:ring-sky-100 focus-visible:outline-none hover:cursor-pointer"
-                    >
-                      <span class="flex items-center">
-                        <span class="text-sm font-medium mr-2">Status:</span>
-                        @if (selectedStatuses().length > 0) {
-                        <span
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800"
-                        >
-                          {{ selectedStatuses().length }}
-                        </span>
-                        } @else {
-                        <span class="text-sm text-gray-500">All</span>
-                        }
-                      </span>
-                      <ng-icon name="heroChevronDown" size="16"></ng-icon>
-                    </button>
-                  </ng-template>
-                  <ng-template #menu>
-                    @for (status of statusOptions; track status) {
-                    <label
-                      class="flex cursor-pointer items-center px-4 py-2 text-sm hover:bg-gray-100"
-                    >
-                      <input
-                        type="checkbox"
-                        [checked]="isStatusSelected(status)"
-                        (change)="toggleStatus(status)"
-                        class="mr-3 h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
-                      />
-                      <span>{{ status }}</span>
-                    </label>
-                    }
-                  </ng-template>
-                </app-dropdown-menu>
-              </div>
-
-              <!-- Clear Filters Button -->
-              <button
-                type="button"
-                (click)="clearFilters()"
-                [disabled]="selectedStatuses().length === 0"
-                class="h-10 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Error Message -->
     @if (error()) {
     <div
-      class="bg-red-50 border flex items-center gap-2 border-red-200 text-red-800 rounded-lg p-4 mb-6"
+      class="mb-6 flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+      role="alert"
     >
-      <ng-icon name="heroExclamationTriangle" size="24"></ng-icon>
-      <p class="text-sm">{{ error() }}</p>
+      <ng-icon
+        name="heroExclamationCircle"
+        size="20"
+        class="shrink-0 text-red-500"
+        aria-hidden="true"
+      ></ng-icon>
+      <p class="wrap-break-word">{{ error() }}</p>
     </div>
     }
 
-    <!-- System Health Warning -->
-    @if (systemUnhealthy()) {
-    <app-alert
-      type="warning"
-      position="fixed"
-      [message]="healthMessage() ?? 'Some workflow services are currently unavailable. Job status and logs may not be up to date until the service is restored.'"
-      [dismissible]="true"
-      (dismissed)="dismissHealthAlert()"
-    ></app-alert>
-    } @if (loading()) {
-    <!-- Loading State -->
-    <div class="bg-white shadow-sm rounded-lg border">
-      <div class="px-6 py-12 text-center">
-        <app-loading message="Loading jobs..." [inline]="true"></app-loading>
-      </div>
-    </div>
-    } @else {
     <!-- Jobs Table -->
-    <div class="bg-white shadow-sm rounded-lg border overflow-hidden">
-      <div class="p-4 flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-semibold">All jobs</h2>
-          <p class="text-sm mt-2 text-gray-500">
-            Total {{ total() }} jobs • {{ totalFinalDesigns }} final designs
-          </p>
-        </div>
-        @if (selectedJobs().length > 0) {
-        <span class="text-sm text-gray-500">
-          {{ selectedJobs().length }} selected
-        </span>
-        } @if (selectedJobs().length > 0) {
-        <button
-          type="button"
-          (click)="openDeleteDialog()"
-          [disabled]="bulkDeleting()"
-          class="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 transition-all disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <ng-icon name="heroTrash" size="16"></ng-icon>
-          Delete Selected
-        </button>
-        }
-      </div>
-      <div class="overflow-x-auto overflow-y-visible">
+    <div class="bg-white shadow-sm rounded-lg border">
+      <!-- A scroll container stops the header sticking, so horizontal scroll is below md only -->
+      <!-- min-h leaves room for the status menu, which the scroll container would otherwise clip -->
+      <div
+        class="@container max-md:overflow-x-auto max-md:rounded-lg max-md:min-h-112"
+      >
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-sky-900 text-white">
-            <tr>
-              <th scope="col" class="px-6 py-2 align-middle text-center">
+          <!-- Search/filter sits in the sticky thead so it all sticks as one block -->
+          <thead class="md:sticky md:top-26 z-20">
+            <tr role="presentation">
+              <!-- Gray backdrop masks rows in the gap below the navbar and the card borders beside the rounded corners -->
+              <td
+                colspan="7"
+                role="presentation"
+                class="relative p-0 md:before:absolute md:before:-inset-x-6 md:before:-top-4 md:before:bottom-0 md:before:bg-gray-50"
+              >
+                <div
+                  class="relative max-md:sticky max-md:left-0 max-md:w-[100cqw] md:-mx-px md:-mt-px bg-white rounded-t-lg md:border md:border-b-0 px-4 pt-4 pb-2"
+                >
+                  <div
+                    class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+                  >
+                    <!-- Search Input -->
+                    <div class="w-full md:flex-1">
+                      <label
+                        for="search"
+                        class="mb-1 block text-sm font-medium"
+                      >
+                        Search
+                      </label>
+                      <div
+                        class="flex h-10 w-full text-sm flex-1 items-center justify-between rounded-md border border-gray-300 bg-white pl-4 pr-2 focus-within:ring-2 focus-within:ring-sky-100"
+                      >
+                        <input
+                          type="text"
+                          id="search"
+                          class="flex-1 focus:outline-none"
+                          [ngModel]="searchQuery()"
+                          (ngModelChange)="onSearch($event)"
+                          placeholder="Search by job name, theme, workflow type or tool…"
+                        />
+                        <button
+                          type="button"
+                          class="flex items-center justify-center rounded-full p-1 transition-all hover:bg-gray-200"
+                          aria-label="Search"
+                        >
+                          <ng-icon
+                            name="heroMagnifyingGlass"
+                            size="16"
+                          ></ng-icon>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Status Filter + Clear + Delete -->
+                    <div
+                      class="flex max-md:flex-wrap items-end gap-4 w-full md:w-auto"
+                    >
+                      <div class="min-w-0 flex-1 md:w-48 md:flex-none">
+                        <p class="mb-1 block text-sm font-medium">Filter</p>
+                        <app-dropdown-menu
+                          [isOpen]="showStatusDropdown()"
+                          (isOpenChange)="showStatusDropdown.set($event)"
+                        >
+                          <ng-template #trigger>
+                            <button
+                              type="button"
+                              (click)="toggleStatusDropdown()"
+                              [attr.aria-expanded]="showStatusDropdown()"
+                              aria-haspopup="true"
+                              class="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-4 focus-within:ring-2 focus-within:ring-sky-100 focus-visible:outline-none hover:cursor-pointer"
+                            >
+                              <span class="flex items-center">
+                                <span class="text-sm font-medium mr-2"
+                                  >Status:</span
+                                >
+                                @if (selectedStatuses().length > 0) {
+                                <span
+                                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800"
+                                >
+                                  {{ selectedStatuses().length }}
+                                </span>
+                                } @else {
+                                <span class="text-sm text-gray-500">All</span>
+                                }
+                              </span>
+                              <ng-icon
+                                name="heroChevronDown"
+                                size="16"
+                              ></ng-icon>
+                            </button>
+                          </ng-template>
+                          <ng-template #menu>
+                            @for (status of statusOptions; track status) {
+                            <label
+                              class="flex cursor-pointer items-center px-4 py-2 text-sm hover:bg-gray-100"
+                            >
+                              <input
+                                type="checkbox"
+                                [checked]="isStatusSelected(status)"
+                                (change)="toggleStatus(status)"
+                                class="mr-3 h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                              />
+                              <span>{{ status }}</span>
+                            </label>
+                            }
+                          </ng-template>
+                        </app-dropdown-menu>
+                      </div>
+
+                      <!-- Clear Filters Button -->
+                      <button
+                        type="button"
+                        (click)="clearFilters()"
+                        [disabled]="selectedStatuses().length === 0"
+                        class="h-10 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Clear Filters
+                      </button>
+
+                      <button
+                        type="button"
+                        (click)="openDeleteDialog()"
+                        [disabled]="
+                          selectedJobs().length === 0 || bulkDeleting() || loading()
+                        "
+                        class="inline-flex h-10 items-center justify-center gap-2 max-md:basis-full whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-red-600 hover:bg-gray-50 disabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <ng-icon
+                          name="heroTrash"
+                          size="16"
+                          aria-hidden="true"
+                        ></ng-icon>
+                        Delete Selected
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- min-h keeps the bar height stable while loading -->
+                  <div class="mt-4 min-h-5">
+                    @if (!loading()) {
+                    <p class="flex items-end gap-1 text-sm">
+                      <span>
+                        <span class="font-medium">Total: </span>
+                        <span class="text-gray-500"
+                          >{{ total() }} {{ total() === 1 ? "job" : "jobs"
+                          }}</span
+                        >
+                      </span>
+                      @if (selectedJobs().length > 0) {
+                      <span class="text-gray-500">
+                        &ndash; {{ selectedJobs().length }} selected
+                      </span>
+                      }
+                    </p>
+                    }
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr class="bg-sky-900 text-white">
+              <th scope="col" class="px-4 py-2 align-middle text-center">
                 <input
                   type="checkbox"
                   [checked]="isAllSelected()"
                   (change)="toggleAllJobs()"
-                  class="block mx-auto h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer"
+                  [disabled]="loading()"
+                  aria-label="Select all jobs"
+                  class="block h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </th>
-              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
+              <th
+                scope="col"
+                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+              >
                 Job Name
               </th>
-              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
+              <th
+                scope="col"
+                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+              >
                 Workflow Type
               </th>
-              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
+              <th
+                scope="col"
+                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+              >
                 Tool
               </th>
-              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
+              <th
+                scope="col"
+                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+              >
                 Status
               </th>
-              <th scope="col" class="px-6 py-2 text-left text-sm font-medium">
+              <th
+                scope="col"
+                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+              >
                 <button
                   type="button"
                   (click)="toggleSubmittedSort()"
@@ -263,7 +311,7 @@
               </th>
               <th
                 scope="col"
-                class="px-6 py-2 text-left text-sm font-medium whitespace-nowrap"
+                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium whitespace-nowrap"
               >
                 <button
                   type="button"
@@ -289,8 +337,17 @@
               </th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            @if (jobs().length === 0) {
+          <tbody class="divide-y divide-gray-200">
+            @if (loading()) {
+            <tr>
+              <td colspan="7" class="px-6 py-12 text-center">
+                <app-loading
+                  message="Loading jobs..."
+                  [inline]="true"
+                ></app-loading>
+              </td>
+            </tr>
+            } @else if (jobs().length === 0) {
             <tr>
               <td
                 colspan="7"
@@ -311,7 +368,7 @@
               (keydown.space)="openJobFromKey(job, $event)"
             >
               <td
-                class="relative px-6 py-4 text-center"
+                class="relative p-4 text-start"
                 (click)="$event.stopPropagation()"
                 (keydown.enter)="$event.stopPropagation()"
                 (keydown.space)="$event.stopPropagation()"
@@ -320,21 +377,26 @@
                   type="checkbox"
                   [checked]="isJobSelected(job.id)"
                   (change)="toggleJob(job.id)"
+                  [attr.aria-label]="'Select ' + job.jobName"
                   class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer"
                 />
               </td>
               <td
-                class="px-6 py-4 whitespace-nowrap text-sm font-medium text-sky-600"
+                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm font-medium text-sky-600"
               >
                 {{ job.jobName }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td
+                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
+              >
                 {{ job.workflow || "—" }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td
+                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
+              >
                 {{ job.tool || "—" }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap">
                 <span
                   [class]="getStatusClass(job.status)"
                   class="px-2 py-1 inline-flex justify-center items-center text-xs font-semibold rounded-full"
@@ -346,11 +408,15 @@
                   } {{ job.status }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td
+                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap text-sm text-gray-500"
+              >
                 {{ job.submittedAt | date:'dd/MM/yyyy' }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                @if (job.score !== null) { {{ job.score.toFixed(3) }} @if
+              <td
+                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
+              >
+                @if (job.score !== null) { {{ formatDecimals(job.score) }} @if
                 (job.finalDesignCount !== null && job.finalDesignCount !==
                 undefined) {
                 <span class="text-xs text-gray-500">
@@ -365,8 +431,10 @@
       </div>
 
       <!-- Pagination -->
-      @if (total() > 0) {
-      <div class="bg-white p-4 flex items-center justify-between border-t">
+      @if (!loading() && total() > 0) {
+      <div
+        class="bg-white rounded-b-lg p-4 flex items-center justify-between border-t"
+      >
         <div class="flex-1 flex justify-between sm:hidden">
           <button
             type="button"
@@ -437,6 +505,6 @@
       </div>
       }
     </div>
-    } } }
+    } }
   </div>
 </div>

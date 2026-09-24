@@ -47,6 +47,7 @@ import {
   parsePaeMatrix,
   residueIndicesToTokens,
 } from "../../shared/prediction-results.utils";
+import { formatDecimals } from "../../shared/job-results-report.utils";
 
 /** The predicted structure beside its PAE matrix, sharing one residue selection. */
 @Component({
@@ -149,14 +150,14 @@ export class SinglePredictionReportComponent {
     if (iptm !== null) {
       items.push({
         label: "ipTM",
-        value: iptm.toFixed(3),
+        value: formatDecimals(iptm),
         hint: "Predicted TM-score across the chain interfaces (0–1, higher is better)",
       });
     }
     if (ptm !== null) {
       items.push({
         label: "pTM",
-        value: ptm.toFixed(3),
+        value: formatDecimals(ptm),
         hint: "Predicted TM-score for the structure as a whole (0–1, higher is better)",
       });
     }

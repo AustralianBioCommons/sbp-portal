@@ -13,6 +13,7 @@ import {
 } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import { statusTagClass } from "../shared/job-status.utils";
+import { formatDecimals } from "../shared/job-results-report.utils";
 import { AuthService } from "../../../core/services/auth.service";
 import { environment } from "../../../../environments/environment";
 import { DatePipe } from "@angular/common";
@@ -26,7 +27,7 @@ import {
   heroClock,
   heroChevronLeft,
   heroChevronRight,
-  heroExclamationTriangle,
+  heroExclamationCircle,
   heroArrowUp,
   heroArrowDown,
 } from "@ng-icons/heroicons/outline";
@@ -51,7 +52,7 @@ import {
       heroClock,
       heroChevronLeft,
       heroChevronRight,
-      heroExclamationTriangle,
+      heroExclamationCircle,
       heroArrowUp,
       heroArrowDown,
     }),
@@ -60,6 +61,8 @@ import {
   styleUrl: "./jobs-list.scss",
 })
 export default class JobsListComponent implements OnInit, OnDestroy {
+  readonly formatDecimals = formatDecimals;
+
   private jobsService = inject(JobsService);
   private healthService = inject(HealthService);
   private auth = inject(AuthService);
@@ -318,13 +321,6 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     return this.currentPage() < this.totalPages;
   }
 
-  get totalFinalDesigns(): number {
-    return this.jobs().reduce(
-      (sum, job) => sum + (job.finalDesignCount ?? 0),
-      0
-    );
-  }
-
   toggleScoreSort(): void {
     if (this.activeSort() === "score") {
       this.scoreSortDirection.update((d) => (d === "desc" ? "asc" : "desc"));
@@ -456,7 +452,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   }
 
   viewJobDetails(job: JobListItem): void {
-    this.router.navigate(["/jobs", job.id], {
+    this.router.navigate(["/my-jobs", job.id], {
       state: { job },
     });
   }

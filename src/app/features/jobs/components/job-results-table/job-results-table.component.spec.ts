@@ -53,6 +53,44 @@ describe("JobResultsTableComponent", () => {
     }).compileComponents();
   });
 
+  it("shortens a long number for display, and sorts by the raw value", () => {
+    fixture = TestBed.createComponent(JobResultsTableComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput("columns", [
+      { key: "Design", heading: "Design name" },
+      { key: "Score", heading: "pTM", numeric: true },
+    ]);
+    fixture.componentRef.setInput("rows", [
+      {
+        id: "a",
+        label: "a",
+        values: { Design: "a", Score: "0.12301" },
+        structure: null,
+      },
+      {
+        id: "b",
+        label: "b",
+        values: { Design: "b", Score: "0.12349" },
+        structure: null,
+      },
+    ]);
+    fixture.detectChanges();
+
+    expect(bodyRows().map((r) => cellText(r)[1])).toEqual(["0.123", "0.123"]);
+
+    component.toggleSort({ key: "Score", heading: "pTM", numeric: true });
+    component.toggleSort({ key: "Score", heading: "pTM", numeric: true });
+    fixture.detectChanges();
+
+    expect(bodyRows().map((r) => cellText(r)[0])).toEqual(["b", "a"]);
+  });
+
+  it("shows short numbers and text exactly as read", () => {
+    render(makeRows(1));
+
+    expect(cellText(bodyRows()[0])).toEqual(["1", "1.00", "design-1"]);
+  });
+
   it("renders the columns it is given, in order", () => {
     render(makeRows(3));
 
