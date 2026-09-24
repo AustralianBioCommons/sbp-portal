@@ -48,6 +48,9 @@ export const routes: Routes = [
       },
     ],
   },
+  // Keeps old /jobs links working
+  { path: "jobs", redirectTo: "my-jobs", pathMatch: "full" },
+  { path: "jobs/:id", redirectTo: "my-jobs/:id" },
   {
     path: "my-jobs",
     children: [

@@ -178,7 +178,7 @@ export class Navbar {
       ],
     },
     {
-      label: "Jobs",
+      label: "My Jobs",
       path: "/my-jobs",
       icon: "heroClipboardDocumentList",
     },

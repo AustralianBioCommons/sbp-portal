@@ -172,7 +172,7 @@ describe("Navbar", () => {
     });
 
     it("should return false when current route does not match item path", () => {
-      const item: NavItem = { label: "Jobs", path: "/my-jobs" };
+      const item: NavItem = { label: "My Jobs", path: "/my-jobs" };
       expect(component.isNavItemActive(item)).toBe(false);
     });
 
@@ -322,7 +322,7 @@ describe("Navbar", () => {
     });
 
     it("should delegate to isNavItemActive when item has no children", () => {
-      const item: NavItem = { label: "Jobs", path: "/my-jobs" };
+      const item: NavItem = { label: "My Jobs", path: "/my-jobs" };
       expect(component.isParentNavItemActive(item)).toBe(false);
     });
 
