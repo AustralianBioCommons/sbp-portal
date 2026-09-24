@@ -172,7 +172,7 @@ describe("Navbar", () => {
     });
 
     it("should return false when current route does not match item path", () => {
-      const item: NavItem = { label: "Jobs", path: "/jobs" };
+      const item: NavItem = { label: "Jobs", path: "/my-jobs" };
       expect(component.isNavItemActive(item)).toBe(false);
     });
 
@@ -245,10 +245,10 @@ describe("Navbar", () => {
   describe("navigate", () => {
     it("should navigate with queryParams and close mobile menu", async () => {
       component.isMobileMenuOpen.set(true);
-      component.navigate("/jobs", { filter: "active" });
+      component.navigate("/my-jobs", { filter: "active" });
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/jobs"], {
+      expect(mockRouter.navigate).toHaveBeenCalledWith(["/my-jobs"], {
         queryParams: { filter: "active" },
       });
       expect(component.isMobileMenuOpen()).toBe(false);
@@ -282,10 +282,10 @@ describe("Navbar", () => {
       );
       component.isMobileMenuOpen.set(true);
 
-      component.navigate("/jobs", { filter: "active" });
+      component.navigate("/my-jobs", { filter: "active" });
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(["/jobs"], {
+      expect(mockRouter.navigate).toHaveBeenCalledWith(["/my-jobs"], {
         queryParams: { filter: "active" },
       });
       expect(component.isMobileMenuOpen()).toBe(false);
@@ -322,7 +322,7 @@ describe("Navbar", () => {
     });
 
     it("should delegate to isNavItemActive when item has no children", () => {
-      const item: NavItem = { label: "Jobs", path: "/jobs" };
+      const item: NavItem = { label: "Jobs", path: "/my-jobs" };
       expect(component.isParentNavItemActive(item)).toBe(false);
     });
 
@@ -346,7 +346,7 @@ describe("Navbar", () => {
     });
 
     it("should return false when no child is active", () => {
-      component.currentRoute.set("/jobs");
+      component.currentRoute.set("/my-jobs");
       const item: NavItem = {
         label: "Home",
         children: [

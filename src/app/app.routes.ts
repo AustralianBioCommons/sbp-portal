@@ -49,7 +49,7 @@ export const routes: Routes = [
     ],
   },
   {
-    path: "jobs",
+    path: "my-jobs",
     children: [
       {
         path: "",

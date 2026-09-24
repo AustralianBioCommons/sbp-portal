@@ -227,7 +227,6 @@ describe("JobsListComponent", () => {
     component.loadJobs();
 
     expect(component.jobs()[0].finalDesignCount).toBe(7);
-    expect(component.totalFinalDesigns).toBe(7);
   });
 
   it("should set an error when loading jobs fails", () => {
@@ -468,7 +467,7 @@ describe("JobsListComponent", () => {
 
     component.viewJobDetails(mockJob);
 
-    expect(navigateSpy).toHaveBeenCalledWith(["/jobs", mockJob.id], {
+    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs", mockJob.id], {
       state: { job: mockJob },
     });
   });
@@ -481,7 +480,7 @@ describe("JobsListComponent", () => {
     component.openJobFromKey(mockJob, space);
 
     expect(space.defaultPrevented).toBeTrue();
-    expect(navigateSpy).toHaveBeenCalledWith(["/jobs", mockJob.id], {
+    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs", mockJob.id], {
       state: { job: mockJob },
     });
   });

@@ -18,21 +18,23 @@ import {
 
 const WORKFLOW = "bulk prediction";
 
-/** Split out of the submitted id, not read from the file. */
-const QUERY_KEY = "queryId";
-const TARGET_KEY = "targetId";
+const PLDDT_KEY = "plddt";
 
 const BULK_COLUMNS: readonly ReportColumn[] = [
-  { key: QUERY_KEY, heading: "Query ID", emphasised: true },
-  { key: TARGET_KEY, heading: "Target ID" },
+  // The submitted FASTA header, whole.
+  { key: "id", heading: "Query ID", emphasised: true },
   { key: "ptm", heading: "pTM", numeric: true, higherIsBetter: true },
+  { key: PLDDT_KEY, heading: "pLDDT", numeric: true, higherIsBetter: true },
 ];
 
-/** Manual mode has no query/target grid to read a boundary off, so the first hyphen is it. */
-export function splitBulkId(id: string): { query: string; target: string } {
-  const boundary = id.indexOf("-");
-  if (boundary < 0) return { query: id, target: "" };
-  return { query: id.slice(0, boundary), target: id.slice(boundary + 1) };
+/** ColabFold writes pLDDT on 0–100 and Boltz on 0–1; both come out on 0–100. */
+export function derivePlddt(row: Readonly<Record<string, string>>): string {
+  const plddt = row["plddt"]?.trim();
+  if (plddt) return plddt;
+
+  const complex = row["complex_plddt"]?.trim();
+  const value = Number(complex);
+  return complex && Number.isFinite(value) ? String(value * 100) : "";
 }
 
 export function parseBulkPredictionRows(
@@ -50,12 +52,10 @@ export function parseBulkPredictionRows(
     const structure = structures.get(id);
     if (!id || !structure) continue;
 
-    const { query, target } = splitBulkId(id);
-
     reportRows.push({
       id,
       label: id,
-      values: { ...row, [QUERY_KEY]: query, [TARGET_KEY]: target },
+      values: { ...row, [PLDDT_KEY]: derivePlddt(row) },
       structure: {
         key: structure.key,
         label: structure.label,

@@ -337,7 +337,7 @@ describe("JobDetailsComponent", () => {
     component.confirmDelete();
 
     expect(mockJobsService.deleteJob).toHaveBeenCalledWith(mockJob.id);
-    expect(navigateSpy).toHaveBeenCalledWith(["/jobs"]);
+    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs"]);
     expect(component.showDeleteDialog()).toBeFalse();
   });
 
