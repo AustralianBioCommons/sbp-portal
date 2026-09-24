@@ -26,6 +26,11 @@ describe("formatDecimals", () => {
     expect(formatDecimals(0.95)).toBe("0.95");
   });
 
+  it("rounds scientific notation the same with or without a decimal point", () => {
+    expect(formatDecimals("1e-5")).toBe("0");
+    expect(formatDecimals("1.2e-5")).toBe("0");
+  });
+
   it("does not show negative zero", () => {
     expect(formatDecimals("-0.0001")).toBe("0");
   });

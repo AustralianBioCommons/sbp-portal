@@ -211,7 +211,9 @@
                       <button
                         type="button"
                         (click)="openDeleteDialog()"
-                        [disabled]="selectedJobs().length === 0 || bulkDeleting()"
+                        [disabled]="
+                          selectedJobs().length === 0 || bulkDeleting() || loading()
+                        "
                         class="inline-flex h-10 items-center justify-center gap-2 max-md:basis-full whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-red-600 hover:bg-gray-50 disabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <ng-icon
@@ -252,8 +254,9 @@
                   type="checkbox"
                   [checked]="isAllSelected()"
                   (change)="toggleAllJobs()"
+                  [disabled]="loading()"
                   aria-label="Select all jobs"
-                  class="block h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer"
+                  class="block h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </th>
               <th

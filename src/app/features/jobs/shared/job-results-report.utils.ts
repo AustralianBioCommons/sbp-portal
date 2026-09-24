@@ -27,12 +27,10 @@ const MAX_DECIMALS = 3;
 /** Rounds a number with more than three places; anything shorter shows as written. */
 export function formatDecimals(value: string | number): string {
   const text = String(value);
-  const decimals = text.trim().split(".")[1] ?? "";
-  if (decimals.length <= MAX_DECIMALS) return text;
   const number = Number(text);
-  return Number.isFinite(number)
-    ? String(Number(number.toFixed(MAX_DECIMALS)))
-    : text;
+  if (!Number.isFinite(number)) return text;
+  const rounded = Number(number.toFixed(MAX_DECIMALS));
+  return rounded === number ? text : String(rounded);
 }
 
 /** The structure a row was written to, ready for the viewer. */
