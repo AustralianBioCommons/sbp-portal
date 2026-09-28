@@ -5,23 +5,19 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  Injector,
   signal,
   viewChild,
 } from "@angular/core";
+import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { CommonModule } from "@angular/common";
 import { NavigationEnd, Router, RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
-  heroArrowRightEndOnRectangle,
   heroArrowRightStartOnRectangle,
   heroBars3,
-  heroCalendarDays,
   heroChevronRight,
-  heroClipboardDocumentList,
-  heroHome,
   heroInformationCircle,
-  heroQuestionMarkCircle,
-  heroRectangleGroup,
   heroUser,
   heroUserCircle,
   heroXMark,
@@ -41,13 +37,9 @@ import { TooltipComponent } from "../tooltip/tooltip.component";
 
 export interface NavItem {
   label: string;
-  path?: string;
-  queryParams?: { [key: string]: string };
-  icon?: string;
-  image?: string;
-  action?: () => void;
+  path: string;
   children?: NavItem[];
-  requiresAuth?: boolean;
+  menuOnly?: boolean;
 }
 
 export interface BreadcrumbInfo {
@@ -59,6 +51,7 @@ export interface BreadcrumbInfo {
 @Component({
   selector: "app-navbar",
   imports: [
+    CdkTrapFocus,
     CommonModule,
     NgIconComponent,
     RouterLink,
@@ -68,16 +61,10 @@ export interface BreadcrumbInfo {
   ],
   providers: [
     provideIcons({
-      heroArrowRightEndOnRectangle,
       heroArrowRightStartOnRectangle,
       heroBars3,
-      heroCalendarDays,
       heroChevronRight,
-      heroClipboardDocumentList,
-      heroHome,
       heroInformationCircle,
-      heroQuestionMarkCircle,
-      heroRectangleGroup,
       heroUser,
       heroUserCircle,
       heroXMark,
@@ -92,11 +79,18 @@ export class Navbar {
   private credits = inject(CreditsService);
   private router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   private readonly profileUrl = environment.profileUrl;
 
   private readonly topSentinel =
     viewChild<ElementRef<HTMLElement>>("topSentinel");
   private scrollObserver?: IntersectionObserver;
+
+  private readonly menuButton =
+    viewChild<ElementRef<HTMLButtonElement>>("menuButton");
+  private readonly closeMenuButton =
+    viewChild<ElementRef<HTMLButtonElement>>("closeMenuButton");
+  private readonly menuPanel = viewChild<ElementRef<HTMLElement>>("menuPanel");
 
   // Login state
   isAuthenticated$ = this.auth.isAuthenticated$;
@@ -138,66 +132,26 @@ export class Navbar {
       return acc;
     }, {} as Record<string, BreadcrumbInfo>);
 
-  navItems: NavItem[] = [
-    {
-      label: "Home",
-      path: "/binder-design",
-      icon: "heroHome",
-      children: [
-        {
-          label: "Binder design",
-          path: "/binder-design",
-        },
-        {
-          label: "Structure prediction",
-          path: "/structure-prediction",
-          requiresAuth: false,
-        },
-      ],
-    },
-    {
-      label: "Workflows",
-      icon: "heroRectangleGroup",
-      children: [
-        {
-          label: "De Novo Design",
-          path: "/binder-design/de-novo-design",
-        },
-        {
-          label: "Single Prediction",
-          path: "/structure-prediction/single-prediction",
-        },
-        {
-          label: "Bulk Prediction",
-          path: "/structure-prediction/bulk-prediction",
-        },
-        {
-          label: "Interaction Screening",
-          path: "/structure-prediction/interaction-screening",
-        },
-      ],
-    },
+  readonly navItems: NavItem[] = [
+    ...THEMES.map((theme) => ({
+      label: theme.label,
+      path: `/${theme.id}`,
+      children: theme.workflows
+        .filter((wf) => !wf.disabled)
+        .map((wf) => ({ label: wf.label, path: wf.href })),
+    })),
     {
       label: "My Jobs",
       path: "/my-jobs",
-      icon: "heroClipboardDocumentList",
-    },
-    {
-      label: "About",
-      path: "/about",
-      icon: "heroInformationCircle",
-    },
-    {
-      label: "Workshops & Events",
-      path: "/events",
-      icon: "heroCalendarDays",
     },
     {
       label: "Support / FAQ",
       path: "/support",
-      icon: "heroQuestionMarkCircle",
+      menuOnly: true,
     },
   ];
+
+  readonly desktopNavItems = this.navItems.filter((item) => !item.menuOnly);
 
   constructor() {
     this.router.events
@@ -228,14 +182,14 @@ export class Navbar {
         !target.closest(".compact-menu-button")
       ) {
         if (this.isMobileMenuOpen()) {
-          this.isMobileMenuOpen.set(false);
+          this.closeMobileMenu();
         }
       }
     };
 
     const onDocumentKeydown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && this.isMobileMenuOpen()) {
-        this.isMobileMenuOpen.set(false);
+        this.closeMobileMenu();
       }
     };
 
@@ -263,18 +217,9 @@ export class Navbar {
   }
 
   private checkRoute(url: string) {
-    const basePath = url.split("?")[0];
-    const isHomePage =
-      basePath === "/binder-design" || basePath === "/structure-prediction";
-
-    if (isHomePage) {
-      this.showBreadcrumb.set(false);
-      this.breadcrumb.set(null);
-    } else {
-      const crumb = this.workflowBreadcrumbs[basePath] ?? null;
-      this.showBreadcrumb.set(crumb !== null);
-      this.breadcrumb.set(crumb);
-    }
+    const crumb = this.workflowBreadcrumbs[url.split("?")[0]] ?? null;
+    this.showBreadcrumb.set(crumb !== null);
+    this.breadcrumb.set(crumb);
   }
 
   // Auth methods
@@ -295,68 +240,22 @@ export class Navbar {
 
   toggleMobileMenu() {
     this.isMobileMenuOpen.update((open) => !open);
-  }
-
-  navigate(path: string, queryParams?: { [key: string]: string }) {
-    if (queryParams) {
-      this.router
-        .navigate([path], { queryParams })
-        .then(() => {
-          this.closeMobileMenu();
-        })
-        .catch((error) => {
-          console.error("Navigation failed:", error);
-          this.closeMobileMenu();
-        });
-    } else {
-      this.router
-        .navigate([path])
-        .then(() => {
-          this.closeMobileMenu();
-        })
-        .catch((error) => {
-          console.error("Navigation failed:", error);
-          this.closeMobileMenu();
-        });
+    if (this.isMobileMenuOpen()) {
+      afterNextRender(() => this.closeMenuButton()?.nativeElement.focus(), {
+        injector: this.injector,
+      });
     }
   }
 
   closeMobileMenu() {
+    if (this.menuPanel()?.nativeElement.contains(document.activeElement)) {
+      this.menuButton()?.nativeElement.focus();
+    }
     this.isMobileMenuOpen.set(false);
   }
 
-  executeAction(action?: () => void) {
-    if (action) {
-      action();
-    }
-    this.closeMobileMenu();
-  }
-
-  shouldShowNavItem(item: NavItem, isAuthenticated: boolean): boolean {
-    return !item.requiresAuth || isAuthenticated;
-  }
-
   isNavItemActive(item: NavItem): boolean {
-    if (!item.path) return false;
-
-    if (this.currentRoute() !== item.path) return false;
-
-    if (!item.queryParams) return true;
-
-    const urlTree = this.router.parseUrl(this.router.url);
-    for (const [key, expectedValue] of Object.entries(item.queryParams)) {
-      if (urlTree.queryParams[key] !== expectedValue) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  isParentNavItemActive(item: NavItem): boolean {
-    if (!item.children) return this.isNavItemActive(item);
-
-    return item.children.some((child) => this.isNavItemActive(child));
+    return this.currentRoute() === item.path;
   }
 
   private updateRouteState(): void {
