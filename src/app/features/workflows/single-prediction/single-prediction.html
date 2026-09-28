@@ -197,20 +197,18 @@
                   >
                     <div class="relative">
                       <div
-                        class="pointer-events-none absolute inset-0 overflow-hidden break-all px-4 py-1 font-mono text-sm text-gray-900"
+                        class="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-all px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-gray-900 scrollbar-gutter-stable"
                         aria-hidden="true"
                       >
                         @for (cell of getSequenceCells(row.sequence,
-                        row.moleculeType); track $index) {<span
-                          class="relative inline-block w-[1ch] align-top text-center leading-7.5 mr-0.5"
+                        row.moleculeType); track $index) {@if (cell.char ===
+                        "\n") {<br />} @else {<span
+                          class="relative inline-block align-top"
                           ><span
-                            class="pointer-events-none absolute inset-x-0 -top-0.5 overflow-visible text-[8px] leading-2.5 whitespace-nowrap text-gray-400 select-none"
-                          >
-                            {{ cell.label }}
-                          </span>
-                          {{ cell.char }}
-                        </span>
-                        }
+                            class="pointer-events-none absolute inset-x-0 -top-0.5 overflow-visible text-center text-[8px] leading-2.5 tracking-normal whitespace-nowrap text-gray-400 select-none"
+                            >{{ cell.label }}</span
+                          >{{ cell.char }}</span
+                        >}}
                       </div>
 
                       <textarea
@@ -224,7 +222,7 @@
                         (input)="updateRowSequence(row.id, $any($event.target).value)"
                         (scroll)="syncSequenceOverlayScroll($event)"
                         (blur)="touchRowField(row.id, 'sequence')"
-                        class="relative block w-full resize-none bg-transparent px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-9.5 max-h-40 break-all"
+                        class="relative block w-full resize-none bg-transparent px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-9.5 max-h-40 whitespace-pre-wrap break-all scrollbar-gutter-stable"
                         [placeholder]="
                         row.moleculeType === 'ligand'
                           ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
