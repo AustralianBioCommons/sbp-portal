@@ -49,7 +49,17 @@ export async function getAppConfig(): Promise<ApplicationConfig> {
           scope: "openid profile email offline_access",
         },
         httpInterceptor: {
-          allowedList: [`${apiBaseUrl}/api/*`],
+          allowedList: [
+            // Bypass the SDK's cached token so a newly-approved workflow
+            // execution role is seen immediately, instead of waiting on a
+            // stale cached token to expire (see the one-time credit grant
+            // in the backend's get_current_user_id dependency).
+            {
+              uri: `${apiBaseUrl}/api/workflows/me/sync`,
+              tokenOptions: { cacheMode: "off" },
+            },
+            `${apiBaseUrl}/api/*`,
+          ],
         },
       }),
       provideHttpClient(withInterceptors([authHttpInterceptorFn])),

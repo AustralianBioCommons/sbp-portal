@@ -66,7 +66,9 @@ export class AuthService {
     this.auth0.isAuthenticated$.pipe(
       switchMap((isAuthenticated) => {
         if (!isAuthenticated) return of(false);
-        return this.auth0.getAccessTokenSilently().pipe(
+        // Bypass the SDK's cached token: a role approved after this token was
+        // cached wouldn't otherwise show up until the cache expires.
+        return this.auth0.getAccessTokenSilently({ cacheMode: "off" }).pipe(
           map((token) => {
             const payload = AuthService.decodeAccessToken(token);
             if (!payload) return false;
