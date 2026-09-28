@@ -96,12 +96,6 @@ export class FooterSectionsComponent {
       heading: "Other",
       links: [
         { label: "My Jobs", href: "/my-jobs" },
-        {
-          label: "About",
-          href: "https://www.biocommons.org.au/about",
-          external: true,
-        },
-        { label: "Workshops & events", href: "/events" },
         { label: "Support", href: "/support" },
       ],
     },

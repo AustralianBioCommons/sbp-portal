@@ -1,4 +1,12 @@
-import { Component, inject, OnDestroy, OnInit, signal } from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  viewChild,
+} from "@angular/core";
 import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { AlertComponent } from "../../../components/alert/alert.component";
@@ -16,7 +24,7 @@ import { statusTagClass } from "../shared/job-status.utils";
 import { formatDecimals } from "../shared/job-results-report.utils";
 import { AuthService } from "../../../core/services/auth.service";
 import { environment } from "../../../../environments/environment";
-import { DatePipe } from "@angular/common";
+import { DatePipe, ViewportScroller } from "@angular/common";
 import { combineLatest, EMPTY, Subscription } from "rxjs";
 import { catchError } from "rxjs/operators";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
@@ -67,6 +75,10 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   private healthService = inject(HealthService);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private viewportScroller = inject(ViewportScroller);
+
+  private readonly jobsTable =
+    viewChild<ElementRef<HTMLTableElement>>("jobsTable");
 
   // Expose Math to template
   Math = Math;
@@ -77,6 +89,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   canExecuteWorkflows = signal<boolean>(false);
   readonly profileUrl = environment.profileUrl;
   private authSubscription?: Subscription;
+  private jobsSubscription?: Subscription;
   private hasLoadedJobs = false;
 
   // State signals
@@ -141,6 +154,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
       clearTimeout(this.searchDebounce);
     }
     this.authSubscription?.unsubscribe();
+    this.jobsSubscription?.unsubscribe();
   }
 
   /**
@@ -202,7 +216,8 @@ export default class JobsListComponent implements OnInit, OnDestroy {
       params.status = this.selectedStatuses();
     }
 
-    this.jobsService
+    this.jobsSubscription?.unsubscribe();
+    this.jobsSubscription = this.jobsService
       .listJobs(params)
       .pipe(
         catchError((err) => {
@@ -283,21 +298,21 @@ export default class JobsListComponent implements OnInit, OnDestroy {
    * Navigate to previous page
    */
   previousPage(): void {
-    if (this.currentPage() > 1) {
-      this.currentPage.update((page) => page - 1);
-      this.loadJobs();
-    }
+    if (this.hasPreviousPage) this.goToPage(this.currentPage() - 1);
   }
 
   /**
    * Navigate to next page
    */
   nextPage(): void {
-    const totalPages = Math.ceil(this.total() / this.pageSize());
-    if (this.currentPage() < totalPages) {
-      this.currentPage.update((page) => page + 1);
-      this.loadJobs();
-    }
+    if (this.hasNextPage) this.goToPage(this.currentPage() + 1);
+  }
+
+  private goToPage(page: number): void {
+    this.currentPage.set(page);
+    this.loadJobs();
+    this.jobsTable()?.nativeElement.focus({ preventScroll: true });
+    this.viewportScroller.scrollToPosition([0, 0], { behavior: "smooth" });
   }
 
   /**

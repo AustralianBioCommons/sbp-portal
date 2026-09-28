@@ -4,6 +4,7 @@ import {
   TestBed,
   tick,
 } from "@angular/core/testing";
+import { ViewportScroller } from "@angular/common";
 import { DomSanitizer } from "@angular/platform-browser";
 import { provideRouter, Router } from "@angular/router";
 import { Observable, of, throwError } from "rxjs";
@@ -342,6 +343,10 @@ describe("JobsListComponent", () => {
 
   it("should paginate backward and forward within bounds", () => {
     const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
+    const scrollSpy = spyOn(
+      TestBed.inject(ViewportScroller),
+      "scrollToPosition"
+    );
     component.total.set(125);
     component.pageSize.set(50);
     component.currentPage.set(2);
@@ -354,6 +359,9 @@ describe("JobsListComponent", () => {
 
     component.nextPage();
     expect(component.currentPage()).toBe(2);
+    expect(document.activeElement).toBe(
+      fixture.nativeElement.querySelector("table")
+    );
 
     component.currentPage.set(3);
     component.nextPage();
@@ -363,6 +371,7 @@ describe("JobsListComponent", () => {
     expect(component.hasPreviousPage).toBeTrue();
     expect(component.hasNextPage).toBeFalse();
     expect(loadJobsSpy).toHaveBeenCalledTimes(2);
+    expect(scrollSpy).toHaveBeenCalledTimes(2);
   });
 
   it("should reload from page one with the flipped score direction when toggling score sort", () => {

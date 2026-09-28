@@ -94,7 +94,12 @@
       <div
         class="@container max-md:overflow-x-auto max-md:rounded-lg max-md:min-h-112"
       >
-        <table class="min-w-full divide-y divide-gray-200">
+        <table
+          #jobsTable
+          tabindex="-1"
+          aria-label="Jobs"
+          class="min-w-full divide-y divide-gray-200 focus:outline-none"
+        >
           <!-- Search/filter sits in the sticky thead so it all sticks as one block -->
           <thead class="md:sticky md:top-26 z-20">
             <tr role="presentation">
