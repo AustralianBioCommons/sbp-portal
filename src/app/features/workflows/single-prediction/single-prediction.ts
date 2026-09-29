@@ -39,6 +39,7 @@ import {
   CCD_COMPOUNDS,
   isValidSmiles,
   lookupCcdCompound,
+  normalizeSequencePaste,
   validateDnaSequence,
   validateProteinSequence,
   validateRnaSequence,
@@ -416,10 +417,14 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   }
 
   updateRowSequence(id: number, value: string): void {
-    this.patchRow(id, { sequence: value });
     const row = this.entityRows().find((r) => r.id === id);
+    const sequence =
+      row && row.moleculeType !== "ccd" && row.moleculeType !== "ligand"
+        ? normalizeSequencePaste(value)
+        : value;
+    this.patchRow(id, { sequence });
     if (row?.moleculeType === "ccd") {
-      this.triggerCcdLookup(id, value);
+      this.triggerCcdLookup(id, sequence);
     }
   }
 
@@ -692,13 +697,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     const normalizedSequence = this.getNormalizedSequence(row);
 
-    if (
-      row.moleculeType !== "ccd" &&
-      row.moleculeType !== "ligand" &&
-      /\s/.test(row.sequence)
-    ) {
-      errors.sequence = "Sequence must not contain spaces or line breaks";
-    } else if (!normalizedSequence) {
+    if (!normalizedSequence) {
       errors.sequence = "Sequence is required";
     } else {
       const sequenceValidation = this.validateSequenceByMoleculeType(
