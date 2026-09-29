@@ -195,7 +195,7 @@ describe("JobResultsReportComponent", () => {
       "ipTM",
       "Design Length",
       "Design Sequence",
-      "Design name",
+      "Design Name",
     ]);
   });
 
@@ -827,7 +827,7 @@ describe("JobResultsReportComponent", () => {
         "ipTM",
         "Design Length",
         "Design Sequence",
-        "Design name",
+        "Design Name",
       ]);
     });
 
@@ -1010,8 +1010,8 @@ describe("JobResultsReportComponent", () => {
       expect(component.rows().map((row) => row.id)).toEqual(["protein1"]);
       expect(component.columns().map((column) => column.heading)).toEqual([
         "Query ID",
-        "Target ID",
         "pTM",
+        "pLDDT",
       ]);
     });
 

@@ -922,6 +922,23 @@ describe("SinglePredictionComponent", () => {
     const proteinCells = component.getSequenceCells("A".repeat(10), "protein");
     expect(proteinCells[9].label).toBe("10");
 
+    const shortCells = component.getSequenceCells("A".repeat(7), "protein");
+    expect(shortCells[6].label).toBe("7");
+
+    const nearTickCells = component.getSequenceCells(
+      "A".repeat(461),
+      "protein"
+    );
+    expect(nearTickCells[459].label).toBe("460");
+    expect(nearTickCells[460].label).toBe("");
+    expect(
+      component.getSequenceCells("A".repeat(462), "protein")[461].label
+    ).toBe("");
+
+    const farTickCells = component.getSequenceCells("A".repeat(463), "protein");
+    expect(farTickCells[459].label).toBe("460");
+    expect(farTickCells[462].label).toBe("463");
+
     const ligandCells = component.getSequenceCells("A".repeat(10), "ligand");
     expect(ligandCells.every((cell) => cell.label === "")).toBe(true);
   });

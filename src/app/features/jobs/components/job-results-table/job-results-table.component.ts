@@ -9,6 +9,7 @@ import {
   ReportColumn,
   ReportRow,
   SortDirection,
+  formatDecimals,
   sortReportRows,
 } from "../../shared/job-results-report.utils";
 
@@ -80,6 +81,12 @@ export class JobResultsTableComponent {
       if (last) classes.push("cap-right");
     }
     return classes.join(" ");
+  }
+
+  cellText(column: ReportColumn, row: ReportRow): string {
+    const value = row.values[column.key] ?? "";
+    if (!value) return "—";
+    return column.numeric ? formatDecimals(value) : value;
   }
 
   select(row: ReportRow): void {

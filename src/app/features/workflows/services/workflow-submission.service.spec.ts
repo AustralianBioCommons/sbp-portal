@@ -198,7 +198,7 @@ describe("WorkflowSubmissionService", () => {
     service.showSuccessDialog.set(true);
     service.goToJobs();
     expect(service.showSuccessDialog()).toBeFalse();
-    expect(router.navigate).toHaveBeenCalledWith(["/jobs"]);
+    expect(router.navigate).toHaveBeenCalledWith(["/my-jobs"]);
   });
 
   it("should set isSubmitting to true while the API call is in flight", () => {

@@ -27,7 +27,7 @@ const TRAILING_COLUMNS: readonly ReportColumn[] = [
     sequence: true,
     sortable: false,
   },
-  { key: "description", heading: "Design name", sortable: false },
+  { key: "description", heading: "Design Name", sortable: false },
 ];
 
 /** AlphaFold2 Initial Guess: PAE is in Angstroms and ipTM runs 0-1. */

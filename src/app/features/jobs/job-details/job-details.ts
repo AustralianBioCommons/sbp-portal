@@ -20,7 +20,6 @@ import {
   heroCog6Tooth,
   heroCommandLine,
   heroExclamationCircle,
-  heroExclamationTriangle,
   heroFolder,
   heroTrash,
 } from "@ng-icons/heroicons/outline";
@@ -32,6 +31,7 @@ import { SinglePredictionReportComponent } from "../components/single-prediction
 import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { statusTagClass } from "../shared/job-status.utils";
+import { formatDecimals } from "../shared/job-results-report.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import {
@@ -145,7 +145,6 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
       heroCog6Tooth,
       heroCommandLine,
       heroExclamationCircle,
-      heroExclamationTriangle,
       heroFolder,
       heroTrash,
     }),
@@ -375,7 +374,7 @@ export default class JobDetailsComponent implements OnInit {
       .subscribe(() => {
         this.deleting.set(false);
         this.closeDeleteDialog();
-        this.router.navigate(["/jobs"]);
+        this.router.navigate(["/my-jobs"]);
       });
   }
 
@@ -458,7 +457,7 @@ export default class JobDetailsComponent implements OnInit {
       },
       {
         label: "Max score",
-        value: job.score === null ? "N/A" : job.score.toFixed(3),
+        value: job.score === null ? "N/A" : formatDecimals(job.score),
       },
     ];
   }

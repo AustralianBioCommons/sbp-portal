@@ -196,7 +196,7 @@ describe("BulkPredictionComponent", () => {
     });
     expect(component.isFormValid()).toBe(false);
     expect(component.form.controls.fasta.errors?.["fasta"]).toContain(
-      "Duplicate FASTA header"
+      "Duplicate sequence ID"
     );
   });
 

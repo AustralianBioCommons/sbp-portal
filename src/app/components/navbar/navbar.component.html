@@ -11,9 +11,12 @@
     <div class="flex items-center gap-4 shrink-0">
       <button
         type="button"
+        #menuButton
         class="compact-menu-button text-sky-600 hover:text-sky-700 transition-all rounded"
         (click)="toggleMobileMenu(); $event.stopPropagation()"
         aria-label="Open menu"
+        aria-controls="navigation-menu"
+        [attr.aria-expanded]="isMobileMenuOpen()"
       >
         <ng-icon name="heroBars3" size="24"></ng-icon>
       </button>
@@ -33,42 +36,23 @@
 
       <!-- Nav Links -->
       <nav
-        class="hidden lg:flex items-center gap-4 lg:gap-6 font-semibold text-biocommons-primary transition-all text-sm"
+        class="hidden lg:flex items-center gap-6 font-semibold text-biocommons-primary transition-all text-sm"
         aria-label="Main navigation"
       >
+        @for (item of desktopNavItems; track item.label) {
         <a
-          routerLink="/binder-design"
+          [routerLink]="item.path"
           class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
           [class]="
-            currentRoute() === '/binder-design'
+            isNavItemActive(item)
               ? 'border-biocommons-primary'
               : 'border-transparent hover:border-biocommons-primary/20'
           "
+          [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
         >
-          Binder Design
+          {{ item.label }}
         </a>
-        <a
-          routerLink="/structure-prediction"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
-          [class]="
-            currentRoute() === '/structure-prediction'
-              ? 'border-biocommons-primary'
-              : 'border-transparent hover:border-biocommons-primary/20'
-          "
-        >
-          Structure Prediction
-        </a>
-        <a
-          routerLink="/jobs"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
-          [class]="
-            currentRoute() === '/jobs'
-              ? 'border-biocommons-primary'
-              : 'border-transparent hover:border-biocommons-primary/20'
-          "
-        >
-          Jobs
-        </a>
+        }
       </nav>
     </div>
 
@@ -195,15 +179,18 @@
     aria-hidden="true"
   ></div>
 
-  <!-- Slide-out Navigation Panel -->
+  <!-- Slide-out Navigation Panel (inert keeps it out of the tab order when closed) -->
   <div
+    #menuPanel
+    id="navigation-menu"
     class="compact-menu fixed top-0 left-0 h-full w-84 z-50 bg-white shadow-2xl transition-transform ease-in-out overflow-y-auto flex flex-col"
     [style.transform]="
       isMobileMenuOpen() ? 'translateX(0)' : 'translateX(-100%)'
     "
     role="dialog"
     [attr.aria-modal]="isMobileMenuOpen() ? 'true' : null"
-    [attr.aria-hidden]="!isMobileMenuOpen() ? 'true' : null"
+    [inert]="!isMobileMenuOpen()"
+    [cdkTrapFocus]="isMobileMenuOpen()"
     aria-label="Navigation menu"
   >
     <!-- Panel Header -->
@@ -222,6 +209,7 @@
         />
       </a>
       <button
+        #closeMenuButton
         type="button"
         (click)="closeMobileMenu()"
         class="rounded-lg h-8 w-8 flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-all"
@@ -232,59 +220,55 @@
     </div>
 
     <!-- Panel Content -->
-    <div
+    <nav
       class="p-6 flex-1 space-y-2 text-sm font-medium"
       aria-label="Mobile navigation"
     >
-      @let isAuth = (isAuthenticated$ | async) || false; @for (item of navItems;
-      track item.label) { @if (item.children) {
+      @for (item of navItems; track item.label) { @if (item.children) {
       <div>
-        <div class="flex items-center gap-2 p-2 text-gray-900">
-          @if (item.icon) {
-          <div
-            class="text-biocommons-primary flex items-center justify-center shrink-0"
-          >
-            <ng-icon [name]="item.icon" size="18" class="shrink-0" />
-          </div>
-          }
-          <span>{{ item.label }}</span>
-        </div>
+        <a
+          [routerLink]="item.path"
+          (click)="closeMobileMenu()"
+          class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary"
+          [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
+          [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
+        >
+          {{ item.label }}
+        </a>
         <div class="ml-6 space-y-2">
-          @for (child of item.children; track child.label) { @if
-          (shouldShowNavItem(child, isAuth)) {
+          @for (child of item.children; track child.label) {
           <a
             [routerLink]="child.path"
             (click)="closeMobileMenu()"
-            class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-biocommons-primary"
+            class="block p-2 rounded-md transition-all no-underline text-biocommons-primary"
             [class]="
               isNavItemActive(child) ? 'bg-sky-50 ' : ' hover:bg-gray-50'
             "
+            [attr.aria-current]="isNavItemActive(child) ? 'page' : null"
           >
-            <span>{{ child.label }}</span>
+            {{ child.label }}
           </a>
-          } }
+          }
         </div>
       </div>
-      } @else if (shouldShowNavItem(item, isAuth)) {
+      } @else {
       <a
         [routerLink]="item.path"
         (click)="closeMobileMenu()"
-        class="flex items-center gap-2 w-full p-2 rounded-md transition-all no-underline text-biocommons-primary"
+        class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary"
         [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
+        [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
       >
-        @if (item.icon) {
-        <ng-icon [name]="item.icon" size="18" />
-        }
-        <span>{{ item.label }}</span>
+        {{ item.label }}
       </a>
       } }
-    </div>
+    </nav>
   </div>
 </nav>
 
 <!-- Breadcrumb (only show on workflow pages) — non-sticky, scrolls with content -->
 @if (showBreadcrumb() && breadcrumb(); as crumb) {
-<div
+<nav
   class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
   aria-label="Breadcrumb"
 >
@@ -294,9 +278,9 @@
   >
     {{ crumb.themeLabel }}
   </a>
-  <ng-icon name="heroChevronRight" size="16"></ng-icon>
-  <span class="text-gray-600">
+  <ng-icon name="heroChevronRight" size="16" aria-hidden="true"></ng-icon>
+  <span class="text-gray-600" aria-current="page">
     {{ crumb.workflowLabel }}
   </span>
-</div>
+</nav>
 }

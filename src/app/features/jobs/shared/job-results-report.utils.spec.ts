@@ -1,12 +1,46 @@
 import {
   ReportColumn,
   ReportRow,
+  formatDecimals,
   getJobResultsAdapter,
   parseCsvTable,
   registerJobResultsAdapter,
   sortReportRows,
 } from "./job-results-report.utils";
 import "./rfdiffusion-results.utils";
+
+describe("formatDecimals", () => {
+  it("rounds a value with more than three places", () => {
+    expect(formatDecimals("0.5428716540336609")).toBe("0.543");
+    expect(formatDecimals("54.28716540336609")).toBe("54.287");
+  });
+
+  it("shows a shorter value exactly as written", () => {
+    expect(formatDecimals("0.79")).toBe("0.79");
+    expect(formatDecimals("1.00")).toBe("1.00");
+    expect(formatDecimals("135")).toBe("135");
+  });
+
+  it("takes a number as well as text", () => {
+    expect(formatDecimals(0.2869528830051422)).toBe("0.287");
+    expect(formatDecimals(0.95)).toBe("0.95");
+  });
+
+  it("rounds scientific notation the same with or without a decimal point", () => {
+    expect(formatDecimals("1e-5")).toBe("0");
+    expect(formatDecimals("1.2e-5")).toBe("0");
+  });
+
+  it("does not show negative zero", () => {
+    expect(formatDecimals("-0.0001")).toBe("0");
+  });
+
+  it("passes non-numeric text through untouched", () => {
+    expect(formatDecimals("NA")).toBe("NA");
+    expect(formatDecimals("")).toBe("");
+    expect(formatDecimals("1.2345x")).toBe("1.2345x");
+  });
+});
 
 const row = (id: string, values: Record<string, string>): ReportRow => ({
   id,

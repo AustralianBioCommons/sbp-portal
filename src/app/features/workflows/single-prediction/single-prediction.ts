@@ -88,6 +88,9 @@ interface ToolSettingErrors {
   colabfoldNumRecycles?: string;
 }
 
+/** Minimum distance (in residues) between ruler labels so multi-digit labels don't overlap. */
+const SEQUENCE_RULER_MIN_LABEL_GAP = 3;
+
 interface SequenceCell {
   char: string;
   label: string;
@@ -778,7 +781,9 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   /**
    * 1-based position labels for the sequence ruler overlay: every 10th character
-   * and the last one. SMILES (ligand) is excleded.
+   * and the last one. SMILES (ligand) is excluded. The last label is dropped when
+   * it sits too close to the preceding 10th label, or the two would overlap
+   * (e.g. "460" and "461").
    */
   getSequenceCells(
     sequence: string,
@@ -786,12 +791,13 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   ): SequenceCell[] {
     const showLabels = moleculeType !== "ligand";
     const length = sequence.length;
+    const showLastLabel =
+      length < 10 || length % 10 >= SEQUENCE_RULER_MIN_LABEL_GAP;
     return Array.from(sequence, (char, index) => {
       const position = index + 1;
-      const label =
-        showLabels && (position % 10 === 0 || position === length)
-          ? String(position)
-          : "";
+      const isLabelled =
+        position % 10 === 0 || (position === length && showLastLabel);
+      const label = showLabels && isLabelled ? String(position) : "";
       return { char, label };
     });
   }

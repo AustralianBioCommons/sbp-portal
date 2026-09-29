@@ -325,12 +325,12 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     const targetEntries = parseMultiFasta(raw.targetFasta);
     return [
       ...queryEntries.map((e) => ({
-        id: e.header,
+        id: e.id,
         sequence: e.sequence,
         group: "query" as const,
       })),
       ...targetEntries.map((e) => ({
-        id: e.header,
+        id: e.id,
         sequence: e.sequence,
         group: "target" as const,
       })),
