@@ -179,7 +179,7 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
   // Submission
   private buildBulkPayload(): { id: string; sequence: string }[] {
     const entries = parseMultiFasta(this.form.getRawValue().fasta);
-    return entries.map((e) => ({ id: e.header, sequence: e.sequence }));
+    return entries.map((e) => ({ id: e.id, sequence: e.sequence }));
   }
 
   protected validateAll(): void {

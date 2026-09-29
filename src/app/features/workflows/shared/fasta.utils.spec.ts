@@ -1,6 +1,7 @@
 import {
   lookupCcdCompound,
   CCD_COMPOUNDS,
+  fastaHeaderToId,
   isValidSmiles,
   parseMultiFasta,
   validateBulkFastaProtein,
@@ -278,7 +279,7 @@ describe("fasta.utils", () => {
         ">seq1\nMKTAYIAK\n>seq1\nACDEFGHIK"
       );
       expect(result.valid).toBe(false);
-      expect(result.errorMessage).toContain('Duplicate FASTA header: "seq1"');
+      expect(result.errorMessage).toContain('Duplicate sequence ID "seq1"');
     });
 
     it("accepts a single valid entry", () => {
@@ -363,7 +364,7 @@ describe("fasta.utils", () => {
         ">seq1\nMKTAYIAK\n>seq1\nACDEFGHIK"
       );
       expect(result.valid).toBe(false);
-      expect(result.errorMessage).toContain('Duplicate FASTA header: "seq1"');
+      expect(result.errorMessage).toContain('Duplicate sequence ID "seq1"');
     });
 
     it("rejects an entry with no sequence after the header", () => {
@@ -479,33 +480,68 @@ describe("fasta.utils", () => {
   describe("parseMultiFasta", () => {
     it("parses a single entry", () => {
       expect(parseMultiFasta(">seq1\nMKTAYIAK")).toEqual([
-        { header: "seq1", sequence: "MKTAYIAK" },
+        { id: "seq1", header: "seq1", sequence: "MKTAYIAK" },
       ]);
     });
 
     it("parses multiple entries", () => {
       expect(parseMultiFasta(">seq1\nMKTAYIAK\n>seq2\nACDEFGHIK")).toEqual([
-        { header: "seq1", sequence: "MKTAYIAK" },
-        { header: "seq2", sequence: "ACDEFGHIK" },
+        { id: "seq1", header: "seq1", sequence: "MKTAYIAK" },
+        { id: "seq2", header: "seq2", sequence: "ACDEFGHIK" },
       ]);
     });
 
     it("normalises sequence to uppercase and strips internal whitespace", () => {
       expect(parseMultiFasta(">seq1\nmkt ayiak")).toEqual([
-        { header: "seq1", sequence: "MKTAYIAK" },
+        { id: "seq1", header: "seq1", sequence: "MKTAYIAK" },
       ]);
     });
 
     it("joins multiline sequence content into one string", () => {
       expect(parseMultiFasta(">seq1\nMKTAY\nIAK")).toEqual([
-        { header: "seq1", sequence: "MKTAYIAK" },
+        { id: "seq1", header: "seq1", sequence: "MKTAYIAK" },
       ]);
     });
 
     it("trims whitespace from header text", () => {
       expect(parseMultiFasta(">  seq1  \nMKTAYIAK")).toEqual([
-        { header: "seq1", sequence: "MKTAYIAK" },
+        { id: "seq1", header: "seq1", sequence: "MKTAYIAK" },
       ]);
+    });
+  });
+
+  describe("fastaHeaderToId", () => {
+    it("uses the first token of an NCBI-style header", () => {
+      expect(
+        fastaHeaderToId(
+          "NP_414544.1 homoserine kinase [Escherichia coli str. K-12 substr. MG1655]"
+        )
+      ).toBe("NP_414544.1");
+    });
+
+    it("replaces glob/shell-unsafe characters", () => {
+      expect(fastaHeaderToId("sp|P69905|HBA_HUMAN Hemoglobin")).toBe(
+        "sp_P69905_HBA_HUMAN"
+      );
+      expect(fastaHeaderToId("seq[1]*?")).toBe("seq_1_");
+    });
+
+    it("parseMultiFasta exposes the safe id alongside the header", () => {
+      const [entry] = parseMultiFasta(
+        ">NP_414542.1 thr operon leader peptide [Escherichia coli]\nMKR"
+      );
+      expect(entry.id).toBe("NP_414542.1");
+      expect(entry.header).toBe(
+        "NP_414542.1 thr operon leader peptide [Escherichia coli]"
+      );
+    });
+
+    it("rejects headers whose first word collides after deriving the id", () => {
+      const result = validateMultiFastaProtein(
+        ">NP_1 kinase\nMKR\n>NP_1 other description\nMKR"
+      );
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain('Duplicate sequence ID "NP_1"');
     });
   });
 });

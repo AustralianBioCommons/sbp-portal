@@ -81,6 +81,19 @@ export const CCD_COMPOUNDS: Record<string, string> = {
   BCB: "Bacteriochlorophyll B",
 };
 
+/**
+ * Derives a filesystem/glob-safe sequence ID from a FASTA header: the first
+ * whitespace-delimited token, with anything outside [A-Za-z0-9._-] replaced by
+ * "_". WISPS writes one split file per sequence named `<id>.fasta`, and
+ * Nextflow treats characters like "[" "]" "*" "?" in paths as glob patterns,
+ * so NCBI-style headers ("NP_414544.1 homoserine kinase [E. coli ...]") must
+ * be reduced to a safe ID before being used as a filename.
+ */
+export function fastaHeaderToId(header: string): string {
+  const firstToken = header.trim().split(/\s+/)[0] ?? "";
+  return firstToken.replace(/[^A-Za-z0-9._-]+/g, "_");
+}
+
 function createSequenceValidator(
   pattern: RegExp,
   emptyMessage: string,
@@ -167,15 +180,25 @@ export function validateMultiFastaProtein(
       };
     }
 
-    if (headers.has(header)) {
+    const id = fastaHeaderToId(header);
+
+    if (!id.replace(/[._-]/g, "")) {
       return {
         valid: false,
-        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique`,
+        errorMessage: `FASTA header "${header}" must start with an ID containing letters or numbers`,
         sequenceCount: 0,
       };
     }
 
-    headers.add(header);
+    if (headers.has(id)) {
+      return {
+        valid: false,
+        errorMessage: `Duplicate sequence ID "${id}" (from header "${header}"). The first word of each header must be unique`,
+        sequenceCount: 0,
+      };
+    }
+
+    headers.add(id);
 
     const sequenceLines = lines.slice(1).map((l) => l.trim());
     const sequence = sequenceLines
@@ -212,19 +235,22 @@ export function validateMultiFastaProtein(
 }
 
 /**
- * Parses a validated multi-FASTA string into an array of header/sequence pairs.
+ * Parses a validated multi-FASTA string into an array of id/header/sequence
+ * entries, where `id` is the safe ID derived via `fastaHeaderToId`.
  * Assumes the input has already passed `validateMultiFastaProtein`.
  */
 export function parseMultiFasta(
   input: string
-): Array<{ header: string; sequence: string }> {
+): Array<{ id: string; header: string; sequence: string }> {
   return input
     .trim()
     .split(/\n(?=>)/)
     .map((block) => {
       const lines = block.split("\n");
+      const header = lines[0].slice(1).trim();
       return {
-        header: lines[0].slice(1).trim(),
+        id: fastaHeaderToId(header),
+        header,
         sequence: lines.slice(1).join("").replace(/\s+/g, "").toUpperCase(),
       };
     });
@@ -238,9 +264,9 @@ export function validateUniqueHeadersAcrossInputs(
   input1: string,
   input2: string
 ): SequenceValidationResult {
-  const headers1 = new Set(parseMultiFasta(input1).map((e) => e.header));
+  const headers1 = new Set(parseMultiFasta(input1).map((e) => e.id));
   const duplicates = parseMultiFasta(input2)
-    .map((e) => e.header)
+    .map((e) => e.id)
     .filter((h) => headers1.has(h));
   if (duplicates.length === 0) return { valid: true };
   return {
@@ -364,15 +390,25 @@ export function validateBulkFastaProtein(
       };
     }
 
-    if (headers.has(header)) {
+    const id = fastaHeaderToId(header);
+
+    if (!id.replace(/[._-]/g, "")) {
       return {
         valid: false,
-        errorMessage: `Duplicate FASTA header: "${header}". All headers must be unique`,
+        errorMessage: `FASTA header "${header}" must start with an ID containing letters or numbers`,
         sequenceCount: 0,
       };
     }
 
-    headers.add(header);
+    if (headers.has(id)) {
+      return {
+        valid: false,
+        errorMessage: `Duplicate sequence ID "${id}" (from header "${header}"). The first word of each header must be unique`,
+        sequenceCount: 0,
+      };
+    }
+
+    headers.add(id);
 
     const sequenceLines = lines.slice(1).map((l) => l.trim());
     const rawSequence = sequenceLines
