@@ -56,6 +56,7 @@ type JobSettingItem = {
   value: string;
   details: string[];
   url?: string;
+  downloadFilename?: string;
 };
 
 /** Settings actually exposed in each workflow's submission form, keyed by
@@ -98,12 +99,18 @@ const RESULTS_REPORT_WORKFLOWS = new Set([
 ]);
 
 /** Workflows whose form is plain text (no file to browse for) — the raw FASTA
- *  is submitted directly, so it's shown inline. Older jobs submitted before
- *  fastaContent existed fall back to the fastaS3Uri download link. */
+ *  is submitted directly rather than uploaded, so it has no natural download
+ *  URL; it's rendered as a download link generated from the content itself
+ *  (see FASTA_CONTENT_DOWNLOAD_FILENAME). Older jobs submitted before
+ *  fastaContent existed fall back to the fastaS3Uri download link instead. */
 const WORKFLOWS_PREFERRING_FASTA_CONTENT = new Set([
   "interaction screening",
   "bulk prediction",
 ]);
+
+/** Filename shown/downloaded for the FASTA-content-derived link, since the raw
+ *  content has no filename of its own (unlike an uploaded file's S3 URI). */
+const FASTA_CONTENT_DOWNLOAD_FILENAME = "input.fasta";
 
 /** Workflows whose form has no "Use Potentials" checkbox, but which still run
  *  Boltz with that flag under the hood (always false, since the form never
@@ -857,25 +864,25 @@ export default class JobDetailsComponent implements OnInit {
       }
       details.push(...this.formatValidationDetails(value.validation));
       const rawValue = this.formatSettingValue(value.value);
-      const isFileDownload = this.isFileDownloadKey(key);
+      const display = this.resolveSettingDisplay(key, rawValue);
       return {
         label: value.label || this.formatSettingLabel(key),
-        value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
+        value: display.value,
         details,
-        ...(isFileDownload && rawValue.startsWith("http")
-          ? { url: rawValue }
+        ...(display.url
+          ? { url: display.url, downloadFilename: display.downloadFilename }
           : {}),
       };
     }
 
     const rawValue = this.formatSettingValue(value);
-    const isFileDownload = this.isFileDownloadKey(key);
+    const display = this.resolveSettingDisplay(key, rawValue);
     return {
       label: this.formatSettingLabel(key),
-      value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
+      value: display.value,
       details: [],
-      ...(isFileDownload && rawValue.startsWith("http")
-        ? { url: rawValue }
+      ...(display.url
+        ? { url: display.url, downloadFilename: display.downloadFilename }
         : {}),
     };
   }
@@ -883,6 +890,47 @@ export default class JobDetailsComponent implements OnInit {
   private isFileDownloadKey(key: string): boolean {
     const lower = key.toLowerCase();
     return lower.includes("pdb") || lower.includes("fasta");
+  }
+
+  /** True only for the exact `fastaContent` field — the raw pasted/generated
+   *  FASTA text — as opposed to `fastaS3Uri`/`fastaFileUrl`, which are already
+   *  real download URLs handled by the generic http-URL branch below. */
+  private isFastaContentKey(key: string): boolean {
+    return key.toLowerCase() === "fastacontent";
+  }
+
+  /** A `data:` URI that serves the given text as a downloadable file, so raw
+   *  FASTA content (which has no S3 file of its own) can offer the same
+   *  download-link UX as an uploaded file's URL. */
+  private buildFastaContentDownloadUrl(content: string): string {
+    return `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`;
+  }
+
+  private resolveSettingDisplay(
+    key: string,
+    rawValue: string
+  ): { value: string; url?: string; downloadFilename?: string } {
+    if (
+      this.isFastaContentKey(key) &&
+      rawValue &&
+      rawValue !== "N/A" &&
+      !rawValue.startsWith("http")
+    ) {
+      return {
+        value: FASTA_CONTENT_DOWNLOAD_FILENAME,
+        url: this.buildFastaContentDownloadUrl(rawValue),
+        downloadFilename: FASTA_CONTENT_DOWNLOAD_FILENAME,
+      };
+    }
+
+    if (!this.isFileDownloadKey(key)) {
+      return { value: rawValue };
+    }
+
+    return {
+      value: this.extractFilename(rawValue),
+      ...(rawValue.startsWith("http") ? { url: rawValue } : {}),
+    };
   }
 
   private extractFilename(path: string): string {

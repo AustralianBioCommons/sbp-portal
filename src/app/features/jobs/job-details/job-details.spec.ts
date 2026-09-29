@@ -1082,8 +1082,10 @@ describe("JobDetailsComponent", () => {
         "FASTA Content",
         "Use Potentials",
       ]);
-      expect(items.find((item) => item.label === "FASTA Content")?.value).toBe(
-        ">seq1|protein\nMV"
+      const fastaItem = items.find((item) => item.label === "FASTA Content");
+      expect(fastaItem?.value).toBe("input.fasta");
+      expect(fastaItem?.url).toBe(
+        "data:text/plain;charset=utf-8,%3Eseq1%7Cprotein%0AMV"
       );
     });
 
@@ -1115,7 +1117,7 @@ describe("JobDetailsComponent", () => {
       ]);
     });
 
-    it("always shows FASTA content for single prediction, never the download link", () => {
+    it("always shows the FASTA content download link for single prediction, never fastaFileUrl", () => {
       component.job.set(singlePredictionJob);
       const items = privateApi().normalizeSettings({
         workflow: "single-prediction",
@@ -1127,7 +1129,8 @@ describe("JobDetailsComponent", () => {
       const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
       expect(fastaItems.length).toBe(1);
       expect(fastaItems[0].label).toBe("FASTA Content");
-      expect(fastaItems[0].value).toBe(">seq1|protein\nMV");
+      expect(fastaItems[0].value).toBe("input.fasta");
+      expect(fastaItems[0].url).toContain("data:text/plain");
     });
 
     it("falls back to a download link for older interaction screening jobs with no fastaContent", () => {
@@ -1154,7 +1157,7 @@ describe("JobDetailsComponent", () => {
       );
     });
 
-    it("prefers FASTA content over the download link for interaction screening", () => {
+    it("prefers the FASTA content download link over the fastaS3Uri link for interaction screening", () => {
       component.job.set(mockJob); // workflow: "Interaction Screening"
       const items = privateApi().normalizeSettings({
         workflow: "interaction-screening",
@@ -1166,9 +1169,8 @@ describe("JobDetailsComponent", () => {
       const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
       expect(fastaItems.length).toBe(1);
       expect(fastaItems[0].label).toBe("FASTA Content");
-      expect(fastaItems[0].value).toBe(
-        ">query1|protein\nMV\n>target1|protein\nAK"
-      );
+      expect(fastaItems[0].value).toBe("input.fasta");
+      expect(fastaItems[0].url).toContain("data:text/plain");
     });
 
     it("shows Use Potentials (defaulted false) for a boltz job even though interaction screening's form has no such control", () => {
@@ -1212,7 +1214,7 @@ describe("JobDetailsComponent", () => {
       ]);
     });
 
-    it("prefers FASTA content over the download link for bulk prediction", () => {
+    it("prefers the FASTA content download link over the fastaS3Uri link for bulk prediction", () => {
       const bulkJob: JobListItem = { ...mockJob, workflow: "Bulk Prediction" };
       component.job.set(bulkJob);
       const items = privateApi().normalizeSettings({
@@ -1225,6 +1227,8 @@ describe("JobDetailsComponent", () => {
       const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
       expect(fastaItems.length).toBe(1);
       expect(fastaItems[0].label).toBe("FASTA Content");
+      expect(fastaItems[0].value).toBe("input.fasta");
+      expect(fastaItems[0].url).toContain("data:text/plain");
     });
   });
 

@@ -359,7 +359,7 @@
                   [href]="setting.url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  download
+                  [attr.download]="setting.downloadFilename || ''"
                   class="text-sky-600 hover:underline transition-all hover:text-sky-800 text-xs wrap-break-word font-mono"
                 >
                   {{ setting.value }}
