@@ -326,6 +326,28 @@ describe("SinglePredictionComponent", () => {
     expect(component.getRowErrors(0).sequence).toContain("RNA sequence");
   });
 
+  it("should strip header lines and whitespace when a FASTA record is pasted into a sequence field", () => {
+    const rowId = component.entityRows()[0].id;
+
+    component.updateRowSequence(
+      rowId,
+      ">sp|P12345|EXAMPLE Example protein\nMAHQ\nLLIG"
+    );
+
+    const row = component.entityRows()[0];
+    expect(row.sequence).toBe("MAHQLLIG");
+    expect(component.getRowErrors(0).sequence).toBeUndefined();
+  });
+
+  it("should leave ligand sequence input untouched (whitespace not stripped)", () => {
+    const rowId = component.entityRows()[0].id;
+    component.updateRowMoleculeType(rowId, "ligand");
+
+    component.updateRowSequence(rowId, "CC(=O)O\n");
+
+    expect(component.entityRows()[0].sequence).toBe("CC(=O)O\n");
+  });
+
   it("should reject malformed SMILES branches and use the fallback message path", () => {
     expect(isValidSmiles("C]")).toBe(false);
     expect(isValidSmiles("C?")).toBe(false);
