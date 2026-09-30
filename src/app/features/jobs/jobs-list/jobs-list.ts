@@ -21,6 +21,7 @@ import {
 } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import { statusTagClass } from "../shared/job-status.utils";
+import { formatToolName } from "../shared/job-tool.utils";
 import { formatDecimals } from "../shared/job-results-report.utils";
 import { AuthService } from "../../../core/services/auth.service";
 import { environment } from "../../../../environments/environment";
@@ -360,6 +361,10 @@ export default class JobsListComponent implements OnInit, OnDestroy {
 
   getStatusClass(status: string): string {
     return statusTagClass(status);
+  }
+
+  getToolName(tool: string): string {
+    return formatToolName(tool);
   }
 
   /**
