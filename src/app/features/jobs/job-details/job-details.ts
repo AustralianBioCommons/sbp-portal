@@ -31,6 +31,7 @@ import { SinglePredictionReportComponent } from "../components/single-prediction
 import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { statusTagClass } from "../shared/job-status.utils";
+import { formatToolName } from "../shared/job-tool.utils";
 import { formatDecimals } from "../shared/job-results-report.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
@@ -450,7 +451,7 @@ export default class JobDetailsComponent implements OnInit {
   getSummaryItems(job: JobListItem): Array<{ label: string; value: string }> {
     return [
       { label: "Workflow type", value: job.workflow || "N/A" },
-      { label: "Tool", value: job.tool || "N/A" },
+      { label: "Tool", value: formatToolName(job.tool) || "N/A" },
       {
         label: "Submitted date",
         value: this.datePipe.transform(job.submittedAt, "dd/MM/yyyy") ?? "",
@@ -476,7 +477,9 @@ export default class JobDetailsComponent implements OnInit {
 
   getCitations(job: JobListItem): string[] {
     return [
-      `${job.tool || "Workflow"} methods and generated outputs.`,
+      `${
+        formatToolName(job.tool) || "Workflow"
+      } methods and generated outputs.`,
       "SBP Portal platform and supporting infrastructure.",
     ];
   }
@@ -493,6 +496,7 @@ export default class JobDetailsComponent implements OnInit {
       "zip",
       "txt",
       "tsv",
+      "pae",
     ]);
 
     // Replace underscores with spaces

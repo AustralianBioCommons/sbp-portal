@@ -750,6 +750,18 @@ describe("JobDetailsComponent", () => {
     expect(citations[0]).toBe("Workflow methods and generated outputs.");
   });
 
+  it("should normalize tool casing regardless of how the API sent it", () => {
+    const valueOf = (job: JobListItem) =>
+      component.getSummaryItems(job).find((item) => item.label === "Tool")
+        ?.value;
+
+    expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
+    expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
+    expect(component.getCitations(deNovoDesignJob)[0]).toBe(
+      "BindCraft methods and generated outputs."
+    );
+  });
+
   it("should group files by category with formatted names via getFilesByCategory", () => {
     component.filesItems.set([
       {
@@ -784,6 +796,7 @@ describe("JobDetailsComponent", () => {
     expect(component.formatCategoryName("stat_csv")).toBe("Stat CSV");
     expect(component.formatCategoryName("pdb_files")).toBe("PDB Files");
     expect(component.formatCategoryName("result_json")).toBe("Result JSON");
+    expect(component.formatCategoryName("pae_files")).toBe("PAE Files");
     expect(component.formatCategoryName("simple")).toBe("Simple");
   });
 
