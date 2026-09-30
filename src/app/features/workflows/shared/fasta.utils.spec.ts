@@ -3,6 +3,7 @@ import {
   CCD_COMPOUNDS,
   fastaHeaderToId,
   isValidSmiles,
+  normalizeSequencePaste,
   parseMultiFasta,
   validateBulkFastaProtein,
   validateDnaSequence,
@@ -14,6 +15,24 @@ import {
 } from "./fasta.utils";
 
 describe("fasta.utils", () => {
+  describe("normalizeSequencePaste", () => {
+    it("strips whitespace and newlines", () => {
+      expect(normalizeSequencePaste("MAHQ\nLLIG KG")).toBe("MAHQLLIGKG");
+    });
+
+    it("drops FASTA header lines before stripping whitespace", () => {
+      const pasted =
+        ">YP_026261.1 DUF2233 domain-containing protein YigE\nMAHQLLIGKGMITLNLK\nRIFLALTLLPLFAVAADD";
+      expect(normalizeSequencePaste(pasted)).toBe(
+        "MAHQLLIGKGMITLNLKRIFLALTLLPLFAVAADD"
+      );
+    });
+
+    it("drops multiple header lines from a multi-record paste", () => {
+      expect(normalizeSequencePaste(">a\nAAA\n>b\nCCC")).toBe("AAACCC");
+    });
+  });
+
   describe("validateFastaHeader", () => {
     it("accepts a simple name", () => {
       expect(validateFastaHeader("seq1")).toEqual({ valid: true });

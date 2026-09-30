@@ -108,62 +108,6 @@ describe("BinderDesignComponent", () => {
     });
   });
 
-  describe("community resources", () => {
-    it("should have correct community resources structure", () => {
-      expect(component.communityResources()).toBeDefined();
-      expect(component.communityResources().length).toBe(4);
-    });
-
-    it("should contain documentation resource", () => {
-      const docs = component
-        .communityResources()
-        .find((r) => r.title === "Documentation");
-      expect(docs).toBeDefined();
-      expect(docs?.description).toContain("guides and tutorials");
-    });
-
-    it("should contain community forum resource", () => {
-      const forum = component
-        .communityResources()
-        .find((r) => r.title === "Community Forum");
-      expect(forum).toBeDefined();
-      expect(forum?.description).toContain("Connect with other researchers");
-    });
-
-    it("should contain best practices resource", () => {
-      const practices = component
-        .communityResources()
-        .find((r) => r.title === "Best Practices");
-      expect(practices).toBeDefined();
-      expect(practices?.description).toContain("protocols and methodologies");
-    });
-
-    it("should contain publication repository resource", () => {
-      const publications = component
-        .communityResources()
-        .find((r) => r.title === "Publication Repository");
-      expect(publications).toBeDefined();
-      expect(publications?.description).toContain("research papers");
-    });
-
-    it("should have all resources with required properties", () => {
-      component.communityResources().forEach((resource) => {
-        expect(resource.title).toBeDefined();
-        expect(resource.title).not.toBe("");
-        expect(resource.description).toBeDefined();
-        expect(resource.description).not.toBe("");
-      });
-    });
-
-    it("should have unique resource titles", () => {
-      const titles = component
-        .communityResources()
-        .map((resource) => resource.title);
-      const uniqueTitles = [...new Set(titles)];
-      expect(titles.length).toBe(uniqueTitles.length);
-    });
-  });
-
   describe("data validation", () => {
     it("should have consistent data structures", () => {
       component.workflows().forEach((workflow) => {
@@ -175,16 +119,10 @@ describe("BinderDesignComponent", () => {
           expect(typeof tool.label).toBe("string");
         });
       });
-
-      component.communityResources().forEach((resource) => {
-        expect(typeof resource.title).toBe("string");
-        expect(typeof resource.description).toBe("string");
-      });
     });
 
     it("should have proper data types", () => {
       expect(Array.isArray(component.workflows())).toBe(true);
-      expect(Array.isArray(component.communityResources())).toBe(true);
     });
   });
 

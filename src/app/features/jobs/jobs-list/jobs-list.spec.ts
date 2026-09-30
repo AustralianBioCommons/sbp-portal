@@ -436,6 +436,14 @@ describe("JobsListComponent", () => {
     );
   });
 
+  it("should normalize tool casing regardless of how the API sent it", () => {
+    expect(component.getToolName("rfdiffusion")).toBe("RFdiffusion");
+    expect(component.getToolName("Bindcraft")).toBe("BindCraft");
+    expect(component.getToolName("Colabfold")).toBe("ColabFold");
+    expect(component.getToolName("boltz")).toBe("Boltz");
+    expect(component.getToolName("")).toBe("");
+  });
+
   it("should toggle individual and all job selections", () => {
     component.jobs.set([mockJob, secondJob]);
 

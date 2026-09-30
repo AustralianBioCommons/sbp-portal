@@ -166,7 +166,7 @@ export default class DeNovoDesignComponent
   readonly tools: ToolChip[] = [
     {
       id: "rfdiffusion",
-      label: "RFDiffusion",
+      label: "RFdiffusion",
     },
     {
       id: "bindcraft",

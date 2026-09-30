@@ -399,7 +399,7 @@
               <td
                 class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
               >
-                {{ job.tool || "—" }}
+                {{ getToolName(job.tool) || "—" }}
               </td>
               <td class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap">
                 <span

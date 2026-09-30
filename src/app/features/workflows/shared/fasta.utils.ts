@@ -43,6 +43,19 @@ export function validateFastaHeader(
   return { valid: true };
 }
 
+/**
+ * Normalizes single-entity sequence input as it's typed or pasted: drops any
+ * FASTA header lines (">...") and strips all whitespace, so pasting a whole
+ * FASTA record is read as sequence-only text.
+ */
+export function normalizeSequencePaste(value: string): string {
+  return value
+    .split("\n")
+    .filter((line) => !line.trimStart().startsWith(">"))
+    .join("")
+    .replace(/\s+/g, "");
+}
+
 export interface CcdLookupResult {
   valid: boolean;
   name?: string;
