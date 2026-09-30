@@ -204,6 +204,11 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   readonly status = signal<"idle" | "loading" | "loaded" | "error">("idle");
   readonly errorMessage = signal("");
   readonly selectedResidues = signal<string[]>([]);
+  /** A file is being dragged over the viewer; drives the drop-zone highlight. */
+  readonly isDraggingOver = signal(false);
+  /** Counts nested dragenter/dragleave pairs so a child element's dragleave
+   *  does not clear the highlight while still over the host. */
+  private dragDepth = 0;
 
   private viewer: Viewer | null = null;
   private selectionSub: { unsubscribe(): void } | null = null;
@@ -268,6 +273,42 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
       // Reset so the same file can be re-picked after an external clear.
       input.value = "";
     }
+  }
+
+  // ── Drag and drop (idle placeholder and loaded viewer alike) ────────────────
+
+  private canAcceptDrop(): boolean {
+    return this.enableUpload() && !this.disabled();
+  }
+
+  onDragEnter(event: DragEvent): void {
+    if (!this.canAcceptDrop()) return;
+    event.preventDefault();
+    this.dragDepth++;
+    this.isDraggingOver.set(true);
+  }
+
+  onDragOver(event: DragEvent): void {
+    if (!this.canAcceptDrop()) return;
+    // Required so the browser fires `drop` instead of rejecting it.
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+  }
+
+  onDragLeave(event: DragEvent): void {
+    if (!this.canAcceptDrop()) return;
+    event.preventDefault();
+    this.dragDepth = Math.max(0, this.dragDepth - 1);
+    if (this.dragDepth === 0) this.isDraggingOver.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    this.dragDepth = 0;
+    this.isDraggingOver.set(false);
+    if (!this.canAcceptDrop()) return;
+    event.preventDefault();
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.filePicked.emit(file);
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────

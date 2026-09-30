@@ -169,6 +169,76 @@ describe("MolstarViewerComponent load failures", () => {
   });
 });
 
+describe("MolstarViewerComponent drag and drop", () => {
+  const create = async () => {
+    await TestBed.configureTestingModule({
+      imports: [MolstarViewerComponent],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(MolstarViewerComponent);
+    return fixture.componentInstance;
+  };
+
+  const dragEvent = (files: File[] = []) => {
+    const event = {
+      preventDefault: jasmine.createSpy("preventDefault"),
+      dataTransfer: { files, dropEffect: "" },
+    };
+    return event as unknown as DragEvent;
+  };
+
+  const pdbFile = () => new File(["ATOM"], "structure.pdb");
+
+  it("highlights the drop zone on dragenter and clears it on dragleave", async () => {
+    const component = await create();
+
+    component.onDragEnter(dragEvent());
+    expect(component.isDraggingOver()).toBeTrue();
+
+    component.onDragLeave(dragEvent());
+    expect(component.isDraggingOver()).toBeFalse();
+  });
+
+  it("keeps the highlight while a nested dragleave still leaves one dragenter outstanding", async () => {
+    const component = await create();
+
+    component.onDragEnter(dragEvent());
+    component.onDragEnter(dragEvent());
+    component.onDragLeave(dragEvent());
+    expect(component.isDraggingOver()).toBeTrue();
+
+    component.onDragLeave(dragEvent());
+    expect(component.isDraggingOver()).toBeFalse();
+  });
+
+  it("emits the dropped file and clears the highlight", async () => {
+    const component = await create();
+    const picked: File[] = [];
+    component.filePicked.subscribe((file) => picked.push(file));
+    const file = pdbFile();
+
+    component.onDragEnter(dragEvent());
+    component.onDrop(dragEvent([file]));
+
+    expect(picked).toEqual([file]);
+    expect(component.isDraggingOver()).toBeFalse();
+  });
+
+  it("ignores drag and drop while disabled", async () => {
+    const component = await create();
+    (component as unknown as { disabled: () => boolean }).disabled = () =>
+      true;
+    const picked: File[] = [];
+    component.filePicked.subscribe((file) => picked.push(file));
+
+    component.onDragEnter(dragEvent());
+    expect(component.isDraggingOver()).toBeFalse();
+
+    component.onDrop(dragEvent([pdbFile()]));
+    expect(picked).toEqual([]);
+  });
+});
+
 describe("MolstarViewerComponent.parseResidueToken", () => {
   it("parses a single residue token", () => {
     expect(MolstarViewerComponent.parseResidueToken("A56")).toEqual({
