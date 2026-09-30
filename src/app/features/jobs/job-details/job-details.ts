@@ -493,6 +493,7 @@ export default class JobDetailsComponent implements OnInit {
       "zip",
       "txt",
       "tsv",
+      "pae",
     ]);
 
     // Replace underscores with spaces

@@ -784,6 +784,7 @@ describe("JobDetailsComponent", () => {
     expect(component.formatCategoryName("stat_csv")).toBe("Stat CSV");
     expect(component.formatCategoryName("pdb_files")).toBe("PDB Files");
     expect(component.formatCategoryName("result_json")).toBe("Result JSON");
+    expect(component.formatCategoryName("pae_files")).toBe("PAE Files");
     expect(component.formatCategoryName("simple")).toBe("Simple");
   });
 
