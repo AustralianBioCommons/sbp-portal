@@ -477,7 +477,9 @@ export default class JobDetailsComponent implements OnInit {
 
   getCitations(job: JobListItem): string[] {
     return [
-      `${formatToolName(job.tool) || "Workflow"} methods and generated outputs.`,
+      `${
+        formatToolName(job.tool) || "Workflow"
+      } methods and generated outputs.`,
       "SBP Portal platform and supporting infrastructure.",
     ];
   }

@@ -752,9 +752,8 @@ describe("JobDetailsComponent", () => {
 
   it("should normalize tool casing regardless of how the API sent it", () => {
     const valueOf = (job: JobListItem) =>
-      component
-        .getSummaryItems(job)
-        .find((item) => item.label === "Tool")?.value;
+      component.getSummaryItems(job).find((item) => item.label === "Tool")
+        ?.value;
 
     expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
