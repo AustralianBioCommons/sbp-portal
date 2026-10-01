@@ -226,8 +226,7 @@ describe("MolstarViewerComponent drag and drop", () => {
 
   it("ignores drag and drop while disabled", async () => {
     const component = await create();
-    (component as unknown as { disabled: () => boolean }).disabled = () =>
-      true;
+    (component as unknown as { disabled: () => boolean }).disabled = () => true;
     const picked: File[] = [];
     component.filePicked.subscribe((file) => picked.push(file));
 
