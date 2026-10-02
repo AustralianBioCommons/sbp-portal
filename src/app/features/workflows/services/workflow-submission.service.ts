@@ -51,7 +51,6 @@ export class WorkflowSubmissionService {
       tool: formData.tool,
       configProfiles: formData.configProfiles ?? ["singularity"],
       runName: formData.runName || randomRunName,
-      paramsText: null,
     };
 
     console.log("Submitting workflow with launch config:", launch);

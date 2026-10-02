@@ -18,7 +18,6 @@ export interface WorkflowLaunchForm {
   tool: WorkflowTool;
   configProfiles?: string[];
   runName?: string;
-  paramsText?: string | null;
 }
 
 /**
@@ -93,7 +92,6 @@ export interface SinglePredictionPayload extends DefaultWorkflowPayload {
   random_seed?: number;
   alphafold2_full_dbs?: boolean;
   colabfold_num_recycles?: number;
-  colabfold_use_templates?: boolean;
   boltz_use_potentials?: boolean;
 }
 
@@ -103,7 +101,6 @@ export type SinglePredictionToolSettingsPayload = Partial<
     | "random_seed"
     | "alphafold2_full_dbs"
     | "colabfold_num_recycles"
-    | "colabfold_use_templates"
     | "boltz_use_potentials"
   >
 >;

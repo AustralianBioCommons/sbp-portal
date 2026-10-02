@@ -126,7 +126,7 @@ export interface JobResultsAdapter {
 /** Shown by both de novo design tools when the ranker kept nothing. */
 export const NO_DESIGNS_MESSAGE =
   "No designs passed in silico quality control criteria. Consider choosing " +
-  "different hotspots or increasing the number of trajectories.";
+  "different hotspots or increasing the number of designs.";
 
 const SCORES_IN_FILES =
   "Scores for everything the run evaluated are listed under the Files tab.";
