@@ -1,6 +1,7 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
+import { provideRouter } from "@angular/router";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../core/services/auth.service";
@@ -106,6 +107,7 @@ describe("SinglePredictionComponent", () => {
       imports: [SinglePredictionComponent],
       providers: [
         provideHttpClient(),
+        provideRouter([]),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: DatasetUploadService, useValue: datasetUploadService },

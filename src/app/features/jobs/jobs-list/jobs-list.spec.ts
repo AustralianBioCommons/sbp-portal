@@ -1,10 +1,10 @@
+import { ViewportScroller } from "@angular/common";
 import {
   ComponentFixture,
   fakeAsync,
   TestBed,
   tick,
 } from "@angular/core/testing";
-import { ViewportScroller } from "@angular/common";
 import { DomSanitizer } from "@angular/platform-browser";
 import { provideRouter, Router } from "@angular/router";
 import { Observable, of, throwError } from "rxjs";
@@ -242,37 +242,202 @@ describe("JobsListComponent", () => {
     expect(component.selectedJobs()).toEqual([]);
   });
 
-  it("should search from page one and reload jobs after debounce", fakeAsync(() => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-    component.currentPage.set(3);
+  describe("URL state", () => {
+    let router: Router;
+    const lastListParams = () =>
+      mockJobsService.listJobs.calls.mostRecent().args[0];
+    const navigateTo = async (url: string) => {
+      await router.navigateByUrl(url);
+      await detectComponentChanges();
+    };
 
-    component.onSearch("binder");
+    beforeEach(() => {
+      router = TestBed.inject(Router);
+      // Three pages, so page params in these tests are in range
+      mockJobsService.listJobs.and.returnValue(
+        of({ ...mockResponse, total: 25 })
+      );
+    });
 
-    expect(component.searchQuery()).toBe("binder");
-    expect(loadJobsSpy).not.toHaveBeenCalled();
+    it("should load the page, search, statuses and sort from the URL", async () => {
+      await navigateTo(
+        "/?page=2&search=pdl1&status=Failed&status=Stopped&sort=score&order=asc"
+      );
 
-    tick(300);
+      expect(lastListParams()).toEqual({
+        limit: 10,
+        offset: 10,
+        search: "pdl1",
+        status: ["Failed", "Stopped"],
+        sortBy: "score",
+        sortOrder: "asc",
+      });
+    });
 
-    expect(component.currentPage()).toBe(1);
-    expect(loadJobsSpy).toHaveBeenCalled();
-  }));
+    it("should fall back to defaults for invalid URL values", async () => {
+      await navigateTo("/?page=abc&status=Bogus&sort=name&order=up");
 
-  it("should debounce rapid search input into a single reload", fakeAsync(() => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
+      expect(lastListParams()).toEqual({
+        limit: 10,
+        offset: 0,
+        sortBy: "submitted",
+        sortOrder: "desc",
+      });
+    });
 
-    component.onSearch("b");
-    tick(100);
-    component.onSearch("bi");
-    tick(100);
-    component.onSearch("bind");
+    it("should move to the last page when the URL page is past the end", async () => {
+      mockJobsService.listJobs.and.callFake((params) =>
+        of({
+          ...mockResponse,
+          jobs: (params?.offset ?? 0) >= 20 ? [] : [mockJob],
+          total: 15,
+        })
+      );
 
-    expect(loadJobsSpy).not.toHaveBeenCalled();
+      await navigateTo("/?page=5");
+      await detectComponentChanges();
 
-    tick(300);
+      expect(router.url).toBe("/?page=2");
+      expect(lastListParams()?.offset).toBe(10);
+    });
 
-    expect(component.searchQuery()).toBe("bind");
-    expect(loadJobsSpy).toHaveBeenCalledTimes(1);
-  }));
+    it("should write the search to the URL from page one after debounce", fakeAsync(() => {
+      router.navigateByUrl("/?page=3");
+      tick();
+      const calls = mockJobsService.listJobs.calls.count();
+
+      component.onSearch("binder");
+      expect(component.searchQuery()).toBe("binder");
+      tick(299);
+      expect(mockJobsService.listJobs.calls.count()).toBe(calls);
+
+      tick(1);
+      tick();
+      expect(router.url).toBe("/?search=binder");
+      expect(lastListParams()).toEqual(
+        jasmine.objectContaining({ search: "binder", offset: 0 })
+      );
+    }));
+
+    it("should debounce rapid search input into a single reload", fakeAsync(() => {
+      const calls = mockJobsService.listJobs.calls.count();
+
+      component.onSearch("b");
+      tick(100);
+      component.onSearch("bi");
+      tick(100);
+      component.onSearch("bind");
+      tick(300);
+      tick();
+
+      expect(router.url).toBe("/?search=bind");
+      expect(mockJobsService.listJobs.calls.count()).toBe(calls + 1);
+    }));
+
+    it("should write toggled statuses to the URL from page one", async () => {
+      await navigateTo("/?page=2");
+
+      component.toggleStatus("Completed");
+      await detectComponentChanges();
+      expect(router.url).toBe("/?status=Completed");
+      expect(component.isStatusSelected("Completed")).toBeTrue();
+
+      component.toggleStatus("Completed");
+      await detectComponentChanges();
+      expect(router.url).toBe("/");
+      expect(component.isStatusSelected("Completed")).toBeFalse();
+    });
+
+    it("should clear filters from the URL, including an unsubmitted search", async () => {
+      await navigateTo("/?page=4&status=Completed");
+      component.onSearch("abc");
+
+      component.clearFilters();
+      await detectComponentChanges();
+
+      expect(router.url).toBe("/");
+      expect(component.searchQuery()).toBe("");
+      expect(component.selectedStatuses()).toEqual([]);
+      expect(component.currentPage()).toBe(1);
+    });
+
+    it("should paginate within bounds, scroll smoothly to the top and keep focus on the table", async () => {
+      await navigateTo("/?page=2");
+      const navigateSpy = spyOn(router, "navigate").and.callThrough();
+      const scrollSpy = spyOn(
+        TestBed.inject(ViewportScroller),
+        "scrollToPosition"
+      );
+
+      component.previousPage();
+      await detectComponentChanges();
+      expect(router.url).toBe("/");
+      expect(scrollSpy).toHaveBeenCalledWith([0, 0], { behavior: "smooth" });
+
+      component.previousPage();
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+
+      component.nextPage();
+      expect(document.activeElement).toBe(
+        fixture.nativeElement.querySelector("table")
+      );
+      await detectComponentChanges();
+      expect(router.url).toBe("/?page=2");
+
+      await navigateTo("/?page=3");
+      component.nextPage();
+      expect(component.hasNextPage).toBeFalse();
+      expect(navigateSpy).toHaveBeenCalledTimes(2);
+      expect(scrollSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it("should flip the active sort and write it to the URL from page one", async () => {
+      await navigateTo("/?page=3");
+
+      component.toggleScoreSort();
+      await detectComponentChanges();
+      expect(router.url).toBe("/?sort=score");
+      expect(lastListParams()).toEqual(
+        jasmine.objectContaining({
+          sortBy: "score",
+          sortOrder: "desc",
+          offset: 0,
+        })
+      );
+
+      component.toggleScoreSort();
+      await detectComponentChanges();
+      expect(router.url).toBe("/?sort=score&order=asc");
+    });
+
+    it("should keep each column's direction when switching sorts", async () => {
+      component.toggleSubmittedSort();
+      await detectComponentChanges();
+      expect(router.url).toBe("/?order=asc");
+
+      component.toggleScoreSort();
+      await detectComponentChanges();
+      expect(router.url).toBe("/?sort=score");
+
+      component.toggleSubmittedSort();
+      await detectComponentChanges();
+      expect(router.url).toBe("/?order=asc");
+    });
+
+    it("should pass the list's query params to the job detail page", async () => {
+      await navigateTo("/?page=2&status=Failed");
+      const navigateSpy = spyOn(router, "navigate");
+
+      component.viewJobDetails(mockJob);
+
+      expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs", mockJob.id], {
+        state: {
+          job: mockJob,
+          jobsListQueryParams: { page: "2", status: "Failed" },
+        },
+      });
+    });
+  });
 
   it("should include search and selected statuses when loading jobs", () => {
     component.searchQuery.set("binder");
@@ -312,105 +477,6 @@ describe("JobsListComponent", () => {
       "Failed",
       "Stopped",
     ]);
-  });
-
-  it("should toggle statuses and report selection state", () => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-
-    component.toggleStatus("Completed");
-    expect(component.selectedStatuses()).toEqual(["Completed"]);
-    expect(component.isStatusSelected("Completed")).toBeTrue();
-
-    component.toggleStatus("Completed");
-    expect(component.selectedStatuses()).toEqual([]);
-    expect(component.isStatusSelected("Completed")).toBeFalse();
-    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
-  });
-
-  it("should clear filters and reload jobs", () => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-    component.searchQuery.set("abc");
-    component.selectedStatuses.set(["Completed"]);
-    component.currentPage.set(4);
-
-    component.clearFilters();
-
-    expect(component.searchQuery()).toBe("");
-    expect(component.selectedStatuses()).toEqual([]);
-    expect(component.currentPage()).toBe(1);
-    expect(loadJobsSpy).toHaveBeenCalled();
-  });
-
-  it("should paginate backward and forward within bounds", () => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-    const scrollSpy = spyOn(
-      TestBed.inject(ViewportScroller),
-      "scrollToPosition"
-    );
-    component.total.set(125);
-    component.pageSize.set(50);
-    component.currentPage.set(2);
-
-    component.previousPage();
-    expect(component.currentPage()).toBe(1);
-
-    component.previousPage();
-    expect(component.currentPage()).toBe(1);
-
-    component.nextPage();
-    expect(component.currentPage()).toBe(2);
-    expect(document.activeElement).toBe(
-      fixture.nativeElement.querySelector("table")
-    );
-
-    component.currentPage.set(3);
-    component.nextPage();
-    expect(component.currentPage()).toBe(3);
-
-    expect(component.totalPages).toBe(3);
-    expect(component.hasPreviousPage).toBeTrue();
-    expect(component.hasNextPage).toBeFalse();
-    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
-    expect(scrollSpy).toHaveBeenCalledTimes(2);
-  });
-
-  it("should reload from page one with the flipped score direction when toggling score sort", () => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-    component.currentPage.set(3);
-
-    component.toggleScoreSort();
-    expect(component.activeSort()).toBe("score");
-    expect(component.scoreSortDirection()).toBe("desc");
-    expect(component.currentPage()).toBe(1);
-    expect(loadJobsSpy).toHaveBeenCalledTimes(1);
-
-    component.toggleScoreSort();
-    expect(component.scoreSortDirection()).toBe("asc");
-    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
-  });
-
-  it("should let activating one sort override the other", () => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-
-    component.toggleScoreSort();
-    expect(component.activeSort()).toBe("score");
-
-    component.toggleSubmittedSort();
-    expect(component.activeSort()).toBe("submitted");
-    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
-  });
-
-  it("should reload from page one with the flipped direction when toggling submitted sort", () => {
-    const loadJobsSpy = spyOn(component, "loadJobs").and.stub();
-    component.currentPage.set(3);
-
-    component.toggleSubmittedSort();
-    expect(component.submittedSortDirection()).toBe("asc");
-    expect(component.currentPage()).toBe(1);
-
-    component.toggleSubmittedSort();
-    expect(component.submittedSortDirection()).toBe("desc");
-    expect(loadJobsSpy).toHaveBeenCalledTimes(2);
   });
 
   it("should return status classes and helpers", () => {
@@ -477,7 +543,7 @@ describe("JobsListComponent", () => {
     component.viewJobDetails(mockJob);
 
     expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs", mockJob.id], {
-      state: { job: mockJob },
+      state: { job: mockJob, jobsListQueryParams: {} },
     });
   });
 
@@ -490,7 +556,7 @@ describe("JobsListComponent", () => {
 
     expect(space.defaultPrevented).toBeTrue();
     expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs", mockJob.id], {
-      state: { job: mockJob },
+      state: { job: mockJob, jobsListQueryParams: {} },
     });
   });
 

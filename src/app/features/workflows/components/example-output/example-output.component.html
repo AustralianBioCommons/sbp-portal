@@ -1,0 +1,100 @@
+<ng-template #explanation><ng-content></ng-content></ng-template>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">{{ heading() }}</h3>
+
+  <div
+    class="@container flex flex-col overflow-hidden rounded-lg border lg:min-h-80 lg:flex-row"
+  >
+    <div class="relative flex min-w-0 flex-1">
+      @if (image(); as image) {
+      <div
+        class="flex min-w-0 flex-1 flex-col items-center justify-center gap-4 bg-white p-4"
+      >
+        @if (banner(); as banner) {
+        <!-- Natural size, cropped at the sides, so its text stays readable in a narrow column. -->
+        <div class="hidden w-full justify-center overflow-hidden sm:flex">
+          <img
+            class="max-w-none shrink-0"
+            [ngSrc]="banner.src"
+            [width]="banner.width"
+            [height]="banner.height"
+            [alt]="banner.alt"
+          />
+        </div>
+        }
+        <img
+          class="block h-auto max-h-[65vh] w-auto max-w-full"
+          [ngSrc]="image.src"
+          [width]="image.width"
+          [height]="image.height"
+          [alt]="image.alt"
+        />
+      </div>
+      } @else {
+      <div class="flex min-h-72 flex-1 items-center justify-center bg-gray-50">
+        <ng-icon
+          name="heroPhoto"
+          class="text-gray-500"
+          size="24"
+          aria-hidden="true"
+        ></ng-icon>
+      </div>
+      } @if (collapsible() && !expanded()) {
+      <button
+        #openButton
+        type="button"
+        class="absolute top-4 right-0 z-10 flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 border-gray-300 bg-white p-2 text-sm font-medium shadow-md transition-colors hover:bg-gray-50"
+        aria-expanded="false"
+        [attr.aria-controls]="panelId"
+        (click)="open()"
+      >
+        <ng-icon
+          name="heroChevronDoubleLeft"
+          class="h-4 w-4 text-gray-500"
+          aria-hidden="true"
+        ></ng-icon>
+        <span>Explanation</span>
+      </button>
+      }
+    </div>
+
+    @if (collapsible()) {
+    <!-- The panel is sized to the card, not this column, so its text doesn't reflow as it slides. -->
+    <div
+      class="shrink-0 overflow-hidden transition-all duration-300 ease-in-out"
+      [class]="expanded() ? 'lg:w-3/5' : 'max-lg:hidden lg:w-0'"
+    >
+      <div
+        [id]="panelId"
+        class="flex h-full flex-col border-t bg-white lg:w-[60cqw] lg:border-t-0 lg:border-l"
+        role="region"
+        [attr.aria-label]="heading() + ' explanation'"
+        [attr.inert]="expanded() ? null : ''"
+      >
+        <div class="flex shrink-0 items-center gap-2 border-b p-4">
+          <span class="flex-1 truncate text-sm font-medium">Explanation</span>
+          <button
+            #closeButton
+            type="button"
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            aria-label="Hide explanation"
+            (click)="close()"
+          >
+            <ng-icon name="heroXMark" size="18" aria-hidden="true"></ng-icon>
+          </button>
+        </div>
+        <div class="space-y-4 p-4 text-sm text-gray-500">
+          <ng-container [ngTemplateOutlet]="explanation"></ng-container>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <div
+      class="space-y-4 border-t bg-white p-4 text-sm text-gray-500 lg:w-3/5 lg:shrink-0 lg:border-t-0 lg:border-l"
+    >
+      <ng-container [ngTemplateOutlet]="explanation"></ng-container>
+    </div>
+    }
+  </div>
+</section>
