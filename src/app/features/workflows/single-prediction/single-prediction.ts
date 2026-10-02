@@ -22,6 +22,7 @@ import {
   ListboxSelectComponent,
   ListboxSelectOption,
 } from "../components/listbox-select/listbox-select.component";
+import { SinglePredictionExampleOutputComponent } from "../components/single-prediction-example-output/single-prediction-example-output.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
 import {
@@ -131,6 +132,7 @@ function generateRandomSeed(): string {
     ListboxSelectComponent,
     WorkflowFormComponent,
     WorkflowLayoutComponent,
+    SinglePredictionExampleOutputComponent,
     StepContentComponent,
     NgIconComponent,
     CreditSummaryComponent,

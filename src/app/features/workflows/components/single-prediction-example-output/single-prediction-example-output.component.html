@@ -1,0 +1,642 @@
+<app-example-output
+  heading="Predicted 3D Structure"
+  collapsible
+  [banner]="images.scores"
+  [image]="images.structure"
+>
+  <div class="space-y-2">
+    <h4
+      class="w-fit rounded-lg border border-sky-200 bg-sky-50 px-3 py-1 text-sky-800 tabular-nums"
+    >
+      pTM = 0.88
+    </h4>
+    <p class="font-medium text-gray-900">What does this mean?</p>
+    <p>
+      The predicted Template Modelling (pTM) score is a measure of how well
+      AlphaFold-Multimer has predicted the overall structure of the complex.
+    </p>
+    <ul class="list-disc space-y-1 pl-5">
+      <li>
+        <span class="font-medium text-gray-900">pTM &gt; 0.5:</span> The overall
+        global fold is broadly correct.
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">pTM &lt; 0.5:</span> The
+        predicted global structure is likely unreliable or failed.
+      </li>
+    </ul>
+  </div>
+
+  <div class="space-y-2">
+    <h4
+      class="w-fit rounded-lg border border-sky-200 bg-sky-50 px-3 py-1 text-sky-800 tabular-nums"
+    >
+      iPTM = 0.91
+    </h4>
+    <p class="font-medium text-gray-900">What does this mean?</p>
+    <p>
+      The interface Predicted Template Modelling (iPTM) measures the accuracy of
+      the predicted relative positions of the subunits forming the
+      protein-protein complex. Based on the EBI
+      <a
+        href="https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/confidence-scores-in-alphafold-multimer/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >training material<span class="sr-only"> (opens in a new tab)</span></a
+      >.
+    </p>
+    <ul class="list-disc space-y-1 pl-5">
+      <li>
+        <span class="font-medium text-gray-900">iPTM &gt; 0.8:</span> Highly
+        confident, reliable predictions,
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">iPTM &lt; 0.6:</span> An
+        inaccurate or failed model.
+      </li>
+    </ul>
+  </div>
+
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">What am I looking at?</h4>
+    <p>
+      The 3D viewer shows the predicted arrangement of the protein’s amino acids
+      in three-dimensional space.
+    </p>
+  </div>
+</app-example-output>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Understanding Confidence</h3>
+  <div class="space-y-2 text-sm text-gray-500">
+    <h4 class="font-medium text-gray-900">What is pLDDT?</h4>
+    <p>
+      The predicted Local Distance Difference Test (pLDDT) is a per-residue
+      measure of local confidence.
+    </p>
+    <p>
+      The score ranges from 0 to 100. A higher pLDDT means the model has higher
+      confidence in the local structure of that region. Since pLDDT is a
+      per-residue metric, confidence levels often fluctuate across a single
+      protein chain. This means the modelling tool can be very confident in the
+      structure of some parts of the protein and less confident in others.
+    </p>
+    <p>
+      For more information, refer to this
+      <a
+        href="https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/confidence-scores-in-alphafold-multimer/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >tutorial<span class="sr-only"> (opens in a new tab)</span></a
+      >.
+    </p>
+  </div>
+
+  <!-- Focusable so keyboard users can scroll it on narrow screens. -->
+  <div
+    class="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+    role="region"
+    aria-labelledby="plddt-table-caption"
+    tabindex="0"
+  >
+    <table class="w-full min-w-lg text-left text-sm">
+      <caption id="plddt-table-caption" class="sr-only">
+        How to interpret pLDDT scores
+      </caption>
+      <thead class="bg-sky-900 text-white">
+        <tr>
+          <th scope="col" class="px-4 py-2 font-medium whitespace-nowrap">
+            pLDDT score
+          </th>
+          <th scope="col" class="px-4 py-2 font-medium">Confidence</th>
+          <th scope="col" class="px-4 py-2 font-medium">How to interpret it</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            &gt; 90
+          </th>
+          <td class="p-4 whitespace-nowrap">Very high</td>
+          <td class="space-y-1 p-4">
+            <p>The local structure is predicted with very high confidence.</p>
+            <p>
+              Both the backbone and side chains are predicted with high accuracy
+            </p>
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            70–90
+          </th>
+          <td class="p-4 whitespace-nowrap">High</td>
+          <td class="space-y-1 p-4">
+            <p>The local structure is generally reliable.</p>
+            <p>
+              A correct backbone prediction with misplacement of some side
+              chains
+            </p>
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            50–70
+          </th>
+          <td class="p-4 whitespace-nowrap">Low</td>
+          <td class="space-y-1 p-4">
+            <p>Treat the predicted structure with caution.</p>
+            <p>
+              The model is guessing at the general location, but the structural
+              details are uncertain.
+            </p>
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            &lt; 50
+          </th>
+          <td class="p-4 whitespace-nowrap">Very low</td>
+          <td class="space-y-1 p-4">
+            <p>Unreliable structure because</p>
+            <ol class="list-[lower-alpha] pl-5">
+              <li>Naturally unstructured or flexible "disordered" regions</li>
+              <li>
+                Insufficient information to predict structure with confidence
+              </li>
+            </ol>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<app-example-output
+  heading="Predicted Aligned Error (PAE)"
+  [image]="images.pae"
+>
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">What is PAE?</h4>
+    <p>
+      Predicted Aligned Error (PAE) indicates how confident the model is about
+      the relative distance between two specific amino acids within the
+      predicted structure. PAE can be visualised as an easy-to-interpret 2D
+      graph, with protein residues running along the axes. In each square, the
+      shade of green indicates the expected distance error in Ångströms (Å) for
+      a pair of residues. Lower PAE means lower predicted positional error;
+      higher PAE means greater uncertainty.
+    </p>
+  </div>
+
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">How to read this plot</h4>
+    <ul class="list-disc space-y-2 pl-5">
+      <li>
+        <span class="font-medium text-gray-900">Dark green diagonal line:</span>
+        This line runs from top-left to bottom-right and represents residues
+        aligned against themselves; confidence is always high by definition, so
+        it is not informative and can be ignored.
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">Darker/low-error regions:</span>
+        The model is highly confident in the relative 3D position of these
+        residues. When a dark block appears off the main diagonal, it means two
+        distant parts of the protein sequence are confidently folded together
+        into a rigid structure (<a
+          href="https://alphafold.ebi.ac.uk/faq"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >AlphaFold DB FAQ<span class="sr-only"> (opens in a new tab)</span></a
+        >).
+      </li>
+      <li>
+        <span class="font-medium text-gray-900"
+          >Lighter/high-error regions:</span
+        >
+        The model is uncertain about their relative position. This often happens
+        when two well-folded domains (which might have great pLDDT scores) are
+        connected by a flexible linker. The modelling tool knows what each
+        domain looks like, but doesn't know how they are angled relative to one
+        another (<a
+          href="https://alphafold.ebi.ac.uk/faq"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >AlphaFold DB FAQ<span class="sr-only"> (opens in a new tab)</span></a
+        >).
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">For Multimers:</span> When
+        predicting multi-chain complexes, the PAE heatmap is split into
+        quadrants. The inter-chain regions (the off-diagonal blocks representing
+        the interaction between Chain A and Chain B) are critical. Low PAE
+        scores in these regions provide strong evidence that the predicted
+        protein-protein interaction is highly confident (<a
+          href="https://doi.org/10.1101/2021.10.04.463034"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Evans et al., 2021<span class="sr-only">
+            (opens in a new tab)</span
+          ></a
+        >).
+      </li>
+    </ul>
+  </div>
+</app-example-output>
+
+<app-example-output heading="MSA Sequence Coverage" [image]="images.msa">
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">What is an MSA?</h4>
+    <p>
+      MSA (Multiple Sequence Alignment) is a collection of related protein
+      sequences aligned to your query sequence. During evolution, amino acids
+      that touch in 3D space tend to mutate together to maintain the protein's
+      shape. Modelling tools scan the MSA for these paired changes, and if two
+      positions consistently mutate together across different species, the tool
+      deduces that they must physically connect in the folded structure (<a
+        href="https://doi.org/10.1038/s41586-021-03819-2"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >Jumper et al., 2021<span class="sr-only">
+          (opens in a new tab)</span
+        ></a
+      >).
+    </p>
+  </div>
+
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">The Axes</h4>
+    <ul class="list-disc space-y-1 pl-5">
+      <li>
+        <span class="font-medium text-gray-900">X-axis:</span> Represents your
+        target protein's amino acid sequence from start to finish.
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">Y-axis:</span> Shows the number
+        of aligned sequences (the depth or thickness of the MSA) found in global
+        databases. This is often displayed on a logarithmic scale.
+      </li>
+    </ul>
+  </div>
+
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">How to Interpret the Shape</h4>
+    <ul class="list-disc space-y-2 pl-5">
+      <li>
+        <span class="font-medium text-gray-900"
+          >High, flat plateaus (High Coverage):</span
+        >
+        Hundreds or thousands of sequences align with this region. The modelling
+        tool has rich evolutionary data to work with, which usually results in a
+        highly confident, rigid 3D structure (high pLDDT).
+      </li>
+      <li>
+        <span class="font-medium text-gray-900"
+          >Deep valleys or dips (Low Coverage):</span
+        >
+        The model found very few related sequences for this specific stretch of
+        amino acids.
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">Zero coverage:</span> A flat
+        line at the bottom means no evolutionary relatives were found for that
+        segment at all.
+      </li>
+    </ul>
+    <p>
+      Low coverage in MSA usually points to naturally flexible/unstructured
+      regions, lab-added artificial sequences, or highly unique evolutionary
+      traits specific to that organism.
+    </p>
+  </div>
+
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">The Colours</h4>
+    <p>
+      Each line is one aligned sequence, coloured by its identity to your query
+      from red (low) to blue/purple (high). White marks gaps where a sequence
+      does not align, and the black line shows how many sequences cover each
+      position.
+    </p>
+  </div>
+</app-example-output>
+
+<section class="space-y-4 text-sm text-gray-500">
+  <h3 class="text-lg font-semibold text-gray-900">
+    Chainwise ipTM and Chainwise ipSAE
+  </h3>
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">Chainwise ipSAE</h4>
+    <p>
+      Developed by Roland Dunbrack Jr. at the Fox Chase Cancer Center,
+      interaction prediction Score from Aligned Errors (ipSAE) is a robust
+      alternative to AlphaFold's standard ipTM metric. It corrects a major
+      mathematical limitation, as ipTM calculates binding confidence by
+      averaging the alignment quality of all residues across interacting chains.
+      Consequently, naturally flexible or non-interacting regions, e.g., long
+      disordered tails, artificially deflate the score of an otherwise perfectly
+      predicted interface. For instance, artificially trimming the flexible
+      tails off a kinase sequence boosts its ipTM score, showing the metric is
+      biased by sequence length. ipSAE resolves this by dynamically filtering
+      out high-error (high PAE) residue pairs before calculation, normalizing
+      the score based solely on the high-confidence interacting regions. ipSAE
+      is scored on a scale from 0 to 1, where values near 1.0 indicate a highly
+      confident interface. (<a
+        href="https://doi.org/10.1101/2025.02.10.637595"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >Dunbrack, 2025<span class="sr-only"> (opens in a new tab)</span></a
+      >).
+    </p>
+  </div>
+
+  <div class="space-y-2">
+    <h4 class="font-medium text-gray-900">Chainwise ipTM</h4>
+    <p>
+      Chainwise interface Predicted Template Modeling score (Chainwise ipTM) is
+      a more granular, pair-specific version of AlphaFold-Multimer's standard
+      ipTM metric. Instead of giving a single score for an entire multi-protein
+      complex, chainwise ipTM breaks down binding confidence for every specific
+      pair of chains interacting within that complex. AlphaFold’s global ipTM
+      scores the entire complex at once, meaning one poorly docked chain can
+      severely drag down the score and hide perfectly predicted interactions
+      between other chains.
+    </p>
+    <p>
+      The pipeline calculates chainwise ipTM by extracting pairwise data from
+      the raw PAE matrix, generating a grid that pinpoints the exact binding
+      confidence for every individual chain-to-chain interaction.
+    </p>
+  </div>
+</section>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Interpreting Your Results</h3>
+  <div class="space-y-2 text-sm text-gray-500">
+    <p>
+      There isn’t one “magic” score; you need to interpret pTM + pLDDT + PAE +
+      Chainwise ipTM + Chainwise ipSAE + MSA coverage together.
+    </p>
+    <p>Below are a few steps you may consider when analysing your results:</p>
+  </div>
+
+  <ol class="grid gap-4 lg:grid-cols-2">
+    <li class="space-y-4 rounded-lg border p-4 text-sm text-gray-500">
+      <div class="space-y-2">
+        <h4 class="font-medium text-gray-900">
+          Step 1: Did the modelling tool have enough data?
+        </h4>
+        <p>
+          Before looking at the 3D model, check the foundation of the
+          prediction.
+        </p>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">MSA Coverage:</span> Measures
+          the evolutionary data fed to the modelling tool.
+        </p>
+        <ul class="space-y-1 pl-4">
+          <li class="flex gap-2">
+            <span aria-hidden="true">🟢</span>
+            <p>
+              <span class="font-medium text-gray-900">Look for:</span> High,
+              flat plateaus (depth &gt; 30 sequences).
+            </p>
+          </li>
+          <li class="flex gap-2">
+            <span aria-hidden="true">🔴</span>
+            <p>
+              <span class="font-medium text-gray-900">Watch out for:</span>
+              Deep valleys or zero coverage. The tool is guessing here (usually
+              due to natural disorder, artificial lab tags, or novel sequences).
+            </p>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="space-y-4 rounded-lg border p-4 text-sm text-gray-500">
+      <div class="space-y-2">
+        <h4 class="font-medium text-gray-900">
+          Step 2: Is the overall shape correct?
+        </h4>
+        <p>Evaluate the big picture and the global topology.</p>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">3D Structure (Visual):</span>
+          Does it look biologically plausible?
+        </p>
+        <ul class="space-y-1 pl-4">
+          <li class="flex gap-2">
+            <span aria-hidden="true">🟢</span>
+            <p>
+              <span class="font-medium text-gray-900">Look for:</span> Compact,
+              well-folded domains.
+            </p>
+          </li>
+          <li class="flex gap-2">
+            <span aria-hidden="true">🔴</span>
+            <p>
+              <span class="font-medium text-gray-900">Watch out for:</span>
+              Tangled, unstructured "spaghetti" (indicates flexible, disordered
+              regions).
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">pTM (Single Chains):</span>
+          Measures global fold confidence.
+        </p>
+        <ul class="space-y-1 pl-4">
+          <li class="flex gap-2">
+            <span aria-hidden="true">🟢</span>
+            <p>
+              <span class="font-medium text-gray-900">Good:</span> &gt; 0.5 (The
+              general 3D shape is on the right track).
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">iPTM (Complexes):</span>
+          Measures global assembly of a multi-chain complex.
+        </p>
+        <ul class="space-y-1 pl-4">
+          <li class="flex gap-2">
+            <span aria-hidden="true">🟢</span>
+            <p>
+              <span class="font-medium text-gray-900">Good:</span> &gt; 0.8.
+              Note: If this is low, don't throw the model away, as a single
+              floppy chain might be dragging the score down. Move to Step 4.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="space-y-4 rounded-lg border p-4 text-sm text-gray-500">
+      <div class="space-y-2">
+        <h4 class="font-medium text-gray-900">
+          Step 3: Can I trust the fine details?
+        </h4>
+        <p>
+          Zoom in to see if the domains and amino acids are accurately placed.
+        </p>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">pLDDT:</span> Measures
+          per-residue confidence (mapped as colors on the 3D viewer).
+        </p>
+        <ul class="space-y-1 pl-4">
+          <li class="flex gap-2">
+            <span aria-hidden="true">🟢</span>
+            <p>
+              <span class="font-medium text-gray-900">Trust it:</span> Blue
+              (&gt;70). You can trust the backbone and side chains for precise
+              measurements.
+            </p>
+          </li>
+          <li class="flex gap-2">
+            <span aria-hidden="true">🔴</span>
+            <p>
+              <span class="font-medium text-gray-900">Ignore it:</span>
+              Orange/Red (&lt;50). Unreliable or naturally flexible.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">PAE Plot:</span> Measures
+          whether different domains are rigidly locked together.
+        </p>
+        <ul class="space-y-1 pl-4">
+          <li class="flex gap-2">
+            <span aria-hidden="true">🟢</span>
+            <p>
+              <span class="font-medium text-gray-900">Look for:</span> Dark
+              regions (&lt; 5 Å). Dark blocks off the main diagonal mean two
+              separate regions are confidently interacting.
+            </p>
+          </li>
+          <li class="flex gap-2">
+            <span aria-hidden="true">🔴</span>
+            <p>
+              <span class="font-medium text-gray-900">Watch out for:</span>
+              Light/white areas. The tool doesn't know how these regions are
+              angled relative to one another.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="space-y-4 rounded-lg border p-4 text-sm text-gray-500">
+      <div class="space-y-2">
+        <h4 class="font-medium text-gray-900">
+          Step 4: Did the subunits bind correctly? (For Multimers)
+        </h4>
+        <p>
+          If you are predicting multiple interacting chains, use these metrics
+          to bypass the flaws of the global iPTM score.
+        </p>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">Chainwise ipTM:</span> Breaks
+          the complex down into a pairwise matrix.
+        </p>
+        <p class="pl-4">
+          <span class="font-medium text-gray-900">Why use it:</span> It tells
+          you exactly which subunits bind together (e.g., Chains A and B are
+          perfect, but Chain C failed).
+        </p>
+      </div>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900">Chainwise ipSAE:</span> The
+          ultimate interface score (Target: &gt; 0.80).
+        </p>
+        <p class="pl-4">
+          <span class="font-medium text-gray-900">Why use it:</span> Standard
+          scores unfairly penalize proteins with long, flexible tails. ipSAE
+          mathematically filters out that floppy "noise" to score only the
+          binding interface, giving you the most accurate verdict on the
+          interaction.
+        </p>
+      </div>
+    </li>
+  </ol>
+
+  <p
+    class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700"
+  >
+    <span class="font-medium text-sky-800">Note:</span> When analyzing
+    multimeric complexes, prioritise the iPTM score over pTM. Because the
+    overall accuracy of a complex depends on the precise orientation of its
+    subunits, a high iPTM (confident interface) strongly implies a high-quality
+    global prediction for the entire complex (Reference: EBI
+    <a
+      href="https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/confidence-scores-in-alphafold-multimer/"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-sky-700 underline hover:text-sky-800"
+      >training material<span class="sr-only"> (opens in a new tab)</span></a
+    >).
+  </p>
+</section>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Download Example Results</h3>
+  <div class="flex flex-wrap gap-4">
+    <app-button variant="secondary" widthClass="w-auto" [disabled]="true">
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download structure
+    </app-button>
+    <app-button variant="secondary" widthClass="w-auto" [disabled]="true">
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download confidence data
+    </app-button>
+    <app-button variant="secondary" widthClass="w-auto" [disabled]="true">
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download MSA
+    </app-button>
+  </div>
+  <p class="text-sm text-gray-500">Example files coming soon.</p>
+</section>
