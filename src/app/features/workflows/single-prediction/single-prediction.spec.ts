@@ -439,8 +439,7 @@ describe("SinglePredictionComponent", () => {
       fieldName: "random_seed",
     };
 
-    // random_seed is exposed for every tool;
-    // colabfold_use_templates is hidden from UI — must NOT appear in summary
+    // random_seed is exposed for every tool
     expect(component.getToolSettingsSummaryItems()).toEqual([
       randomSeedItem,
       {
@@ -835,7 +834,7 @@ describe("SinglePredictionComponent", () => {
     expect(component.alertMessage()).toContain("no S3 URI");
   });
 
-  it("should include colabfold_use_templates=false in submission payload (hidden param)", () => {
+  it("should not include colabfold_use_templates in submission payload (removed, no UI control)", () => {
     fillValidProteinRow();
     component.isToolAvailable.set(true);
     component.selectTool("colabfold");
@@ -845,7 +844,7 @@ describe("SinglePredictionComponent", () => {
     const payload =
       workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
         .args[0];
-    expect(payload["colabfold_use_templates"]).toBe(false);
+    expect(payload["colabfold_use_templates"]).toBeUndefined();
   });
 
   it("should reject more than 52 entities counting copies", () => {

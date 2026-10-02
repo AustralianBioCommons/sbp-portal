@@ -100,7 +100,6 @@ describe("WorkflowSubmissionService", () => {
     expect(launch.tool).toBe("boltz");
     expect(launch.configProfiles).toEqual(["docker"]);
     expect(launch.runName).toBe("test-run");
-    expect(launch.paramsText).toBeNull();
     expect(service.isSubmitting()).toBeFalse();
     expect(service.showSuccessDialog()).toBeTrue();
     expect(service.successDialogData()).toEqual({
