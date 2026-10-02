@@ -123,6 +123,12 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
   colabfold_num_recycles: "Recycles",
   alphafold2_full_dbs: "Full DBs",
   boltz_use_potentials: "Use Potentials",
+  // The de-novo-design form field is now labeled "Number of Designs" (see
+  // de-novo-design.ts), but still submits under the wire key max_trajectories
+  // — unchanged since it's also used server-side for credit-cost derivation
+  // and the bindcraft QC-pass-target formula, and is already stored under
+  // that key in historical job records.
+  max_trajectories: "Number of Designs",
 };
 
 @Component({
