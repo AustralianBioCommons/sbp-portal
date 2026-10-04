@@ -225,7 +225,7 @@
       aria-label="Mobile navigation"
     >
       @for (item of navItems; track item.label) { @if (item.children) {
-      <div>
+      <div class="space-y-2">
         <a
           [routerLink]="item.path"
           (click)="closeMobileMenu()"

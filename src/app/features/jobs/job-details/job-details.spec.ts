@@ -2,7 +2,12 @@ import { Component, input, output } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { HttpHeaders, HttpResponse } from "@angular/common/http";
 import { By, DomSanitizer } from "@angular/platform-browser";
-import { ActivatedRoute, provideRouter, Router } from "@angular/router";
+import {
+  ActivatedRoute,
+  Navigation,
+  provideRouter,
+  Router,
+} from "@angular/router";
 import { of, throwError } from "rxjs";
 
 import JobDetailsComponent from "./job-details";
@@ -337,8 +342,32 @@ describe("JobDetailsComponent", () => {
     component.confirmDelete();
 
     expect(mockJobsService.deleteJob).toHaveBeenCalledWith(mockJob.id);
-    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs"]);
+    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs"], {
+      queryParams: {},
+    });
     expect(component.showDeleteDialog()).toBeFalse();
+  });
+
+  it("should return to the jobs list with the page and filters it came from", () => {
+    const router = TestBed.inject(Router);
+    const jobsListQueryParams = { page: "2", status: "Failed" };
+    spyOn(router, "getCurrentNavigation").and.returnValue({
+      extras: { state: { jobsListQueryParams } },
+    } as unknown as Navigation);
+    fixture = TestBed.createComponent(JobDetailsComponent);
+    component = fixture.componentInstance;
+    render();
+    const navigateSpy = spyOn(router, "navigate");
+
+    const backLink: HTMLAnchorElement = fixture.nativeElement.querySelector(
+      'a[href^="/my-jobs"]'
+    );
+    expect(backLink.getAttribute("href")).toBe("/my-jobs?page=2&status=Failed");
+
+    component.confirmDelete();
+    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs"], {
+      queryParams: jobsListQueryParams,
+    });
   });
 
   it("should render an enabled download all files button for the selected job", () => {

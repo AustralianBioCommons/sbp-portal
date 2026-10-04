@@ -4,10 +4,13 @@ import {
   ElementRef,
   inject,
   input,
+  linkedSignal,
   output,
-  signal,
   viewChildren,
 } from "@angular/core";
+import { toSignal } from "@angular/core/rxjs-interop";
+import { ActivatedRoute, Router } from "@angular/router";
+import { map } from "rxjs";
 import { AlertComponent } from "../../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../../components/button/button.component";
 import { DialogComponent } from "../../../../components/dialog/dialog.component";
@@ -28,7 +31,9 @@ export interface WorkflowTabItem {
  * the submission success dialog. Each page projects its `app-workflow-form`
  * into the default slot, the subtitle and About description into `[description]`
  * and `[overview]` (so they may contain rich markup), and may project extra
- * Papers content via `[papers]`.
+ * Papers content via `[papers]` and its example output via `[output]`.
+ * The open tab is kept in the `?tab=` query param, so a refresh or shared link
+ * reopens it.
  */
 @Component({
   selector: "app-workflow-layout",
@@ -57,6 +62,8 @@ export class WorkflowLayoutComponent {
   readonly auth = inject(AuthService);
   readonly workflowSubmission = inject(WorkflowSubmissionService);
   readonly profileUrl = environment.profileUrl;
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly tabs: WorkflowTabItem[] = [
     { id: "execute", label: "Execute" },
@@ -64,7 +71,14 @@ export class WorkflowLayoutComponent {
     { id: "output", label: "Example Output", shortLabel: "Output" },
     { id: "papers", label: "Papers" },
   ];
-  private readonly activeTab = signal<WorkflowTabItem["id"]>("execute");
+  private readonly tabParam = toSignal(
+    this.route.queryParamMap.pipe(map((params) => params.get("tab"))),
+    { requireSync: true }
+  );
+  /** Follows the URL, and is set directly on a click so the switch doesn't wait for navigation. */
+  private readonly activeTab = linkedSignal(() =>
+    this.toTabId(this.tabParam())
+  );
   private readonly tabButtons =
     viewChildren<ElementRef<HTMLButtonElement>>("tabButton");
 
@@ -74,6 +88,18 @@ export class WorkflowLayoutComponent {
 
   switchTab(id: WorkflowTabItem["id"]): void {
     this.activeTab.set(id);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: id === "execute" ? null : id },
+      queryParamsHandling: "merge",
+      replaceUrl: true,
+      scroll: "manual",
+    });
+  }
+
+  /** Unknown values fall back to Execute, the default tab. */
+  private toTabId(param: string | null): WorkflowTabItem["id"] {
+    return this.tabs.find((tab) => tab.id === param)?.id ?? "execute";
   }
 
   /**

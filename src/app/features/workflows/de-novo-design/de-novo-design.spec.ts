@@ -1,6 +1,7 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
+import { provideRouter } from "@angular/router";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../core/services/auth.service";
@@ -68,6 +69,7 @@ describe("DeNovoDesignComponent", () => {
       imports: [DeNovoDesignComponent],
       providers: [
         provideHttpClient(),
+        provideRouter([]),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: CreditsService, useValue: credits },

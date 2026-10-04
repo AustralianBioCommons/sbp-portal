@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   ElementRef,
   inject,
   OnDestroy,
@@ -7,7 +8,7 @@ import {
   signal,
   viewChild,
 } from "@angular/core";
-import { Router } from "@angular/router";
+import { ActivatedRoute, ParamMap, Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { AlertComponent } from "../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../components/button/button.component";
@@ -40,6 +41,17 @@ import {
   heroArrowUp,
   heroArrowDown,
 } from "@ng-icons/heroicons/outline";
+
+type SortField = "score" | "submitted";
+type SortOrder = "asc" | "desc";
+
+interface ListState {
+  page: number;
+  search: string;
+  statuses: string[];
+  sort: SortField;
+  order: SortOrder;
+}
 
 @Component({
   selector: "app-jobs-list",
@@ -76,6 +88,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   private healthService = inject(HealthService);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private viewportScroller = inject(ViewportScroller);
 
   private readonly jobsTable =
@@ -91,6 +104,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   readonly profileUrl = environment.profileUrl;
   private authSubscription?: Subscription;
   private jobsSubscription?: Subscription;
+  private queryParamsSubscription?: Subscription;
   private hasLoadedJobs = false;
 
   // State signals
@@ -113,9 +127,14 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   selectedStatuses = signal<string[]>([]);
   currentPage = signal<number>(1);
   pageSize = signal<number>(10);
-  scoreSortDirection = signal<"asc" | "desc">("desc");
-  submittedSortDirection = signal<"asc" | "desc">("desc");
-  activeSort = signal<"score" | "submitted">("submitted");
+  scoreSortDirection = signal<SortOrder>("desc");
+  submittedSortDirection = signal<SortOrder>("desc");
+  activeSort = signal<SortField>("submitted");
+  private readonly sortOrder = computed(() =>
+    this.activeSort() === "score"
+      ? this.scoreSortDirection()
+      : this.submittedSortDirection()
+  );
 
   // Available status options
   statusOptions = [
@@ -144,7 +163,13 @@ export default class JobsListComponent implements OnInit, OnDestroy {
       this.canExecuteWorkflows.set(canExecuteWorkflows);
       if (canExecuteWorkflows && !this.hasLoadedJobs) {
         this.hasLoadedJobs = true;
-        this.loadJobs();
+        // The URL holds the list state so refresh, Back and shared links restore it
+        this.queryParamsSubscription = this.route.queryParamMap.subscribe(
+          (params) => {
+            this.applyQueryParams(params);
+            this.loadJobs();
+          }
+        );
         this.checkSystemHealth();
       }
     });
@@ -156,6 +181,50 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     }
     this.authSubscription?.unsubscribe();
     this.jobsSubscription?.unsubscribe();
+    this.queryParamsSubscription?.unsubscribe();
+  }
+
+  private applyQueryParams(params: ParamMap): void {
+    const page = Number(params.get("page"));
+    this.currentPage.set(Number.isInteger(page) && page > 1 ? page : 1);
+    this.searchQuery.set(params.get("search") ?? "");
+    this.selectedStatuses.set(
+      params.getAll("status").filter((s) => this.statusOptions.includes(s))
+    );
+    const sort: SortField =
+      params.get("sort") === "score" ? "score" : "submitted";
+    const order: SortOrder = params.get("order") === "asc" ? "asc" : "desc";
+    this.activeSort.set(sort);
+    if (sort === "score") this.scoreSortDirection.set(order);
+    else this.submittedSortDirection.set(order);
+  }
+
+  /**
+   * Write list state changes to the URL, which reloads the jobs. Defaults are
+   * left out to keep the URL clean.
+   */
+  private updateQueryParams(changes: Partial<ListState>): void {
+    const state: ListState = {
+      page: this.currentPage(),
+      search: this.searchQuery(),
+      statuses: this.selectedStatuses(),
+      sort: this.activeSort(),
+      order: this.sortOrder(),
+      ...changes,
+    };
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        page: state.page > 1 ? state.page : null,
+        search: state.search || null,
+        status: state.statuses.length > 0 ? state.statuses : null,
+        sort: state.sort === "score" ? state.sort : null,
+        order: state.order === "asc" ? state.order : null,
+      },
+      replaceUrl: true,
+      // Otherwise the router jumps to the top on every change
+      scroll: "manual",
+    });
   }
 
   /**
@@ -203,10 +272,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
       limit: this.pageSize(),
       offset: (this.currentPage() - 1) * this.pageSize(),
       sortBy: this.activeSort(),
-      sortOrder:
-        this.activeSort() === "score"
-          ? this.scoreSortDirection()
-          : this.submittedSortDirection(),
+      sortOrder: this.sortOrder(),
     };
 
     if (this.searchQuery()) {
@@ -244,6 +310,11 @@ export default class JobsListComponent implements OnInit, OnDestroy {
         this.jobs.set(normalizedJobs);
         this.total.set(response.total);
         this.loading.set(false);
+        // A stale link or a delete can leave the page past the end
+        const lastPage = Math.max(this.totalPages, 1);
+        if (this.currentPage() > lastPage) {
+          this.updateQueryParams({ page: lastPage });
+        }
       });
   }
 
@@ -255,10 +326,10 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     if (this.searchDebounce) {
       clearTimeout(this.searchDebounce);
     }
-    this.searchDebounce = setTimeout(() => {
-      this.currentPage.set(1);
-      this.loadJobs();
-    }, this.searchDebounceMs);
+    this.searchDebounce = setTimeout(
+      () => this.updateQueryParams({ search: query, page: 1 }),
+      this.searchDebounceMs
+    );
   }
 
   /**
@@ -266,13 +337,10 @@ export default class JobsListComponent implements OnInit, OnDestroy {
    */
   toggleStatus(status: string): void {
     const current = this.selectedStatuses();
-    if (current.includes(status)) {
-      this.selectedStatuses.set(current.filter((s) => s !== status));
-    } else {
-      this.selectedStatuses.set([...current, status]);
-    }
-    this.currentPage.set(1); // Reset to first page
-    this.loadJobs();
+    const statuses = current.includes(status)
+      ? current.filter((s) => s !== status)
+      : [...current, status];
+    this.updateQueryParams({ statuses, page: 1 });
   }
 
   /**
@@ -289,10 +357,9 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     if (this.searchDebounce) {
       clearTimeout(this.searchDebounce);
     }
+    // Clear the input directly, as an unsubmitted search never reached the URL
     this.searchQuery.set("");
-    this.selectedStatuses.set([]);
-    this.currentPage.set(1);
-    this.loadJobs();
+    this.updateQueryParams({ search: "", statuses: [], page: 1 });
   }
 
   /**
@@ -310,8 +377,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   }
 
   private goToPage(page: number): void {
-    this.currentPage.set(page);
-    this.loadJobs();
+    this.updateQueryParams({ page });
     this.jobsTable()?.nativeElement.focus({ preventScroll: true });
     this.viewportScroller.scrollToPosition([0, 0], { behavior: "smooth" });
   }
@@ -338,25 +404,21 @@ export default class JobsListComponent implements OnInit, OnDestroy {
   }
 
   toggleScoreSort(): void {
-    if (this.activeSort() === "score") {
-      this.scoreSortDirection.update((d) => (d === "desc" ? "asc" : "desc"));
-    } else {
-      this.activeSort.set("score");
-    }
-    this.currentPage.set(1);
-    this.loadJobs();
+    this.toggleSort("score", this.scoreSortDirection());
   }
 
   toggleSubmittedSort(): void {
-    if (this.activeSort() === "submitted") {
-      this.submittedSortDirection.update((d) =>
-        d === "desc" ? "asc" : "desc"
-      );
-    } else {
-      this.activeSort.set("submitted");
-    }
-    this.currentPage.set(1);
-    this.loadJobs();
+    this.toggleSort("submitted", this.submittedSortDirection());
+  }
+
+  // Clicking the active column flips it; clicking the other keeps its last direction
+  private toggleSort(sort: SortField, order: SortOrder): void {
+    const flipped = order === "desc" ? "asc" : "desc";
+    this.updateQueryParams({
+      sort,
+      order: this.activeSort() === sort ? flipped : order,
+      page: 1,
+    });
   }
 
   getStatusClass(status: string): string {
@@ -473,7 +535,7 @@ export default class JobsListComponent implements OnInit, OnDestroy {
 
   viewJobDetails(job: JobListItem): void {
     this.router.navigate(["/my-jobs", job.id], {
-      state: { job },
+      state: { job, jobsListQueryParams: this.route.snapshot.queryParams },
     });
   }
 

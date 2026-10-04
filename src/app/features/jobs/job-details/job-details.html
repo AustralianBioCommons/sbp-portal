@@ -29,6 +29,7 @@
     <div class="flex items-center justify-between">
       <a
         routerLink="/my-jobs"
+        [queryParams]="jobsListQueryParams"
         class="flex items-center gap-2 text-sm text-gray-600 transition-all hover:text-gray-700"
       >
         <ng-icon name="heroArrowLeft" size="16"></ng-icon>
