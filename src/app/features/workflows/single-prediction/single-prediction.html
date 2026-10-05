@@ -10,12 +10,12 @@
     validate inputs against the selected tool, then review the generated FASTA
     and settings before submission.</span
   >
-  <span overview>
-    Single Prediction is designed for structure-prediction runs from curated
-    biological inputs. Define entities row by row with sequence, copy number,
-    and molecule type, then proceed through tool settings and review before
-    launch.</span
-  >
+  <app-single-prediction-about overview></app-single-prediction-about>
+  <app-workflow-papers
+    papers
+    workflowName="Single Structure Prediction"
+    [tools]="['colabfold', 'alphafold2', 'boltz']"
+  ></app-workflow-papers>
   <app-single-prediction-example-output
     output
   ></app-single-prediction-example-output>

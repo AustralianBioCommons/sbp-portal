@@ -9,14 +9,12 @@
     in FASTA format. Multimers can be specified by separating chains with a
     <code class="font-mono">:</code> delimiter.
   </span>
-  <span overview>
-    This workflow enables the prediction of bulk protein structures by providing
-    input sequences in FASTA format. Multimers can be predicted by separating
-    sequences with a <code class="font-mono">:</code> delimiter. Between 10 and
-    1000 entries are supported, each with up to 1000 amino-acid residues. For
-    fewer than 10 predictions, please use the Single Prediction workflow
-    instead.
-  </span>
+  <app-bulk-prediction-about overview></app-bulk-prediction-about>
+  <app-workflow-papers
+    papers
+    workflowName="Bulk Prediction"
+    [tools]="['boltz', 'colabfold']"
+  ></app-workflow-papers>
   <app-workflow-form
     [sections]="sections"
     [isSectionValid]="isSectionValid"

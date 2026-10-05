@@ -1,0 +1,315 @@
+<div class="space-y-2 text-sm text-gray-500">
+  <p>
+    Predicting 3D protein structures using modern AI tools, e.g., AlphaFold2,
+    ColabFold, and Boltz, often requires complex environments, GPU
+    configurations, and command-line execution. Our goal is to make these
+    powerful tools more accessible by providing a user-friendly interface to
+    structural biologists who can easily run, compare, and visualise 3D
+    predictions using these tools through a simple, intuitive dashboard.
+  </p>
+  <p>
+    Under the hood, this interface is powered by the
+    <a
+      href="https://github.com/AustralianBioCommons/sbp-proteinfold"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-sky-700 underline hover:text-sky-800"
+      >sbp-proteinfold<span class="sr-only"> (opens in a new tab)</span></a
+    >
+    repository, a bioinformatics best-practice Nextflow pipeline optimised for
+    the Structural Biology Platform and forked from the widely adopted
+    <a
+      href="https://github.com/nf-core/proteinfold"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-sky-700 underline hover:text-sky-800"
+      >nf-core/proteinfold<span class="sr-only"> (opens in a new tab)</span></a
+    >.
+  </p>
+  <p>
+    This workflow screens all pairwise interactions between the provided query
+    sequences and target sequences. Each query–target pair is evaluated using
+    the selected structure prediction tool (Boltz or ColabFold) to predict
+    structural geometry. Between 10 and 1000 query–target pairs are required per
+    run; for fewer than 10 interactions, use the
+    <a
+      routerLink="/structure-prediction/single-prediction"
+      class="text-sky-700 underline hover:text-sky-800"
+      >Single Prediction workflow</a
+    >
+    instead.
+  </p>
+</div>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Tools</h3>
+  <div class="space-y-2 text-sm text-gray-500">
+    <p>
+      The following structure prediction tools are available to be selected for
+      each run:
+    </p>
+    <p>
+      Boltz is an open-source, multimodal AI model developed by researchers at
+      MIT and Recursion that predicts the 3D structures of complex biomolecular
+      assemblies involving proteins, DNA, RNA, and small molecules (<a
+        href="https://github.com/jwohlwend/boltz"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
+      >). Its breakthrough feature is the ability to simultaneously calculate
+      highly accurate protein-ligand binding affinities ~1,000 times faster than
+      traditional physics-based free-energy perturbation (FEP) simulations,
+      significantly accelerating early-stage drug discovery (<a
+        href="https://github.com/jwohlwend/boltz"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
+      >;
+      <a
+        href="https://www.cancergrandchallenges.org/news/boltz-2-democratising-the-future-of-drug-design"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >Cancer Grand Challenges<span class="sr-only">
+          (opens in a new tab)</span
+        ></a
+      >).
+    </p>
+    <p>
+      ColabFold is an open-source platform that drastically accelerates
+      AI-driven protein structure prediction models, such as AlphaFold2, by
+      replacing their standard homology search with the ultra-fast MMseqs2
+      algorithm. Its breakthrough feature is the ability to generate sequence
+      alignments 40–60 times faster than traditional methods, democratising
+      access to complex protein and multimer predictions without requiring
+      massive computational infrastructure (<a
+        href="https://www.nature.com/articles/s41592-022-01488-1"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >Mirdita et al., 2022<span class="sr-only">
+          (opens in a new tab)</span
+        ></a
+      >).
+    </p>
+  </div>
+</section>
+
+<!-- TODO: workflow diagram. -->
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Credits Calculation</h3>
+  <div class="space-y-2 text-sm text-gray-500">
+    <p>
+      Credits are required to execute workflows and will be consumed upon
+      workflow submission. The credit balance refreshes to 1000 on the 1st of
+      each month.
+    </p>
+    <p>
+      For the interaction screening workflow, the number of credits required to
+      run a workflow depends on the tool and the number of input
+      sequences/entries.
+    </p>
+    <p>
+      Total credits required and utilised in a workflow are calculated and
+      displayed during the input configuration and review stages. Below is the
+      formula for calculating total credits for a workflow run.
+    </p>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="space-y-2 rounded-lg border p-4 text-sm text-gray-500">
+      <h4 class="font-medium text-gray-900">Boltz example</h4>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900"
+            >Number of query sequences:</span
+          >
+          5
+        </p>
+        <p>
+          <span class="font-medium text-gray-900"
+            >Number of target sequences:</span
+          >
+          6
+        </p>
+        <p><span class="font-medium text-gray-900">Tool multiplier:</span> 1</p>
+        <p>
+          <span class="font-medium text-gray-900"
+            >Total credits needed/utilised:</span
+          >
+          Tool multiplier × (query sequences × target sequences) = 1 × (5 × 6) =
+          30 credits
+        </p>
+      </div>
+    </div>
+
+    <div class="space-y-2 rounded-lg border p-4 text-sm text-gray-500">
+      <h4 class="font-medium text-gray-900">ColabFold example</h4>
+      <div class="space-y-1">
+        <p>
+          <span class="font-medium text-gray-900"
+            >Number of query sequences:</span
+          >
+          5
+        </p>
+        <p>
+          <span class="font-medium text-gray-900"
+            >Number of target sequences:</span
+          >
+          6
+        </p>
+        <p><span class="font-medium text-gray-900">Tool multiplier:</span> 5</p>
+        <p>
+          <span class="font-medium text-gray-900"
+            >Total credits needed/utilised:</span
+          >
+          Tool multiplier × (query sequences × target sequences) = 5 × (5 × 6) =
+          150 credits
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-sm text-gray-500">
+    Since interaction screening requires at least 10 query–target pairs per run
+    (the
+    <a
+      routerLink="/structure-prediction/single-prediction"
+      class="text-sky-700 underline hover:text-sky-800"
+      >Single Structure Prediction workflow</a
+    >
+    is recommended for fewer than 10 query–target pairs), at least 10 credits
+    are used to run a workflow employing Boltz, and at least 50 credits are
+    required and used to run a workflow employing ColabFold.
+  </p>
+</section>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">
+    Input Configuration and Tool Settings
+  </h3>
+  <p class="text-sm text-gray-500">
+    Below are the input parameters available to users to customise their
+    workflow, the accepted format of each parameter, and the behaviour and
+    limits, if any, of each parameter.
+  </p>
+
+  <!-- Focusable so keyboard users can scroll it on narrow screens. -->
+  <div
+    class="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+    role="region"
+    aria-labelledby="screening-input-settings-table-caption"
+    tabindex="0"
+  >
+    <table class="w-full min-w-2xl text-left text-sm">
+      <caption id="screening-input-settings-table-caption" class="sr-only">
+        Input parameters, accepted formats, and behaviour and limits
+      </caption>
+      <thead class="bg-sky-900 text-white">
+        <tr>
+          <th scope="col" class="px-4 py-2 font-medium">Input</th>
+          <th scope="col" class="px-4 py-2 font-medium">Accepted formats</th>
+          <th scope="col" class="px-4 py-2 font-medium">
+            Behaviour and limits
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Job Name
+          </th>
+          <td class="p-4">
+            A string containing letters, numbers, hyphens, and underscores
+          </td>
+          <td class="space-y-1 p-4">
+            <p>Mandatory/Required identifier for the job/workflow run</p>
+            <p>Must not start with a number</p>
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Query Sequences
+          </th>
+          <td class="space-y-1 p-4">
+            <p>One or more protein sequences in FASTA format</p>
+            <p>
+              Each entry must have a unique header line starting with
+              <code class="font-mono">&gt;</code>, followed by the sequence on
+              the next line.
+            </p>
+            <p>
+              Each protein sequence must contain only the 20 canonical amino
+              acids (ARNDCQEGHILKMFPSTWYV).
+            </p>
+            <p>
+              Multimeric sequences are accepted with a header followed by two or
+              more sequences separated by colons, e.g.,
+              <code class="font-mono">SEQUENCEA:SEQUENCEB:SEQUENCEC</code>.
+            </p>
+            <p>
+              Please note that for compute cost calculation, multimeric
+              sequences will be counted as a single sequence.
+            </p>
+          </td>
+          <td class="space-y-1 p-4">
+            <p class="font-medium text-gray-900">Mandatory input</p>
+            <p>Minimum 10 query–target pairs</p>
+            <p>Maximum 1000 query–target pairs</p>
+            <p>
+              Each entry/sequence must not contain more than 1000 amino acid
+              residues.
+            </p>
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Target Sequences
+          </th>
+          <td class="space-y-1 p-4">
+            <p>One or more protein sequences in FASTA format</p>
+            <p>
+              Each entry must have a unique header line starting with
+              <code class="font-mono">&gt;</code>, followed by the sequence on
+              the next line.
+            </p>
+            <p>
+              Each protein sequence must contain only the 20 canonical amino
+              acids (ARNDCQEGHILKMFPSTWYV).
+            </p>
+            <p>
+              Multimeric sequences are accepted with a header followed by two or
+              more sequences separated by colons, e.g.,
+              <code class="font-mono">SEQUENCEA:SEQUENCEB:SEQUENCEC</code>.
+            </p>
+            <p>
+              Please note that for compute cost calculation, multimeric
+              sequences will be counted as a single sequence.
+            </p>
+          </td>
+          <td class="space-y-1 p-4">
+            <p class="font-medium text-gray-900">Mandatory input</p>
+            <p>Minimum 10 query–target pairs</p>
+            <p>Maximum 1000 query–target pairs</p>
+            <p>
+              Each entry/sequence must not contain more than 1000 amino acid
+              residues.
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
