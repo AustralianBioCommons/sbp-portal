@@ -9,6 +9,13 @@ app-molstar-viewer .msp-controls-panel {
   display: none !important;
 }
 
+/* Mol*'s own "Load File(s)" drag-drop overlay would otherwise catch a drop
+ * before it reaches our own handlers and add the file as a second structure
+ * alongside the one already loaded, instead of replacing it. */
+app-molstar-viewer .msp-drag-drop-overlay {
+  display: none !important;
+}
+
 app-molstar-viewer .msp-layout-standard {
   border: none !important;
 }

@@ -1,9 +1,21 @@
-import { signal } from "@angular/core";
+import { Component, signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { By } from "@angular/platform-browser";
+import { Router, provideRouter } from "@angular/router";
 import { Observable, of } from "rxjs";
 import { AuthService } from "../../../../core/services/auth.service";
 import { WorkflowSubmissionService } from "../../services/workflow-submission.service";
 import { WorkflowLayoutComponent } from "./workflow-layout.component";
+
+@Component({
+  imports: [WorkflowLayoutComponent],
+  template: `
+    <app-workflow-layout heading="Test Workflow">
+      <p output>Workflow example output</p>
+    </app-workflow-layout>
+  `,
+})
+class OutputHostComponent {}
 
 describe("WorkflowLayoutComponent", () => {
   let component: WorkflowLayoutComponent;
@@ -38,6 +50,7 @@ describe("WorkflowLayoutComponent", () => {
     await TestBed.configureTestingModule({
       imports: [WorkflowLayoutComponent],
       providers: [
+        provideRouter([]),
         { provide: AuthService, useValue: authService },
         {
           provide: WorkflowSubmissionService,
@@ -65,6 +78,28 @@ describe("WorkflowLayoutComponent", () => {
     component.switchTab("papers");
     expect(component.isActiveTab("papers")).toBe(true);
     expect(component.isActiveTab("execute")).toBe(false);
+  });
+
+  it("should open the tab named in the URL, falling back to Execute", async () => {
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl("/?tab=papers");
+    expect(component.isActiveTab("papers")).toBe(true);
+
+    await router.navigateByUrl("/?tab=unknown");
+    expect(component.isActiveTab("execute")).toBe(true);
+  });
+
+  it("should keep the open tab in the URL, leaving Execute out", async () => {
+    const router = TestBed.inject(Router);
+
+    component.switchTab("output");
+    await fixture.whenStable();
+    expect(router.url).toBe("/?tab=output");
+
+    component.switchTab("execute");
+    await fixture.whenStable();
+    expect(router.url).toBe("/");
   });
 
   it("should move selection with arrow keys and wrap around", () => {
@@ -103,6 +138,29 @@ describe("WorkflowLayoutComponent", () => {
     expect(selected.getAttribute("tabindex")).toBe("0");
     expect(selected.getAttribute("aria-controls")).toBe(panel.id);
     expect(panel.getAttribute("aria-labelledby")).toBe(selected.id);
+  });
+
+  it("should show the page's example output in the output tab", () => {
+    const hostFixture = TestBed.createComponent(OutputHostComponent);
+    hostFixture.detectChanges();
+    hostFixture.debugElement
+      .query(By.directive(WorkflowLayoutComponent))
+      .componentInstance.switchTab("output");
+    hostFixture.detectChanges();
+
+    const panel: HTMLElement =
+      hostFixture.nativeElement.querySelector('[role="tabpanel"]');
+    expect(panel.textContent).toContain("Workflow example output");
+    expect(panel.textContent).not.toContain("will appear here");
+  });
+
+  it("should fall back to placeholder text without an example output", () => {
+    component.switchTab("output");
+    fixture.detectChanges();
+
+    const panel: HTMLElement =
+      fixture.nativeElement.querySelector('[role="tabpanel"]');
+    expect(panel.textContent).toContain("will appear here after submission");
   });
 
   it("should delegate goToJobs to the workflow submission service", () => {

@@ -1,12 +1,20 @@
-<div class="h-full flex flex-col relative overflow-hidden">
+<div
+  class="h-full flex flex-col relative overflow-hidden"
+  (dragenter)="onDragEnter($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
   <!-- Idle placeholder -->
   @if (status() === 'idle' && enableUpload()) {
   <label
-    class="flex-1 flex flex-col items-center justify-center gap-3 rounded-bl-lg bg-gray-50 text-center min-h-0 transition-colors"
+    class="flex-1 flex flex-col items-center justify-center gap-3 rounded-bl-lg border-2 border-dashed text-center min-h-0 transition-colors"
     [class]="
       disabled()
-        ? 'opacity-50 pointer-events-none'
-        : 'cursor-pointer hover:border-sky-400 hover:bg-sky-50'
+        ? 'opacity-50 pointer-events-none border-transparent bg-gray-50'
+        : isDraggingOver()
+        ? 'cursor-pointer border-sky-400 bg-sky-50'
+        : 'cursor-pointer border-transparent bg-gray-50 hover:border-sky-400 hover:bg-sky-50'
     "
   >
     <ng-icon
@@ -16,7 +24,11 @@
       aria-hidden="true"
     ></ng-icon>
     <p class="text-sm text-gray-500">
-      Upload a PDB file to preview the structure.
+      {{
+        isDraggingOver()
+          ? "Drop the PDB file to upload it"
+          : "Upload a PDB file to preview the structure, or drag and drop it here."
+      }}
     </p>
     <input
       type="file"
@@ -26,6 +38,19 @@
       (change)="onFileInputChange($event)"
     />
   </label>
+  }
+
+  <!-- Drag-over highlight for an already-loaded structure -->
+  @if (isDraggingOver() && status() === 'loaded') {
+  <div
+    class="absolute inset-0 z-20 flex items-center justify-center rounded-bl-lg border-2 border-dashed border-sky-400 bg-sky-50/80 pointer-events-none"
+  >
+    <p
+      class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-sky-900 shadow-sm"
+    >
+      Drop to replace the current structure
+    </p>
+  </div>
   } @if (status() === 'loading' || sourceLoading()) {
   <div
     class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"

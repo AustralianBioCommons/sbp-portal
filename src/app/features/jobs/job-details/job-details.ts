@@ -6,7 +6,7 @@ import {
   OnInit,
   signal,
 } from "@angular/core";
-import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { ActivatedRoute, Params, Router, RouterLink } from "@angular/router";
 import { SafeResourceUrl } from "@angular/platform-browser";
 import { DatePipe } from "@angular/common";
 import { EMPTY } from "rxjs";
@@ -123,6 +123,12 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
   colabfold_num_recycles: "Recycles",
   alphafold2_full_dbs: "Full DBs",
   boltz_use_potentials: "Use Potentials",
+  // The de-novo-design form field is now labeled "Number of Designs" (see
+  // de-novo-design.ts), but still submits under the wire key max_trajectories
+  // — unchanged since it's also used server-side for credit-cost derivation
+  // and the bindcraft QC-pass-target formula, and is already stored under
+  // that key in historical job records.
+  max_trajectories: "Number of Designs",
 };
 
 @Component({
@@ -258,6 +264,9 @@ export default class JobDetailsComponent implements OnInit {
     this.tabs.find((tab) => tab.id === this.activeTab())
   );
 
+  // The jobs list's page and filters, so going back returns to the same view
+  readonly jobsListQueryParams: Params;
+
   constructor() {
     // A job passed through router navigation state lets us render immediately
     // without an extra round-trip when arriving from the jobs list.
@@ -266,6 +275,8 @@ export default class JobDetailsComponent implements OnInit {
     if (navigatedJob) {
       this.job.set(this.jobsService.normalizeJob(navigatedJob));
     }
+    this.jobsListQueryParams =
+      (navState?.["jobsListQueryParams"] as Params | undefined) ?? {};
 
     // Reset and reload the results whenever the selected job changes.
     effect(() => {
@@ -375,7 +386,9 @@ export default class JobDetailsComponent implements OnInit {
       .subscribe(() => {
         this.deleting.set(false);
         this.closeDeleteDialog();
-        this.router.navigate(["/my-jobs"]);
+        this.router.navigate(["/my-jobs"], {
+          queryParams: this.jobsListQueryParams,
+        });
       });
   }
 

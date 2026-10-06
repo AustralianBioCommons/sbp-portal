@@ -352,6 +352,8 @@ export default class DeNovoDesignComponent
     this.localPdbFile.set(null);
     this.uploadedPdbFile.set(null);
     this.pdbResidueMap.set(null);
+    this.pdbHasNegativeResidues.set(false);
+    this.lastSequenceLength.set(null);
     this.programmaticViewerSelection.set("");
     this.startingPdb.set("");
     this.targetHotspotResidues.set("");
@@ -359,10 +361,50 @@ export default class DeNovoDesignComponent
     this.validateHotspotResiduesField();
   }
 
+  /** True when the most recently parsed structure has at least one residue
+   *  with a negative sequence number (e.g. an N-terminal expression tag
+   *  numbered ...-7, -6, -5) — ProteinDJ currently crashes on these. */
+  private pdbHasNegativeResidues = signal(false);
+
+  /** Amino-acid count from the most recent Mol* parse; null until a
+   *  structure has been loaded. Combined with pdbHasNegativeResidues in
+   *  updateStructureValidationError() so neither check clobbers the other's
+   *  "starting_pdb" error, regardless of which viewer output fires last. */
+  private lastSequenceLength = signal<number | null>(null);
+
   /** Receives the chain→residue map emitted by the Mol* viewer after it
    *  parses the PDB structure — no need to re-parse the file ourselves. */
   onStructureResiduesDetected(residues: Map<string, Set<number>>): void {
     this.pdbResidueMap.set(residues.size > 0 ? residues : null);
+    this.pdbHasNegativeResidues.set(
+      [...residues.values()].some((resNums) =>
+        [...resNums].some((resNum) => resNum < 0)
+      )
+    );
+    this.updateStructureValidationError();
+  }
+
+  /** Recomputes the shared "starting_pdb" structure-validity error from the
+   *  latest negative-residue and sequence-length checks together, so each
+   *  Mol* output handler doesn't stomp on the other's error message. */
+  private updateStructureValidationError(): void {
+    const errors = { ...this.formErrors() };
+    const count = this.lastSequenceLength();
+    if (this.pdbHasNegativeResidues()) {
+      errors["starting_pdb"] =
+        "Structures with negative residue indices are not currently supported. Please re-number the structure or trim residues with negative residues to submit this workflow.";
+    } else if (count !== null && count < 50) {
+      errors[
+        "starting_pdb"
+      ] = `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a larger structure.`;
+    } else if (count !== null && count > 300) {
+      errors[
+        "starting_pdb"
+      ] = `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a smaller structure. Structures can be trimmed using PyMOL or ChimeraX to satisfy the size limit.`;
+    } else {
+      delete errors["starting_pdb"];
+    }
+    this.formErrors.set(errors);
   }
 
   private validateHotspotResidues(value: string): string | null {
@@ -445,22 +487,8 @@ export default class DeNovoDesignComponent
   }
 
   onSequenceLengthDetected(count: number): void {
-    const currentErrors = this.formErrors();
-    if (count < 50) {
-      this.formErrors.set({
-        ...currentErrors,
-        starting_pdb: `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a larger structure.`,
-      });
-    } else if (count > 300) {
-      this.formErrors.set({
-        ...currentErrors,
-        starting_pdb: `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a smaller structure. Structures can be trimmed using PyMOL or ChimeraX to satisfy the size limit.`,
-      });
-    } else {
-      const updated = { ...currentErrors };
-      delete updated["starting_pdb"];
-      this.formErrors.set(updated);
-    }
+    this.lastSequenceLength.set(count);
+    this.updateStructureValidationError();
   }
 
   // Single-page form sections (rendered + tracked by app-workflow-form)

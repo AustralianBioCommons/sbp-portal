@@ -22,6 +22,7 @@ import {
   ListboxSelectComponent,
   ListboxSelectOption,
 } from "../components/listbox-select/listbox-select.component";
+import { SinglePredictionExampleOutputComponent } from "../components/single-prediction-example-output/single-prediction-example-output.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
 import {
@@ -131,6 +132,7 @@ function generateRandomSeed(): string {
     ListboxSelectComponent,
     WorkflowFormComponent,
     WorkflowLayoutComponent,
+    SinglePredictionExampleOutputComponent,
     StepContentComponent,
     NgIconComponent,
     CreditSummaryComponent,
@@ -221,7 +223,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   randomSeed = signal(generateRandomSeed());
   alphafold2FullDbs = signal(false);
   colabfoldNumRecycles = signal(String(DEFAULT_COLABFOLD_NUM_RECYCLES));
-  colabfoldUseTemplates = signal(false);
   boltzUsePotentials = signal(false);
   randomSeedTouched = signal(false);
   colabfoldNumRecyclesTouched = signal(false);
@@ -766,7 +767,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           colabfold_num_recycles:
             parsePositiveInteger(this.colabfoldNumRecycles()) ??
             DEFAULT_COLABFOLD_NUM_RECYCLES,
-          colabfold_use_templates: this.colabfoldUseTemplates(),
         };
       case "boltz":
         return {

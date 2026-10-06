@@ -1,6 +1,7 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { provideHttpClient } from "@angular/common/http";
+import { provideRouter } from "@angular/router";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
 import { AuthService } from "../../../core/services/auth.service";
@@ -68,6 +69,7 @@ describe("DeNovoDesignComponent", () => {
       imports: [DeNovoDesignComponent],
       providers: [
         provideHttpClient(),
+        provideRouter([]),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: CreditsService, useValue: credits },
@@ -371,6 +373,39 @@ describe("DeNovoDesignComponent", () => {
       component.onSequenceLengthDetected(10);
       component.onSequenceLengthDetected(150);
       expect(component.getFieldError("starting_pdb")).toBeNull();
+    });
+
+    it("flags a structure containing negative residue indices", () => {
+      component.onStructureResiduesDetected(
+        new Map([["A", new Set([-7, -6, 1, 2])]])
+      );
+      expect(component.getFieldError("starting_pdb")).toContain(
+        "negative residue indices"
+      );
+    });
+
+    it("clears the negative-residue error once a valid structure is loaded", () => {
+      component.onStructureResiduesDetected(new Map([["A", new Set([-1])]]));
+      component.onStructureResiduesDetected(new Map([["A", new Set([1, 2])]]));
+      expect(component.getFieldError("starting_pdb")).toBeNull();
+    });
+
+    it("keeps the negative-residue error even once a valid length is reported", () => {
+      component.onStructureResiduesDetected(
+        new Map([["A", new Set([-1, 100])]])
+      );
+      component.onSequenceLengthDetected(150);
+      expect(component.getFieldError("starting_pdb")).toContain(
+        "negative residue indices"
+      );
+    });
+
+    it("keeps the length error even when residues are all non-negative", () => {
+      component.onSequenceLengthDetected(10);
+      component.onStructureResiduesDetected(new Map([["A", new Set([1, 2])]]));
+      expect(component.getFieldError("starting_pdb")).toContain(
+        "upload a larger structure"
+      );
     });
 
     it("updates min and max on length range change", () => {
