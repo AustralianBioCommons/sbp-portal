@@ -16,6 +16,8 @@ import { map, startWith, switchMap } from "rxjs/operators";
 import { CreditSummaryComponent } from "../components/credit-summary/credit-summary.component";
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
+import { InteractionScreeningAboutComponent } from "./components/interaction-screening-about/interaction-screening-about.component";
+import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
 import {
   WorkflowFormComponent,
@@ -99,6 +101,8 @@ interface ToolChip extends ToolOption {
     ToolSelectionComponent,
     WorkflowFormComponent,
     WorkflowLayoutComponent,
+    InteractionScreeningAboutComponent,
+    WorkflowPapersComponent,
     StepContentComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
