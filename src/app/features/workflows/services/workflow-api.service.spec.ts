@@ -38,7 +38,6 @@ describe("WorkflowApiService", () => {
       tool: "boltz" as const,
       configProfiles: ["singularity"],
       runName: "test-run",
-      paramsText: null,
     };
     const formData = {
       workflow: "interaction-screening" as const,

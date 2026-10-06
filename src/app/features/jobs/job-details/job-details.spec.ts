@@ -942,7 +942,7 @@ describe("JobDetailsComponent", () => {
 
     expect(items.map((item) => item.label)).toEqual([
       "Target Hotspot Residues",
-      "Max Trajectories",
+      "Number of Designs",
     ]);
   });
 

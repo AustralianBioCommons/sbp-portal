@@ -223,7 +223,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   randomSeed = signal(generateRandomSeed());
   alphafold2FullDbs = signal(false);
   colabfoldNumRecycles = signal(String(DEFAULT_COLABFOLD_NUM_RECYCLES));
-  colabfoldUseTemplates = signal(false);
   boltzUsePotentials = signal(false);
   randomSeedTouched = signal(false);
   colabfoldNumRecyclesTouched = signal(false);
@@ -768,7 +767,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
           colabfold_num_recycles:
             parsePositiveInteger(this.colabfoldNumRecycles()) ??
             DEFAULT_COLABFOLD_NUM_RECYCLES,
-          colabfold_use_templates: this.colabfoldUseTemplates(),
         };
       case "boltz":
         return {
