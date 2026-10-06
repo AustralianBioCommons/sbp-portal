@@ -35,84 +35,89 @@
       The following structure prediction tools are available to be selected for
       each run:
     </p>
-    <p>
-      AlphaFold2 is an advanced AI system developed by Google DeepMind that
-      predicts the 3D structures of proteins from their one-dimensional amino
-      acid sequences with unprecedented, atomic-level accuracy (<a
-        href="https://www.nature.com/articles/s41586-021-03819-2"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sky-700 underline hover:text-sky-800"
-        >Jumper et al., 2021<span class="sr-only">
-          (opens in a new tab)</span
-        ></a
-      >). Its breakthrough feature is the use of a novel attention-based neural
-      network architecture that incorporates evolutionary and geometric
-      constraints, effectively solving the 50-year-old "protein folding problem"
-      by matching the accuracy of experimental techniques like X-ray
-      crystallography (<a
-        href="https://www.nature.com/articles/s41586-021-03819-2"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sky-700 underline hover:text-sky-800"
-        >Jumper et al., 2021<span class="sr-only">
-          (opens in a new tab)</span
-        ></a
-      >;
-      <a
-        href="https://www.nature.com/articles/d41586-020-03348-4"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sky-700 underline hover:text-sky-800"
-        >Callaway, 2020<span class="sr-only"> (opens in a new tab)</span></a
-      >).
-    </p>
-    <p>
-      Boltz is an open-source, multimodal AI model developed by researchers at
-      MIT and Recursion that predicts the 3D structures of complex biomolecular
-      assemblies involving proteins, DNA, RNA, and small molecules (<a
-        href="https://github.com/jwohlwend/boltz"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sky-700 underline hover:text-sky-800"
-        >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
-      >). Its breakthrough feature is the ability to simultaneously calculate
-      highly accurate protein-ligand binding affinities ~1,000 times faster than
-      traditional physics-based free-energy perturbation (FEP) simulations,
-      significantly accelerating early-stage drug discovery (<a
-        href="https://github.com/jwohlwend/boltz"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sky-700 underline hover:text-sky-800"
-        >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
-      >;
-      <a
-        href="https://www.cancergrandchallenges.org/news/boltz-2-democratising-the-future-of-drug-design"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sky-700 underline hover:text-sky-800"
-        >Cancer Grand Challenges<span class="sr-only">
-          (opens in a new tab)</span
-        ></a
-      >).
-    </p>
-    <p>
-      ColabFold is an open-source platform that drastically accelerates
-      AI-driven protein structure prediction models, such as AlphaFold2, by
-      replacing their standard homology search with the ultra-fast MMseqs2
-      algorithm. Its breakthrough feature is the ability to generate sequence
-      alignments 40–60 times faster than traditional methods, democratising
-      access to complex protein and multimer predictions without requiring
-      massive computational infrastructure (<a
-        href="https://www.nature.com/articles/s41592-022-01488-1"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sky-700 underline hover:text-sky-800"
-        >Mirdita et al., 2022<span class="sr-only">
-          (opens in a new tab)</span
-        ></a
-      >).
-    </p>
+    <ul class="list-disc space-y-2 pl-5">
+      <li>
+        <span class="font-medium text-gray-900">AlphaFold2</span> is an advanced
+        AI system developed by Google DeepMind that predicts the 3D structures
+        of proteins from their one-dimensional amino acid sequences with
+        unprecedented, atomic-level accuracy (<a
+          href="https://www.nature.com/articles/s41586-021-03819-2"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Jumper et al., 2021<span class="sr-only">
+            (opens in a new tab)</span
+          ></a
+        >). Its breakthrough feature is the use of a novel attention-based
+        neural network architecture that incorporates evolutionary and geometric
+        constraints, effectively solving the 50-year-old "protein folding
+        problem" by matching the accuracy of experimental techniques like X-ray
+        crystallography (<a
+          href="https://www.nature.com/articles/s41586-021-03819-2"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Jumper et al., 2021<span class="sr-only">
+            (opens in a new tab)</span
+          ></a
+        >;
+        <a
+          href="https://www.nature.com/articles/d41586-020-03348-4"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Callaway, 2020<span class="sr-only"> (opens in a new tab)</span></a
+        >).
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">Boltz</span> is an open-source,
+        multimodal AI model developed by researchers at MIT and Recursion that
+        predicts the 3D structures of complex biomolecular assemblies involving
+        proteins, DNA, RNA, and small molecules (<a
+          href="https://github.com/jwohlwend/boltz"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
+        >). Its breakthrough feature is the ability to simultaneously calculate
+        highly accurate protein-ligand binding affinities ~1,000 times faster
+        than traditional physics-based free-energy perturbation (FEP)
+        simulations, significantly accelerating early-stage drug discovery (<a
+          href="https://github.com/jwohlwend/boltz"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
+        >;
+        <a
+          href="https://www.cancergrandchallenges.org/news/boltz-2-democratising-the-future-of-drug-design"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Cancer Grand Challenges<span class="sr-only">
+            (opens in a new tab)</span
+          ></a
+        >).
+      </li>
+      <li>
+        <span class="font-medium text-gray-900">ColabFold</span> is an
+        open-source platform that drastically accelerates AI-driven protein
+        structure prediction models, such as AlphaFold2, by replacing their
+        standard homology search with the ultra-fast MMseqs2 algorithm. Its
+        breakthrough feature is the ability to generate sequence alignments
+        40–60 times faster than traditional methods, democratising access to
+        complex protein and multimer predictions without requiring massive
+        computational infrastructure (<a
+          href="https://www.nature.com/articles/s41592-022-01488-1"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sky-700 underline hover:text-sky-800"
+          >Mirdita et al., 2022<span class="sr-only">
+            (opens in a new tab)</span
+          ></a
+        >).
+      </li>
+    </ul>
   </div>
 
   <!-- Focusable so keyboard users can scroll it on narrow screens. -->
