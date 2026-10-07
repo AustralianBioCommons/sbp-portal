@@ -37,8 +37,15 @@ const MOCK_DATASET_RESPONSE = {
   success: true,
   message: "ok",
   s3Key: "inputs/samplesheets/dataset-123.csv",
-  splitOutputDir: "/g/data/yz52/sbp-service/input/interaction_screening/my-job",
 };
+
+/** Echo the uploaded file's name back in its S3 URI, so query/target are distinguishable. */
+const fastaResponseFor = (file: File): FastaUploadResponse => ({
+  ...MOCK_FASTA_RESPONSE,
+  fileId: `input/interaction-screening/${file.name}`,
+  fileName: file.name,
+  s3Uri: `s3://bucket/input/interaction-screening/${file.name}`,
+});
 
 // ──────────────────────────────────────────────────────────────────────────
 
@@ -69,7 +76,9 @@ describe("InteractionScreeningComponent", () => {
       "FastaUploadService",
       ["uploadFastaFile"]
     );
-    fastaUploadService.uploadFastaFile.and.returnValue(of(MOCK_FASTA_RESPONSE));
+    fastaUploadService.uploadFastaFile.and.callFake(({ file }) =>
+      of(fastaResponseFor(file))
+    );
 
     datasetUploadService = jasmine.createSpyObj<DatasetUploadService>(
       "DatasetUploadService",
@@ -176,14 +185,50 @@ describe("InteractionScreeningComponent", () => {
     expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
   });
 
-  it("should call uploadFastaFile once with combined sequences when form is valid", () => {
+  it("should upload one query and one target FASTA named after the job", async () => {
     fillValidForm();
     fixture.detectChanges();
 
     component.submitWorkflow();
 
-    // all sequences combined into a single FASTA file upload
-    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(2);
+    const [queryFile, targetFile] = fastaUploadService.uploadFastaFile.calls
+      .allArgs()
+      .map(([req]) => req.file);
+    expect(queryFile.name).toBe("my-job_query.fasta");
+    expect(targetFile.name).toBe("my-job_target.fasta");
+    expect(await queryFile.text()).toBe(VALID_QUERY);
+    expect(await targetFile.text()).toBe(VALID_TARGET);
+  });
+
+  it("should send both FASTA S3 URIs to the samplesheet upload and the launch payload", () => {
+    fillValidForm();
+    fixture.detectChanges();
+
+    component.submitWorkflow();
+
+    const queryUri =
+      "s3://bucket/input/interaction-screening/my-job_query.fasta";
+    const targetUri =
+      "s3://bucket/input/interaction-screening/my-job_target.fasta";
+    expect(
+      datasetUploadService.uploadInteractionScreeningDataset
+    ).toHaveBeenCalledOnceWith({
+      runId: "my-job",
+      queryFastaS3Uri: queryUri,
+      targetFastaS3Uri: targetUri,
+    });
+    const [payload, s3InputKey] =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+        .args;
+    expect(s3InputKey).toBe("inputs/samplesheets/dataset-123.csv");
+    expect(payload).toEqual(
+      jasmine.objectContaining({
+        queryFastaS3Uri: queryUri,
+        targetFastaS3Uri: targetUri,
+        fastaContent: `${VALID_QUERY}\n${VALID_TARGET}`,
+      })
+    );
   });
 
   it("should set isSubmitting to false on successful upload", () => {
@@ -525,26 +570,6 @@ describe("InteractionScreeningComponent", () => {
     expect(component.alertMessage()).toContain("no S3 key");
   });
 
-  // ── 23b. submitWorkflow — missing splitOutputDir ─────────────────────────
-
-  it("should show error and set isSubmitting false when dataset upload returns no splitOutputDir", () => {
-    fillValidForm();
-    fixture.detectChanges();
-    datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-        s3Key: "inputs/samplesheets/dataset-123.csv",
-      })
-    );
-
-    component.submitWorkflow();
-
-    expect(workflowSubmissionService.isSubmitting()).toBe(false);
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("split output directory");
-  });
-
   // ── 24. submitWorkflow — workflow launch error callback ───────────────────
 
   it("should show error when submitWorkflowWithDataset calls the error callback", () => {
@@ -679,7 +704,7 @@ describe("InteractionScreeningComponent", () => {
       component.onPreviewConfirmed();
 
       expect(component.showPreview()).toBe(false);
-      expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+      expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(2);
     });
   });
 });

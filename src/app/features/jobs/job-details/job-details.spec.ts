@@ -1213,6 +1213,26 @@ describe("JobDetailsComponent", () => {
       );
     });
 
+    it("shows query and target FASTA in separate cards for interaction screening", () => {
+      component.job.set(mockJob); // workflow: "Interaction Screening"
+      const items = privateApi().normalizeSettings({
+        workflow: "interaction-screening",
+        tool: "boltz",
+        queryFastaContent: ">query1|protein\nMV",
+        targetFastaContent: ">target1/a|protein\nAK",
+        fastaContent: ">query1|protein\nMV\n>target1/a|protein\nAK",
+        queryFastaS3Uri: "https://api.example.com/uploads/my-job_query.fasta",
+        targetFastaS3Uri: "https://api.example.com/uploads/my-job_target.fasta",
+      });
+
+      const fastaItems = items.filter((item) => item.label.includes("FASTA"));
+      expect(fastaItems).toEqual([
+        { label: "Query FASTA", value: ">query1|protein\nMV", details: [] },
+        // a "/" in a header must not be mistaken for a path and trimmed
+        { label: "Target FASTA", value: ">target1/a|protein\nAK", details: [] },
+      ]);
+    });
+
     it("shows Use Potentials (defaulted false) for a boltz job even though interaction screening's form has no such control", () => {
       component.job.set(mockJob); // workflow: "Interaction Screening"
       const items = privateApi().normalizeSettings({

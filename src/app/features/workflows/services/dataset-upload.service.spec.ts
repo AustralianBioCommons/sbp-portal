@@ -58,11 +58,9 @@ describe("DatasetUploadService", () => {
 
   it("should upload interaction screening dataset to the correct endpoint", () => {
     const requestBody = {
-      sequences: [
-        { id: "querySeq1", group: "query" as const },
-        { id: "targetSeq1", group: "target" as const },
-      ],
       runId: "my-run",
+      queryFastaS3Uri: "s3://bucket/input/my-run_query.fasta",
+      targetFastaS3Uri: "s3://bucket/input/my-run_target.fasta",
     };
 
     service

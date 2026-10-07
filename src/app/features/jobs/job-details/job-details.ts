@@ -78,6 +78,8 @@ const ALLOWED_SETTING_KEYS_BY_WORKFLOW: Record<string, Set<string>> = {
   "interaction screening": new Set([
     "workflow",
     "tool",
+    "queryFastaContent",
+    "targetFastaContent",
     "fastaContent",
     "fastaS3Uri",
     "boltz_use_potentials",
@@ -119,6 +121,8 @@ const WORKFLOWS_WITH_IMPLICIT_BOLTZ_POTENTIALS = new Set([
  *  isn't just a title-cased version of the raw key. */
 const SETTING_LABEL_OVERRIDES: Record<string, string> = {
   fastaContent: "FASTA Content",
+  queryFastaContent: "Query FASTA",
+  targetFastaContent: "Target FASTA",
   fastaS3Uri: "FASTA File",
   colabfold_num_recycles: "Recycles",
   alphafold2_full_dbs: "Full DBs",
@@ -792,6 +796,13 @@ export default class JobDetailsComponent implements OnInit {
     const hasFastaContent =
       typeof fastaContentValue === "string" &&
       fastaContentValue.trim().length > 0;
+    const hasSplitFastaContent = [
+      "queryFastaContent",
+      "targetFastaContent",
+    ].some((key) => {
+      const value = settingParams[key];
+      return typeof value === "string" && value.trim().length > 0;
+    });
 
     const isKeyVisible = (key: string): boolean => {
       if (WORKFLOWS_PREFERRING_FASTA_CONTENT.has(workflowName)) {
@@ -799,6 +810,9 @@ export default class JobDetailsComponent implements OnInit {
         // fastaS3Uri download link — fall back to that so they aren't blank.
         if (key === "fastaS3Uri") return !hasFastaContent;
       }
+      // Interaction screening shows query and target FASTA in separate cards;
+      // the combined fastaContent is only shown for older jobs that lack them.
+      if (key === "fastaContent" && hasSplitFastaContent) return false;
       return allowedKeys
         ? allowedKeys.has(key)
         : !this.shouldHideSettingKey(key);
@@ -899,6 +913,8 @@ export default class JobDetailsComponent implements OnInit {
 
   private isFileDownloadKey(key: string): boolean {
     const lower = key.toLowerCase();
+    // *Content keys hold raw FASTA text, not a path — never trim to a filename.
+    if (lower.endsWith("content")) return false;
     return lower.includes("pdb") || lower.includes("fasta");
   }
 

@@ -16,8 +16,9 @@ export interface DatasetUploadResponse {
 }
 
 export interface InteractionScreeningDatasetUploadRequest {
-  sequences: { id: string; group: "query" | "target" }[];
   runId: string;
+  queryFastaS3Uri: string;
+  targetFastaS3Uri: string;
 }
 
 export interface BulkPredictionDatasetUploadRequest {

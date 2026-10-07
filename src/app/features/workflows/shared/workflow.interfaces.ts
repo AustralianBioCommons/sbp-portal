@@ -68,11 +68,14 @@ export interface DefaultWorkflowPayload {
 }
 
 export interface InteractionScreeningPayload extends DefaultWorkflowPayload {
-  fastaS3Uri: string;
-  splitOutputDir: string;
-  /** Combined FASTA text, already in memory from the query/target textareas —
-   *  sent alongside fastaS3Uri purely so the results page can show it inline
-   *  instead of only a download link. */
+  queryFastaS3Uri: string;
+  targetFastaS3Uri: string;
+  /** Query/target FASTA text, already in memory from the textareas — sent
+   *  alongside the FASTA S3 URIs purely so the job's settings tab can show
+   *  each inline instead of only a download link. */
+  queryFastaContent?: string;
+  targetFastaContent?: string;
+  /** Both FASTAs combined (query then target), read by the results report. */
   fastaContent?: string;
 }
 

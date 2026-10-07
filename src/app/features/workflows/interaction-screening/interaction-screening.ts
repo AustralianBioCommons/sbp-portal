@@ -12,6 +12,7 @@ import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../shared/job-name.validators";
+import { forkJoin } from "rxjs";
 import { map, startWith, switchMap } from "rxjs/operators";
 import { CreditSummaryComponent } from "../components/credit-summary/credit-summary.component";
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
@@ -319,53 +320,50 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
 
   // ─── Submission ───────────────────────────────────────────────────────────
 
-  private buildWispsPayload(): {
-    id: string;
-    sequence: string;
-    group: "query" | "target";
-  }[] {
-    const raw = this.form.getRawValue();
-    const queryEntries = parseMultiFasta(raw.queryFasta);
-    const targetEntries = parseMultiFasta(raw.targetFasta);
-    return [
-      ...queryEntries.map((e) => ({
-        id: e.id,
-        sequence: e.sequence,
-        group: "query" as const,
-      })),
-      ...targetEntries.map((e) => ({
-        id: e.id,
-        sequence: e.sequence,
-        group: "target" as const,
-      })),
-    ];
+  private buildFastaText(fasta: string): string {
+    return parseMultiFasta(fasta)
+      .map((e) => `>${e.id}\n${e.sequence}`)
+      .join("\n");
   }
 
-  protected performSubmit(): void {
-    const jobName = this.form.getRawValue().jobName;
-    const sequences = this.buildWispsPayload();
-
-    this.workflowSubmission.isSubmitting.set(true);
-
-    const combinedFasta = sequences
-      .map((seq) => `>${seq.id}\n${seq.sequence}`)
-      .join("\n");
-    const blob = new Blob([combinedFasta], { type: "text/plain" });
-    const file = new File([blob], `sequences.fasta`, { type: "text/plain" });
-    const upload$ = this.fastaUploadService.uploadFastaFile({
+  private uploadGroupFasta(
+    jobName: string,
+    group: "query" | "target",
+    text: string
+  ) {
+    const file = new File([text], `${jobName}_${group}.fasta`, {
+      type: "text/plain",
+    });
+    return this.fastaUploadService.uploadFastaFile({
       file,
       folder: this.workflowInputDir,
     });
+  }
 
-    let fastaS3Uri = "";
+  protected performSubmit(): void {
+    const raw = this.form.getRawValue();
+    const jobName = raw.jobName;
+    const queryFasta = this.buildFastaText(raw.queryFasta);
+    const targetFasta = this.buildFastaText(raw.targetFasta);
+    const combinedFasta = `${queryFasta}\n${targetFasta}`;
 
-    upload$
+    this.workflowSubmission.isSubmitting.set(true);
+
+    let queryFastaS3Uri = "";
+    let targetFastaS3Uri = "";
+
+    forkJoin({
+      query: this.uploadGroupFasta(jobName, "query", queryFasta),
+      target: this.uploadGroupFasta(jobName, "target", targetFasta),
+    })
       .pipe(
-        switchMap((uploadResp) => {
-          fastaS3Uri = uploadResp.s3Uri;
+        switchMap(({ query, target }) => {
+          queryFastaS3Uri = query.s3Uri;
+          targetFastaS3Uri = target.s3Uri;
           return this.datasetUploadService.uploadInteractionScreeningDataset({
-            sequences: sequences.map((s) => ({ id: s.id, group: s.group })),
             runId: jobName,
+            queryFastaS3Uri,
+            targetFastaS3Uri,
           });
         })
       )
@@ -379,21 +377,15 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
             );
             return;
           }
-          const splitOutputDir = datasetResponse.splitOutputDir;
-          if (!splitOutputDir) {
-            this.workflowSubmission.isSubmitting.set(false);
-            this.showError(
-              "Dataset upload did not return a split output directory."
-            );
-            return;
-          }
           const payload: InteractionScreeningPayload = {
             tool: this.selectedTool(),
             runName: jobName,
             workflow: "interaction-screening",
             sample_id: jobName,
-            fastaS3Uri,
-            splitOutputDir,
+            queryFastaS3Uri,
+            targetFastaS3Uri,
+            queryFastaContent: queryFasta,
+            targetFastaContent: targetFasta,
             fastaContent: combinedFasta,
           };
           this.workflowSubmission.submitWorkflowWithDataset(
