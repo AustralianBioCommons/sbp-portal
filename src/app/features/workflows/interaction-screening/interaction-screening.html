@@ -32,8 +32,7 @@
       >
         <app-tool-selection
           [tools]="tools"
-          [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"
+          [formControl]="form.controls.selectedTool"
         ></app-tool-selection>
       </app-step-content>
     </div>

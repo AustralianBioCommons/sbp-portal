@@ -36,8 +36,7 @@
       >
         <app-tool-selection
           [tools]="tools"
-          [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"
+          [formControl]="form.controls.selectedTool"
         ></app-tool-selection>
       </app-step-content>
     </div>
@@ -357,7 +356,7 @@
             }
           </div>
 
-          @if (selectedTool() === 'colabfold') {
+          @if (form.controls.selectedTool.value === 'colabfold') {
           <div class="rounded-lg border p-4">
             <label
               for="colabfold-num-recycles"
@@ -392,7 +391,7 @@
             </p>
             }
           </div>
-          } @if (selectedTool() === 'alphafold2') {
+          } @if (form.controls.selectedTool.value === 'alphafold2') {
           <div
             class="rounded-lg border p-4 flex items-center justify-start gap-2"
           >
@@ -414,7 +413,7 @@
               (change)="alphafold2FullDbs.set($any($event.target).checked)"
             />
           </div>
-          } @if (selectedTool() === 'boltz') {
+          } @if (form.controls.selectedTool.value === 'boltz') {
           <div
             class="rounded-lg border p-4 flex items-center justify-start gap-2"
           >

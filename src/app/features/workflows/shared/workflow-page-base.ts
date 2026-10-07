@@ -26,8 +26,8 @@ import { WORKFLOW_INPUT_DIRS } from "./workflow-paths";
  * Shared base for the workflow pages: owns the validate → preview → submit
  * flow, alert state, and credit wiring. Each page implements a small contract
  * ({@link validateAll}, {@link isFormValid}, {@link performSubmit},
- * {@link creditCost}, {@link workflowCategory}, {@link tools},
- * {@link selectedTool}) and keeps its own form internals.
+ * {@link creditCost}, {@link workflowCategory}, {@link tools}) and keeps its
+ * own form internals.
  */
 @Directive()
 export abstract class WorkflowPageBase implements OnInit {
@@ -52,7 +52,6 @@ export abstract class WorkflowPageBase implements OnInit {
   }
 
   protected abstract readonly tools: ToolOption<WorkflowTool>[];
-  protected abstract readonly selectedTool: Signal<WorkflowTool>;
   abstract readonly creditCost: Signal<number | null>;
 
   /**
