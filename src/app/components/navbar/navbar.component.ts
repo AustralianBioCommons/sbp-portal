@@ -40,6 +40,7 @@ export interface NavItem {
   path: string;
   children?: NavItem[];
   menuOnly?: boolean;
+  external?: boolean;
 }
 
 export interface BreadcrumbInfo {
@@ -145,9 +146,10 @@ export class Navbar {
       path: "/my-jobs",
     },
     {
-      label: "Support / FAQ",
-      path: "/support",
+      label: "Support",
+      path: "https://biocommons-sbp-help.freshdesk.com/support/tickets/new",
       menuOnly: true,
+      external: true,
     },
   ];
 
