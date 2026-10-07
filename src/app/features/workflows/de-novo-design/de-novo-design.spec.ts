@@ -97,28 +97,31 @@ describe("DeNovoDesignComponent", () => {
   });
 
   describe("tool selection", () => {
-    it("keeps BindCraft selected and reports the initial label", () => {
-      expect(component.selectedTool()).toBe("bindcraft");
-      expect(component.isToolSelected("bindcraft")).toBe(true);
-      expect(component.selectedToolLabel()).toBe("BindCraft");
-      expect(component.selectedToolData()?.id).toBe("bindcraft");
+    it("starts without a selected tool", () => {
+      expect(component.form.controls.selectedTool.value).toBeNull();
+      expect(component.form.controls.selectedTool.hasError("required")).toBe(
+        true
+      );
+      expect(component.isSectionValid("select-tool")).toBe(false);
+      expect(component.selectedToolLabel()).toBe("");
+      expect(component.selectedToolData()).toBeUndefined();
       expect(component.selectedToolHasParams()).toBe(false);
     });
 
     it("allows selecting rfdiffusion", () => {
-      component.selectTool("rfdiffusion");
-      expect(component.selectedTool()).toBe("rfdiffusion");
+      component.form.controls.selectedTool.setValue("rfdiffusion");
+      expect(component.form.controls.selectedTool.value).toBe("rfdiffusion");
     });
 
     it("allows selecting bindcraft", () => {
-      component.selectTool("bindcraft");
-      expect(component.selectedTool()).toBe("bindcraft");
+      component.form.controls.selectedTool.setValue("bindcraft");
+      expect(component.form.controls.selectedTool.value).toBe("bindcraft");
     });
 
     it("uses the same number-of-designs label for both tools", () => {
-      component.selectTool("bindcraft");
+      component.form.controls.selectedTool.setValue("bindcraft");
       expect(component.numberOfDesignsField.label).toBe("Number of Designs");
-      component.selectTool("rfdiffusion");
+      component.form.controls.selectedTool.setValue("rfdiffusion");
       expect(component.numberOfDesignsField.label).toBe("Number of Designs");
     });
   });
@@ -139,6 +142,7 @@ describe("DeNovoDesignComponent", () => {
   describe("isFormValid (derived)", () => {
     beforeEach(() => {
       component.form.controls.jobName.setValue("valid-job");
+      component.form.controls.selectedTool.setValue("bindcraft");
       component.startingPdb.set("target.pdb");
       component.targetHotspotResidues.set("A56");
       component.numberOfDesigns.set(1);
@@ -462,6 +466,7 @@ describe("DeNovoDesignComponent", () => {
 
   describe("credit cost", () => {
     it("computes credit cost from multiplier and design count", () => {
+      component.form.controls.selectedTool.setValue("bindcraft");
       component["toolMultipliers"].set({ bindcraft: 10 });
       component.numberOfDesigns.set(2);
       expect(component.creditCost()).toBe(20);
@@ -480,8 +485,10 @@ describe("DeNovoDesignComponent", () => {
   });
 
   describe("section validity", () => {
-    it("marks input-config and review by form validity, others always valid", () => {
+    it("requires select-tool while tool-settings has no params", () => {
       component.form.controls.jobName.setValue("job-1");
+      expect(component.isSectionValid("select-tool")).toBe(false);
+      component.form.controls.selectedTool.setValue("bindcraft");
       expect(component.isSectionValid("select-tool")).toBe(true);
       expect(component.isSectionValid("tool-settings")).toBe(true);
     });
@@ -490,6 +497,7 @@ describe("DeNovoDesignComponent", () => {
   describe("submission", () => {
     beforeEach(() => {
       component.form.controls.jobName.setValue("job-1");
+      component.form.controls.selectedTool.setValue("bindcraft");
       component.targetHotspotResidues.set("A12,A13");
     });
 
@@ -524,7 +532,7 @@ describe("DeNovoDesignComponent", () => {
     });
 
     it("omits chains from the payload for rfdiffusion", () => {
-      component.selectTool("rfdiffusion");
+      component.form.controls.selectedTool.setValue("rfdiffusion");
       component.startingPdb.set("s3://bucket/target.pdb");
       component.targetHotspotResidues.set("A12,B5");
 
@@ -612,7 +620,7 @@ describe("DeNovoDesignComponent", () => {
     });
 
     it("blocks an rfdiffusion submission with no PDB uploaded", () => {
-      component.selectTool("rfdiffusion");
+      component.form.controls.selectedTool.setValue("rfdiffusion");
       component["performSubmit"]();
       expect(component.showAlert()).toBe(true);
       expect(

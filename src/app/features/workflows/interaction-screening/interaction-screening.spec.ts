@@ -148,6 +148,7 @@ describe("InteractionScreeningComponent", () => {
       jobName: "my-job",
       queryFasta: VALID_QUERY,
       targetFasta: VALID_TARGET,
+      selectedTool: "boltz",
     });
   }
 
@@ -167,6 +168,14 @@ describe("InteractionScreeningComponent", () => {
     fillValidForm();
     fixture.detectChanges();
     expect(component.isFormValid()).toBe(true);
+  });
+
+  it("should start with no selected tool", () => {
+    expect(component.form.controls.selectedTool.value).toBeNull();
+    expect(component.form.controls.selectedTool.hasError("required")).toBe(
+      true
+    );
+    expect(component.isSectionValid("select-tool")).toBe(false);
   });
 
   // ── 3. submitWorkflow ──────────────────────────────────────────────────
@@ -237,7 +246,9 @@ describe("InteractionScreeningComponent", () => {
     ]);
   });
 
-  it("should treat select-tool and tool-settings as always valid", () => {
+  it("should require select-tool while tool-settings has no params", () => {
+    expect(component.isSectionValid("select-tool")).toBe(false);
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.isSectionValid("select-tool")).toBe(true);
     expect(component.isSectionValid("tool-settings")).toBe(true);
   });
@@ -256,11 +267,11 @@ describe("InteractionScreeningComponent", () => {
   // ── 8. selectTool ──────────────────────────────────────────────────────
 
   it("should update selectedTool when selectTool is called", () => {
-    component.selectTool("colabfold");
-    expect(component.selectedTool()).toBe("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
+    expect(component.form.controls.selectedTool.value).toBe("colabfold");
 
-    component.selectTool("boltz");
-    expect(component.selectedTool()).toBe("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
+    expect(component.form.controls.selectedTool.value).toBe("boltz");
   });
 
   // ── 9. closeAlert ──────────────────────────────────────────────────────
@@ -410,6 +421,7 @@ describe("InteractionScreeningComponent", () => {
   // ── 14. selectedToolLabel computed ────────────────────────────────────────
 
   it("should return the label of the currently selected tool", () => {
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.selectedToolLabel()).toBe("Boltz");
   });
 
@@ -440,10 +452,10 @@ describe("InteractionScreeningComponent", () => {
 
   // ── 17. getFormValidationSummary ──────────────────────────────────────────
 
-  it("should count 3 field errors when form is empty", () => {
+  it("should count 4 field errors when form is empty", () => {
     const s = component.getFormValidationSummary();
     expect(s.valid).toBe(false);
-    expect(s.errorCount).toBe(3);
+    expect(s.errorCount).toBe(4);
     expect(s.rowCount).toBe(3);
   });
 
@@ -464,7 +476,12 @@ describe("InteractionScreeningComponent", () => {
       { length: 32 },
       (_, i) => `>t${i}\nARNDC`
     ).join("\n");
-    component.form.setValue({ jobName: "job", queryFasta, targetFasta });
+    component.form.setValue({
+      jobName: "job",
+      queryFasta,
+      targetFasta,
+      selectedTool: "boltz",
+    });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
   });
@@ -474,6 +491,7 @@ describe("InteractionScreeningComponent", () => {
       jobName: "job",
       queryFasta: VALID_TARGET,
       targetFasta: ">t1\nARNDC",
+      selectedTool: "boltz",
     });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
@@ -503,6 +521,7 @@ describe("InteractionScreeningComponent", () => {
       jobName: "my-job",
       queryFasta: VALID_QUERY,
       targetFasta: VALID_QUERY, // same header as query → duplicate
+      selectedTool: "boltz",
     });
     fixture.detectChanges();
     expect(component.hasDuplicateSequencesError()).toBe(true);
@@ -590,7 +609,7 @@ describe("InteractionScreeningComponent", () => {
   describe("creditCost", () => {
     it("computes tool multiplier × (query entries × target entries)", () => {
       component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
@@ -603,7 +622,7 @@ describe("InteractionScreeningComponent", () => {
 
     it("returns null when either FASTA input is empty or invalid", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue("");
       component.form.controls.targetFasta.setValue("");
       fixture.detectChanges();
@@ -613,7 +632,7 @@ describe("InteractionScreeningComponent", () => {
 
     it("flags insufficient credits when the cost exceeds the balance", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
@@ -626,7 +645,7 @@ describe("InteractionScreeningComponent", () => {
 
     it("does not flag insufficient when the balance is unknown", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
