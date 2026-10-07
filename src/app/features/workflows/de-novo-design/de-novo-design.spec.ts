@@ -118,6 +118,24 @@ describe("DeNovoDesignComponent", () => {
       expect(component.form.controls.selectedTool.value).toBe("bindcraft");
     });
 
+    it("exposes selected tool data and params for rfdiffusion", () => {
+      component.form.controls.selectedTool.setValue("rfdiffusion");
+      expect(component.selectedToolData()).toEqual({
+        id: "rfdiffusion",
+        label: "RFdiffusion",
+      });
+      expect(component.selectedToolParams()).toEqual([]);
+    });
+
+    it("exposes selected tool data and params for bindcraft", () => {
+      component.form.controls.selectedTool.setValue("bindcraft");
+      expect(component.selectedToolData()).toEqual({
+        id: "bindcraft",
+        label: "BindCraft",
+      });
+      expect(component.selectedToolParams()).toEqual([]);
+    });
+
     it("uses the same number-of-designs label for both tools", () => {
       component.form.controls.selectedTool.setValue("bindcraft");
       expect(component.numberOfDesignsField.label).toBe("Number of Designs");
@@ -465,6 +483,12 @@ describe("DeNovoDesignComponent", () => {
   });
 
   describe("credit cost", () => {
+    it("returns null credit cost when no tool is selected", () => {
+      component["toolMultipliers"].set({ bindcraft: 10 });
+      component.numberOfDesigns.set(2);
+      expect(component.creditCost()).toBeNull();
+    });
+
     it("computes credit cost from multiplier and design count", () => {
       component.form.controls.selectedTool.setValue("bindcraft");
       component["toolMultipliers"].set({ bindcraft: 10 });
