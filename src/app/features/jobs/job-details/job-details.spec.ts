@@ -814,6 +814,7 @@ describe("JobDetailsComponent", () => {
     render();
 
     component.job.set(fallbackJob);
+    fixture.detectChanges();
     component.setActiveTab("citations");
     fixture.detectChanges();
 
