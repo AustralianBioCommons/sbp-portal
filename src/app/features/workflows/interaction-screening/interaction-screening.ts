@@ -384,8 +384,6 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
             sample_id: jobName,
             queryFastaS3Uri,
             targetFastaS3Uri,
-            queryFastaContent: queryFasta,
-            targetFastaContent: targetFasta,
             fastaContent: combinedFasta,
           };
           this.workflowSubmission.submitWorkflowWithDataset(

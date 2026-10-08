@@ -27,7 +27,13 @@ type JobDetailsPrivateApi = {
   normalizeLogs: (logs: string | string[] | null | undefined) => string[];
   normalizeSettings: (
     settingParams: Record<string, unknown> | null | undefined
-  ) => Array<{ label: string; value: string; details: string[]; url?: string }>;
+  ) => Array<{
+    label: string;
+    value: string;
+    details: string[];
+    url?: string;
+    openInline?: boolean;
+  }>;
   formatSettingLabel: (key: string) => string;
   formatSettingValue: (value: unknown) => string;
   formatValidationDetails: (
@@ -1196,7 +1202,7 @@ describe("JobDetailsComponent", () => {
       );
     });
 
-    it("prefers FASTA content over the download link for interaction screening", () => {
+    it("shows an older interaction screening job's combined FASTA as a link, not inline content", () => {
       component.job.set(mockJob); // workflow: "Interaction Screening"
       const items = privateApi().normalizeSettings({
         workflow: "interaction-screening",
@@ -1205,31 +1211,46 @@ describe("JobDetailsComponent", () => {
         fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
       });
 
-      const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
-      expect(fastaItems.length).toBe(1);
-      expect(fastaItems[0].label).toBe("FASTA Content");
-      expect(fastaItems[0].value).toBe(
-        ">query1|protein\nMV\n>target1|protein\nAK"
-      );
+      const fastaItems = items.filter((item) => item.label.includes("FASTA"));
+      expect(fastaItems).toEqual([
+        {
+          label: "FASTA File",
+          value: "sequences.fasta",
+          details: [],
+          url: "https://api.example.com/uploads/sequences.fasta",
+          openInline: true,
+        },
+      ]);
     });
 
-    it("shows query and target FASTA in separate cards for interaction screening", () => {
+    it("shows query and target FASTA as separate inline links for interaction screening", () => {
       component.job.set(mockJob); // workflow: "Interaction Screening"
       const items = privateApi().normalizeSettings({
         workflow: "interaction-screening",
         tool: "boltz",
-        queryFastaContent: ">query1|protein\nMV",
-        targetFastaContent: ">target1/a|protein\nAK",
-        fastaContent: ">query1|protein\nMV\n>target1/a|protein\nAK",
-        queryFastaS3Uri: "https://api.example.com/uploads/my-job_query.fasta",
-        targetFastaS3Uri: "https://api.example.com/uploads/my-job_target.fasta",
+        fastaContent: ">query1|protein\nMV\n>target1|protein\nAK",
+        queryFastaS3Uri:
+          "https://bucket.s3.example.com/input/my-job_query.fasta?X-Amz-Signature=a",
+        targetFastaS3Uri:
+          "https://bucket.s3.example.com/input/my-job_target.fasta?X-Amz-Signature=b",
       });
 
       const fastaItems = items.filter((item) => item.label.includes("FASTA"));
       expect(fastaItems).toEqual([
-        { label: "Query FASTA", value: ">query1|protein\nMV", details: [] },
-        // a "/" in a header must not be mistaken for a path and trimmed
-        { label: "Target FASTA", value: ">target1/a|protein\nAK", details: [] },
+        {
+          label: "Query FASTA",
+          value: "my-job_query.fasta",
+          details: [],
+          url: "https://bucket.s3.example.com/input/my-job_query.fasta?X-Amz-Signature=a",
+          openInline: true,
+        },
+        {
+          label: "Target FASTA",
+          value: "my-job_target.fasta",
+          details: [],
+          url: "https://bucket.s3.example.com/input/my-job_target.fasta?X-Amz-Signature=b",
+          openInline: true,
+        },
       ]);
     });
 
@@ -1274,7 +1295,7 @@ describe("JobDetailsComponent", () => {
       ]);
     });
 
-    it("prefers FASTA content over the download link for bulk prediction", () => {
+    it("shows bulk prediction's FASTA as a single inline link, not inline content", () => {
       const bulkJob: JobListItem = { ...mockJob, workflow: "Bulk Prediction" };
       component.job.set(bulkJob);
       const items = privateApi().normalizeSettings({
@@ -1284,9 +1305,43 @@ describe("JobDetailsComponent", () => {
         fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
       });
 
-      const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
+      const fastaItems = items.filter((item) => item.label.includes("FASTA"));
       expect(fastaItems.length).toBe(1);
-      expect(fastaItems[0].label).toBe("FASTA Content");
+      expect(fastaItems[0].label).toBe("FASTA File");
+      expect(fastaItems[0].openInline).toBeTrue();
+    });
+
+    it("renders inline FASTA links without the download attribute", () => {
+      render();
+      component.setActiveTab("settings");
+      component.settingsLoading.set(false);
+      component.settingsError.set(null);
+      component.settingsItems.set([
+        {
+          label: "Query FASTA",
+          value: "q.fasta",
+          details: [],
+          url: "https://signed/q.fasta",
+          openInline: true,
+        },
+        {
+          label: "Starting PDB",
+          value: "s.pdb",
+          details: [],
+          url: "https://signed/s.pdb",
+        },
+      ]);
+      fixture.detectChanges();
+
+      const links: HTMLAnchorElement[] = Array.from(
+        fixture.nativeElement.querySelectorAll("a[href^='https://signed/']")
+      );
+      expect(
+        links.map((a) => [a.textContent?.trim(), a.hasAttribute("download")])
+      ).toEqual([
+        ["q.fasta", false],
+        ["s.pdb", true],
+      ]);
     });
   });
 

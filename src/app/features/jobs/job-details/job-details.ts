@@ -57,6 +57,8 @@ type JobSettingItem = {
   value: string;
   details: string[];
   url?: string;
+  /** Open the link in the browser (served as plain text) rather than download it. */
+  openInline?: boolean;
 };
 
 /** Settings actually exposed in each workflow's submission form, keyed by
@@ -78,16 +80,15 @@ const ALLOWED_SETTING_KEYS_BY_WORKFLOW: Record<string, Set<string>> = {
   "interaction screening": new Set([
     "workflow",
     "tool",
-    "queryFastaContent",
-    "targetFastaContent",
-    "fastaContent",
+    "queryFastaS3Uri",
+    "targetFastaS3Uri",
+    // Older jobs, submitted as one combined FASTA.
     "fastaS3Uri",
     "boltz_use_potentials",
   ]),
   "bulk prediction": new Set([
     "workflow",
     "tool",
-    "fastaContent",
     "fastaS3Uri",
     "boltz_use_potentials",
   ]),
@@ -100,12 +101,13 @@ const RESULTS_REPORT_WORKFLOWS = new Set([
   "bulk prediction",
 ]);
 
-/** Workflows whose form is plain text (no file to browse for) — the raw FASTA
- *  is submitted directly, so it's shown inline. Older jobs submitted before
- *  fastaContent existed fall back to the fastaS3Uri download link. */
-const WORKFLOWS_PREFERRING_FASTA_CONTENT = new Set([
-  "interaction screening",
-  "bulk prediction",
+/** FASTA links the backend presigns as inline plain text, so they open in the
+ *  browser (sequences can be copied straight from the tab) instead of
+ *  downloading. */
+const INLINE_FASTA_KEYS = new Set([
+  "fastaS3Uri",
+  "queryFastaS3Uri",
+  "targetFastaS3Uri",
 ]);
 
 /** Workflows whose form has no "Use Potentials" checkbox, but which still run
@@ -121,9 +123,9 @@ const WORKFLOWS_WITH_IMPLICIT_BOLTZ_POTENTIALS = new Set([
  *  isn't just a title-cased version of the raw key. */
 const SETTING_LABEL_OVERRIDES: Record<string, string> = {
   fastaContent: "FASTA Content",
-  queryFastaContent: "Query FASTA",
-  targetFastaContent: "Target FASTA",
   fastaS3Uri: "FASTA File",
+  queryFastaS3Uri: "Query FASTA",
+  targetFastaS3Uri: "Target FASTA",
   colabfold_num_recycles: "Recycles",
   alphafold2_full_dbs: "Full DBs",
   boltz_use_potentials: "Use Potentials",
@@ -792,27 +794,7 @@ export default class JobDetailsComponent implements OnInit {
     const workflowName = this.workflowName();
     const allowedKeys = ALLOWED_SETTING_KEYS_BY_WORKFLOW[workflowName];
 
-    const fastaContentValue = settingParams["fastaContent"];
-    const hasFastaContent =
-      typeof fastaContentValue === "string" &&
-      fastaContentValue.trim().length > 0;
-    const hasSplitFastaContent = [
-      "queryFastaContent",
-      "targetFastaContent",
-    ].some((key) => {
-      const value = settingParams[key];
-      return typeof value === "string" && value.trim().length > 0;
-    });
-
     const isKeyVisible = (key: string): boolean => {
-      if (WORKFLOWS_PREFERRING_FASTA_CONTENT.has(workflowName)) {
-        // Older jobs submitted before fastaContent existed have only the
-        // fastaS3Uri download link — fall back to that so they aren't blank.
-        if (key === "fastaS3Uri") return !hasFastaContent;
-      }
-      // Interaction screening shows query and target FASTA in separate cards;
-      // the combined fastaContent is only shown for older jobs that lack them.
-      if (key === "fastaContent" && hasSplitFastaContent) return false;
       return allowedKeys
         ? allowedKeys.has(key)
         : !this.shouldHideSettingKey(key);
@@ -894,7 +876,7 @@ export default class JobDetailsComponent implements OnInit {
         value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
         details,
         ...(isFileDownload && rawValue.startsWith("http")
-          ? { url: rawValue }
+          ? { url: rawValue, openInline: INLINE_FASTA_KEYS.has(key) }
           : {}),
       };
     }
@@ -906,7 +888,7 @@ export default class JobDetailsComponent implements OnInit {
       value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
       details: [],
       ...(isFileDownload && rawValue.startsWith("http")
-        ? { url: rawValue }
+        ? { url: rawValue, openInline: INLINE_FASTA_KEYS.has(key) }
         : {}),
     };
   }
