@@ -472,6 +472,26 @@ describe("SinglePredictionComponent", () => {
     ]);
   });
 
+  it("should show the selected tool in the tool settings description", () => {
+    const toolSettingsSection = (): HTMLElement =>
+      fixture.nativeElement.querySelector("#tool-settings");
+
+    const cases: Array<[Parameters<typeof component.selectTool>[0], string]> = [
+      ["colabfold", "ColabFold"],
+      ["alphafold2", "AlphaFold2"],
+      ["boltz", "Boltz"],
+    ];
+
+    for (const [tool, label] of cases) {
+      component.selectTool(tool);
+      fixture.detectChanges();
+
+      expect(toolSettingsSection().textContent).toContain(
+        `Configure parameters specific to ${label}.`
+      );
+    }
+  });
+
   it("should pre-fill Random Seed with a random 8-digit integer", () => {
     const seed = component.randomSeed();
     expect(seed).toMatch(/^\d{8}$/);
