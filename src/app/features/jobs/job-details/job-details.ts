@@ -30,7 +30,7 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
 import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
-import { statusTagClass } from "../shared/job-status.utils";
+import { statusTagClass, type JobStatusUi } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
 import { formatDecimals } from "../shared/job-results-report.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
@@ -42,6 +42,12 @@ import {
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
+const DEFAULT_JOB_RESULTS_TAB: JobResultsTab = "settings";
+const TERMINAL_JOB_STATUSES: readonly JobStatusUi[] = [
+  "Completed",
+  "Failed",
+  "Stopped",
+];
 
 /** Compare workflow labels without depending on the backend's exact casing. */
 function normalizeWorkflowName(workflow: string | undefined): string {
@@ -50,6 +56,14 @@ function normalizeWorkflowName(workflow: string | undefined): string {
     .replace(/[-_]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function isTerminalJobStatus(
+  status: string | undefined
+): status is JobStatusUi {
+  return TERMINAL_JOB_STATUSES.some(
+    (terminalStatus) => terminalStatus === status
+  );
 }
 
 type JobSettingItem = {
@@ -181,7 +195,7 @@ export default class JobDetailsComponent implements OnInit {
   deleting = signal<boolean>(false);
 
   // Results state
-  activeTab = signal<JobResultsTab>("results");
+  activeTab = signal<JobResultsTab>(DEFAULT_JOB_RESULTS_TAB);
   reportUrl = signal<SafeResourceUrl | null>(null);
   reportLoading = signal(false);
   reportError = signal<string | null>(null);
@@ -195,8 +209,13 @@ export default class JobDetailsComponent implements OnInit {
   logsLoading = signal(false);
   logsError = signal<string | null>(null);
   downloadingAllFiles = signal(false);
+  isTerminalJob = computed(() => {
+    const status = this.job()?.status;
+    return isTerminalJobStatus(status);
+  });
   canDownloadAllFiles = computed(
     () =>
+      this.isTerminalJob() &&
       !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
   );
 
@@ -217,6 +236,7 @@ export default class JobDetailsComponent implements OnInit {
 
   canDownloadCategory(category: string): boolean {
     return (
+      this.isTerminalJob() &&
       this.zipCategories().includes(category) &&
       !this.filesLoading() &&
       !this.filesError() &&
@@ -281,7 +301,7 @@ export default class JobDetailsComponent implements OnInit {
     // Reset and reload the results whenever the selected job changes.
     effect(() => {
       this.job();
-      this.activeTab.set("results");
+      this.activeTab.set(this.getDefaultTab());
       this.reportFallback.set(false);
       if (this.hasInteractiveReport()) this.resetReportState();
       else this.loadReport();
@@ -455,10 +475,22 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   setActiveTab(tab: JobResultsTab): void {
+    if (this.isTabDisabled(tab)) {
+      return;
+    }
+
     this.activeTab.set(tab);
     if (tab === "logs") {
       this.loadLogs();
     }
+  }
+
+  isTabDisabled(tab: JobResultsTab): boolean {
+    return (tab === "results" || tab === "files") && !this.isTerminalJob();
+  }
+
+  private getDefaultTab(): JobResultsTab {
+    return this.isTerminalJob() ? "results" : DEFAULT_JOB_RESULTS_TAB;
   }
 
   getSummaryItems(job: JobListItem): Array<{ label: string; value: string }> {

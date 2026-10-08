@@ -1,5 +1,7 @@
+export type JobStatusUi = "Completed" | "Staging" | "Pending" | "In progress" | "In queue" | "Failed" | "Stopped";
+
 /** Tag colours for a job status, shared by the jobs list and job details. */
-export function statusTagClass(status: string): string {
+export function statusTagClass(status: JobStatusUi | string): string {
   switch (status) {
     case "Completed":
       return "bg-green-100 text-green-800";
