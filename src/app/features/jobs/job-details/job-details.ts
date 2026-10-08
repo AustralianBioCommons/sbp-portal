@@ -39,6 +39,10 @@ import {
   ResultLogsResponse,
   ResultsService,
 } from "../services/results.service";
+import {
+  getToolCitation,
+  ToolCitation,
+} from "../../workflows/shared/workflow-citations";
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -488,13 +492,9 @@ export default class JobDetailsComponent implements OnInit {
     ];
   }
 
-  getCitations(job: JobListItem): string[] {
-    return [
-      `${
-        formatToolName(job.tool) || "Workflow"
-      } methods and generated outputs.`,
-      "SBP Portal platform and supporting infrastructure.",
-    ];
+  getCitations(job: JobListItem): ToolCitation[] {
+    const citation = getToolCitation(job.tool);
+    return citation ? [citation] : [];
   }
 
   formatCategoryName(category: string): string {

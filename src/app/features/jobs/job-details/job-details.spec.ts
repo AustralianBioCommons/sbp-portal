@@ -776,7 +776,7 @@ describe("JobDetailsComponent", () => {
     expect(valueOf("Tool")).toBe("N/A");
     expect(valueOf("Max score")).toBe("N/A");
     expect(files[0]).toBe("queued_job_summary.json");
-    expect(citations[0]).toBe("Workflow methods and generated outputs.");
+    expect(citations).toEqual([]);
   });
 
   it("should normalize tool casing regardless of how the API sent it", () => {
@@ -786,8 +786,40 @@ describe("JobDetailsComponent", () => {
 
     expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
-    expect(component.getCitations(deNovoDesignJob)[0]).toBe(
-      "BindCraft methods and generated outputs."
+    expect(component.getCitations(deNovoDesignJob)[0].label).toBe("BindCraft");
+    expect(component.getCitations(bulkPredictionJob)[0].label).toBe(
+      "ColabFold"
+    );
+  });
+
+  it("should render the selected job tool citation in the citations tab", () => {
+    render();
+
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const citationLink = element.querySelector<HTMLAnchorElement>(
+      'a[href="https://doi.org/10.1101/2025.06.14.659707"]'
+    );
+
+    expect(element.textContent).toContain("Boltz-2");
+    expect(element.textContent).toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(citationLink).not.toBeNull();
+  });
+
+  it("should show a citation fallback when the job tool has no citation", () => {
+    render();
+
+    component.job.set(fallbackJob);
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      "No citation is available for this workflow tool yet."
     );
   });
 

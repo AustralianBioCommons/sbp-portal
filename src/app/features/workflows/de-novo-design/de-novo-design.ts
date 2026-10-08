@@ -56,6 +56,7 @@ import {
   WorkflowTool,
 } from "../shared/workflow.interfaces";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
+import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
 
 interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
@@ -89,6 +90,7 @@ const DEFAULT_MAX_LENGTH = 150;
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
     NgIconComponent,
+    WorkflowPapersComponent,
   ],
   providers: [
     provideIcons({
