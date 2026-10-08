@@ -216,7 +216,9 @@ export default class JobDetailsComponent implements OnInit {
   canDownloadAllFiles = computed(
     () =>
       this.isTerminalJob() &&
-      !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
+      !this.filesLoading() &&
+      !this.filesError() &&
+      this.filesItems().length > 0
   );
 
   /** Normalised name; also what picks the report's adapter, alongside the tool. */
