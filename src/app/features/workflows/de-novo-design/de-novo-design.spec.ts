@@ -516,6 +516,21 @@ describe("DeNovoDesignComponent", () => {
       expect(component.isSectionValid("select-tool")).toBe(true);
       expect(component.isSectionValid("tool-settings")).toBe(true);
     });
+
+    it("tracks input-config and review validity", () => {
+      expect(component.isSectionValid("input-config")).toBe(false);
+      expect(component.isSectionValid("review")).toBe(false);
+
+      component.form.controls.jobName.setValue("job-1");
+      component.form.controls.selectedTool.setValue("bindcraft");
+      component.startingPdb.set("target.pdb");
+      component.targetHotspotResidues.set("A56");
+      component.numberOfDesigns.set(1);
+      component.formErrors.set({});
+
+      expect(component.isSectionValid("input-config")).toBe(true);
+      expect(component.isSectionValid("review")).toBe(true);
+    });
   });
 
   describe("submission", () => {
@@ -567,6 +582,24 @@ describe("DeNovoDesignComponent", () => {
         workflowSubmission.submitWorkflowWithDataset.calls.mostRecent()
           .args[0] as Record<string, unknown>;
       expect("chains" in payload).toBe(false);
+    });
+
+    it("surfaces a workflow launch failure for rfdiffusion", () => {
+      component.form.controls.selectedTool.setValue("rfdiffusion");
+      component.startingPdb.set("s3://bucket/target.pdb");
+      workflowSubmission.submitWorkflowWithDataset.and.callFake(
+        (
+          _payload: unknown,
+          _key: string,
+          onError: (e: { message?: string }) => void
+        ) => onError(new Error("launch failed"))
+      );
+
+      component["performSubmit"]();
+
+      expect(component.showAlert()).toBe(true);
+      expect(component.alertMessage()).toContain("launch failed");
+      expect(workflowSubmission.isSubmitting()).toBe(false);
     });
 
     it("falls back to the file name when the upload returns no URI", () => {
