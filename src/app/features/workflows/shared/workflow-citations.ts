@@ -37,7 +37,7 @@ const CITATIONS: Record<CitedTool, ToolCitation> = {
   },
 };
 
-function normalizeTool(tool: string | undefined): string {
+export function normalizeTool(tool: string | undefined): string {
   return (tool ?? "").trim().toLowerCase();
 }
 
