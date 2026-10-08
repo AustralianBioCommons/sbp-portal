@@ -1,12 +1,14 @@
 import { CommonModule } from "@angular/common";
-import { Component, computed, inject, Signal, signal } from "@angular/core";
+import { Component, computed, inject, Signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
+  FormControl,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
+  Validators,
 } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
@@ -25,6 +27,7 @@ import {
   WorkflowSection,
 } from "../components/workflow-form/workflow-form.component";
 import {
+  getToolLabel,
   ToolOption,
   ToolSelectionComponent,
 } from "../components/tool-selection/tool-selection.component";
@@ -126,26 +129,15 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   protected readonly workflowCategory = "interaction-screening" as const;
   protected override readonly minimumQuantity = MIN_SEQUENCE_PRODUCT;
 
-  /**
-   * Credit cost of the run: tool multiplier × (query entries × target entries).
-   */
-  readonly creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
-    if (multiplier == null) return null;
-    const val = this.formValue();
-    const query = validateMultiFastaProtein(val?.queryFasta ?? "");
-    const target = validateMultiFastaProtein(val?.targetFasta ?? "");
-    if (!query.valid || !target.valid) return null;
-    const product = query.sequenceCount * target.sequenceCount;
-    if (!product) return null;
-    return multiplier * product;
-  });
-
   readonly form = this.fb.group(
     {
       jobName: ["", JOB_NAME_VALIDATORS],
       queryFasta: ["", multiFastaValidator],
       targetFasta: ["", multiFastaValidator],
+      selectedTool: new FormControl<ToolChip["id"] | null>(
+        null,
+        Validators.required
+      ),
     },
     {
       validators: [
@@ -163,6 +155,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     jobName: string;
     queryFasta: string;
     targetFasta: string;
+    selectedTool: ToolChip["id"] | null;
   }> = toSignal(
     this.form.valueChanges.pipe(
       startWith(null),
@@ -171,16 +164,29 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     { initialValue: this.form.getRawValue() }
   );
 
+  /**
+   * Credit cost of the run: tool multiplier × (query entries × target entries).
+   */
+  readonly creditCost = computed<number | null>(() => {
+    const tool = this.formValue().selectedTool;
+    if (!tool) return null;
+    const multiplier = this.toolMultipliers()[tool];
+    if (multiplier == null) return null;
+    const val = this.formValue();
+    const query = validateMultiFastaProtein(val?.queryFasta ?? "");
+    const target = validateMultiFastaProtein(val?.targetFasta ?? "");
+    if (!query.valid || !target.valid) return null;
+    const product = query.sequenceCount * target.sequenceCount;
+    if (!product) return null;
+    return multiplier * product;
+  });
+
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
     { id: "colabfold", label: "ColabFold" },
   ];
-  selectedTool = signal<ToolChip["id"]>("boltz");
-  selectTool(id: ToolChip["id"]) {
-    this.selectedTool.set(id);
-  }
-  selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+  selectedToolLabel: Signal<string> = computed(() =>
+    getToolLabel(this.tools, this.formValue().selectedTool)
   );
 
   // ─── Sections ────────────────────────────────────────────────────────────
@@ -197,11 +203,21 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
     switch (id) {
+      case "select-tool":
+        return this.form.controls.selectedTool.valid;
       case "input-config":
+        return (
+          this.form.controls.jobName.valid &&
+          this.form.controls.queryFasta.valid &&
+          this.form.controls.targetFasta.valid &&
+          !this.form.errors?.["maxProduct"] &&
+          !this.form.errors?.["minProduct"] &&
+          !this.form.errors?.["duplicateSequences"]
+        );
       case "review":
         return this.isFormValid();
       default:
-        // select-tool (a tool is always selected) and tool-settings (no params).
+        // tool-settings has no params.
         return true;
     }
   };
@@ -247,6 +263,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     const productError = !!this.form.errors?.["maxProduct"];
     const minProductError = !!this.form.errors?.["minProduct"];
     const errorCount =
+      (this.form.controls.selectedTool.valid ? 0 : 1) +
       (this.form.controls.jobName.valid ? 0 : 1) +
       (this.form.controls.queryFasta.valid ? 0 : 1) +
       (this.form.controls.targetFasta.valid ? 0 : 1) +
@@ -343,6 +360,8 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   protected performSubmit(): void {
     const raw = this.form.getRawValue();
     const jobName = raw.jobName;
+    const tool = raw.selectedTool;
+    if (!tool) return;
     const queryFasta = this.buildFastaText(raw.queryFasta);
     const targetFasta = this.buildFastaText(raw.targetFasta);
     const combinedFasta = `${queryFasta}\n${targetFasta}`;
@@ -378,7 +397,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
             return;
           }
           const payload: InteractionScreeningPayload = {
-            tool: this.selectedTool(),
+            tool,
             runName: jobName,
             workflow: "interaction-screening",
             sample_id: jobName,

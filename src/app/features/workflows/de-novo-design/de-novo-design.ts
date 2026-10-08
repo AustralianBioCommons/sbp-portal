@@ -17,7 +17,12 @@ import {
   signal,
 } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
-import { NonNullableFormBuilder, ReactiveFormsModule } from "@angular/forms";
+import {
+  FormControl,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
@@ -27,7 +32,7 @@ import { TooltipComponent } from "../../../components/tooltip/tooltip.component"
 import { MolstarViewerComponent } from "../components/molstar-viewer/molstar-viewer.component";
 import { LengthRangeSliderComponent } from "../components/length-range-slider/length-range-slider.component";
 
-import { startWith, Subscription } from "rxjs";
+import { map, startWith, Subscription } from "rxjs";
 import { FormFieldComponent } from "../components/form-field/form-field.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
@@ -36,6 +41,7 @@ import {
   WorkflowSection,
 } from "../components/workflow-form/workflow-form.component";
 import {
+  getToolLabel,
   ToolOption,
   ToolSelectionComponent,
 } from "../components/tool-selection/tool-selection.component";
@@ -114,7 +120,21 @@ export default class DeNovoDesignComponent
   private readonly fb = inject(NonNullableFormBuilder);
   readonly form = this.fb.group({
     jobName: ["", JOB_NAME_VALIDATORS],
+    selectedTool: new FormControl<ToolChip["id"] | null>(
+      null,
+      Validators.required
+    ),
   });
+  private readonly formValue: Signal<{
+    jobName: string;
+    selectedTool: ToolChip["id"] | null;
+  }> = toSignal(
+    this.form.valueChanges.pipe(
+      startWith(null),
+      map(() => this.form.getRawValue())
+    ),
+    { initialValue: this.form.getRawValue() }
+  );
   readonly jobName = toSignal(
     this.form.controls.jobName.valueChanges.pipe(
       startWith(this.form.controls.jobName.value)
@@ -151,7 +171,7 @@ export default class DeNovoDesignComponent
     );
   }
 
-  readonly isFormValid = computed<boolean>(() => {
+  readonly isInputConfigValid = computed<boolean>(() => {
     this.jobName();
     if (this.form.controls.jobName.invalid) return false;
     if (Object.keys(this.formErrors()).length > 0) return false;
@@ -160,6 +180,11 @@ export default class DeNovoDesignComponent
     const designs = this.numberOfDesigns();
     if (!Number.isInteger(designs) || designs < 1) return false;
     return true;
+  });
+
+  readonly isFormValid = computed<boolean>(() => {
+    this.formValue();
+    return this.form.controls.selectedTool.valid && this.isInputConfigValid();
   });
 
   // Tools
@@ -173,16 +198,11 @@ export default class DeNovoDesignComponent
       label: "BindCraft",
     },
   ];
-  selectedTool = signal<ToolChip["id"]>("bindcraft");
-  isToolSelected = (id: ToolChip["id"]) => this.selectedTool() === id;
-  selectTool(id: ToolChip["id"]) {
-    this.selectedTool.set(id);
-  }
-  selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+  selectedToolLabel: Signal<string> = computed(() =>
+    getToolLabel(this.tools, this.formValue().selectedTool)
   );
   selectedToolData: Signal<ToolChip | undefined> = computed(() =>
-    this.tools.find((t) => t.id === this.selectedTool())
+    this.tools.find((t) => t.id === this.formValue().selectedTool)
   );
 
   // Tool-specific parameter definitions (no params for any tool yet)
@@ -196,8 +216,14 @@ export default class DeNovoDesignComponent
 
   // Computed signal to indicate whether the currently selected tool exposes parameters
   selectedToolHasParams = computed(() => {
-    const params = this.toolParams[this.selectedTool()];
+    const tool = this.formValue().selectedTool;
+    if (!tool) return false;
+    const params = this.toolParams[tool];
     return Array.isArray(params) && params.length > 0;
+  });
+  selectedToolParams = computed(() => {
+    const tool = this.formValue().selectedTool;
+    return tool ? this.toolParams[tool] : [];
   });
 
   // Step 1: Input configuration
@@ -502,11 +528,14 @@ export default class DeNovoDesignComponent
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
     switch (id) {
+      case "select-tool":
+        return this.form.controls.selectedTool.valid;
       case "input-config":
+        return this.isInputConfigValid();
       case "review":
         return this.isFormValid();
       default:
-        // select-tool (a tool is always selected) and tool-settings (no params).
+        // tool-settings has no params.
         return true;
     }
   };
@@ -515,7 +544,9 @@ export default class DeNovoDesignComponent
 
   /** Credit cost of the run: tool multiplier × number of designs. */
   readonly creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
+    const tool = this.formValue().selectedTool;
+    if (!tool) return null;
+    const multiplier = this.toolMultipliers()[tool];
     if (multiplier == null) return null;
     const count = this.numberOfDesigns();
     if (!Number.isInteger(count) || count < 1) return null;
@@ -574,6 +605,9 @@ export default class DeNovoDesignComponent
   }
 
   protected performSubmit(): void {
+    const tool = this.form.getRawValue().selectedTool;
+    if (!tool) return;
+
     const file = this.localPdbFile();
 
     if (file && file !== this.uploadedPdbFile()) {
@@ -600,7 +634,7 @@ export default class DeNovoDesignComponent
               this.startingPdb.set(s3Uri);
               this.uploadedPdbFile.set(file);
               this.isPdbUploading.set(false);
-              this.doSubmitWorkflow();
+              this.doSubmitWorkflow(tool);
             },
             error: (error) => {
               this.isPdbUploading.set(false);
@@ -615,7 +649,7 @@ export default class DeNovoDesignComponent
       return;
     }
 
-    this.doSubmitWorkflow();
+    this.doSubmitWorkflow(tool);
   }
 
   /** Sorted, deduplicated chain letters from a residue string like
@@ -634,7 +668,7 @@ export default class DeNovoDesignComponent
       .join(",");
   }
 
-  private doSubmitWorkflow(): void {
+  private doSubmitWorkflow(tool: ToolChip["id"]): void {
     const jobName = this.jobName();
     const numberOfDesigns = this.numberOfDesigns();
     const formData: Record<string, unknown> = {
@@ -653,7 +687,7 @@ export default class DeNovoDesignComponent
     // BindCraft submits a target chain list derived from the selected hotspot
     // residues (deduplicated, e.g. "A12,A13" -> "A"). RFDiffusion doesn't take
     // a chains input at all, so it's omitted from the payload entirely.
-    if (this.selectedTool() === "bindcraft") {
+    if (tool === "bindcraft") {
       formData["chains"] = this.extractChainsForSubmission(
         this.targetHotspotResidues()
       );
@@ -664,7 +698,7 @@ export default class DeNovoDesignComponent
     // rfdiffusion has no samplesheet - it takes the PDB file directly, so skip
     // the CSV-samplesheet-generating dataset upload and reuse the PDB's own S3
     // URI (already synced into formData.starting_pdb) as the launch's s3InputKey.
-    if (this.selectedTool() === "rfdiffusion") {
+    if (tool === "rfdiffusion") {
       const s3InputKey = formData["starting_pdb"] as string | undefined;
       if (!s3InputKey) {
         console.error("No PDB file uploaded for rfdiffusion submission");
@@ -676,7 +710,7 @@ export default class DeNovoDesignComponent
       const workflowFormData: DeNovoDesignPayload = {
         ...formData,
         workflow: "de-novo-design",
-        tool: this.selectedTool(),
+        tool,
       } as DeNovoDesignPayload;
 
       this.workflowSubmission.submitWorkflowWithDataset(
@@ -713,7 +747,7 @@ export default class DeNovoDesignComponent
           const workflowFormData: DeNovoDesignPayload = {
             ...formData,
             workflow: "de-novo-design",
-            tool: this.selectedTool(),
+            tool,
           } as DeNovoDesignPayload;
 
           this.workflowSubmission.submitWorkflowWithDataset(

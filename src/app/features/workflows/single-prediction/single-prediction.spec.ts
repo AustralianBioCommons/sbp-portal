@@ -130,6 +130,9 @@ describe("SinglePredictionComponent", () => {
   ): number {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
+    if (!component.form.controls.selectedTool.value) {
+      component.form.controls.selectedTool.setValue("boltz");
+    }
     component.updateRowSequence(rowId, sequence);
     component.updateRowCopyNumber(rowId, copyNumber);
     component.updateRowMoleculeType(rowId, "protein");
@@ -152,12 +155,16 @@ describe("SinglePredictionComponent", () => {
     expect(component.entityRows().length).toBe(1);
     expect(component.entityRows()[0].copyNumber).toBe("1");
     expect(component.entityRows()[0].moleculeType).toBe("protein");
-    expect(component.selectedTool()).toBe("colabfold");
+    expect(component.form.controls.selectedTool.value).toBeNull();
+    expect(component.form.controls.selectedTool.hasError("required")).toBe(
+      true
+    );
+    expect(component.isSectionValid("select-tool")).toBe(false);
     expect(component.isFormValid()).toBe(false);
   });
 
   it("should expose label fallbacks for unknown state", () => {
-    component.selectedTool.set("unknown" as never);
+    component.form.controls.selectedTool.setValue("unknown" as never);
     expect(component.selectedToolLabel()).toBe("");
     expect(component.getToolSettingsSummaryItems()).toEqual([]);
     expect(component.getMoleculeTypeLabel("unknown" as never)).toBe("unknown");
@@ -214,6 +221,7 @@ describe("SinglePredictionComponent", () => {
   it("should enforce protein-only validation for ColabFold", () => {
     const rowId = component.entityRows()[0].id;
 
+    component.form.controls.selectedTool.setValue("colabfold");
     component.updateRowSequence(rowId, "AUGC");
     component.updateRowMoleculeType(rowId, "rna");
 
@@ -226,7 +234,7 @@ describe("SinglePredictionComponent", () => {
   it("should validate DNA, RNA, and ligand formats", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     addProteinRow();
 
     component.updateRowSequence(rowId, "ACGT");
@@ -258,7 +266,7 @@ describe("SinglePredictionComponent", () => {
   it("should mark CCD row valid when code is in the supported list", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     addProteinRow();
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
@@ -270,7 +278,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should mark CCD row invalid and add error when CCD code is not in supported list", () => {
     const rowId = component.entityRows()[0].id;
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "XYZ");
 
@@ -281,7 +289,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should clear CCD lookup state when switching away from ccd molecule type", () => {
     const rowId = component.entityRows()[0].id;
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
     expect(component.ccdLookupState()[rowId]).toBe("valid");
@@ -292,7 +300,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should reset CCD lookup state for blank codes and expose field helper branches", () => {
     const rowId = component.entityRows()[0].id;
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     component.updateRowMoleculeType(rowId, "ccd");
     component.updateRowSequence(rowId, "ATP");
 
@@ -317,7 +325,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should return protein and RNA validation messages for invalid sequences", () => {
     const rowId = component.entityRows()[0].id;
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
 
     component.updateRowSequence(rowId, "123");
     component.updateRowMoleculeType(rowId, "protein");
@@ -363,16 +371,13 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should build Boltz settings payload and cover fallback payload branch", () => {
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     component.updateRandomSeed("12345678");
     component.boltzUsePotentials.set(true);
-    expect(component["buildToolSettingsPayload"]()).toEqual({
+    expect(component["buildToolSettingsPayload"]("boltz")).toEqual({
       random_seed: 12345678,
       boltz_use_potentials: true,
     });
-
-    component.selectedTool.set("unknown" as never);
-    expect(component["buildToolSettingsPayload"]()).toEqual({});
   });
 
   it("should use shared sequence validators from fasta utils", () => {
@@ -395,7 +400,7 @@ describe("SinglePredictionComponent", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
 
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     addProteinRow();
     component.updateRowSequence(rowId, "ACGT");
     component.updateRowMoleculeType(rowId, "dna");
@@ -409,7 +414,7 @@ describe("SinglePredictionComponent", () => {
   it("should tag generated FASTA headers with the molecule type", () => {
     const rowId = component.entityRows()[0].id;
     component.form.controls.jobName.setValue("test-run");
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
 
     component.updateRowSequence(rowId, "ACDEFGHIK");
     component.updateRowMoleculeType(rowId, "protein");
@@ -442,6 +447,7 @@ describe("SinglePredictionComponent", () => {
     };
 
     // random_seed is exposed for every tool
+    component.form.controls.selectedTool.setValue("colabfold");
     expect(component.getToolSettingsSummaryItems()).toEqual([
       randomSeedItem,
       {
@@ -451,7 +457,7 @@ describe("SinglePredictionComponent", () => {
       },
     ]);
 
-    component.selectTool("alphafold2");
+    component.form.controls.selectedTool.setValue("alphafold2");
     expect(component.getToolSettingsSummaryItems()).toEqual([
       randomSeedItem,
       {
@@ -461,7 +467,7 @@ describe("SinglePredictionComponent", () => {
       },
     ]);
 
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.getToolSettingsSummaryItems()).toEqual([
       randomSeedItem,
       {
@@ -482,7 +488,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should enforce an integer Random Seed with at most 8 digits for every tool", () => {
     for (const tool of ["colabfold", "alphafold2", "boltz"] as const) {
-      component.selectTool(tool);
+      component.form.controls.selectedTool.setValue(tool);
 
       component.updateRandomSeed("999999999");
       expect(component.isStep2Valid()).toBe(false);
@@ -505,7 +511,7 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should validate tool settings for AlphaFold2 and ColabFold", () => {
-    component.selectTool("alphafold2");
+    component.form.controls.selectedTool.setValue("alphafold2");
     component.updateRandomSeed("-1");
     expect(component.isStep2Valid()).toBe(false);
     expect(component.toolSettingErrors().randomSeed).toContain(
@@ -515,7 +521,7 @@ describe("SinglePredictionComponent", () => {
     component.updateRandomSeed("7");
     expect(component.isStep2Valid()).toBe(true);
 
-    component.selectTool("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
     component.updateColabfoldNumRecycles("0");
     expect(component.isStep2Valid()).toBe(false);
 
@@ -524,7 +530,7 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should reject a decimal number of Recycles", () => {
-    component.selectTool("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
 
     component.updateColabfoldNumRecycles("3.5");
     expect(component.isStep2Valid()).toBe(false);
@@ -537,7 +543,7 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should reject a number of Recycles greater than 10", () => {
-    component.selectTool("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
 
     component.updateColabfoldNumRecycles("11");
     expect(component.isStep2Valid()).toBe(false);
@@ -560,9 +566,11 @@ describe("SinglePredictionComponent", () => {
 
   it("should track section validity", () => {
     expect(component.isSectionValid("input-config")).toBe(false);
-    expect(component.isSectionValid("select-tool")).toBe(true);
+    expect(component.isSectionValid("select-tool")).toBe(false);
 
+    component.form.controls.selectedTool.setValue("colabfold");
     fillValidProteinRow();
+    expect(component.isSectionValid("select-tool")).toBe(true);
     expect(component.isSectionValid("input-config")).toBe(true);
     expect(component.isSectionValid("tool-settings")).toBe(true);
     expect(component.isSectionValid("review")).toBe(true);
@@ -578,7 +586,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should touch tool settings when submitting with invalid tool settings", () => {
     fillValidProteinRow();
-    component.selectTool("alphafold2");
+    component.form.controls.selectedTool.setValue("alphafold2");
     component.updateRandomSeed("-3");
 
     component.submitWorkflow();
@@ -599,7 +607,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should submit a valid workflow payload", () => {
     fillValidProteinRow("ACDEFGHIK", "2");
-    component.selectTool("alphafold2");
+    component.form.controls.selectedTool.setValue("alphafold2");
     component.updateRandomSeed("42");
     component.alphafold2FullDbs.set(true);
     component.isToolAvailable.set(true);
@@ -722,7 +730,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should include tool setting errors in form validation summary error count", () => {
     fillValidProteinRow();
-    component.selectTool("alphafold2");
+    component.form.controls.selectedTool.setValue("alphafold2");
     component.updateRandomSeed("-5");
     component.setRandomSeedTouched();
 
@@ -839,7 +847,7 @@ describe("SinglePredictionComponent", () => {
   it("should not include colabfold_use_templates in submission payload (removed, no UI control)", () => {
     fillValidProteinRow();
     component.isToolAvailable.set(true);
-    component.selectTool("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
 
     component.submitWorkflow();
 
@@ -875,7 +883,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should require at least one protein entity", () => {
     const rowId = fillValidProteinRow("ACDEFGHIK");
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.hasProteinInput()).toBe(true);
     expect(component.isStep1Valid()).toBe(true);
 
@@ -891,7 +899,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should count ligand and CCD entities as a fixed size of 30 per copy", () => {
     const rowId = fillValidProteinRow("ACDEFGHIK");
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     const ligandRowId = addProteinRow();
     component.updateRowMoleculeType(ligandRowId, "ligand");
     component.updateRowSequence(ligandRowId, "CC(=O)OC1=CC=CC=C1C(=O)O");
@@ -904,7 +912,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should enforce the 1000 size limit for AlphaFold2", () => {
     const rowId = fillValidProteinRow("A".repeat(999));
-    component.selectTool("alphafold2");
+    component.form.controls.selectedTool.setValue("alphafold2");
     expect(component.predictionSizeLimit()).toBe(1000);
     expect(component.isStep1Valid()).toBe(true);
 
@@ -917,7 +925,8 @@ describe("SinglePredictionComponent", () => {
 
   it("should enforce the 4000 size limit for ColabFold and Boltz", () => {
     const rowId = fillValidProteinRow("A".repeat(3999));
-    expect(component.selectedTool()).toBe("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
+    expect(component.form.controls.selectedTool.value).toBe("colabfold");
     expect(component.predictionSizeLimit()).toBe(4000);
     expect(component.isStep1Valid()).toBe(true);
 
@@ -927,7 +936,7 @@ describe("SinglePredictionComponent", () => {
 
   it("should reduce the Boltz size limit to 2000 when boltz_use_potentials is set", () => {
     const rowId = fillValidProteinRow("A".repeat(3000));
-    component.selectTool("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.predictionSizeLimit()).toBe(4000);
     expect(component.isStep1Valid()).toBe(true);
 
@@ -935,7 +944,7 @@ describe("SinglePredictionComponent", () => {
     expect(component.predictionSizeLimit()).toBe(2000);
     expect(component.isStep1Valid()).toBe(false);
 
-    component.selectTool("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
     expect(component.predictionSizeLimit()).toBe(4000);
     expect(component.isStep1Valid()).toBe(true);
     expect(rowId).toBeDefined();

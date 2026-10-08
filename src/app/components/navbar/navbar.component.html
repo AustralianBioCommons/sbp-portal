@@ -151,6 +151,22 @@
             <ng-icon name="heroUserCircle" size="20"></ng-icon>
             My Profile
           </button>
+          <a
+            href="https://biocommons-sbp-help.freshdesk.com/support/tickets/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
+            role="menuitem"
+            tabindex="-1"
+            (click)="userMenuOpen.set(false)"
+          >
+            <img
+              src="/assets/freshdesk-logo.png"
+              alt=""
+              class="h-5 w-5 object-contain"
+            />
+            Support
+          </a>
           <button
             type="button"
             class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
@@ -251,6 +267,16 @@
           }
         </div>
       </div>
+      } @else if (item.external) {
+      <a
+        [href]="item.path"
+        target="_blank"
+        rel="noopener noreferrer"
+        (click)="closeMobileMenu()"
+        class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary hover:bg-gray-50"
+      >
+        {{ item.label }}
+      </a>
       } @else {
       <a
         [routerLink]="item.path"

@@ -1,4 +1,10 @@
-<div class="flex flex-wrap gap-4">
+<div
+  class="flex flex-wrap gap-4"
+  role="radiogroup"
+  tabindex="-1"
+  [attr.aria-invalid]="showRequiredError() ? 'true' : null"
+  [attr.aria-describedby]="showRequiredError() ? errorId : null"
+>
   @for (tool of tools(); track tool.id) {
   <label
     class="flex items-center cursor-pointer gap-2 border rounded-full p-2 pr-3 transition-all hover:bg-gray-50"
@@ -8,10 +14,12 @@
   >
     <input
       type="radio"
-      name="selectedTool"
+      [name]="name()"
       [value]="tool.id"
       [checked]="selectedToolId() === tool.id"
+      [disabled]="disabled()"
       (change)="onToolSelect(tool.id)"
+      (blur)="markAsTouched()"
       class="sr-only"
     />
     <div
@@ -37,3 +45,8 @@
   </div>
   }
 </div>
+@if (showRequiredError()) {
+<p [id]="errorId" class="mt-2 text-xs text-red-600" role="alert">
+  {{ requiredErrorMessage() }}
+</p>
+}

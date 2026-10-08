@@ -96,7 +96,11 @@ export class FooterSectionsComponent {
       heading: "Other",
       links: [
         { label: "My Jobs", href: "/my-jobs" },
-        { label: "Support", href: "/support" },
+        {
+          label: "Support",
+          href: "https://biocommons-sbp-help.freshdesk.com/support/tickets/new",
+          external: true,
+        },
       ],
     },
   ];
