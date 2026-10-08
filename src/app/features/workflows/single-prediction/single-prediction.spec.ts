@@ -482,14 +482,14 @@ describe("SinglePredictionComponent", () => {
     const toolSettingsSection = (): HTMLElement =>
       fixture.nativeElement.querySelector("#tool-settings");
 
-    const cases: Array<[Parameters<typeof component.selectTool>[0], string]> = [
+    const cases = [
       ["colabfold", "ColabFold"],
       ["alphafold2", "AlphaFold2"],
       ["boltz", "Boltz"],
-    ];
+    ] as const;
 
     for (const [tool, label] of cases) {
-      component.selectTool(tool);
+      component.form.controls.selectedTool.setValue(tool);
       fixture.detectChanges();
 
       expect(toolSettingsSection().textContent).toContain(
