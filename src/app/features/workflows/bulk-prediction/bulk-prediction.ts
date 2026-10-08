@@ -1,11 +1,13 @@
 import { CommonModule } from "@angular/common";
-import { Component, computed, inject, Signal, signal } from "@angular/core";
+import { Component, computed, inject, Signal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
+  FormControl,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   ValidationErrors,
+  Validators,
 } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
@@ -23,6 +25,7 @@ import {
   WorkflowSection,
 } from "../components/workflow-form/workflow-form.component";
 import {
+  getToolLabel,
   ToolOption,
   ToolSelectionComponent,
 } from "../components/tool-selection/tool-selection.component";
@@ -79,24 +82,23 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
   protected readonly workflowCategory = "bulk-prediction" as const;
   protected override readonly minimumQuantity = MIN_BULK_ENTRIES;
 
-  /** Credit cost of the run: tool multiplier × number of FASTA entries. */
-  readonly creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
-    if (multiplier == null) return null;
-    const result = validateBulkFastaProtein(this.formValue()?.fasta ?? "");
-    if (!result.valid || !result.sequenceCount) return null;
-    return multiplier * result.sequenceCount;
-  });
-
   readonly form = this.fb.group({
     jobName: ["", JOB_NAME_VALIDATORS],
     fasta: ["", bulkFastaValidator],
+    selectedTool: new FormControl<ToolChip["id"] | null>(
+      null,
+      Validators.required
+    ),
   });
   private formStatus = toSignal(
     this.form.statusChanges.pipe(startWith(this.form.status)),
     { requireSync: true }
   );
-  private formValue: Signal<{ jobName: string; fasta: string }> = toSignal(
+  private formValue: Signal<{
+    jobName: string;
+    fasta: string;
+    selectedTool: ToolChip["id"] | null;
+  }> = toSignal(
     this.form.valueChanges.pipe(
       startWith(null),
       map(() => this.form.getRawValue())
@@ -104,17 +106,24 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
     { initialValue: this.form.getRawValue() }
   );
 
+  /** Credit cost of the run: tool multiplier × number of FASTA entries. */
+  readonly creditCost = computed<number | null>(() => {
+    const tool = this.formValue().selectedTool;
+    if (!tool) return null;
+    const multiplier = this.toolMultipliers()[tool];
+    if (multiplier == null) return null;
+    const result = validateBulkFastaProtein(this.formValue()?.fasta ?? "");
+    if (!result.valid || !result.sequenceCount) return null;
+    return multiplier * result.sequenceCount;
+  });
+
   // Tools
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
     { id: "colabfold", label: "ColabFold" },
   ];
-  selectedTool = signal<ToolChip["id"]>("boltz");
-  selectTool(id: ToolChip["id"]) {
-    this.selectedTool.set(id);
-  }
-  selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+  selectedToolLabel: Signal<string> = computed(() =>
+    getToolLabel(this.tools, this.formValue().selectedTool)
   );
 
   // Single-page form sections (rendered + tracked by app-workflow-form)
@@ -130,11 +139,16 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
     switch (id) {
+      case "select-tool":
+        return this.form.controls.selectedTool.valid;
       case "input-config":
+        return (
+          this.form.controls.jobName.valid && this.form.controls.fasta.valid
+        );
       case "review":
         return this.isFormValid();
       default:
-        // select-tool (a tool is always selected) and tool-settings (no params).
+        // tool-settings has no params.
         return true;
     }
   };
@@ -192,6 +206,8 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
 
   protected performSubmit(): void {
     const jobName = this.form.getRawValue().jobName;
+    const tool = this.form.getRawValue().selectedTool;
+    if (!tool) return;
     const sequences = this.buildBulkPayload();
 
     this.workflowSubmission.isSubmitting.set(true);
@@ -239,7 +255,7 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
           }
           const formData: BulkPredictionPayload = {
             workflow: "bulk-prediction",
-            tool: this.selectedTool(),
+            tool,
             runName: jobName,
             sample_id: jobName,
             fastaS3Uri,
