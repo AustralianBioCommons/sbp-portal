@@ -137,6 +137,22 @@ describe("JobDetailsComponent", () => {
     finalDesignCount: null,
   };
 
+  const failedJob: JobListItem = {
+    ...mockJob,
+    id: "job-failed",
+    jobName: "Failed job",
+    status: "Failed",
+    score: null,
+  };
+
+  const stoppedJob: JobListItem = {
+    ...mockJob,
+    id: "job-stopped",
+    jobName: "Stopped job",
+    status: "Stopped",
+    score: null,
+  };
+
   const privateApi = () => component as unknown as JobDetailsPrivateApi;
 
   beforeEach(async () => {
@@ -457,6 +473,64 @@ describe("JobDetailsComponent", () => {
     expect(iframe.title).toContain(packagedReportJob.jobName);
   });
 
+  it("should show results by default for terminal jobs", () => {
+    render();
+
+    expect(component.activeTab()).toBe("results");
+
+    component.job.set(failedJob);
+    fixture.detectChanges();
+
+    expect(component.activeTab()).toBe("results");
+
+    component.job.set(stoppedJob);
+    fixture.detectChanges();
+
+    expect(component.activeTab()).toBe("results");
+  });
+
+  it("should show settings by default for incomplete jobs", () => {
+    mockJobsService.getJob.and.returnValue(of(fallbackJob));
+    routeId = fallbackJob.id;
+    render();
+
+    expect(component.activeTab()).toBe("settings");
+  });
+
+  it("should disable results and files tabs until the job is terminal", () => {
+    mockJobsService.getJob.and.returnValue(of(fallbackJob));
+    routeId = fallbackJob.id;
+    render();
+
+    const tabButtons = Array.from(
+      fixture.nativeElement.querySelectorAll(
+        'nav[aria-label="Job result tabs"] button'
+      )
+    ) as HTMLButtonElement[];
+
+    expect(tabButtons[0].textContent).toContain("Results");
+    expect(tabButtons[0].disabled).toBeTrue();
+    expect(tabButtons[1].textContent).toContain("Files");
+    expect(tabButtons[1].disabled).toBeTrue();
+    expect(tabButtons[2].textContent).toContain("Settings");
+    expect(tabButtons[2].disabled).toBeFalse();
+
+    component.setActiveTab("files");
+    expect(component.activeTab()).toBe("settings");
+
+    component.job.set(failedJob);
+    fixture.detectChanges();
+
+    expect(component.isTabDisabled("results")).toBeFalse();
+    expect(component.isTabDisabled("files")).toBeFalse();
+
+    component.job.set(stoppedJob);
+    fixture.detectChanges();
+
+    expect(component.isTabDisabled("results")).toBeFalse();
+    expect(component.isTabDisabled("files")).toBeFalse();
+  });
+
   it("should switch tabs and reset when the job changes", () => {
     render();
 
@@ -467,7 +541,7 @@ describe("JobDetailsComponent", () => {
     component.job.set(fallbackJob);
     fixture.detectChanges();
 
-    expect(component.activeTab()).toBe("results");
+    expect(component.activeTab()).toBe("settings");
     expect(resultsService.getJobReport.calls.mostRecent().args).toEqual([
       fallbackJob.id,
     ]);
@@ -483,7 +557,7 @@ describe("JobDetailsComponent", () => {
     component.job.set(null);
     fixture.detectChanges();
 
-    expect(component.activeTab()).toBe("results");
+    expect(component.activeTab()).toBe("settings");
   });
 
   it("should clear report state when the selected job is cleared", () => {
