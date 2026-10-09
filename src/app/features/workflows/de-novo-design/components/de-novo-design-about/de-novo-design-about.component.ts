@@ -1,8 +1,10 @@
 import { Component, ChangeDetectionStrategy } from "@angular/core";
+import { CitationLinkComponent } from "../../../components/citation-link/citation-link.component";
 
 /** About tab content for the De Novo Design workflow. */
 @Component({
   selector: "app-de-novo-design-about",
+  imports: [CitationLinkComponent],
   templateUrl: "./de-novo-design-about.component.html",
   styleUrl: "./de-novo-design-about.component.scss",
   changeDetection: ChangeDetectionStrategy.Eager,

@@ -24,13 +24,7 @@
       PapenfussLab/ProteinDJ<span class="sr-only">
         (opens in a new tab)</span
       > </a
-    >. (<a
-      href="https://onlinelibrary.wiley.com/doi/10.1002/pro.70464"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="text-sky-700 underline hover:text-sky-800"
-      >Silke et al., 2026<span class="sr-only"> (opens in a new tab)</span></a
-    >)
+    >. (<app-citation-link citationKey="proteindj"></app-citation-link>)
   </p>
 </div>
 
@@ -62,8 +56,14 @@
     <div class="space-y-1">
       <h4 class="font-medium text-gray-900">Backbone generation</h4>
       <p>
-        RFdiffusion or BindCraft generates candidate protein backbones designed
-        to interact with the uploaded
+        RFdiffusion (<app-citation-link
+          citationKey="rfdiffusion"
+        ></app-citation-link
+        >) or BindCraft (<app-citation-link
+          citationKey="bindcraft"
+        ></app-citation-link
+        >) generates candidate protein backbones designed to interact with the
+        uploaded
         <span class="font-medium text-gray-900">Target Structure</span> at a
         site defined by user-supplied
         <span class="font-medium text-gray-900">Target Hotspot Residues</span>.
@@ -78,11 +78,16 @@
     <div class="space-y-1">
       <h4 class="font-medium text-gray-900">Sequence design</h4>
       <p>
-        For each designed backbone, ProteinMPNN assigns amino-acid sequences to
-        the candidate backbones, aiming to produce sequences compatible with the
-        target interface. After threading a designed sequence onto the
-        corresponding backbone, interface clashes are resolved by OpenMM
-        relaxation before an additional sequence design iteration with
+        For each designed backbone, ProteinMPNN (<app-citation-link
+          citationKey="proteinmpnn"
+        ></app-citation-link
+        >) assigns amino-acid sequences to the candidate backbones, aiming to
+        produce sequences compatible with the target interface. After threading
+        a designed sequence onto the corresponding backbone, interface clashes
+        are resolved by OpenMM (<app-citation-link
+          citationKey="openmm"
+        ></app-citation-link
+        >) relaxation before an additional sequence design iteration with
         ProteinMPNN. In the SBP deployment, 8 sequences are designed for each
         generated backbone, such as 8 &times; 100 sequences when selecting 100
         designs.
@@ -92,10 +97,13 @@
     <div class="space-y-1">
       <h4 class="font-medium text-gray-900">Structure prediction</h4>
       <p>
-        AlphaFold2 Initial Guess is used to predict the structure of each
-        designed target-binder complex. Designed structures are provided to
-        AlphaFold2 as an initial guess to aid prediction without relying on an
-        input multiple sequence alignment.
+        AlphaFold2 Initial Guess (<app-citation-link
+          citationKey="alphafold2"
+        ></app-citation-link
+        >) is used to predict the structure of each designed target-binder
+        complex. Designed structures are provided to AlphaFold2 as an initial
+        guess to aid prediction without relying on an input multiple sequence
+        alignment.
       </p>
     </div>
 
