@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="1127" height="218" viewBox="0 0 1127 218" style="color-scheme: light dark">
+     width="1127" height="218" viewBox="0 0 1127 218">
 <defs>
 </defs>
 <metadata id="diagram-manifest" data-schema-version="1.0"><![CDATA[{"groups":[{"color":"#4CAF50","id":"rf","label":"RFdiffusion"},{"color":"#2196F3","id":"bc","label":"BindCraft"}],"height":218,"match":{"flags":"i","target":"fqProcessName","type":"regex"},"nodes":[{"groups":["bc","rf"],"h":14.0,"id":"mpnn","label":"ProteinMPNN\n(+OpenMM)","patterns":[],"r":5.0,"region":"sequence_design","rx":5.0,"w":10.0,"x":463.5,"y":122.0},{"groups":["bc","rf"],"h":14.0,"id":"r_in","label":"Target","patterns":[],"r":5.0,"region":"centered_sec","rx":5.0,"w":10.0,"x":80.0,"y":122.0},{"groups":["rf"],"h":10.0,"id":"rfdiff","label":"RFDiffusion","patterns":[],"r":5.0,"region":"centered_sec","rx":5.0,"w":10.0,"x":168.0,"y":100.0},{"groups":["bc"],"h":10.0,"id":"bc","label":"BindCraft","patterns":[],"r":5.0,"region":"centered_sec","rx":5.0,"w":10.0,"x":168.0,"y":144.0},{"groups":["bc","rf"],"h":14.0,"id":"filtfold","label":"Filter folds","patterns":[],"r":5.0,"region":"centered_sec","rx":5.0,"w":10.0,"x":272.0,"y":122.0},{"groups":["bc","rf"],"h":14.0,"id":"af2","label":"AlphaFold2\n(initial guess)","patterns":[],"r":5.0,"region":"structure_prediction","rx":5.0,"w":10.0,"x":668.5,"y":122.0},{"groups":["bc","rf"],"h":14.0,"id":"filt","label":"Filter designs","patterns":[],"r":5.0,"region":"analysis","rx":5.0,"w":10.0,"x":857.0,"y":122.0},{"groups":["bc","rf"],"h":14.0,"id":"rank","label":"Rank Designs","patterns":[],"r":5.0,"region":"analysis","rx":5.0,"w":10.0,"x":917.0,"y":122.0},{"groups":["bc","rf"],"h":14.0,"id":"r_out","label":"Designs","patterns":[],"r":5.0,"region":"analysis","rx":5.0,"w":10.0,"x":977.0,"y":122.0}],"regions":[{"id":"centered_sec","label":"Backbone generation"},{"id":"sequence_design","label":"Sequence design"},{"id":"structure_prediction","label":"Structure prediction"},{"id":"analysis","label":"Analysis"}],"title":"","version":"1.0","width":1127}]]></metadata>
-<style>.nf-metro-bg { fill: var(--nfm-map-bg, light-dark(#f5f5f5, #2b2b2b)); }
-.nf-metro-title { fill: var(--nfm-map-title-color, light-dark(#111111, #ffffff)); }
-.nf-metro-station-label { fill: var(--nfm-map-label-color, light-dark(#333333, #e0e0e0)); }
-.nf-metro-section-box { fill: var(--nfm-map-section-fill, light-dark(#ededed, #373737)); stroke: var(--nfm-map-section-stroke, light-dark(#e6e6e6, #595959)); }
-.nf-metro-section-label { fill: var(--nfm-map-section-label-color, light-dark(#666666, #c8c8c8)); }
-.nf-metro-group-label { fill: var(--nfm-map-section-label-color, light-dark(#666666, #c8c8c8)); }
-.nf-metro-group-underline { stroke: var(--nfm-map-section-label-color, light-dark(#666666, #c8c8c8)); }
-.nf-metro-legend-bg { fill: var(--nfm-map-legend-bg, light-dark(rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0.3))); }
-.nf-metro-legend-text { fill: var(--nfm-map-legend-text-color, light-dark(#333333, #e0e0e0)); }
-.nf-metro-marker-stroke { stroke: var(--nfm-map-marker-stroke, light-dark(#333333, #f0f0f0)); }
-.nf-metro-label-halo { fill: var(--nfm-map-bg, light-dark(#f5f5f5, #2b2b2b)); stroke: var(--nfm-map-bg, light-dark(#f5f5f5, #2b2b2b)); }</style>
+<style>.nf-metro-bg { fill: #f5f5f5; }
+.nf-metro-title { fill: #111111 }
+.nf-metro-station-label { fill: #333333; }
+.nf-metro-section-box { fill: #ededed; stroke: #e6e6e6; }
+.nf-metro-section-label { fill: #666666; }
+.nf-metro-group-label { fill: #666666; }
+.nf-metro-group-underline { stroke: #666666; }
+.nf-metro-legend-bg { fill: rgba(255, 255, 255, 0.8); }
+.nf-metro-legend-text { fill: #333333; }
+.nf-metro-marker-stroke { stroke: #333333; }
+.nf-metro-label-halo { fill: #f5f5f5; stroke: #f5f5f5; }</style>
 <rect x="0" y="0" width="1127" height="218" fill="#2b2b2b" class="nf-metro-bg" />
 <rect x="22.0" y="50.0" width="308.0" height="144.0" rx="8" ry="8" fill="#373737" stroke="#595959" stroke-width="1.0" class="nf-metro-section-box" data-section-id="centered_sec" data-section-lines="bc,rf" />
 <circle cx="33.0" cy="35.0" r="11" fill="#333333" class="nf-metro-section-num-circle" data-section-id="centered_sec" />
