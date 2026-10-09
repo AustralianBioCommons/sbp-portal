@@ -418,31 +418,15 @@
             <p class="text-sm text-gray-900 wrap-break-word">
               No logs are available for this run.
             </p>
-            } } @case ("citations") { @if (getCitations(selectedJob).length > 0)
-            {
-            <div class="space-y-4 text-sm text-gray-500">
-              @for (citation of getCitations(selectedJob); track citation.label)
-              {
-              <div class="space-y-2">
-                <h3 class="font-medium text-gray-900">{{ citation.label }}</h3>
-                <p>
-                  {{ citation.reference }}
-                  <a
-                    [href]="citation.doi"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="wrap-break-word text-sky-700 underline hover:text-sky-800"
-                    >{{ citation.doi }}<span class="sr-only">
-                      (opens in a new tab)</span
-                    ></a
-                  >
-                </p>
-              </div>
-              }
-            </div>
+            } } @case ("citations") { @if (getCitationKeys(selectedJob).length >
+            0) {
+            <app-workflow-papers
+              [workflowName]="selectedJob.workflow"
+              [citations]="getCitationKeys(selectedJob)"
+            ></app-workflow-papers>
             } @else {
             <p class="text-sm text-gray-900 wrap-break-word">
-              No citation is available for this workflow tool yet.
+              No citations are available for this workflow yet.
             </p>
             } } }
           </div>

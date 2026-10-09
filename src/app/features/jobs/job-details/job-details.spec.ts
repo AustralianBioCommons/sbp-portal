@@ -855,7 +855,7 @@ describe("JobDetailsComponent", () => {
   it("should provide fallback values for helper methods", () => {
     const summaryItems = component.getSummaryItems(fallbackJob);
     const files = component.getFiles(fallbackJob);
-    const citations = component.getCitations(fallbackJob);
+    const citationKeys = component.getCitationKeys(fallbackJob);
 
     const valueOf = (label: string) =>
       summaryItems.find((item) => item.label === label)?.value;
@@ -863,7 +863,7 @@ describe("JobDetailsComponent", () => {
     expect(valueOf("Tool")).toBe("N/A");
     expect(valueOf("Max score")).toBe("N/A");
     expect(files[0]).toBe("queued_job_summary.json");
-    expect(citations).toEqual([]);
+    expect(citationKeys).toEqual([]);
   });
 
   it("should normalize tool casing regardless of how the API sent it", () => {
@@ -873,13 +873,14 @@ describe("JobDetailsComponent", () => {
 
     expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
-    expect(component.getCitations(deNovoDesignJob)[0].label).toBe("BindCraft");
-    expect(component.getCitations(bulkPredictionJob)[0].label).toBe(
-      "ColabFold"
-    );
+    expect(component.getCitationKeys(deNovoDesignJob)[0]).toBe("proteindj");
+    expect(component.getCitationKeys(bulkPredictionJob)).toEqual([
+      "boltz2",
+      "colabfold",
+    ]);
   });
 
-  it("should render the selected job tool citation in the citations tab", () => {
+  it("should render the selected job workflow citations in the citations tab", () => {
     render();
 
     component.setActiveTab("citations");
@@ -890,14 +891,16 @@ describe("JobDetailsComponent", () => {
       'a[href="https://doi.org/10.1101/2025.06.14.659707"]'
     );
 
-    expect(element.textContent).toContain("Boltz-2");
     expect(element.textContent).toContain(
       "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
     );
     expect(citationLink).not.toBeNull();
   });
 
-  it("should show a citation fallback when the job tool has no citation", () => {
+  it("should show a citation fallback when the job workflow has no citations", () => {
     render();
 
     component.job.set(fallbackJob);
@@ -906,7 +909,7 @@ describe("JobDetailsComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "No citation is available for this workflow tool yet."
+      "No citations are available for this workflow yet."
     );
   });
 

@@ -30,6 +30,7 @@ import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
 import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
+import { WorkflowPapersComponent } from "../../workflows/components/workflow-papers/workflow-papers.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { statusTagClass, type JobStatusUi } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
@@ -40,10 +41,7 @@ import {
   ResultLogsResponse,
   ResultsService,
 } from "../services/results.service";
-import {
-  getToolCitation,
-  ToolCitation,
-} from "../../workflows/shared/workflow-citations";
+import { getWorkflowPaperCitationKeys } from "../../citations/workflow-citations";
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -167,6 +165,7 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     ButtonComponent,
     SinglePredictionReportComponent,
     JobResultsReportComponent,
+    WorkflowPapersComponent,
   ],
   providers: [
     provideIcons({
@@ -534,9 +533,8 @@ export default class JobDetailsComponent implements OnInit {
     ];
   }
 
-  getCitations(job: JobListItem): ToolCitation[] {
-    const citation = getToolCitation(job.tool);
-    return citation ? [citation] : [];
+  getCitationKeys(job: JobListItem): readonly string[] {
+    return getWorkflowPaperCitationKeys(job.workflow);
   }
 
   formatCategoryName(category: string): string {

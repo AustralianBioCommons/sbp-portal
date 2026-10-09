@@ -1,13 +1,13 @@
 import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { CitationLinkComponent } from "../../../components/citation-link/citation-link.component";
 
-/** About tab content for the Single Prediction workflow. */
+/** About tab content for the De Novo Design workflow. */
 @Component({
-  selector: "app-single-prediction-about",
+  selector: "app-de-novo-design-about",
   imports: [CitationLinkComponent],
-  templateUrl: "./single-prediction-about.component.html",
-  styleUrl: "./single-prediction-about.component.scss",
+  templateUrl: "./de-novo-design-about.component.html",
+  styleUrl: "./de-novo-design-about.component.scss",
   changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block space-y-8 pt-4" },
 })
-export class SinglePredictionAboutComponent {}
+export class DeNovoDesignAboutComponent {}
