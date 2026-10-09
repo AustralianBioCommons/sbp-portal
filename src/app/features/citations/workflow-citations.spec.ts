@@ -4,6 +4,7 @@ import {
   formatCitation,
   formatCitationLinkLabel,
   getCitation,
+  getCitations,
   getCitationsByTool,
   getCitationsByWorkflow,
   getRelevantCitations,
@@ -85,6 +86,28 @@ describe("Workflow Citations utilities", () => {
     ).toEqual(["colabfold", "alphafold2", "callaway2020", "boltz2"]);
   });
 
+  it("returns empty lists for unknown workflow paper citations", () => {
+    expect(getWorkflowPaperCitationKeys("unknown workflow")).toEqual([]);
+    expect(getWorkflowPaperCitationKeys(undefined)).toEqual([]);
+    expect(getWorkflowPaperCitations("unknown workflow")).toEqual([]);
+  });
+
+  it("filters unknown citation keys from explicit citation lists", () => {
+    const citations = getCitations(["alphafold2", "unknown", "colabfold"]);
+
+    expect(citations.map((citation) => citation.key)).toEqual([
+      "alphafold2",
+      "colabfold",
+    ]);
+  });
+
+  it("returns empty lists for unknown tool and workflow lookups", () => {
+    expect(getCitationsByTool("unknown tool")).toEqual([]);
+    expect(getCitationsByTool(undefined)).toEqual([]);
+    expect(getCitationsByWorkflow("unknown workflow")).toEqual([]);
+    expect(getCitationsByWorkflow(undefined)).toEqual([]);
+  });
+
   it("gets relevant citations from workflow and tools without duplicates", () => {
     const citations = getRelevantCitations({
       workflow: "Single Prediction",
@@ -97,6 +120,21 @@ describe("Workflow Citations utilities", () => {
       "callaway2020",
       "colabfold",
     ]);
+  });
+
+  it("gets relevant citations from workflow-only and missing options", () => {
+    expect(
+      getRelevantCitations({ workflow: "Bulk Prediction" }).map(
+        (citation) => citation.key
+      )
+    ).toEqual(["boltz2", "colabfold"]);
+    expect(
+      getRelevantCitations({
+        workflow: "unknown workflow",
+        tools: ["unknown tool"],
+      })
+    ).toEqual([]);
+    expect(getRelevantCitations({})).toEqual([]);
   });
 
   it("formats full citations and inline labels", () => {
