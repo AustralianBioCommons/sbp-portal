@@ -830,7 +830,7 @@ export default class DeNovoDesignComponent
       fieldName: "length_range",
     });
     summary.push({
-      label: this.numberOfDesignsField.label,
+      label: this.numberOfDesignsField.label ?? "Number of Designs",
       value: String(this.numberOfDesigns()),
       fieldName: "max_trajectories",
     });
