@@ -41,9 +41,11 @@ import {
   ResultsService,
 } from "../services/results.service";
 import {
-  getToolCitation,
-  ToolCitation,
-} from "../../workflows/shared/workflow-citations";
+  CitationRecord,
+  formatCitation,
+  getCitationHref,
+  getCitationsByTool,
+} from "../../citations/workflow-citations";
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -534,9 +536,16 @@ export default class JobDetailsComponent implements OnInit {
     ];
   }
 
-  getCitations(job: JobListItem): ToolCitation[] {
-    const citation = getToolCitation(job.tool);
-    return citation ? [citation] : [];
+  getCitations(job: JobListItem): CitationRecord[] {
+    return getCitationsByTool(job.tool);
+  }
+
+  formatCitation(citation: CitationRecord): string {
+    return formatCitation(citation);
+  }
+
+  getCitationHref(citation: CitationRecord): string {
+    return getCitationHref(citation);
   }
 
   formatCategoryName(category: string): string {

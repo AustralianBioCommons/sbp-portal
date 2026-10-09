@@ -421,14 +421,13 @@
             } } @case ("citations") { @if (getCitations(selectedJob).length > 0)
             {
             <div class="space-y-4 text-sm text-gray-500">
-              @for (citation of getCitations(selectedJob); track citation.label)
-              {
+              @for (citation of getCitations(selectedJob); track citation.key) {
               <div class="space-y-2">
-                <h3 class="font-medium text-gray-900">{{ citation.label }}</h3>
+                <h3 class="font-medium text-gray-900">{{ citation.title }}</h3>
                 <p>
-                  {{ citation.reference }}
+                  {{ formatCitation(citation) }}
                   <a
-                    [href]="citation.doi"
+                    [href]="getCitationHref(citation)"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="wrap-break-word text-sky-700 underline hover:text-sky-800"

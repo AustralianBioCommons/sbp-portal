@@ -873,9 +873,11 @@ describe("JobDetailsComponent", () => {
 
     expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
-    expect(component.getCitations(deNovoDesignJob)[0].label).toBe("BindCraft");
-    expect(component.getCitations(bulkPredictionJob)[0].label).toBe(
-      "ColabFold"
+    expect(component.getCitations(deNovoDesignJob)[0].title).toBe(
+      "BindCraft: one-shot design of functional protein binders"
+    );
+    expect(component.getCitations(bulkPredictionJob)[0].title).toBe(
+      "ColabFold: making protein folding accessible to all"
     );
   });
 
@@ -890,7 +892,6 @@ describe("JobDetailsComponent", () => {
       'a[href="https://doi.org/10.1101/2025.06.14.659707"]'
     );
 
-    expect(element.textContent).toContain("Boltz-2");
     expect(element.textContent).toContain(
       "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
     );
