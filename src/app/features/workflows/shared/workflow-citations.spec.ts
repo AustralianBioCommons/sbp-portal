@@ -1,76 +1,91 @@
 import {
-  normalizeTool,
-  isCitedTool,
-  getToolCitation,
-  getToolCitations,
+  CITATION_KEYS_BY_TOOL,
+  CITATION_KEYS_BY_WORKFLOW,
+  formatCitation,
+  formatCitationLinkLabel,
+  getCitation,
+  getCitationsByTool,
+  getCitationsByWorkflow,
+  getRelevantCitations,
 } from "./workflow-citations";
 
 describe("Workflow Citations utilities", () => {
-  it("normalizeTool trims and lowercases", () => {
-    const result = normalizeTool("  AlphaFold2  ");
-    expect(result).toEqual("alphafold2");
+  it("returns a keyed citation from the master list", () => {
+    const citation = getCitation("alphafold2");
+
+    expect(citation?.key).toBe("alphafold2");
+    expect(citation?.title).toBe(
+      "Highly accurate protein structure prediction with AlphaFold"
+    );
+    expect(citation?.doi).toBe("https://doi.org/10.1038/s41586-021-03819-2");
   });
 
-  it("normalizeTool returns an empty string for undefined", () => {
-    expect(normalizeTool(undefined)).toBe("");
+  it("normalizes citation keys for lookup", () => {
+    const citation = getCitation("  alpha fold 2  ");
+
+    expect(citation?.key).toBe("alphafold2");
   });
 
-  it("isCitedTool matches known tools", () => {
-    const result = isCitedTool("boltz");
-    expect(result).toBeTrue();
+  it("returns null for an unknown citation key", () => {
+    expect(getCitation("unknown")).toBeNull();
+    expect(getCitation(undefined)).toBeNull();
   });
 
-  it("isCitedTool rejects unknown or empty tools", () => {
-    expect(isCitedTool("rfdiffusion")).toBeFalse();
-    expect(isCitedTool("")).toBeFalse();
-    expect(isCitedTool(undefined)).toBeFalse();
+  it("builds tool-to-citation records", () => {
+    expect(CITATION_KEYS_BY_TOOL["boltz"]).toEqual(["boltz2"]);
+    expect(CITATION_KEYS_BY_TOOL["rfdiffusion"]).toContain("rfdiffusion");
   });
 
-  it("getToolCitation returns citation for tool", () => {
-    const citation = getToolCitation("alphafold2");
-    expect(citation?.label).toEqual("AlphaFold2");
-    expect(citation?.reference).toContain("Highly accurate protein structure");
-    expect(citation?.doi).toContain("https://doi.org");
-  });
-
-  it("getToolCitation normalizes casing and whitespace", () => {
-    const citation = getToolCitation("  ColabFold  ");
-    expect(citation?.label).toBe("ColabFold");
-    expect(citation?.doi).toBe("https://doi.org/10.1038/s41592-022-01488-1");
-  });
-
-  it("getToolCitation returns null for unsupported tools", () => {
-    expect(getToolCitation("rfdiffusion")).toBeNull();
-    expect(getToolCitation(undefined)).toBeNull();
-  });
-
-  it("getToolCitation includes the BindCraft citation", () => {
-    const citation = getToolCitation("bindcraft");
-    expect(citation?.label).toBe("BindCraft");
-    expect(citation?.reference).toContain("one-shot design");
-    expect(citation?.doi).toBe("https://doi.org/10.1101/2024.09.30.615802");
-  });
-
-  it("getToolCitations returns citations for multiple tools", () => {
-    const citations = getToolCitations(["boltz", "alphafold2"]);
-    expect(citations[0].label).toEqual("Boltz-2");
-    expect(citations[1].label).toEqual("AlphaFold2");
-  });
-
-  it("getToolCitations filters unsupported tools and preserves supported order", () => {
-    const citations = getToolCitations([
-      "rfdiffusion",
-      " bindcraft ",
-      "unknown",
-      "BOLTZ",
-      "",
+  it("builds workflow-to-citation records", () => {
+    expect(CITATION_KEYS_BY_WORKFLOW["de novo design"]).toContain("proteindj");
+    expect(CITATION_KEYS_BY_WORKFLOW["bulk prediction"]).toEqual([
+      "boltz2",
       "colabfold",
     ]);
+  });
 
-    expect(citations.map((citation) => citation.label)).toEqual([
-      "BindCraft",
-      "Boltz-2",
-      "ColabFold",
+  it("gets citations by tool", () => {
+    const citations = getCitationsByTool("  BindCraft  ");
+
+    expect(citations.map((citation) => citation.key)).toEqual([
+      "bindcraft",
+      "alphafold2",
+      "openmm",
+      "proteindj",
+      "proteinmpnn",
     ]);
+  });
+
+  it("gets citations by workflow", () => {
+    const citations = getCitationsByWorkflow("Bulk Prediction");
+
+    expect(citations.map((citation) => citation.key)).toEqual([
+      "boltz2",
+      "colabfold",
+    ]);
+  });
+
+  it("gets relevant citations from workflow and tools without duplicates", () => {
+    const citations = getRelevantCitations({
+      workflow: "Single Prediction",
+      tools: ["alphafold2", "boltz"],
+    });
+
+    expect(citations.map((citation) => citation.key)).toEqual([
+      "alphafold2",
+      "boltz2",
+      "callaway2020",
+      "colabfold",
+    ]);
+  });
+
+  it("formats full citations and inline labels", () => {
+    const citation = getCitation("colabfold");
+
+    expect(citation).not.toBeNull();
+    expect(formatCitation(citation!)).toContain(
+      "Mirdita, M., Schuetze, K., Moriwaki, Y. et al. (2022)."
+    );
+    expect(formatCitationLinkLabel(citation!)).toBe("Mirdita, 2022");
   });
 });
