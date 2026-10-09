@@ -125,7 +125,7 @@
             <img
               class="h-10 w-10 rounded-full"
               [class.hidden]="!profileImageLoaded()"
-              [src]="$safeNavigationMigration(user?.picture)"
+              [src]="user?.picture"
               alt="User"
               (load)="profileImageLoaded.set(true)"
               (error)="profileImageLoaded.set(false)"
