@@ -50,6 +50,7 @@ describe("Workflow Citations utilities", () => {
     expect(citations.map((citation) => citation.key)).toEqual([
       "bindcraft",
       "alphafold2",
+      "alphafold2relax",
       "openmm",
       "proteindj",
       "proteinmpnn",
@@ -84,8 +85,20 @@ describe("Workflow Citations utilities", () => {
 
     expect(citation).not.toBeNull();
     expect(formatCitation(citation!)).toContain(
-      "Mirdita, M., Schuetze, K., Moriwaki, Y. et al. (2022)."
+      "Mirdita, M., Schuetze, K., Moriwaki, Y. et al. ColabFold: making protein folding accessible to all. Nat Methods 19, 679-682 (2022)."
     );
     expect(formatCitationLinkLabel(citation!)).toBe("Mirdita, 2022");
+  });
+
+  it("includes the AlphaFold2 Initial Guess and ProteinMPNN-FastRelax citation", () => {
+    const citation = getCitation("alphafold2relax");
+
+    expect(citation?.label).toBe(
+      "AlphaFold2 Initial Guess and ProteinMPNN-FastRelax"
+    );
+    expect(citation?.doi).toBe("https://doi.org/10.1038/s41467-023-38328-5");
+    expect(formatCitation(citation!)).toBe(
+      "Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023)."
+    );
   });
 });
