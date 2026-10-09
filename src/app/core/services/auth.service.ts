@@ -70,6 +70,7 @@ export class AuthService {
         // cached wouldn't otherwise show up until the cache expires.
         return this.auth0.getAccessTokenSilently({ cacheMode: "off" }).pipe(
           map((token) => {
+            if (!token) return false;
             const payload = AuthService.decodeAccessToken(token);
             if (!payload) return false;
             const roles = payload[environment.rolesClaim];
@@ -315,7 +316,9 @@ export class AuthService {
    * Get access token silently (delegated to Auth0)
    */
   getAccessTokenSilently(): Observable<string> {
-    return this.auth0.getAccessTokenSilently();
+    return this.auth0
+      .getAccessTokenSilently()
+      .pipe(filter((token): token is string => typeof token === "string"));
   }
 
   /**

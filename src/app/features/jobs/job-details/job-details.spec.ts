@@ -1,4 +1,9 @@
-import { Component, input, output } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { HttpHeaders, HttpResponse } from "@angular/common/http";
 import { By, DomSanitizer } from "@angular/platform-browser";
@@ -46,6 +51,7 @@ type JobDetailsPrivateApi = {
 /** Stands in for the report view: only its `unavailable` output matters here. */
 @Component({
   selector: "app-single-prediction-report",
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: "",
 })
 class SinglePredictionReportStubComponent {
@@ -58,6 +64,7 @@ class SinglePredictionReportStubComponent {
 
 @Component({
   selector: "app-job-results-report",
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: "",
 })
 class JobResultsReportStubComponent {

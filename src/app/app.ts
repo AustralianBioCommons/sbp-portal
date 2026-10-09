@@ -1,5 +1,10 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject, signal } from "@angular/core";
+import {
+  Component,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { AlertComponent } from "./components/alert/alert.component";
 import { DialogComponent } from "./components/dialog/dialog.component";
@@ -20,6 +25,7 @@ import { AuthService } from "./core/services/auth.service";
     LoadingComponent,
   ],
   templateUrl: "./app.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./app.scss",
 })
 export class App {

@@ -1,5 +1,11 @@
 import { CommonModule } from "@angular/common";
-import { Component, computed, inject, Signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  Signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
@@ -69,6 +75,7 @@ interface ToolChip extends ToolOption {
     class: "block w-full bulk-prediction-bg",
   },
   templateUrl: "./bulk-prediction.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./bulk-prediction.scss",
 })
 export default class BulkPredictionComponent extends WorkflowPageBase {

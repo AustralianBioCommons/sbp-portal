@@ -1,9 +1,10 @@
-import { Component, input } from "@angular/core";
+import { Component, input, ChangeDetectionStrategy } from "@angular/core";
 import { ChainPairMatrix } from "../../shared/prediction-results.utils";
 
 @Component({
   selector: "app-chain-matrix",
   templateUrl: "./chain-matrix.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./chain-matrix.component.scss",
 })
 export class ChainMatrixComponent {

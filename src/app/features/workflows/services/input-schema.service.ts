@@ -158,42 +158,43 @@ export class InputSchemaService {
   /**
    * Parse the fetched input schema into a structured format
    */
-  parseInputSchema(
-    schema: Record<string, unknown>
-  ): Observable<ParsedInputSchema> {
+  parseInputSchema(schema: unknown): Observable<ParsedInputSchema> {
     try {
       if (!schema || typeof schema !== "object") {
         return throwError(() => new Error("Invalid input schema format"));
       }
+      const rawSchema = schema as Record<string, unknown>;
 
       const parsedSchema: ParsedInputSchema = {
-        title: this.getStringValue(schema.title) || "Input Configuration",
-        description: this.getStringValue(schema.description) || "",
+        title: this.getStringValue(rawSchema.title) || "Input Configuration",
+        description: this.getStringValue(rawSchema.description) || "",
         sections: [],
       };
 
       // Determine the schema format and parse accordingly
       if (Array.isArray(schema)) {
         // Nextflow input format (array of objects)
-        parsedSchema.sections = this.parseNextflowInput(schema);
-      } else if (schema.sections && Array.isArray(schema.sections)) {
+        parsedSchema.sections = this.parseNextflowInput(
+          schema as Record<string, unknown>[]
+        );
+      } else if (rawSchema.sections && Array.isArray(rawSchema.sections)) {
         // Direct sections format
         parsedSchema.sections = this.parseSections(
-          schema.sections as Record<string, unknown>[]
+          rawSchema.sections as Record<string, unknown>[]
         );
-      } else if (this.hasItemsWithProperties(schema)) {
+      } else if (this.hasItemsWithProperties(rawSchema)) {
         // Bindflow format (items.properties structure)
-        parsedSchema.sections = this.parseBindflowSchema(schema);
-      } else if (this.hasProperties(schema)) {
+        parsedSchema.sections = this.parseBindflowSchema(rawSchema);
+      } else if (this.hasProperties(rawSchema)) {
         // Direct properties format
         parsedSchema.sections = [
           {
             name: "main",
-            title: this.getStringValue(schema.title) || "Input Parameters",
-            description: this.getStringValue(schema.description) || "",
+            title: this.getStringValue(rawSchema.title) || "Input Parameters",
+            description: this.getStringValue(rawSchema.description) || "",
             fields: this.parseProperties(
-              schema.properties as Record<string, unknown>,
-              this.getStringArrayValue(schema.required) || []
+              rawSchema.properties as Record<string, unknown>,
+              this.getStringArrayValue(rawSchema.required) || []
             ),
             collapsible: false,
             collapsed: false,

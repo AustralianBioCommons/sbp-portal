@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { LocationStrategy } from "@angular/common";
 import { MockLocationStrategy } from "@angular/common/testing";
@@ -44,7 +44,7 @@ describe("Navbar", () => {
     await TestBed.configureTestingModule({
       imports: [Navbar],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },

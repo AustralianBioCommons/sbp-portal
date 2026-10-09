@@ -15,6 +15,7 @@ import {
   OnDestroy,
   Signal,
   signal,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
@@ -103,6 +104,7 @@ const DEFAULT_MAX_LENGTH = 150;
     }),
   ],
   templateUrl: "./de-novo-design.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./de-novo-design.scss",
 })
 export default class DeNovoDesignComponent
@@ -828,7 +830,7 @@ export default class DeNovoDesignComponent
       fieldName: "length_range",
     });
     summary.push({
-      label: this.numberOfDesignsField.label,
+      label: this.numberOfDesignsField.label ?? "Number of Designs",
       value: String(this.numberOfDesigns()),
       fieldName: "max_trajectories",
     });

@@ -7,6 +7,7 @@ import {
   linkedSignal,
   output,
   viewChildren,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -46,6 +47,7 @@ export interface WorkflowTabItem {
   ],
   templateUrl: "./workflow-layout.component.html",
   styleUrl: "./workflow-layout.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block w-full" },
 })
 export class WorkflowLayoutComponent {

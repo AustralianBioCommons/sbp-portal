@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { RouterLink } from "@angular/router";
 
 /** About tab content for the Bulk Prediction workflow. */
@@ -7,6 +7,7 @@ import { RouterLink } from "@angular/router";
   imports: [RouterLink],
   templateUrl: "./bulk-prediction-about.component.html",
   styleUrl: "./bulk-prediction-about.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block space-y-8 pt-4" },
 })
 export class BulkPredictionAboutComponent {}

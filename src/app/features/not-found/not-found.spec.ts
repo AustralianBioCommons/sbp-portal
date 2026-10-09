@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 
 import NotFoundComponent from "./not-found";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideRouter, Router, RouterLink } from "@angular/router";
 
 describe("NotFoundComponent", () => {
@@ -12,7 +12,7 @@ describe("NotFoundComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [NotFoundComponent],
-      providers: [provideHttpClient(), provideRouter([])],
+      providers: [provideHttpClient(withXhr()), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(NotFoundComponent);

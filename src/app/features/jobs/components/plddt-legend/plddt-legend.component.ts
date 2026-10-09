@@ -1,9 +1,10 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 
 @Component({
   selector: "app-plddt-legend",
   templateUrl: "./plddt-legend.component.html",
   styleUrl: "./plddt-legend.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block" },
 })
 export class PlddtLegendComponent {

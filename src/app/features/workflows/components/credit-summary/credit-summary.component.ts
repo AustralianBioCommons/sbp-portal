@@ -1,4 +1,9 @@
-import { Component, computed, input } from "@angular/core";
+import {
+  Component,
+  computed,
+  input,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 
 /**
  * Shows the computed credit cost of a workflow run, an insufficient-balance
@@ -10,6 +15,7 @@ import { Component, computed, input } from "@angular/core";
   selector: "app-credit-summary",
   imports: [],
   templateUrl: "./credit-summary.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block" },
 })
 export class CreditSummaryComponent {

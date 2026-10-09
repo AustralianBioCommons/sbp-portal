@@ -43,12 +43,13 @@ describe("ToolSelectionComponent", () => {
 
   it("should display selected tool correctly", () => {
     fixture.detectChanges();
-    const radioButtons = fixture.nativeElement.querySelectorAll(
+    const compiled = fixture.nativeElement as HTMLElement;
+    const radioButtons = compiled.querySelectorAll<HTMLInputElement>(
       'input[type="radio"]'
     );
     const selectedRadio = Array.from(radioButtons).find(
-      (radio: HTMLInputElement) => radio.checked
-    ) as HTMLInputElement;
+      (radio) => radio.checked
+    );
     expect(selectedRadio?.value).toBe("tool1");
   });
 

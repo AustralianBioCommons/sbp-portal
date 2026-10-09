@@ -1,4 +1,9 @@
-import { Component, input, output } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { Subject, of, throwError } from "rxjs";
@@ -17,6 +22,7 @@ import {
 /** Stands in for the real viewer so tests never boot a WebGL context. */
 @Component({
   selector: "app-molstar-viewer",
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: "",
 })
 class MolstarViewerStubComponent {

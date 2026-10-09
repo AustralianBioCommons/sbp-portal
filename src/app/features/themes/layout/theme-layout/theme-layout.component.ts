@@ -1,4 +1,4 @@
-import { Component, input } from "@angular/core";
+import { Component, input, ChangeDetectionStrategy } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroChevronRight } from "@ng-icons/heroicons/outline";
@@ -10,6 +10,7 @@ import { WorkflowItem } from "../../../../core/configs/themes.config";
   providers: [provideIcons({ heroChevronRight })],
   templateUrl: "./theme-layout.component.html",
   styleUrl: "./theme-layout.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block w-full" },
 })
 export class ThemeLayoutComponent {

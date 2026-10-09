@@ -1,55 +1,50 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import angular from "angular-eslint";
 import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
-});
+import { defineConfig, globalIgnores } from "eslint/config";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
-    globalIgnores(["projects/**/*", "**/node_modules", "**/dist", "**/coverage"]),
-    {
-        files: ["**/*.ts"],
-
-        extends: compat.extends(
-            "eslint:recommended",
-            "plugin:@typescript-eslint/recommended",
-            "plugin:@angular-eslint/recommended",
-            "plugin:@angular-eslint/template/process-inline-templates",
-        ),
-
-        rules: {
-            "@angular-eslint/directive-selector": ["error", {
-                type: "attribute",
-                prefix: "app",
-                style: "camelCase",
-            }],
-
-            "@angular-eslint/component-selector": ["error", {
-                type: "element",
-                prefix: "app",
-                style: "kebab-case",
-            }],
-
-            "@typescript-eslint/no-unused-vars": ["error", {
-                argsIgnorePattern: "^_",
-            }],
+  globalIgnores(["projects/**/*", "**/node_modules", "**/dist", "**/coverage"]),
+  {
+    files: ["**/*.ts"],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...angular.configs.tsRecommended,
+    ],
+    processor: angular.processInlineTemplates,
+    rules: {
+      "@angular-eslint/directive-selector": [
+        "error",
+        {
+          type: "attribute",
+          prefix: "app",
+          style: "camelCase",
         },
+      ],
+      "@angular-eslint/component-selector": [
+        "error",
+        {
+          type: "element",
+          prefix: "app",
+          style: "kebab-case",
+        },
+      ],
+      "@angular-eslint/prefer-on-push-component-change-detection": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+        },
+      ],
     },
-    {
-        files: ["**/*.html"],
-
-        extends: compat.extends(
-            "plugin:@angular-eslint/template/recommended",
-            "plugin:@angular-eslint/template/accessibility",
-        ),
-
-        rules: {},
-    },
+  },
+  {
+    files: ["**/*.html"],
+    extends: [
+      ...angular.configs.templateRecommended,
+      ...angular.configs.templateAccessibility,
+    ],
+    rules: {},
+  },
 ]);

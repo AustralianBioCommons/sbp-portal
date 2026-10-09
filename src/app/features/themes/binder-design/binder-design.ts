@@ -1,4 +1,4 @@
-import { Component, signal } from "@angular/core";
+import { Component, signal, ChangeDetectionStrategy } from "@angular/core";
 import { ThemeLayoutComponent } from "../layout/theme-layout/theme-layout.component";
 import { THEMES } from "../../../core/configs/themes.config";
 
@@ -6,6 +6,7 @@ import { THEMES } from "../../../core/configs/themes.config";
   selector: "app-binder-design",
   imports: [ThemeLayoutComponent],
   templateUrl: "./binder-design.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./binder-design.scss",
 })
 export class BinderDesignComponent {

@@ -9,6 +9,7 @@ import {
   output,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { ButtonComponent } from "../../../../components/button/button.component";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
@@ -26,6 +27,7 @@ export interface WorkflowSection {
   templateUrl: "./workflow-form.component.html",
   styleUrl: "./workflow-form.component.scss",
   host: { class: "block" },
+  changeDetection: ChangeDetectionStrategy.Eager,
   viewProviders: [
     provideIcons({
       heroCheck,

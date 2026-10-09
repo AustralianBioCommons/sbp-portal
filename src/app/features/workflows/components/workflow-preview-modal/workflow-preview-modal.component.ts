@@ -1,4 +1,10 @@
-import { Component, computed, input, output } from "@angular/core";
+import {
+  Component,
+  computed,
+  input,
+  output,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroXMark } from "@ng-icons/heroicons/outline";
 
@@ -29,6 +35,7 @@ export interface EntitySummaryItem {
   ],
   providers: [provideIcons({ heroXMark })],
   templateUrl: "./workflow-preview-modal.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./workflow-preview-modal.component.scss",
 })
 export class WorkflowPreviewModalComponent {

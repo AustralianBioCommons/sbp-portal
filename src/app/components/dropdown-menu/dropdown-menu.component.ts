@@ -8,6 +8,7 @@ import {
   ElementRef,
   Renderer2,
   inject,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { NgTemplateOutlet } from "@angular/common";
 
@@ -16,6 +17,7 @@ import { NgTemplateOutlet } from "@angular/common";
   imports: [NgTemplateOutlet],
   templateUrl: "./dropdown-menu.component.html",
   styleUrl: "./dropdown-menu.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: {
     "(keydown.escape)": "close()",
   },
