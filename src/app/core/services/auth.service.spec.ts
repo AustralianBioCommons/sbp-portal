@@ -1,5 +1,5 @@
 import { TestBed, fakeAsync, tick } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import {
   HttpTestingController,
   provideHttpClientTesting,
@@ -49,7 +49,7 @@ describe("AuthService", () => {
 
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         AuthService,
         { provide: Auth0Service, useValue: mockAuth0Service },
@@ -747,7 +747,7 @@ describe("AuthService", () => {
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
         providers: [
-          provideHttpClient(),
+          provideHttpClient(withXhr()),
           provideHttpClientTesting(),
           AuthService,
           { provide: Auth0Service, useValue: localMock },

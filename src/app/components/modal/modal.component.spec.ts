@@ -1,9 +1,10 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ModalComponent } from "./modal.component";
 
 @Component({
   imports: [ModalComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <app-modal
       [isOpen]="isOpen"

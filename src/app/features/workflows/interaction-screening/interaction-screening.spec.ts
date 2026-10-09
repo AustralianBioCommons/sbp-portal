@@ -1,6 +1,6 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideRouter } from "@angular/router";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
@@ -131,7 +131,7 @@ describe("InteractionScreeningComponent", () => {
     await TestBed.configureTestingModule({
       imports: [InteractionScreeningComponent],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideRouter([]),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },

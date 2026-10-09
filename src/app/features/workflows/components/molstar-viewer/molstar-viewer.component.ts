@@ -10,6 +10,7 @@ import {
   output,
   signal,
   untracked,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
@@ -142,6 +143,7 @@ interface ResidueToken {
   encapsulation: ViewEncapsulation.None,
   templateUrl: "./molstar-viewer.component.html",
   styleUrl: "./molstar-viewer.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block" },
 })
 export class MolstarViewerComponent implements AfterViewInit, OnDestroy {

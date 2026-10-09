@@ -7,6 +7,7 @@ import {
   OnInit,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { ActivatedRoute, ParamMap, Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
@@ -79,6 +80,7 @@ interface ListState {
     }),
   ],
   templateUrl: "./jobs-list.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./jobs-list.scss",
 })
 export default class JobsListComponent implements OnInit, OnDestroy {

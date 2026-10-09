@@ -1,4 +1,4 @@
-import { Component, signal } from "@angular/core";
+import { Component, signal, ChangeDetectionStrategy } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { Router, provideRouter } from "@angular/router";
@@ -9,6 +9,7 @@ import { WorkflowLayoutComponent } from "./workflow-layout.component";
 
 @Component({
   imports: [WorkflowLayoutComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <app-workflow-layout heading="Test Workflow">
       <p output>Workflow example output</p>

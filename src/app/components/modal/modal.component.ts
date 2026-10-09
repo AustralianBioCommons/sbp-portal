@@ -8,12 +8,14 @@ import {
   output,
   Renderer2,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 
 @Component({
   selector: "app-modal",
   imports: [],
   templateUrl: "./modal.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./modal.component.scss",
 })
 export class ModalComponent {

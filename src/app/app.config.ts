@@ -3,7 +3,11 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from "@angular/core";
-import { provideHttpClient, withInterceptors } from "@angular/common/http";
+import {
+  provideHttpClient,
+  withInterceptors,
+  withXhr,
+} from "@angular/common/http";
 import { provideRouter, withInMemoryScrolling } from "@angular/router";
 import { authHttpInterceptorFn, provideAuth0 } from "@auth0/auth0-angular";
 import { environment, updateEnvironment } from "../environments/environment";
@@ -62,7 +66,7 @@ export async function getAppConfig(): Promise<ApplicationConfig> {
           ],
         },
       }),
-      provideHttpClient(withInterceptors([authHttpInterceptorFn])),
+      provideHttpClient(withXhr(), withInterceptors([authHttpInterceptorFn])),
     ],
   };
 }

@@ -1,4 +1,9 @@
-import { Component, input, output } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroExclamationTriangle } from "@ng-icons/heroicons/outline";
 
@@ -12,6 +17,7 @@ export type DialogVariant = "default" | "danger";
   imports: [ModalComponent, ButtonComponent, NgIconComponent],
   providers: [provideIcons({ heroExclamationTriangle })],
   templateUrl: "./dialog.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./dialog.component.scss",
 })
 export class DialogComponent {

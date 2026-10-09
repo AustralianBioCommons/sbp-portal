@@ -7,6 +7,7 @@ import {
   inject,
   input,
   signal,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { NgIcon, provideIcons } from "@ng-icons/core";
 import { heroInformationCircle } from "@ng-icons/heroicons/outline";
@@ -18,6 +19,7 @@ let nextTooltipId = 0;
   imports: [NgIcon],
   templateUrl: "./tooltip.component.html",
   styleUrl: "./tooltip.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   viewProviders: [provideIcons({ heroInformationCircle })],
 })
 export class TooltipComponent {

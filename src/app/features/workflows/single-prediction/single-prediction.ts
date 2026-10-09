@@ -5,7 +5,14 @@ import {
   DragDropModule,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { Component, computed, inject, Signal, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  Signal,
+  signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   FormControl,
@@ -154,6 +161,7 @@ function generateRandomSeed(): string {
     class: "block w-full single-prediction-bg",
   },
   templateUrl: "./single-prediction.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./single-prediction.scss",
 })
 export default class SinglePredictionComponent extends WorkflowPageBase {

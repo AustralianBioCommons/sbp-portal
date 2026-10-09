@@ -109,7 +109,7 @@
       type="file"
       [class]="getFileClasses()"
       [required]="f.required"
-      [accept]="f.validation?.accept"
+      [accept]="$safeNavigationMigration(f.validation?.accept)"
       (change)="onFileChange($event)"
       (blur)="onBlur()"
     />

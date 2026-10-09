@@ -1,4 +1,10 @@
-import { Component, input, inject, signal } from "@angular/core";
+import {
+  Component,
+  input,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { ControlValueAccessor, NgControl } from "@angular/forms";
 
 export interface ToolOption<ToolId extends string = string> {
@@ -23,6 +29,7 @@ let nextToolSelectionId = 0;
   host: { class: "block" },
   imports: [],
   templateUrl: "./tool-selection.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./tool-selection.component.scss",
 })
 export class ToolSelectionComponent<ToolId extends string = string>

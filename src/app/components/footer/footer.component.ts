@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroMagnifyingGlass } from "@ng-icons/heroicons/outline";
@@ -45,6 +45,7 @@ type SocialLink = {
     }),
   ],
   templateUrl: "./footer.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./footer.component.scss",
 })
 export class FooterSectionsComponent {

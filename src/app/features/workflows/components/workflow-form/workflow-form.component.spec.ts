@@ -1,4 +1,4 @@
-import { Component, viewChild } from "@angular/core";
+import { Component, viewChild, ChangeDetectionStrategy } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import {
   WorkflowFormComponent,
@@ -286,6 +286,7 @@ describe("WorkflowFormComponent", () => {
 
 @Component({
   imports: [WorkflowFormComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <app-workflow-form [sections]="sections">
       <div id="input-config">

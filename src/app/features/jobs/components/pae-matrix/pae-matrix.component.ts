@@ -11,6 +11,7 @@ import {
   signal,
   untracked,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroExclamationCircle, heroXMark } from "@ng-icons/heroicons/outline";
@@ -84,6 +85,7 @@ const MAX_PLOT_SIDE = 460;
   providers: [provideIcons({ heroExclamationCircle, heroXMark })],
   templateUrl: "./pae-matrix.component.html",
   styleUrl: "./pae-matrix.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block" },
 })
 export class PaeMatrixComponent implements OnDestroy {

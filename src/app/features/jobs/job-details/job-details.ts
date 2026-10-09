@@ -5,6 +5,7 @@ import {
   inject,
   OnInit,
   signal,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { ActivatedRoute, Params, Router, RouterLink } from "@angular/router";
 import { SafeResourceUrl } from "@angular/platform-browser";
@@ -182,6 +183,7 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     DatePipe,
   ],
   templateUrl: "./job-details.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./job-details.scss",
 })
 export default class JobDetailsComponent implements OnInit {

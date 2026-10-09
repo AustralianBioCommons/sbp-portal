@@ -8,6 +8,7 @@ import {
   Injector,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { CommonModule } from "@angular/common";
@@ -73,6 +74,7 @@ export interface BreadcrumbInfo {
   ],
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "contents" },
 })
 export class Navbar {

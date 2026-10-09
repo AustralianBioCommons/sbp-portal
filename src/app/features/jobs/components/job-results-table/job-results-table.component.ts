@@ -1,4 +1,11 @@
-import { Component, computed, input, output, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDown,
@@ -18,6 +25,7 @@ import {
   imports: [NgIconComponent],
   providers: [provideIcons({ heroArrowDown, heroArrowUp, heroArrowsUpDown })],
   templateUrl: "./job-results-table.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./job-results-table.component.scss",
 })
 export class JobResultsTableComponent {

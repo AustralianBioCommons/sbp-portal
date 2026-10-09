@@ -7,6 +7,7 @@ import {
   input,
   output,
   signal,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import type { WritableSignal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -66,6 +67,7 @@ import { formatDecimals } from "../../shared/job-results-report.utils";
     provideIcons({ heroArrowPath, heroExclamationCircle, heroLifebuoy }),
   ],
   templateUrl: "./single-prediction-report.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./single-prediction-report.component.scss",
 })
 export class SinglePredictionReportComponent {
