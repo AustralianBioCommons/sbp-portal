@@ -7,6 +7,8 @@ import {
   getCitationsByTool,
   getCitationsByWorkflow,
   getRelevantCitations,
+  getWorkflowPaperCitationKeys,
+  getWorkflowPaperCitations,
 } from "./workflow-citations";
 
 describe("Workflow Citations utilities", () => {
@@ -64,6 +66,23 @@ describe("Workflow Citations utilities", () => {
       "boltz2",
       "colabfold",
     ]);
+  });
+
+  it("gets the same paper citation keys used by workflow forms", () => {
+    expect(getWorkflowPaperCitationKeys("De Novo Design")).toEqual([
+      "proteindj",
+      "rfdiffusion",
+      "bindcraft",
+      "proteinmpnn",
+      "openmm",
+      "alphafold2",
+      "alphafold2relax",
+    ]);
+    expect(
+      getWorkflowPaperCitations("Single Structure Prediction").map(
+        (citation) => citation.key
+      )
+    ).toEqual(["colabfold", "alphafold2", "callaway2020", "boltz2"]);
   });
 
   it("gets relevant citations from workflow and tools without duplicates", () => {

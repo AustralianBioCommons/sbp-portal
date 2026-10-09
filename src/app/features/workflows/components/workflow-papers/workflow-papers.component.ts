@@ -10,6 +10,7 @@ import {
   getCitations,
   getCitationHref,
   getRelevantCitations,
+  getWorkflowPaperCitations,
 } from "../../../citations/workflow-citations";
 
 /** Papers tab content: how to cite each tool a structure prediction workflow offers. */
@@ -32,6 +33,11 @@ export class WorkflowPapersComponent {
     const citations = this.citations();
     if (citations !== null) {
       return getCitations(citations);
+    }
+
+    const workflowCitations = getWorkflowPaperCitations(this.workflowName());
+    if (workflowCitations.length > 0) {
+      return workflowCitations;
     }
 
     return getRelevantCitations({

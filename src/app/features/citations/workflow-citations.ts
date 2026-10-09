@@ -151,6 +151,30 @@ export const CITATIONS = {
   },
 } satisfies Record<string, Citation>;
 
+export const WORKFLOW_PAPER_CITATION_KEYS_BY_WORKFLOW: Record<
+  string,
+  CitationKey[]
+> = {
+  "bulk prediction": ["boltz2", "colabfold"],
+  "de novo design": [
+    "proteindj",
+    "rfdiffusion",
+    "bindcraft",
+    "proteinmpnn",
+    "openmm",
+    "alphafold2",
+    "alphafold2relax",
+  ],
+  "interaction screening": ["boltz2", "colabfold"],
+  "single prediction": ["colabfold", "alphafold2", "callaway2020", "boltz2"],
+  "single structure prediction": [
+    "colabfold",
+    "alphafold2",
+    "callaway2020",
+    "boltz2",
+  ],
+};
+
 function normalizeName(value: string | undefined): string {
   return (value ?? "")
     .trim()
@@ -211,6 +235,20 @@ export function getCitations(keys: readonly string[]): CitationRecord[] {
   return keys
     .map((key) => getCitation(key))
     .filter((citation): citation is CitationRecord => citation !== null);
+}
+
+export function getWorkflowPaperCitationKeys(
+  workflow: string | undefined
+): readonly CitationKey[] {
+  return (
+    WORKFLOW_PAPER_CITATION_KEYS_BY_WORKFLOW[normalizeName(workflow)] ?? []
+  );
+}
+
+export function getWorkflowPaperCitations(
+  workflow: string | undefined
+): CitationRecord[] {
+  return getCitations(getWorkflowPaperCitationKeys(workflow));
 }
 
 export function getCitationsByTool(tool: string | undefined): CitationRecord[] {
