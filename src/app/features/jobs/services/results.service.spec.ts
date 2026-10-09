@@ -1,6 +1,6 @@
 import { SecurityContext } from "@angular/core";
 import { TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import {
   HttpTestingController,
   provideHttpClientTesting,
@@ -20,7 +20,7 @@ describe("ResultsService", () => {
 
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         ResultsService,
       ],

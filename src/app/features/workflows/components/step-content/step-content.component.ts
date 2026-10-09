@@ -1,9 +1,10 @@
-import { Component, input } from "@angular/core";
+import { Component, input, ChangeDetectionStrategy } from "@angular/core";
 
 @Component({
   selector: "app-step-content",
   imports: [],
   templateUrl: "./step-content.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./step-content.component.scss",
 })
 export class StepContentComponent {

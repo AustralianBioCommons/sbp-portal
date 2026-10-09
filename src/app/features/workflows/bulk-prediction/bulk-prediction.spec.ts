@@ -1,6 +1,6 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideRouter } from "@angular/router";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
@@ -130,7 +130,7 @@ describe("BulkPredictionComponent", () => {
     await TestBed.configureTestingModule({
       imports: [BulkPredictionComponent],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideRouter([]),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
@@ -152,7 +152,11 @@ describe("BulkPredictionComponent", () => {
   // ── Helper ─────────────────────────────────────────────────────────────
 
   function fillValidForm(): void {
-    component.form.setValue({ jobName: "bulk-job", fasta: VALID_FASTA });
+    component.form.setValue({
+      jobName: "bulk-job",
+      fasta: VALID_FASTA,
+      selectedTool: "boltz",
+    });
   }
 
   // ── 1. Creation ────────────────────────────────────────────────────────
@@ -174,18 +178,22 @@ describe("BulkPredictionComponent", () => {
 
   // ── 3. Tool selection ──────────────────────────────────────────────────
 
-  it("should default selected tool to boltz", () => {
-    expect(component.selectedTool()).toBe("boltz");
+  it("should start with no selected tool", () => {
+    expect(component.form.controls.selectedTool.value).toBeNull();
+    expect(component.form.controls.selectedTool.hasError("required")).toBe(
+      true
+    );
+    expect(component.isSectionValid("select-tool")).toBe(false);
   });
 
-  it("should switch selected tool when selectTool is called", () => {
-    component.selectTool("colabfold");
-    expect(component.selectedTool()).toBe("colabfold");
+  it("should update selected tool through the form control", () => {
+    component.form.controls.selectedTool.setValue("colabfold");
+    expect(component.form.controls.selectedTool.value).toBe("colabfold");
     expect(component.selectedToolLabel()).toBe("ColabFold");
   });
 
   it("should fall back to an empty label when the selected tool is unknown", () => {
-    component.selectedTool.set("unknown" as never);
+    component.form.controls.selectedTool.setValue("unknown" as never);
     expect(component.selectedToolLabel()).toBe("");
   });
 
@@ -195,6 +203,7 @@ describe("BulkPredictionComponent", () => {
     component.form.setValue({
       jobName: "bulk-job",
       fasta: ">seq1\nARNDCQ\n>seq1\nEGHILK",
+      selectedTool: "boltz",
     });
     expect(component.isFormValid()).toBe(false);
     expect(component.form.controls.fasta.errors?.["fasta"]).toContain(
@@ -209,7 +218,11 @@ describe("BulkPredictionComponent", () => {
       { length: 1001 },
       (_, i) => `>seq${i}\nARNDCQ`
     ).join("\n");
-    component.form.setValue({ jobName: "bulk-job", fasta: entries });
+    component.form.setValue({
+      jobName: "bulk-job",
+      fasta: entries,
+      selectedTool: "boltz",
+    });
     expect(component.isFormValid()).toBe(false);
     expect(component.form.controls.fasta.errors?.["fasta"]).toContain(
       "Too many FASTA entries"
@@ -223,6 +236,7 @@ describe("BulkPredictionComponent", () => {
     component.form.setValue({
       jobName: "bulk-job",
       fasta: `>longseq\n${longSeq}`,
+      selectedTool: "boltz",
     });
     expect(component.isFormValid()).toBe(false);
     expect(component.form.controls.fasta.errors?.["fasta"]).toContain(
@@ -236,6 +250,7 @@ describe("BulkPredictionComponent", () => {
     component.form.setValue({
       jobName: "bulk-job",
       fasta: VALID_MULTIMER_FASTA,
+      selectedTool: "boltz",
     });
     expect(component.isFormValid()).toBe(true);
   });
@@ -244,6 +259,7 @@ describe("BulkPredictionComponent", () => {
     component.form.setValue({
       jobName: "bulk-job",
       fasta: ">bad\n:ARNDCQ",
+      selectedTool: "boltz",
     });
     expect(component.isFormValid()).toBe(false);
   });
@@ -252,6 +268,7 @@ describe("BulkPredictionComponent", () => {
     component.form.setValue({
       jobName: "bulk-job",
       fasta: ">bad\nARNDCQ::EGHILK",
+      selectedTool: "boltz",
     });
     expect(component.isFormValid()).toBe(false);
   });
@@ -262,6 +279,7 @@ describe("BulkPredictionComponent", () => {
     component.form.setValue({
       jobName: "bulk-job",
       fasta: ">seq1\nARNDCQXYZ",
+      selectedTool: "boltz",
     });
     expect(component.isFormValid()).toBe(false);
     expect(component.form.controls.fasta.errors?.["fasta"]).toContain(
@@ -280,7 +298,9 @@ describe("BulkPredictionComponent", () => {
     ]);
   });
 
-  it("should treat select-tool and tool-settings as always valid", () => {
+  it("should require select-tool while tool-settings has no params", () => {
+    expect(component.isSectionValid("select-tool")).toBe(false);
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.isSectionValid("select-tool")).toBe(true);
     expect(component.isSectionValid("tool-settings")).toBe(true);
   });
@@ -366,7 +386,11 @@ describe("BulkPredictionComponent", () => {
   });
 
   it("should leave job name value empty in formSummary when jobName is empty", () => {
-    component.form.setValue({ jobName: "", fasta: VALID_FASTA });
+    component.form.setValue({
+      jobName: "",
+      fasta: VALID_FASTA,
+      selectedTool: "boltz",
+    });
     const summary = component.formSummary();
     const jobItem = summary.find((item) => item.fieldName === "job_id");
     expect(jobItem?.value).toBe("");
@@ -442,7 +466,11 @@ describe("BulkPredictionComponent", () => {
   // ── 18. formSummary — plural and invalid FASTA ────────────────────────
 
   it("should use plural 'sequences' when FASTA has more than one entry", () => {
-    component.form.setValue({ jobName: "bulk-job", fasta: VALID_FASTA });
+    component.form.setValue({
+      jobName: "bulk-job",
+      fasta: VALID_FASTA,
+      selectedTool: "boltz",
+    });
     const summary = component.formSummary();
     const fastaItem = summary.find(
       (item) => item.fieldName === "fasta_entries"
@@ -451,7 +479,11 @@ describe("BulkPredictionComponent", () => {
   });
 
   it("should leave fasta_entries value empty in formSummary when FASTA is invalid", () => {
-    component.form.setValue({ jobName: "bulk-job", fasta: "" });
+    component.form.setValue({
+      jobName: "bulk-job",
+      fasta: "",
+      selectedTool: "boltz",
+    });
     const summary = component.formSummary();
     const fastaItem = summary.find(
       (item) => item.fieldName === "fasta_entries"
@@ -494,7 +526,7 @@ describe("BulkPredictionComponent", () => {
   describe("creditCost", () => {
     it("computes tool multiplier × number of FASTA entries", () => {
       component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.fasta.setValue(VALID_FASTA);
       fixture.detectChanges();
 
@@ -503,7 +535,7 @@ describe("BulkPredictionComponent", () => {
 
     it("returns null when the FASTA input is empty or invalid", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.fasta.setValue("");
       fixture.detectChanges();
 
@@ -512,7 +544,7 @@ describe("BulkPredictionComponent", () => {
 
     it("flags insufficient credits when the cost exceeds the balance", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.fasta.setValue(VALID_FASTA);
       component["creditsRemaining"].set(1);
       fixture.detectChanges();
@@ -522,7 +554,7 @@ describe("BulkPredictionComponent", () => {
 
     it("does not flag insufficient when the balance is unknown", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.fasta.setValue(VALID_FASTA);
       component["creditsRemaining"].set(null);
       fixture.detectChanges();

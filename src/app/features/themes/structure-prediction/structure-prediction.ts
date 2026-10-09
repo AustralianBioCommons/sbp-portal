@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { ThemeLayoutComponent } from "../layout/theme-layout/theme-layout.component";
 import { THEMES } from "../../../core/configs/themes.config";
 
@@ -6,6 +6,7 @@ import { THEMES } from "../../../core/configs/themes.config";
   selector: "app-structure-prediction",
   imports: [ThemeLayoutComponent],
   templateUrl: "./structure-prediction.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./structure-prediction.scss",
 })
 export class StructurePredictionComponent {

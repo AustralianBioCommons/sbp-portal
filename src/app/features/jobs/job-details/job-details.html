@@ -128,11 +128,15 @@
               @for (tab of tabs; track tab.id) {
               <button
                 type="button"
+                [disabled]="isTabDisabled(tab.id)"
+                [attr.aria-disabled]="isTabDisabled(tab.id)"
                 (click)="setActiveTab(tab.id)"
                 class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-b-3 py-3 min-w-24 w-24 text-sm font-semibold transition-all"
                 [class]="
                   activeTab() === tab.id
                     ? 'border-sky-500 text-sky-600'
+                    : isTabDisabled(tab.id)
+                    ? 'border-transparent text-gray-400 opacity-50 cursor-not-allowed'
                     : 'border-transparent text-gray-500 hover:border-gray-600'
                 "
               >
@@ -360,7 +364,7 @@
                   [href]="setting.url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  download
+                  [attr.download]="setting.openInline ? null : ''"
                   class="text-sky-600 hover:underline transition-all hover:text-sky-800 text-xs wrap-break-word font-mono"
                 >
                   {{ setting.value }}
@@ -414,14 +418,33 @@
             <p class="text-sm text-gray-900 wrap-break-word">
               No logs are available for this run.
             </p>
-            } } @case ("citations") {
-            <ul class="space-y-2 list-disc pl-6 text-sm">
-              @for (citation of getCitations(selectedJob); track citation) {
-              <li>{{ citation }}</li>
+            } } @case ("citations") { @if (getCitations(selectedJob).length > 0)
+            {
+            <div class="space-y-4 text-sm text-gray-500">
+              @for (citation of getCitations(selectedJob); track citation.label)
+              {
+              <div class="space-y-2">
+                <h3 class="font-medium text-gray-900">{{ citation.label }}</h3>
+                <p>
+                  {{ citation.reference }}
+                  <a
+                    [href]="citation.doi"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="wrap-break-word text-sky-700 underline hover:text-sky-800"
+                    >{{ citation.doi }}<span class="sr-only">
+                      (opens in a new tab)</span
+                    ></a
+                  >
+                </p>
+              </div>
               }
-            </ul>
-
-            } }
+            </div>
+            } @else {
+            <p class="text-sm text-gray-900 wrap-break-word">
+              No citation is available for this workflow tool yet.
+            </p>
+            } } }
           </div>
         </div>
       </div>

@@ -1,27 +1,39 @@
 import { CommonModule } from "@angular/common";
-import { Component, computed, inject, Signal, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  Signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import {
   AbstractControl,
+  FormControl,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
+  Validators,
 } from "@angular/forms";
 import {
   JOB_NAME_VALIDATORS,
   jobNameErrorMessage,
 } from "../shared/job-name.validators";
+import { forkJoin } from "rxjs";
 import { map, startWith, switchMap } from "rxjs/operators";
 import { CreditSummaryComponent } from "../components/credit-summary/credit-summary.component";
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
+import { InteractionScreeningAboutComponent } from "./components/interaction-screening-about/interaction-screening-about.component";
+import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
 import {
   WorkflowFormComponent,
   WorkflowSection,
 } from "../components/workflow-form/workflow-form.component";
 import {
+  getToolLabel,
   ToolOption,
   ToolSelectionComponent,
 } from "../components/tool-selection/tool-selection.component";
@@ -99,6 +111,8 @@ interface ToolChip extends ToolOption {
     ToolSelectionComponent,
     WorkflowFormComponent,
     WorkflowLayoutComponent,
+    InteractionScreeningAboutComponent,
+    WorkflowPapersComponent,
     StepContentComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
@@ -108,6 +122,7 @@ interface ToolChip extends ToolOption {
     class: "block w-full interaction-screening-bg",
   },
   templateUrl: "./interaction-screening.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./interaction-screening.scss",
 })
 export default class InteractionScreeningComponent extends WorkflowPageBase {
@@ -121,26 +136,15 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   protected readonly workflowCategory = "interaction-screening" as const;
   protected override readonly minimumQuantity = MIN_SEQUENCE_PRODUCT;
 
-  /**
-   * Credit cost of the run: tool multiplier × (query entries × target entries).
-   */
-  readonly creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
-    if (multiplier == null) return null;
-    const val = this.formValue();
-    const query = validateMultiFastaProtein(val?.queryFasta ?? "");
-    const target = validateMultiFastaProtein(val?.targetFasta ?? "");
-    if (!query.valid || !target.valid) return null;
-    const product = query.sequenceCount * target.sequenceCount;
-    if (!product) return null;
-    return multiplier * product;
-  });
-
   readonly form = this.fb.group(
     {
       jobName: ["", JOB_NAME_VALIDATORS],
       queryFasta: ["", multiFastaValidator],
       targetFasta: ["", multiFastaValidator],
+      selectedTool: new FormControl<ToolChip["id"] | null>(
+        null,
+        Validators.required
+      ),
     },
     {
       validators: [
@@ -158,6 +162,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     jobName: string;
     queryFasta: string;
     targetFasta: string;
+    selectedTool: ToolChip["id"] | null;
   }> = toSignal(
     this.form.valueChanges.pipe(
       startWith(null),
@@ -166,16 +171,29 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     { initialValue: this.form.getRawValue() }
   );
 
+  /**
+   * Credit cost of the run: tool multiplier × (query entries × target entries).
+   */
+  readonly creditCost = computed<number | null>(() => {
+    const tool = this.formValue().selectedTool;
+    if (!tool) return null;
+    const multiplier = this.toolMultipliers()[tool];
+    if (multiplier == null) return null;
+    const val = this.formValue();
+    const query = validateMultiFastaProtein(val?.queryFasta ?? "");
+    const target = validateMultiFastaProtein(val?.targetFasta ?? "");
+    if (!query.valid || !target.valid) return null;
+    const product = query.sequenceCount * target.sequenceCount;
+    if (!product) return null;
+    return multiplier * product;
+  });
+
   readonly tools: ToolChip[] = [
     { id: "boltz", label: "Boltz" },
     { id: "colabfold", label: "ColabFold" },
   ];
-  selectedTool = signal<ToolChip["id"]>("boltz");
-  selectTool(id: ToolChip["id"]) {
-    this.selectedTool.set(id);
-  }
-  selectedToolLabel: Signal<string> = computed(
-    () => this.tools.find((t) => t.id === this.selectedTool())?.label ?? ""
+  selectedToolLabel: Signal<string> = computed(() =>
+    getToolLabel(this.tools, this.formValue().selectedTool)
   );
 
   // ─── Sections ────────────────────────────────────────────────────────────
@@ -192,11 +210,21 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
     switch (id) {
+      case "select-tool":
+        return this.form.controls.selectedTool.valid;
       case "input-config":
+        return (
+          this.form.controls.jobName.valid &&
+          this.form.controls.queryFasta.valid &&
+          this.form.controls.targetFasta.valid &&
+          !this.form.errors?.["maxProduct"] &&
+          !this.form.errors?.["minProduct"] &&
+          !this.form.errors?.["duplicateSequences"]
+        );
       case "review":
         return this.isFormValid();
       default:
-        // select-tool (a tool is always selected) and tool-settings (no params).
+        // tool-settings has no params.
         return true;
     }
   };
@@ -242,6 +270,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     const productError = !!this.form.errors?.["maxProduct"];
     const minProductError = !!this.form.errors?.["minProduct"];
     const errorCount =
+      (this.form.controls.selectedTool.valid ? 0 : 1) +
       (this.form.controls.jobName.valid ? 0 : 1) +
       (this.form.controls.queryFasta.valid ? 0 : 1) +
       (this.form.controls.targetFasta.valid ? 0 : 1) +
@@ -315,53 +344,52 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
 
   // ─── Submission ───────────────────────────────────────────────────────────
 
-  private buildWispsPayload(): {
-    id: string;
-    sequence: string;
-    group: "query" | "target";
-  }[] {
-    const raw = this.form.getRawValue();
-    const queryEntries = parseMultiFasta(raw.queryFasta);
-    const targetEntries = parseMultiFasta(raw.targetFasta);
-    return [
-      ...queryEntries.map((e) => ({
-        id: e.id,
-        sequence: e.sequence,
-        group: "query" as const,
-      })),
-      ...targetEntries.map((e) => ({
-        id: e.id,
-        sequence: e.sequence,
-        group: "target" as const,
-      })),
-    ];
+  private buildFastaText(fasta: string): string {
+    return parseMultiFasta(fasta)
+      .map((e) => `>${e.id}\n${e.sequence}`)
+      .join("\n");
   }
 
-  protected performSubmit(): void {
-    const jobName = this.form.getRawValue().jobName;
-    const sequences = this.buildWispsPayload();
-
-    this.workflowSubmission.isSubmitting.set(true);
-
-    const combinedFasta = sequences
-      .map((seq) => `>${seq.id}\n${seq.sequence}`)
-      .join("\n");
-    const blob = new Blob([combinedFasta], { type: "text/plain" });
-    const file = new File([blob], `sequences.fasta`, { type: "text/plain" });
-    const upload$ = this.fastaUploadService.uploadFastaFile({
+  private uploadGroupFasta(
+    jobName: string,
+    group: "query" | "target",
+    text: string
+  ) {
+    const file = new File([text], `${jobName}_${group}.fasta`, {
+      type: "text/plain",
+    });
+    return this.fastaUploadService.uploadFastaFile({
       file,
       folder: this.workflowInputDir,
     });
+  }
 
-    let fastaS3Uri = "";
+  protected performSubmit(): void {
+    const raw = this.form.getRawValue();
+    const jobName = raw.jobName;
+    const tool = raw.selectedTool;
+    if (!tool) return;
+    const queryFasta = this.buildFastaText(raw.queryFasta);
+    const targetFasta = this.buildFastaText(raw.targetFasta);
+    const combinedFasta = `${queryFasta}\n${targetFasta}`;
 
-    upload$
+    this.workflowSubmission.isSubmitting.set(true);
+
+    let queryFastaS3Uri = "";
+    let targetFastaS3Uri = "";
+
+    forkJoin({
+      query: this.uploadGroupFasta(jobName, "query", queryFasta),
+      target: this.uploadGroupFasta(jobName, "target", targetFasta),
+    })
       .pipe(
-        switchMap((uploadResp) => {
-          fastaS3Uri = uploadResp.s3Uri;
+        switchMap(({ query, target }) => {
+          queryFastaS3Uri = query.s3Uri;
+          targetFastaS3Uri = target.s3Uri;
           return this.datasetUploadService.uploadInteractionScreeningDataset({
-            sequences: sequences.map((s) => ({ id: s.id, group: s.group })),
             runId: jobName,
+            queryFastaS3Uri,
+            targetFastaS3Uri,
           });
         })
       )
@@ -375,21 +403,13 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
             );
             return;
           }
-          const splitOutputDir = datasetResponse.splitOutputDir;
-          if (!splitOutputDir) {
-            this.workflowSubmission.isSubmitting.set(false);
-            this.showError(
-              "Dataset upload did not return a split output directory."
-            );
-            return;
-          }
           const payload: InteractionScreeningPayload = {
-            tool: this.selectedTool(),
+            tool,
             runName: jobName,
             workflow: "interaction-screening",
             sample_id: jobName,
-            fastaS3Uri,
-            splitOutputDir,
+            queryFastaS3Uri,
+            targetFastaS3Uri,
             fastaContent: combinedFasta,
           };
           this.workflowSubmission.submitWorkflowWithDataset(

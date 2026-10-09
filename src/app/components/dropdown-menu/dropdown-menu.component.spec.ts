@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { DropdownMenuComponent } from "./dropdown-menu.component";
-import { Component, signal } from "@angular/core";
+import { Component, signal, ChangeDetectionStrategy } from "@angular/core";
 
 @Component({
   selector: "app-test-host",
   imports: [DropdownMenuComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <app-dropdown-menu [isOpen]="isOpen()" (isOpenChange)="isOpen.set($event)">
       <ng-template #trigger>

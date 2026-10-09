@@ -1,11 +1,11 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroArrowDownTray } from "@ng-icons/heroicons/outline";
-import { ButtonComponent } from "../../../../components/button/button.component";
+import { ButtonComponent } from "../../../../../components/button/button.component";
 import {
   ExampleOutputComponent,
   ExampleOutputImage,
-} from "../example-output/example-output.component";
+} from "../../../components/example-output/example-output.component";
 
 /** Example Output tab content for the Single Prediction workflow. */
 @Component({
@@ -14,6 +14,7 @@ import {
   providers: [provideIcons({ heroArrowDownTray })],
   templateUrl: "./single-prediction-example-output.component.html",
   styleUrl: "./single-prediction-example-output.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block space-y-8 pt-4" },
 })
 export class SinglePredictionExampleOutputComponent {

@@ -5,9 +5,21 @@ import {
   DragDropModule,
   moveItemInArray,
 } from "@angular/cdk/drag-drop";
-import { Component, computed, inject, Signal, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  Signal,
+  signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
-import { NonNullableFormBuilder, ReactiveFormsModule } from "@angular/forms";
+import {
+  FormControl,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from "@angular/forms";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { bootstrapGripVertical } from "@ng-icons/bootstrap-icons";
 import { heroTrash } from "@ng-icons/heroicons/outline";
@@ -22,14 +34,17 @@ import {
   ListboxSelectComponent,
   ListboxSelectOption,
 } from "../components/listbox-select/listbox-select.component";
-import { SinglePredictionExampleOutputComponent } from "../components/single-prediction-example-output/single-prediction-example-output.component";
+import { SinglePredictionAboutComponent } from "./components/single-prediction-about/single-prediction-about.component";
+import { SinglePredictionExampleOutputComponent } from "./components/single-prediction-example-output/single-prediction-example-output.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
+import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
 import {
   WorkflowFormComponent,
   WorkflowSection,
 } from "../components/workflow-form/workflow-form.component";
 import {
+  getToolLabel,
   ToolOption,
   ToolSelectionComponent,
 } from "../components/tool-selection/tool-selection.component";
@@ -132,7 +147,9 @@ function generateRandomSeed(): string {
     ListboxSelectComponent,
     WorkflowFormComponent,
     WorkflowLayoutComponent,
+    SinglePredictionAboutComponent,
     SinglePredictionExampleOutputComponent,
+    WorkflowPapersComponent,
     StepContentComponent,
     NgIconComponent,
     CreditSummaryComponent,
@@ -144,6 +161,7 @@ function generateRandomSeed(): string {
     class: "block w-full single-prediction-bg",
   },
   templateUrl: "./single-prediction.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./single-prediction.scss",
 })
 export default class SinglePredictionComponent extends WorkflowPageBase {
@@ -152,9 +170,40 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   protected readonly workflowCategory = "single-prediction" as const;
 
+  private readonly fb = inject(NonNullableFormBuilder);
+  readonly form = this.fb.group({
+    jobName: ["", JOB_NAME_VALIDATORS],
+    selectedTool: new FormControl<SinglePredictionTool | null>(
+      null,
+      Validators.required
+    ),
+  });
+  private readonly formStatus = toSignal(
+    this.form.statusChanges.pipe(startWith(this.form.status)),
+    { requireSync: true }
+  );
+  private readonly formValue: Signal<{
+    jobName: string;
+    selectedTool: SinglePredictionTool | null;
+  }> = toSignal(
+    this.form.valueChanges.pipe(
+      startWith(null),
+      map(() => this.form.getRawValue())
+    ),
+    { initialValue: this.form.getRawValue() }
+  );
+  readonly jobName = toSignal(
+    this.form.controls.jobName.valueChanges.pipe(
+      startWith(this.form.controls.jobName.value)
+    ),
+    { initialValue: this.form.controls.jobName.value }
+  );
+
   /** Credit cost of the run: tool multiplier × 1 (a single prediction). */
   readonly creditCost = computed<number | null>(() => {
-    const multiplier = this.toolMultipliers()[this.selectedTool()];
+    const tool = this.formValue().selectedTool;
+    if (!tool) return null;
+    const multiplier = this.toolMultipliers()[tool];
     return multiplier == null ? null : multiplier;
   });
 
@@ -180,10 +229,8 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     { id: "boltz", label: "Boltz" },
   ];
   isToolAvailable = signal(true);
-  selectedTool = signal<SinglePredictionTool>("colabfold");
-  selectedToolLabel: Signal<string> = computed(
-    () =>
-      this.tools.find((tool) => tool.id === this.selectedTool())?.label ?? ""
+  selectedToolLabel: Signal<string> = computed(() =>
+    getToolLabel(this.tools, this.formValue().selectedTool)
   );
 
   readonly moleculeTypes: { value: MoleculeType; label: string }[] = [
@@ -201,16 +248,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   stepOneTouched = signal(false);
   stepTwoTouched = signal(false);
 
-  private readonly fb = inject(NonNullableFormBuilder);
-  readonly form = this.fb.group({
-    jobName: ["", JOB_NAME_VALIDATORS],
-  });
-  readonly jobName = toSignal(
-    this.form.controls.jobName.valueChanges.pipe(
-      startWith(this.form.controls.jobName.value)
-    ),
-    { initialValue: this.form.controls.jobName.value }
-  );
   hasJobNameError(): boolean {
     const ctrl = this.form.controls.jobName;
     return ctrl.touched && ctrl.invalid;
@@ -257,8 +294,9 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   );
 
   /** Upper limit on the total prediction size for the selected tool. */
-  readonly predictionSizeLimit = computed(() => {
-    const tool = this.selectedTool();
+  readonly predictionSizeLimit = computed<number | null>(() => {
+    const tool = this.formValue().selectedTool;
+    if (!tool) return null;
     if (tool === "boltz" && this.boltzUsePotentials()) {
       return PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS;
     }
@@ -291,7 +329,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     const limit = this.predictionSizeLimit();
     const size = this.totalPredictionSize();
-    if (size >= limit) {
+    if (limit !== null && size >= limit) {
       errors.push(
         `Total prediction size (${size}) must be less than ${limit} for ${this.selectedToolLabel()}. Reduce sequence length or the number of copies.`
       );
@@ -314,14 +352,18 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     () => Object.keys(this.toolSettingErrors()).length === 0
   );
   readonly isFormValid = computed(
-    () => this.isStep1Valid() && this.isStep2Valid() && this.isToolAvailable()
+    () =>
+      this.formStatus() === "VALID" &&
+      this.isStep1Valid() &&
+      this.isStep2Valid() &&
+      this.isToolAvailable()
   );
 
   /** Per-section validity — drives the progress-bar colours. */
   isSectionValid = (id: string): boolean => {
     switch (id) {
       case "select-tool":
-        return this.isToolAvailable();
+        return this.form.controls.selectedTool.valid && this.isToolAvailable();
       case "input-config":
         return this.isStep1Valid();
       case "tool-settings":
@@ -372,10 +414,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     return fastaRecords.join("\n");
   });
-
-  selectTool(id: SinglePredictionTool) {
-    this.selectedTool.set(id);
-  }
 
   addEntityRow(): void {
     this.entityRows.update((rows) => [...rows, this.createEntityRow()]);
@@ -504,7 +542,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       fieldName: "random_seed",
     };
 
-    switch (this.selectedTool()) {
+    switch (this.formValue().selectedTool) {
       case "alphafold2":
         return [
           randomSeedItem,
@@ -591,10 +629,13 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   }
 
   protected performSubmit(): void {
+    const tool = this.form.getRawValue().selectedTool;
+    if (!tool) return;
+
     this.workflowSubmission.isSubmitting.set(true);
 
     this.prepareSinglePredictionInput((fastaUrl, s3InputKey) => {
-      this.submitPreparedWorkflow(s3InputKey, fastaUrl);
+      this.submitPreparedWorkflow(s3InputKey, fastaUrl, tool);
     });
   }
 
@@ -721,9 +762,9 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         "Copy number must be a whole number greater than or equal to 1";
     }
 
+    const tool = this.formValue().selectedTool;
     if (
-      (this.selectedTool() === "colabfold" ||
-        this.selectedTool() === "alphafold2") &&
+      (tool === "colabfold" || tool === "alphafold2") &&
       row.moleculeType !== "protein"
     ) {
       errors.tool = `${this.selectedToolLabel()} tool only accepts protein input`;
@@ -743,7 +784,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
     const recycles = parsePositiveInteger(this.colabfoldNumRecycles());
     if (
-      this.selectedTool() === "colabfold" &&
+      this.formValue().selectedTool === "colabfold" &&
       (recycles === null || recycles > MAX_COLABFOLD_NUM_RECYCLES)
     ) {
       errors.colabfoldNumRecycles = `Should be an integer between 1-${MAX_COLABFOLD_NUM_RECYCLES}. Default value is ${DEFAULT_COLABFOLD_NUM_RECYCLES}.`;
@@ -752,10 +793,12 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return errors;
   }
 
-  private buildToolSettingsPayload(): SinglePredictionToolSettingsPayload {
+  private buildToolSettingsPayload(
+    tool: SinglePredictionTool
+  ): SinglePredictionToolSettingsPayload {
     const random_seed = parseWholeNumber(this.randomSeed()) ?? 0;
 
-    switch (this.selectedTool()) {
+    switch (tool) {
       case "alphafold2":
         return {
           random_seed,
@@ -905,10 +948,14 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
       });
   }
 
-  private submitPreparedWorkflow(s3InputKey: string, fastaUrl: string): void {
+  private submitPreparedWorkflow(
+    s3InputKey: string,
+    fastaUrl: string,
+    tool: SinglePredictionTool
+  ): void {
     this.workflowSubmission.submitWorkflowWithDataset(
       {
-        ...this.buildWorkflowPayload(),
+        ...this.buildWorkflowPayload(tool),
         fastaFileUrl: fastaUrl,
         sample_id: this.samplesheetId,
       },
@@ -922,13 +969,12 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     );
   }
 
-  private buildWorkflowPayload(): Omit<
-    SinglePredictionPayload,
-    "fastaFileUrl" | "sample_id"
-  > {
+  private buildWorkflowPayload(
+    tool: SinglePredictionTool
+  ): Omit<SinglePredictionPayload, "fastaFileUrl" | "sample_id"> {
     return {
       workflow: "single-prediction",
-      tool: this.selectedTool(),
+      tool,
       runName: this.jobName().trim(),
       entities: this.entityRows().map((row, index) => ({
         id: this.getEntityName(index),
@@ -937,7 +983,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         sequence: this.getNormalizedSequence(row),
       })),
       fastaContent: this.generatedFastaContent(),
-      ...this.buildToolSettingsPayload(),
+      ...this.buildToolSettingsPayload(tool),
     };
   }
 

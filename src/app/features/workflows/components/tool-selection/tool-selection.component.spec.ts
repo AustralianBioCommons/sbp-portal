@@ -20,7 +20,7 @@ describe("ToolSelectionComponent", () => {
 
     // Set required inputs
     fixture.componentRef.setInput("tools", mockTools);
-    fixture.componentRef.setInput("selectedToolId", "tool1");
+    component.writeValue("tool1");
   });
 
   it("should create", () => {
@@ -34,20 +34,22 @@ describe("ToolSelectionComponent", () => {
     expect(compiled.textContent).toContain("Tool 2");
   });
 
-  it("should emit toolSelect when tool is selected", () => {
-    spyOn(component.toolSelect, "emit");
+  it("should notify the registered form change callback when tool is selected", () => {
+    const onChange = jasmine.createSpy("onChange");
+    component.registerOnChange(onChange);
     component.onToolSelect("tool2");
-    expect(component.toolSelect.emit).toHaveBeenCalledWith("tool2");
+    expect(onChange).toHaveBeenCalledWith("tool2");
   });
 
   it("should display selected tool correctly", () => {
     fixture.detectChanges();
-    const radioButtons = fixture.nativeElement.querySelectorAll(
+    const compiled = fixture.nativeElement as HTMLElement;
+    const radioButtons = compiled.querySelectorAll<HTMLInputElement>(
       'input[type="radio"]'
     );
     const selectedRadio = Array.from(radioButtons).find(
-      (radio: HTMLInputElement) => radio.checked
-    ) as HTMLInputElement;
+      (radio) => radio.checked
+    );
     expect(selectedRadio?.value).toBe("tool1");
   });
 
@@ -59,7 +61,8 @@ describe("ToolSelectionComponent", () => {
   });
 
   it("should handle tool selection change", () => {
-    spyOn(component.toolSelect, "emit");
+    const onChange = jasmine.createSpy("onChange");
+    component.registerOnChange(onChange);
     fixture.detectChanges();
 
     const radioButton = fixture.nativeElement.querySelector(
@@ -67,6 +70,6 @@ describe("ToolSelectionComponent", () => {
     );
     radioButton.click();
 
-    expect(component.toolSelect.emit).toHaveBeenCalledWith("tool2");
+    expect(onChange).toHaveBeenCalledWith("tool2");
   });
 });

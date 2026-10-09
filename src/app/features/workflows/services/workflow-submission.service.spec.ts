@@ -1,5 +1,5 @@
 import { TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Router } from "@angular/router";
 import { of, Subject, throwError } from "rxjs";
@@ -34,7 +34,7 @@ describe("WorkflowSubmissionService", () => {
 
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         WorkflowSubmissionService,
         { provide: WorkflowApiService, useValue: workflowApiService },

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { ActivatedRoute } from "@angular/router";
 import { of } from "rxjs";
@@ -39,7 +39,7 @@ describe("App", () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthService },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
@@ -122,7 +122,7 @@ describe("App", () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthServiceLoggedIn },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
@@ -156,7 +156,7 @@ describe("App", () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthServiceWithError },
         { provide: ActivatedRoute, useValue: activatedRouteMock },

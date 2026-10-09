@@ -1,5 +1,5 @@
 import { TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import {
   HttpTestingController,
   provideHttpClientTesting,
@@ -14,7 +14,7 @@ describe("DatasetUploadService", () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         DatasetUploadService,
       ],
@@ -58,11 +58,9 @@ describe("DatasetUploadService", () => {
 
   it("should upload interaction screening dataset to the correct endpoint", () => {
     const requestBody = {
-      sequences: [
-        { id: "querySeq1", group: "query" as const },
-        { id: "targetSeq1", group: "target" as const },
-      ],
       runId: "my-run",
+      queryFastaS3Uri: "s3://bucket/input/my-run_query.fasta",
+      targetFastaS3Uri: "s3://bucket/input/my-run_target.fasta",
     };
 
     service

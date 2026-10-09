@@ -1,6 +1,6 @@
 import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideRouter } from "@angular/router";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
 import { Observable, of, throwError } from "rxjs";
@@ -37,8 +37,15 @@ const MOCK_DATASET_RESPONSE = {
   success: true,
   message: "ok",
   s3Key: "inputs/samplesheets/dataset-123.csv",
-  splitOutputDir: "/g/data/yz52/sbp-service/input/interaction_screening/my-job",
 };
+
+/** Echo the uploaded file's name back in its S3 URI, so query/target are distinguishable. */
+const fastaResponseFor = (file: File): FastaUploadResponse => ({
+  ...MOCK_FASTA_RESPONSE,
+  fileId: `input/interaction-screening/${file.name}`,
+  fileName: file.name,
+  s3Uri: `s3://bucket/input/interaction-screening/${file.name}`,
+});
 
 // ──────────────────────────────────────────────────────────────────────────
 
@@ -69,7 +76,9 @@ describe("InteractionScreeningComponent", () => {
       "FastaUploadService",
       ["uploadFastaFile"]
     );
-    fastaUploadService.uploadFastaFile.and.returnValue(of(MOCK_FASTA_RESPONSE));
+    fastaUploadService.uploadFastaFile.and.callFake(({ file }) =>
+      of(fastaResponseFor(file))
+    );
 
     datasetUploadService = jasmine.createSpyObj<DatasetUploadService>(
       "DatasetUploadService",
@@ -122,7 +131,7 @@ describe("InteractionScreeningComponent", () => {
     await TestBed.configureTestingModule({
       imports: [InteractionScreeningComponent],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideRouter([]),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
@@ -148,6 +157,7 @@ describe("InteractionScreeningComponent", () => {
       jobName: "my-job",
       queryFasta: VALID_QUERY,
       targetFasta: VALID_TARGET,
+      selectedTool: "boltz",
     });
   }
 
@@ -169,6 +179,14 @@ describe("InteractionScreeningComponent", () => {
     expect(component.isFormValid()).toBe(true);
   });
 
+  it("should start with no selected tool", () => {
+    expect(component.form.controls.selectedTool.value).toBeNull();
+    expect(component.form.controls.selectedTool.hasError("required")).toBe(
+      true
+    );
+    expect(component.isSectionValid("select-tool")).toBe(false);
+  });
+
   // ── 3. submitWorkflow ──────────────────────────────────────────────────
 
   it("should return early without calling uploadFastaFile when form is invalid", () => {
@@ -176,14 +194,50 @@ describe("InteractionScreeningComponent", () => {
     expect(fastaUploadService.uploadFastaFile).not.toHaveBeenCalled();
   });
 
-  it("should call uploadFastaFile once with combined sequences when form is valid", () => {
+  it("should upload one query and one target FASTA named after the job", async () => {
     fillValidForm();
     fixture.detectChanges();
 
     component.submitWorkflow();
 
-    // all sequences combined into a single FASTA file upload
-    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+    expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(2);
+    const [queryFile, targetFile] = fastaUploadService.uploadFastaFile.calls
+      .allArgs()
+      .map(([req]) => req.file);
+    expect(queryFile.name).toBe("my-job_query.fasta");
+    expect(targetFile.name).toBe("my-job_target.fasta");
+    expect(await queryFile.text()).toBe(VALID_QUERY);
+    expect(await targetFile.text()).toBe(VALID_TARGET);
+  });
+
+  it("should send both FASTA S3 URIs to the samplesheet upload and the launch payload", () => {
+    fillValidForm();
+    fixture.detectChanges();
+
+    component.submitWorkflow();
+
+    const queryUri =
+      "s3://bucket/input/interaction-screening/my-job_query.fasta";
+    const targetUri =
+      "s3://bucket/input/interaction-screening/my-job_target.fasta";
+    expect(
+      datasetUploadService.uploadInteractionScreeningDataset
+    ).toHaveBeenCalledOnceWith({
+      runId: "my-job",
+      queryFastaS3Uri: queryUri,
+      targetFastaS3Uri: targetUri,
+    });
+    const [payload, s3InputKey] =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+        .args;
+    expect(s3InputKey).toBe("inputs/samplesheets/dataset-123.csv");
+    expect(payload).toEqual(
+      jasmine.objectContaining({
+        queryFastaS3Uri: queryUri,
+        targetFastaS3Uri: targetUri,
+        fastaContent: `${VALID_QUERY}\n${VALID_TARGET}`,
+      })
+    );
   });
 
   it("should set isSubmitting to false on successful upload", () => {
@@ -237,7 +291,9 @@ describe("InteractionScreeningComponent", () => {
     ]);
   });
 
-  it("should treat select-tool and tool-settings as always valid", () => {
+  it("should require select-tool while tool-settings has no params", () => {
+    expect(component.isSectionValid("select-tool")).toBe(false);
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.isSectionValid("select-tool")).toBe(true);
     expect(component.isSectionValid("tool-settings")).toBe(true);
   });
@@ -256,11 +312,11 @@ describe("InteractionScreeningComponent", () => {
   // ── 8. selectTool ──────────────────────────────────────────────────────
 
   it("should update selectedTool when selectTool is called", () => {
-    component.selectTool("colabfold");
-    expect(component.selectedTool()).toBe("colabfold");
+    component.form.controls.selectedTool.setValue("colabfold");
+    expect(component.form.controls.selectedTool.value).toBe("colabfold");
 
-    component.selectTool("boltz");
-    expect(component.selectedTool()).toBe("boltz");
+    component.form.controls.selectedTool.setValue("boltz");
+    expect(component.form.controls.selectedTool.value).toBe("boltz");
   });
 
   // ── 9. closeAlert ──────────────────────────────────────────────────────
@@ -410,6 +466,7 @@ describe("InteractionScreeningComponent", () => {
   // ── 14. selectedToolLabel computed ────────────────────────────────────────
 
   it("should return the label of the currently selected tool", () => {
+    component.form.controls.selectedTool.setValue("boltz");
     expect(component.selectedToolLabel()).toBe("Boltz");
   });
 
@@ -440,10 +497,10 @@ describe("InteractionScreeningComponent", () => {
 
   // ── 17. getFormValidationSummary ──────────────────────────────────────────
 
-  it("should count 3 field errors when form is empty", () => {
+  it("should count 4 field errors when form is empty", () => {
     const s = component.getFormValidationSummary();
     expect(s.valid).toBe(false);
-    expect(s.errorCount).toBe(3);
+    expect(s.errorCount).toBe(4);
     expect(s.rowCount).toBe(3);
   });
 
@@ -464,7 +521,12 @@ describe("InteractionScreeningComponent", () => {
       { length: 32 },
       (_, i) => `>t${i}\nARNDC`
     ).join("\n");
-    component.form.setValue({ jobName: "job", queryFasta, targetFasta });
+    component.form.setValue({
+      jobName: "job",
+      queryFasta,
+      targetFasta,
+      selectedTool: "boltz",
+    });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
   });
@@ -474,6 +536,7 @@ describe("InteractionScreeningComponent", () => {
       jobName: "job",
       queryFasta: VALID_TARGET,
       targetFasta: ">t1\nARNDC",
+      selectedTool: "boltz",
     });
     fixture.detectChanges();
     expect(component.getFormValidationSummary().errorCount).toBe(1);
@@ -503,6 +566,7 @@ describe("InteractionScreeningComponent", () => {
       jobName: "my-job",
       queryFasta: VALID_QUERY,
       targetFasta: VALID_QUERY, // same header as query → duplicate
+      selectedTool: "boltz",
     });
     fixture.detectChanges();
     expect(component.hasDuplicateSequencesError()).toBe(true);
@@ -523,26 +587,6 @@ describe("InteractionScreeningComponent", () => {
     expect(workflowSubmissionService.isSubmitting()).toBe(false);
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("no S3 key");
-  });
-
-  // ── 23b. submitWorkflow — missing splitOutputDir ─────────────────────────
-
-  it("should show error and set isSubmitting false when dataset upload returns no splitOutputDir", () => {
-    fillValidForm();
-    fixture.detectChanges();
-    datasetUploadService.uploadInteractionScreeningDataset.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-        s3Key: "inputs/samplesheets/dataset-123.csv",
-      })
-    );
-
-    component.submitWorkflow();
-
-    expect(workflowSubmissionService.isSubmitting()).toBe(false);
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("split output directory");
   });
 
   // ── 24. submitWorkflow — workflow launch error callback ───────────────────
@@ -590,7 +634,7 @@ describe("InteractionScreeningComponent", () => {
   describe("creditCost", () => {
     it("computes tool multiplier × (query entries × target entries)", () => {
       component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
@@ -603,7 +647,7 @@ describe("InteractionScreeningComponent", () => {
 
     it("returns null when either FASTA input is empty or invalid", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue("");
       component.form.controls.targetFasta.setValue("");
       fixture.detectChanges();
@@ -613,7 +657,7 @@ describe("InteractionScreeningComponent", () => {
 
     it("flags insufficient credits when the cost exceeds the balance", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
@@ -626,7 +670,7 @@ describe("InteractionScreeningComponent", () => {
 
     it("does not flag insufficient when the balance is unknown", () => {
       component["toolMultipliers"].set({ boltz: 1 });
-      component.selectTool("boltz");
+      component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.queryFasta.setValue(
         ">q1\nARNDCQEGHILKMFPSTWYV\n>q2\nVYWTSPFMKLIHGEQCDNRA"
       );
@@ -679,7 +723,7 @@ describe("InteractionScreeningComponent", () => {
       component.onPreviewConfirmed();
 
       expect(component.showPreview()).toBe(false);
-      expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(1);
+      expect(fastaUploadService.uploadFastaFile).toHaveBeenCalledTimes(2);
     });
   });
 });

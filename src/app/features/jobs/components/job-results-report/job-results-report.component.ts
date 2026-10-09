@@ -9,6 +9,7 @@ import {
   output,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import type { WritableSignal } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
@@ -73,6 +74,7 @@ import "../../shared/bulk-prediction-results.utils";
     }),
   ],
   templateUrl: "./job-results-report.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./job-results-report.component.scss",
 })
 export class JobResultsReportComponent {

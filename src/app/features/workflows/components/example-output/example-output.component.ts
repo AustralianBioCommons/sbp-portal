@@ -10,6 +10,7 @@ import {
   input,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
@@ -37,6 +38,7 @@ let nextExampleOutputId = 0;
   providers: [provideIcons({ heroChevronDoubleLeft, heroPhoto, heroXMark })],
   templateUrl: "./example-output.component.html",
   styleUrl: "./example-output.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "block" },
 })
 export class ExampleOutputComponent {

@@ -5,6 +5,7 @@ import {
   inject,
   OnInit,
   signal,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { ActivatedRoute, Params, Router, RouterLink } from "@angular/router";
 import { SafeResourceUrl } from "@angular/platform-browser";
@@ -30,7 +31,7 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
 import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
-import { statusTagClass } from "../shared/job-status.utils";
+import { statusTagClass, type JobStatusUi } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
 import { formatDecimals } from "../shared/job-results-report.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
@@ -39,9 +40,19 @@ import {
   ResultLogsResponse,
   ResultsService,
 } from "../services/results.service";
+import {
+  getToolCitation,
+  ToolCitation,
+} from "../../workflows/shared/workflow-citations";
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
+const DEFAULT_JOB_RESULTS_TAB: JobResultsTab = "settings";
+const TERMINAL_JOB_STATUSES: readonly JobStatusUi[] = [
+  "Completed",
+  "Failed",
+  "Stopped",
+];
 
 /** Compare workflow labels without depending on the backend's exact casing. */
 function normalizeWorkflowName(workflow: string | undefined): string {
@@ -52,11 +63,21 @@ function normalizeWorkflowName(workflow: string | undefined): string {
     .trim();
 }
 
+function isTerminalJobStatus(
+  status: string | undefined
+): status is JobStatusUi {
+  return TERMINAL_JOB_STATUSES.some(
+    (terminalStatus) => terminalStatus === status
+  );
+}
+
 type JobSettingItem = {
   label: string;
   value: string;
   details: string[];
   url?: string;
+  /** Open the link in the browser (served as plain text) rather than download it. */
+  openInline?: boolean;
 };
 
 /** Settings actually exposed in each workflow's submission form, keyed by
@@ -78,14 +99,15 @@ const ALLOWED_SETTING_KEYS_BY_WORKFLOW: Record<string, Set<string>> = {
   "interaction screening": new Set([
     "workflow",
     "tool",
-    "fastaContent",
+    "queryFastaS3Uri",
+    "targetFastaS3Uri",
+    // Older jobs, submitted as one combined FASTA.
     "fastaS3Uri",
     "boltz_use_potentials",
   ]),
   "bulk prediction": new Set([
     "workflow",
     "tool",
-    "fastaContent",
     "fastaS3Uri",
     "boltz_use_potentials",
   ]),
@@ -98,12 +120,13 @@ const RESULTS_REPORT_WORKFLOWS = new Set([
   "bulk prediction",
 ]);
 
-/** Workflows whose form is plain text (no file to browse for) — the raw FASTA
- *  is submitted directly, so it's shown inline. Older jobs submitted before
- *  fastaContent existed fall back to the fastaS3Uri download link. */
-const WORKFLOWS_PREFERRING_FASTA_CONTENT = new Set([
-  "interaction screening",
-  "bulk prediction",
+/** FASTA links the backend presigns as inline plain text, so they open in the
+ *  browser (sequences can be copied straight from the tab) instead of
+ *  downloading. */
+const INLINE_FASTA_KEYS = new Set([
+  "fastaS3Uri",
+  "queryFastaS3Uri",
+  "targetFastaS3Uri",
 ]);
 
 /** Workflows whose form has no "Use Potentials" checkbox, but which still run
@@ -120,6 +143,8 @@ const WORKFLOWS_WITH_IMPLICIT_BOLTZ_POTENTIALS = new Set([
 const SETTING_LABEL_OVERRIDES: Record<string, string> = {
   fastaContent: "FASTA Content",
   fastaS3Uri: "FASTA File",
+  queryFastaS3Uri: "Query FASTA",
+  targetFastaS3Uri: "Target FASTA",
   colabfold_num_recycles: "Recycles",
   alphafold2_full_dbs: "Full DBs",
   boltz_use_potentials: "Use Potentials",
@@ -158,6 +183,7 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     DatePipe,
   ],
   templateUrl: "./job-details.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./job-details.scss",
 })
 export default class JobDetailsComponent implements OnInit {
@@ -181,7 +207,7 @@ export default class JobDetailsComponent implements OnInit {
   deleting = signal<boolean>(false);
 
   // Results state
-  activeTab = signal<JobResultsTab>("results");
+  activeTab = signal<JobResultsTab>(DEFAULT_JOB_RESULTS_TAB);
   reportUrl = signal<SafeResourceUrl | null>(null);
   reportLoading = signal(false);
   reportError = signal<string | null>(null);
@@ -195,9 +221,16 @@ export default class JobDetailsComponent implements OnInit {
   logsLoading = signal(false);
   logsError = signal<string | null>(null);
   downloadingAllFiles = signal(false);
+  isTerminalJob = computed(() => {
+    const status = this.job()?.status;
+    return isTerminalJobStatus(status);
+  });
   canDownloadAllFiles = computed(
     () =>
-      !this.filesLoading() && !this.filesError() && this.filesItems().length > 0
+      this.isTerminalJob() &&
+      !this.filesLoading() &&
+      !this.filesError() &&
+      this.filesItems().length > 0
   );
 
   /** Normalised name; also what picks the report's adapter, alongside the tool. */
@@ -217,6 +250,7 @@ export default class JobDetailsComponent implements OnInit {
 
   canDownloadCategory(category: string): boolean {
     return (
+      this.isTerminalJob() &&
       this.zipCategories().includes(category) &&
       !this.filesLoading() &&
       !this.filesError() &&
@@ -281,7 +315,7 @@ export default class JobDetailsComponent implements OnInit {
     // Reset and reload the results whenever the selected job changes.
     effect(() => {
       this.job();
-      this.activeTab.set("results");
+      this.activeTab.set(this.getDefaultTab());
       this.reportFallback.set(false);
       if (this.hasInteractiveReport()) this.resetReportState();
       else this.loadReport();
@@ -455,10 +489,22 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   setActiveTab(tab: JobResultsTab): void {
+    if (this.isTabDisabled(tab)) {
+      return;
+    }
+
     this.activeTab.set(tab);
     if (tab === "logs") {
       this.loadLogs();
     }
+  }
+
+  isTabDisabled(tab: JobResultsTab): boolean {
+    return (tab === "results" || tab === "files") && !this.isTerminalJob();
+  }
+
+  private getDefaultTab(): JobResultsTab {
+    return this.isTerminalJob() ? "results" : DEFAULT_JOB_RESULTS_TAB;
   }
 
   getSummaryItems(job: JobListItem): Array<{ label: string; value: string }> {
@@ -488,13 +534,9 @@ export default class JobDetailsComponent implements OnInit {
     ];
   }
 
-  getCitations(job: JobListItem): string[] {
-    return [
-      `${
-        formatToolName(job.tool) || "Workflow"
-      } methods and generated outputs.`,
-      "SBP Portal platform and supporting infrastructure.",
-    ];
+  getCitations(job: JobListItem): ToolCitation[] {
+    const citation = getToolCitation(job.tool);
+    return citation ? [citation] : [];
   }
 
   formatCategoryName(category: string): string {
@@ -788,17 +830,7 @@ export default class JobDetailsComponent implements OnInit {
     const workflowName = this.workflowName();
     const allowedKeys = ALLOWED_SETTING_KEYS_BY_WORKFLOW[workflowName];
 
-    const fastaContentValue = settingParams["fastaContent"];
-    const hasFastaContent =
-      typeof fastaContentValue === "string" &&
-      fastaContentValue.trim().length > 0;
-
     const isKeyVisible = (key: string): boolean => {
-      if (WORKFLOWS_PREFERRING_FASTA_CONTENT.has(workflowName)) {
-        // Older jobs submitted before fastaContent existed have only the
-        // fastaS3Uri download link — fall back to that so they aren't blank.
-        if (key === "fastaS3Uri") return !hasFastaContent;
-      }
       return allowedKeys
         ? allowedKeys.has(key)
         : !this.shouldHideSettingKey(key);
@@ -880,7 +912,7 @@ export default class JobDetailsComponent implements OnInit {
         value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
         details,
         ...(isFileDownload && rawValue.startsWith("http")
-          ? { url: rawValue }
+          ? { url: rawValue, openInline: INLINE_FASTA_KEYS.has(key) }
           : {}),
       };
     }
@@ -892,13 +924,15 @@ export default class JobDetailsComponent implements OnInit {
       value: isFileDownload ? this.extractFilename(rawValue) : rawValue,
       details: [],
       ...(isFileDownload && rawValue.startsWith("http")
-        ? { url: rawValue }
+        ? { url: rawValue, openInline: INLINE_FASTA_KEYS.has(key) }
         : {}),
     };
   }
 
   private isFileDownloadKey(key: string): boolean {
     const lower = key.toLowerCase();
+    // *Content keys hold raw FASTA text, not a path — never trim to a filename.
+    if (lower.endsWith("content")) return false;
     return lower.includes("pdb") || lower.includes("fasta");
   }
 

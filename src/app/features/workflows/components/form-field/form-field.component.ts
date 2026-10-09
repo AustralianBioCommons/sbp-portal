@@ -1,4 +1,11 @@
-import { Component, inject, input, output, signal } from "@angular/core";
+import {
+  Component,
+  inject,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { InputSchemaField } from "../../services/input-schema.service";
 import { PdbUploadService } from "../../services/pdb-upload.service";
 import { AlertComponent } from "../../../../components/alert/alert.component";
@@ -8,6 +15,7 @@ import { TooltipComponent } from "../../../../components/tooltip/tooltip.compone
   selector: "app-form-field",
   imports: [AlertComponent, TooltipComponent],
   templateUrl: "./form-field.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./form-field.component.scss",
 })
 export class FormFieldComponent {

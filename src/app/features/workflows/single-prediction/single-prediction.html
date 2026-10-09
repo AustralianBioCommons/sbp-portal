@@ -10,12 +10,12 @@
     validate inputs against the selected tool, then review the generated FASTA
     and settings before submission.</span
   >
-  <span overview>
-    Single Prediction is designed for structure-prediction runs from curated
-    biological inputs. Define entities row by row with sequence, copy number,
-    and molecule type, then proceed through tool settings and review before
-    launch.</span
-  >
+  <app-single-prediction-about overview></app-single-prediction-about>
+  <app-workflow-papers
+    papers
+    workflowName="Single Structure Prediction"
+    [tools]="['colabfold', 'alphafold2', 'boltz']"
+  ></app-workflow-papers>
   <app-single-prediction-example-output
     output
   ></app-single-prediction-example-output>
@@ -36,8 +36,7 @@
       >
         <app-tool-selection
           [tools]="tools"
-          [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"
+          [formControl]="form.controls.selectedTool"
         ></app-tool-selection>
       </app-step-content>
     </div>
@@ -319,8 +318,21 @@
       <app-step-content
         [step]="3"
         heading="Tool Settings"
-        description="Expose only the tool-specific settings required for {{ selectedToolLabel() }}."
+        [description]="
+          form.controls.selectedTool.value
+            ? 'Configure parameters specific to ' +
+              selectedToolLabel() +
+              '.'
+            : 'Select a tool to see settings.'
+        "
       >
+        @if (!form.controls.selectedTool.value) {
+        <div class="p-4 bg-sky-50 border border-sky-200 rounded-lg">
+          <h3 class="text-sm font-medium text-sky-800">
+            Select a tool to see settings.
+          </h3>
+        </div>
+        } @else {
         <div class="space-y-4">
           <div class="rounded-lg border p-4">
             <label
@@ -357,7 +369,7 @@
             }
           </div>
 
-          @if (selectedTool() === 'colabfold') {
+          @if (form.controls.selectedTool.value === 'colabfold') {
           <div class="rounded-lg border p-4">
             <label
               for="colabfold-num-recycles"
@@ -392,7 +404,7 @@
             </p>
             }
           </div>
-          } @if (selectedTool() === 'alphafold2') {
+          } @if (form.controls.selectedTool.value === 'alphafold2') {
           <div
             class="rounded-lg border p-4 flex items-center justify-start gap-2"
           >
@@ -414,7 +426,7 @@
               (change)="alphafold2FullDbs.set($any($event.target).checked)"
             />
           </div>
-          } @if (selectedTool() === 'boltz') {
+          } @if (form.controls.selectedTool.value === 'boltz') {
           <div
             class="rounded-lg border p-4 flex items-center justify-start gap-2"
           >
@@ -438,6 +450,7 @@
           </div>
           }
         </div>
+        }
       </app-step-content>
     </div>
   </app-workflow-form>

@@ -5,6 +5,7 @@ import {
   input,
   output,
   signal,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 
 export interface LengthRange {
@@ -16,6 +17,7 @@ export interface LengthRange {
   selector: "app-length-range-slider",
   imports: [],
   templateUrl: "./length-range-slider.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./length-range-slider.component.scss",
 })
 export class LengthRangeSliderComponent {

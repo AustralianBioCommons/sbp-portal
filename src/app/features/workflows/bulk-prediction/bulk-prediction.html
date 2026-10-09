@@ -9,14 +9,12 @@
     in FASTA format. Multimers can be specified by separating chains with a
     <code class="font-mono">:</code> delimiter.
   </span>
-  <span overview>
-    This workflow enables the prediction of bulk protein structures by providing
-    input sequences in FASTA format. Multimers can be predicted by separating
-    sequences with a <code class="font-mono">:</code> delimiter. Between 10 and
-    1000 entries are supported, each with up to 1000 amino-acid residues. For
-    fewer than 10 predictions, please use the Single Prediction workflow
-    instead.
-  </span>
+  <app-bulk-prediction-about overview></app-bulk-prediction-about>
+  <app-workflow-papers
+    papers
+    workflowName="Bulk Prediction"
+    [tools]="['boltz', 'colabfold']"
+  ></app-workflow-papers>
   <app-workflow-form
     [sections]="sections"
     [isSectionValid]="isSectionValid"
@@ -34,8 +32,7 @@
       >
         <app-tool-selection
           [tools]="tools"
-          [selectedToolId]="selectedTool()"
-          (toolSelect)="selectTool($event)"
+          [formControl]="form.controls.selectedTool"
         ></app-tool-selection>
       </app-step-content>
     </div>
@@ -140,8 +137,19 @@
       <app-step-content
         [step]="3"
         heading="Tool Settings"
-        description="Configure parameters specific to {{ selectedToolLabel() }}."
+        [description]="
+          form.controls.selectedTool.value
+            ? 'Configure parameters specific to ' + selectedToolLabel() + '.'
+            : 'Select a tool to see settings.'
+        "
       >
+        @if (!form.controls.selectedTool.value) {
+        <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+          <h3 class="text-sm font-medium text-sky-800">
+            Select a tool to see settings.
+          </h3>
+        </div>
+        } @else {
         <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
           <div class="flex items-start">
             <div class="shrink-0">
@@ -173,6 +181,7 @@
             </div>
           </div>
         </div>
+        }
       </app-step-content>
     </div>
   </app-workflow-form>

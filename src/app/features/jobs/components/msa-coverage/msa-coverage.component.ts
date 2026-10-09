@@ -8,6 +8,7 @@ import {
   signal,
   untracked,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroExclamationCircle } from "@ng-icons/heroicons/outline";
@@ -47,6 +48,7 @@ const AXIS_TITLE_INSET = 12;
   imports: [NgIconComponent, LoadingComponent],
   providers: [provideIcons({ heroExclamationCircle })],
   templateUrl: "./msa-coverage.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./msa-coverage.component.scss",
 })
 export class MsaCoverageComponent implements OnDestroy {

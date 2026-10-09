@@ -8,6 +8,7 @@ import {
   Injector,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { CommonModule } from "@angular/common";
@@ -40,6 +41,7 @@ export interface NavItem {
   path: string;
   children?: NavItem[];
   menuOnly?: boolean;
+  external?: boolean;
 }
 
 export interface BreadcrumbInfo {
@@ -72,6 +74,7 @@ export interface BreadcrumbInfo {
   ],
   templateUrl: "./navbar.component.html",
   styleUrl: "./navbar.component.scss",
+  changeDetection: ChangeDetectionStrategy.Eager,
   host: { class: "contents" },
 })
 export class Navbar {
@@ -145,9 +148,10 @@ export class Navbar {
       path: "/my-jobs",
     },
     {
-      label: "Support / FAQ",
-      path: "/support",
+      label: "Support",
+      path: "https://biocommons-sbp-help.freshdesk.com/support/tickets/new",
       menuOnly: true,
+      external: true,
     },
   ];
 

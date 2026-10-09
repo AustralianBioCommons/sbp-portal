@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 
@@ -60,6 +60,7 @@ describe("TooltipComponent", () => {
 
 @Component({
   imports: [TooltipComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <app-tooltip message="Custom">
       <button type="button" aria-label="Help">?</button>

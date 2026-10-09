@@ -1,4 +1,9 @@
-import { Component, input, output } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { HttpHeaders, HttpResponse } from "@angular/common/http";
 import { By, DomSanitizer } from "@angular/platform-browser";
@@ -27,7 +32,13 @@ type JobDetailsPrivateApi = {
   normalizeLogs: (logs: string | string[] | null | undefined) => string[];
   normalizeSettings: (
     settingParams: Record<string, unknown> | null | undefined
-  ) => Array<{ label: string; value: string; details: string[]; url?: string }>;
+  ) => Array<{
+    label: string;
+    value: string;
+    details: string[];
+    url?: string;
+    openInline?: boolean;
+  }>;
   formatSettingLabel: (key: string) => string;
   formatSettingValue: (value: unknown) => string;
   formatValidationDetails: (
@@ -40,6 +51,7 @@ type JobDetailsPrivateApi = {
 /** Stands in for the report view: only its `unavailable` output matters here. */
 @Component({
   selector: "app-single-prediction-report",
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: "",
 })
 class SinglePredictionReportStubComponent {
@@ -52,6 +64,7 @@ class SinglePredictionReportStubComponent {
 
 @Component({
   selector: "app-job-results-report",
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: "",
 })
 class JobResultsReportStubComponent {
@@ -135,6 +148,22 @@ describe("JobDetailsComponent", () => {
     submittedAt: "2026-03-12T11:00:00Z",
     score: null,
     finalDesignCount: null,
+  };
+
+  const failedJob: JobListItem = {
+    ...mockJob,
+    id: "job-failed",
+    jobName: "Failed job",
+    status: "Failed",
+    score: null,
+  };
+
+  const stoppedJob: JobListItem = {
+    ...mockJob,
+    id: "job-stopped",
+    jobName: "Stopped job",
+    status: "Stopped",
+    score: null,
   };
 
   const privateApi = () => component as unknown as JobDetailsPrivateApi;
@@ -457,6 +486,64 @@ describe("JobDetailsComponent", () => {
     expect(iframe.title).toContain(packagedReportJob.jobName);
   });
 
+  it("should show results by default for terminal jobs", () => {
+    render();
+
+    expect(component.activeTab()).toBe("results");
+
+    component.job.set(failedJob);
+    fixture.detectChanges();
+
+    expect(component.activeTab()).toBe("results");
+
+    component.job.set(stoppedJob);
+    fixture.detectChanges();
+
+    expect(component.activeTab()).toBe("results");
+  });
+
+  it("should show settings by default for incomplete jobs", () => {
+    mockJobsService.getJob.and.returnValue(of(fallbackJob));
+    routeId = fallbackJob.id;
+    render();
+
+    expect(component.activeTab()).toBe("settings");
+  });
+
+  it("should disable results and files tabs until the job is terminal", () => {
+    mockJobsService.getJob.and.returnValue(of(fallbackJob));
+    routeId = fallbackJob.id;
+    render();
+
+    const tabButtons = Array.from(
+      fixture.nativeElement.querySelectorAll(
+        'nav[aria-label="Job result tabs"] button'
+      )
+    ) as HTMLButtonElement[];
+
+    expect(tabButtons[0].textContent).toContain("Results");
+    expect(tabButtons[0].disabled).toBeTrue();
+    expect(tabButtons[1].textContent).toContain("Files");
+    expect(tabButtons[1].disabled).toBeTrue();
+    expect(tabButtons[2].textContent).toContain("Settings");
+    expect(tabButtons[2].disabled).toBeFalse();
+
+    component.setActiveTab("files");
+    expect(component.activeTab()).toBe("settings");
+
+    component.job.set(failedJob);
+    fixture.detectChanges();
+
+    expect(component.isTabDisabled("results")).toBeFalse();
+    expect(component.isTabDisabled("files")).toBeFalse();
+
+    component.job.set(stoppedJob);
+    fixture.detectChanges();
+
+    expect(component.isTabDisabled("results")).toBeFalse();
+    expect(component.isTabDisabled("files")).toBeFalse();
+  });
+
   it("should switch tabs and reset when the job changes", () => {
     render();
 
@@ -467,7 +554,7 @@ describe("JobDetailsComponent", () => {
     component.job.set(fallbackJob);
     fixture.detectChanges();
 
-    expect(component.activeTab()).toBe("results");
+    expect(component.activeTab()).toBe("settings");
     expect(resultsService.getJobReport.calls.mostRecent().args).toEqual([
       fallbackJob.id,
     ]);
@@ -483,7 +570,7 @@ describe("JobDetailsComponent", () => {
     component.job.set(null);
     fixture.detectChanges();
 
-    expect(component.activeTab()).toBe("results");
+    expect(component.activeTab()).toBe("settings");
   });
 
   it("should clear report state when the selected job is cleared", () => {
@@ -776,7 +863,7 @@ describe("JobDetailsComponent", () => {
     expect(valueOf("Tool")).toBe("N/A");
     expect(valueOf("Max score")).toBe("N/A");
     expect(files[0]).toBe("queued_job_summary.json");
-    expect(citations[0]).toBe("Workflow methods and generated outputs.");
+    expect(citations).toEqual([]);
   });
 
   it("should normalize tool casing regardless of how the API sent it", () => {
@@ -786,8 +873,40 @@ describe("JobDetailsComponent", () => {
 
     expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
-    expect(component.getCitations(deNovoDesignJob)[0]).toBe(
-      "BindCraft methods and generated outputs."
+    expect(component.getCitations(deNovoDesignJob)[0].label).toBe("BindCraft");
+    expect(component.getCitations(bulkPredictionJob)[0].label).toBe(
+      "ColabFold"
+    );
+  });
+
+  it("should render the selected job tool citation in the citations tab", () => {
+    render();
+
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const citationLink = element.querySelector<HTMLAnchorElement>(
+      'a[href="https://doi.org/10.1101/2025.06.14.659707"]'
+    );
+
+    expect(element.textContent).toContain("Boltz-2");
+    expect(element.textContent).toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(citationLink).not.toBeNull();
+  });
+
+  it("should show a citation fallback when the job tool has no citation", () => {
+    render();
+
+    component.job.set(fallbackJob);
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      "No citation is available for this workflow tool yet."
     );
   });
 
@@ -1196,7 +1315,7 @@ describe("JobDetailsComponent", () => {
       );
     });
 
-    it("prefers FASTA content over the download link for interaction screening", () => {
+    it("shows an older interaction screening job's combined FASTA as a link, not inline content", () => {
       component.job.set(mockJob); // workflow: "Interaction Screening"
       const items = privateApi().normalizeSettings({
         workflow: "interaction-screening",
@@ -1205,12 +1324,47 @@ describe("JobDetailsComponent", () => {
         fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
       });
 
-      const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
-      expect(fastaItems.length).toBe(1);
-      expect(fastaItems[0].label).toBe("FASTA Content");
-      expect(fastaItems[0].value).toBe(
-        ">query1|protein\nMV\n>target1|protein\nAK"
-      );
+      const fastaItems = items.filter((item) => item.label.includes("FASTA"));
+      expect(fastaItems).toEqual([
+        {
+          label: "FASTA File",
+          value: "sequences.fasta",
+          details: [],
+          url: "https://api.example.com/uploads/sequences.fasta",
+          openInline: true,
+        },
+      ]);
+    });
+
+    it("shows query and target FASTA as separate inline links for interaction screening", () => {
+      component.job.set(mockJob); // workflow: "Interaction Screening"
+      const items = privateApi().normalizeSettings({
+        workflow: "interaction-screening",
+        tool: "boltz",
+        fastaContent: ">query1|protein\nMV\n>target1|protein\nAK",
+        queryFastaS3Uri:
+          "https://bucket.s3.example.com/input/my-job_query.fasta?X-Amz-Signature=a",
+        targetFastaS3Uri:
+          "https://bucket.s3.example.com/input/my-job_target.fasta?X-Amz-Signature=b",
+      });
+
+      const fastaItems = items.filter((item) => item.label.includes("FASTA"));
+      expect(fastaItems).toEqual([
+        {
+          label: "Query FASTA",
+          value: "my-job_query.fasta",
+          details: [],
+          url: "https://bucket.s3.example.com/input/my-job_query.fasta?X-Amz-Signature=a",
+          openInline: true,
+        },
+        {
+          label: "Target FASTA",
+          value: "my-job_target.fasta",
+          details: [],
+          url: "https://bucket.s3.example.com/input/my-job_target.fasta?X-Amz-Signature=b",
+          openInline: true,
+        },
+      ]);
     });
 
     it("shows Use Potentials (defaulted false) for a boltz job even though interaction screening's form has no such control", () => {
@@ -1254,7 +1408,7 @@ describe("JobDetailsComponent", () => {
       ]);
     });
 
-    it("prefers FASTA content over the download link for bulk prediction", () => {
+    it("shows bulk prediction's FASTA as a single inline link, not inline content", () => {
       const bulkJob: JobListItem = { ...mockJob, workflow: "Bulk Prediction" };
       component.job.set(bulkJob);
       const items = privateApi().normalizeSettings({
@@ -1264,9 +1418,43 @@ describe("JobDetailsComponent", () => {
         fastaS3Uri: "https://api.example.com/uploads/sequences.fasta",
       });
 
-      const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
+      const fastaItems = items.filter((item) => item.label.includes("FASTA"));
       expect(fastaItems.length).toBe(1);
-      expect(fastaItems[0].label).toBe("FASTA Content");
+      expect(fastaItems[0].label).toBe("FASTA File");
+      expect(fastaItems[0].openInline).toBeTrue();
+    });
+
+    it("renders inline FASTA links without the download attribute", () => {
+      render();
+      component.setActiveTab("settings");
+      component.settingsLoading.set(false);
+      component.settingsError.set(null);
+      component.settingsItems.set([
+        {
+          label: "Query FASTA",
+          value: "q.fasta",
+          details: [],
+          url: "https://signed/q.fasta",
+          openInline: true,
+        },
+        {
+          label: "Starting PDB",
+          value: "s.pdb",
+          details: [],
+          url: "https://signed/s.pdb",
+        },
+      ]);
+      fixture.detectChanges();
+
+      const links: HTMLAnchorElement[] = Array.from(
+        fixture.nativeElement.querySelectorAll("a[href^='https://signed/']")
+      );
+      expect(
+        links.map((a) => [a.textContent?.trim(), a.hasAttribute("download")])
+      ).toEqual([
+        ["q.fasta", false],
+        ["s.pdb", true],
+      ]);
     });
   });
 

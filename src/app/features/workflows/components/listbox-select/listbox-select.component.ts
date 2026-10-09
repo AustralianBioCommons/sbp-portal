@@ -1,4 +1,10 @@
-import { Component, input, output, signal } from "@angular/core";
+import {
+  Component,
+  input,
+  output,
+  signal,
+  ChangeDetectionStrategy,
+} from "@angular/core";
 
 export interface ListboxSelectOption {
   value: string;
@@ -9,6 +15,7 @@ export interface ListboxSelectOption {
   selector: "app-listbox-select",
   imports: [],
   templateUrl: "./listbox-select.component.html",
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./listbox-select.component.scss",
 })
 export class ListboxSelectComponent {

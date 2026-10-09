@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { provideHttpClient } from "@angular/common/http";
+import { provideHttpClient, withXhr } from "@angular/common/http";
 import { InputSchemaField } from "../../services/input-schema.service";
 import { FormFieldComponent } from "./form-field.component";
 
@@ -20,7 +20,7 @@ describe("FormFieldComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FormFieldComponent],
-      providers: [provideHttpClient()],
+      providers: [provideHttpClient(withXhr())],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
