@@ -10,6 +10,7 @@ import {
   getRelevantCitations,
   getWorkflowPaperCitationKeys,
   getWorkflowPaperCitations,
+  getWorkflowRunCitationKeys,
 } from "./workflow-citations";
 
 describe("Workflow Citations utilities", () => {
@@ -83,7 +84,66 @@ describe("Workflow Citations utilities", () => {
       getWorkflowPaperCitations("Single Structure Prediction").map(
         (citation) => citation.key
       )
-    ).toEqual(["colabfold", "alphafold2", "callaway2020", "boltz2"]);
+    ).toEqual([
+      "proteinfold",
+      "alphafold2",
+      "alphafoldmultimer",
+      "colabfold",
+      "boltz2",
+      "lmi4boltz",
+      "mmseqs2",
+      "hmmer",
+      "hhsuite",
+      "bfdplass",
+      "uniref",
+      "mgnify",
+      "structuralbiologyai",
+      "pdb",
+    ]);
+  });
+
+  it("gets tool-specific citation keys for Single Prediction job runs", () => {
+    expect(getWorkflowRunCitationKeys("Single Prediction", "Boltz")).toEqual([
+      "lmi4boltz",
+      "boltz2",
+      "colabfold",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
+    expect(
+      getWorkflowRunCitationKeys("single-prediction", "AlphaFold-2")
+    ).toEqual(["alphafold2", "proteinfold", "structuralbiologyai"]);
+    expect(
+      getWorkflowRunCitationKeys("Single Prediction", "ColabFold")
+    ).toEqual([
+      "colabfold",
+      "alphafold2",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
+  });
+
+  it("falls back to workflow citation keys for non-tool-specific runs", () => {
+    expect(getWorkflowRunCitationKeys("Bulk Prediction", "Boltz")).toEqual([
+      "boltz2",
+      "colabfold",
+    ]);
+    expect(getWorkflowRunCitationKeys("Single Prediction", "Unknown")).toEqual([
+      "proteinfold",
+      "alphafold2",
+      "alphafoldmultimer",
+      "colabfold",
+      "boltz2",
+      "lmi4boltz",
+      "mmseqs2",
+      "hmmer",
+      "hhsuite",
+      "bfdplass",
+      "uniref",
+      "mgnify",
+      "structuralbiologyai",
+      "pdb",
+    ]);
   });
 
   it("returns empty lists for unknown workflow paper citations", () => {
@@ -116,9 +176,20 @@ describe("Workflow Citations utilities", () => {
 
     expect(citations.map((citation) => citation.key)).toEqual([
       "alphafold2",
+      "alphafoldmultimer",
+      "bfdplass",
       "boltz2",
       "callaway2020",
       "colabfold",
+      "hhsuite",
+      "hmmer",
+      "lmi4boltz",
+      "mgnify",
+      "mmseqs2",
+      "pdb",
+      "proteinfold",
+      "structuralbiologyai",
+      "uniref",
     ]);
   });
 
@@ -157,5 +228,21 @@ describe("Workflow Citations utilities", () => {
     expect(formatCitation(citation!)).toBe(
       "Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023)."
     );
+  });
+
+  it("includes the Single Prediction supporting reference citations", () => {
+    expect(getCitation("proteinfold")?.doi).toBe(
+      "https://doi.org/10.5281/zenodo.7437038"
+    );
+    expect(getCitation("alphafoldmultimer")?.doi).toBe(
+      "https://doi.org/10.1101/2021.10.04.463034"
+    );
+    expect(getCitation("lmi4boltz")?.doi).toBe(
+      "https://doi.org/10.1101/2025.10.29.684571"
+    );
+    expect(getCitation("structuralbiologyai")?.doi).toBe(
+      "https://doi.org/10.25914/q48c-9a86"
+    );
+    expect(getCitation("pdb")?.label).toBe("Protein Data Bank");
   });
 });
