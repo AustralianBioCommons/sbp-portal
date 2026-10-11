@@ -21,7 +21,13 @@ describe("WorkflowPapersComponent", () => {
       h.textContent?.trim()
     );
 
-    expect(headings).toEqual(["Boltz-2", "ColabFold"]);
+    expect(headings).toEqual([
+      "AlphaFold2",
+      "ColabFold",
+      "Boltz-2",
+      "MMseqs2",
+      "Structural Biology AI Reference Collection",
+    ]);
     expect(element.textContent).toContain(
       "Passaro, S., Corso, G., Wohlwend, J. et al. Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction."
     );

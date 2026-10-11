@@ -43,8 +43,11 @@ describe("Workflow Citations utilities", () => {
   it("builds workflow-to-citation records", () => {
     expect(CITATION_KEYS_BY_WORKFLOW["de novo design"]).toContain("proteindj");
     expect(CITATION_KEYS_BY_WORKFLOW["bulk prediction"]).toEqual([
+      "alphafold2",
       "boltz2",
       "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
     ]);
   });
 
@@ -65,8 +68,11 @@ describe("Workflow Citations utilities", () => {
     const citations = getCitationsByWorkflow("Bulk Prediction");
 
     expect(citations.map((citation) => citation.key)).toEqual([
+      "alphafold2",
       "boltz2",
       "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
     ]);
   });
 
@@ -79,6 +85,13 @@ describe("Workflow Citations utilities", () => {
       "openmm",
       "alphafold2",
       "alphafold2relax",
+    ]);
+    expect(getWorkflowPaperCitationKeys("Bulk Prediction")).toEqual([
+      "alphafold2",
+      "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
     ]);
     expect(
       getWorkflowPaperCitations("Single Structure Prediction").map(
@@ -125,8 +138,11 @@ describe("Workflow Citations utilities", () => {
 
   it("falls back to workflow citation keys for non-tool-specific runs", () => {
     expect(getWorkflowRunCitationKeys("Bulk Prediction", "Boltz")).toEqual([
-      "boltz2",
+      "alphafold2",
       "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
     ]);
     expect(getWorkflowRunCitationKeys("Single Prediction", "Unknown")).toEqual([
       "proteinfold",
@@ -198,7 +214,13 @@ describe("Workflow Citations utilities", () => {
       getRelevantCitations({ workflow: "Bulk Prediction" }).map(
         (citation) => citation.key
       )
-    ).toEqual(["boltz2", "colabfold"]);
+    ).toEqual([
+      "alphafold2",
+      "boltz2",
+      "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
     expect(
       getRelevantCitations({
         workflow: "unknown workflow",
