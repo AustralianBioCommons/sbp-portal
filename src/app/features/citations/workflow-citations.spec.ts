@@ -136,8 +136,21 @@ describe("Workflow Citations utilities", () => {
     ]);
   });
 
-  it("falls back to workflow citation keys for non-tool-specific runs", () => {
+  it("gets tool-specific citation keys for Bulk Prediction job runs", () => {
     expect(getWorkflowRunCitationKeys("Bulk Prediction", "Boltz")).toEqual([
+      "boltz2",
+      "colabfold",
+      "structuralbiologyai",
+    ]);
+    expect(getWorkflowRunCitationKeys("bulk-prediction", "ColabFold")).toEqual([
+      "colabfold",
+      "alphafold2",
+      "structuralbiologyai",
+    ]);
+  });
+
+  it("falls back to workflow citation keys for non-tool-specific runs", () => {
+    expect(getWorkflowRunCitationKeys("Bulk Prediction", "Unknown")).toEqual([
       "alphafold2",
       "colabfold",
       "boltz2",

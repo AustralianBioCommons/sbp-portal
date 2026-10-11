@@ -363,6 +363,12 @@ const SINGLE_PREDICTION_CITATION_KEYS_BY_TOOL: Record<string, CitationKey[]> = {
   colabfold: ["colabfold", "alphafold2", "proteinfold", "structuralbiologyai"],
 };
 
+const BULK_PREDICTION_CITATION_KEYS_BY_TOOL: Record<string, CitationKey[]> = {
+  boltz: ["boltz2", "colabfold", "structuralbiologyai"],
+  boltz2: ["boltz2", "colabfold", "structuralbiologyai"],
+  colabfold: ["colabfold", "alphafold2", "structuralbiologyai"],
+};
+
 function normalizeName(value: string | undefined): string {
   return (value ?? "")
     .trim()
@@ -444,6 +450,12 @@ export function getWorkflowRunCitationKeys(
   ) {
     return (
       SINGLE_PREDICTION_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
+      getWorkflowPaperCitationKeys(workflow)
+    );
+  }
+  if (normalizedWorkflow === "bulk prediction") {
+    return (
+      BULK_PREDICTION_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
       getWorkflowPaperCitationKeys(workflow)
     );
   }

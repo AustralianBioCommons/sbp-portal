@@ -875,9 +875,16 @@ describe("JobDetailsComponent", () => {
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
     expect(component.getCitationKeys(deNovoDesignJob)[0]).toBe("proteindj");
     expect(component.getCitationKeys(bulkPredictionJob)).toEqual([
-      "boltz2",
       "colabfold",
+      "alphafold2",
+      "structuralbiologyai",
     ]);
+    expect(
+      component.getCitationKeys({
+        ...bulkPredictionJob,
+        tool: "Boltz",
+      })
+    ).toEqual(["boltz2", "colabfold", "structuralbiologyai"]);
     expect(component.getCitationKeys(singlePredictionJob)).toEqual([
       "lmi4boltz",
       "boltz2",
@@ -951,6 +958,36 @@ describe("JobDetailsComponent", () => {
     );
     expect(element.textContent).not.toContain(
       "Protein complex prediction with AlphaFold-Multimer"
+    );
+  });
+
+  it("should render selected Bulk Prediction tool citations in the citations tab", () => {
+    render();
+
+    component.job.set({
+      ...bulkPredictionJob,
+      tool: "Boltz",
+    });
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.textContent).toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
+    );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Highly accurate protein structure prediction with AlphaFold"
+    );
+    expect(element.textContent).not.toContain(
+      "MMseqs2 enables sensitive protein sequence searching"
     );
   });
 
