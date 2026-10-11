@@ -41,7 +41,7 @@ import {
   ResultLogsResponse,
   ResultsService,
 } from "../services/results.service";
-import { getWorkflowPaperCitationKeys } from "../../citations/workflow-citations";
+import { getWorkflowRunCitationKeys } from "../../citations/workflow-citations";
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -534,7 +534,7 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   getCitationKeys(job: JobListItem): readonly string[] {
-    return getWorkflowPaperCitationKeys(job.workflow);
+    return getWorkflowRunCitationKeys(job.workflow, job.tool);
   }
 
   formatCategoryName(category: string): string {

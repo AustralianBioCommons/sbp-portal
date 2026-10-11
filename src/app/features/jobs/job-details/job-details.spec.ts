@@ -878,6 +878,30 @@ describe("JobDetailsComponent", () => {
       "boltz2",
       "colabfold",
     ]);
+    expect(component.getCitationKeys(singlePredictionJob)).toEqual([
+      "lmi4boltz",
+      "boltz2",
+      "colabfold",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
+    expect(
+      component.getCitationKeys({
+        ...singlePredictionJob,
+        tool: "AlphaFold-2",
+      })
+    ).toEqual(["alphafold2", "proteinfold", "structuralbiologyai"]);
+    expect(
+      component.getCitationKeys({
+        ...singlePredictionJob,
+        tool: "ColabFold",
+      })
+    ).toEqual([
+      "colabfold",
+      "alphafold2",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
   });
 
   it("should render the selected job workflow citations in the citations tab", () => {
@@ -898,6 +922,36 @@ describe("JobDetailsComponent", () => {
       "ColabFold: making protein folding accessible to all"
     );
     expect(citationLink).not.toBeNull();
+  });
+
+  it("should render selected Single Prediction tool citations in the citations tab", () => {
+    render();
+
+    component.job.set(singlePredictionJob);
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.textContent).toContain(
+      "LMI4Boltz: Optimising VRAM utilisation to predict large macromolecular complexes with consumer grade hardware"
+    );
+    expect(element.textContent).toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
+    );
+    expect(element.textContent).toContain(
+      "nf-core/proteinfold: Protein 3D structure prediction pipeline"
+    );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Protein complex prediction with AlphaFold-Multimer"
+    );
   });
 
   it("should show a citation fallback when the job workflow has no citations", () => {
