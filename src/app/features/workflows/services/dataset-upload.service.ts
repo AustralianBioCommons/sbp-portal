@@ -12,7 +12,6 @@ export interface DatasetUploadResponse {
   success: boolean;
   s3Key?: string;
   s3Uri?: string;
-  splitOutputDir?: string;
 }
 
 export interface InteractionScreeningDatasetUploadRequest {
@@ -22,8 +21,8 @@ export interface InteractionScreeningDatasetUploadRequest {
 }
 
 export interface BulkPredictionDatasetUploadRequest {
-  sequences: { id: string; sequence: string }[];
   runId: string;
+  fastaS3Uri: string;
 }
 
 @Injectable({

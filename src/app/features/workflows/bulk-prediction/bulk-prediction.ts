@@ -237,8 +237,8 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
         switchMap((uploadResp) => {
           fastaS3Uri = uploadResp.s3Uri;
           return this.datasetUploadService.uploadBulkPredictionDataset({
-            sequences,
             runId: jobName,
+            fastaS3Uri,
           });
         })
       )
@@ -252,21 +252,12 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
             );
             return;
           }
-          const splitOutputDir = datasetResponse.splitOutputDir;
-          if (!splitOutputDir) {
-            this.workflowSubmission.isSubmitting.set(false);
-            this.showError(
-              "Dataset upload did not return a split output directory."
-            );
-            return;
-          }
           const formData: BulkPredictionPayload = {
             workflow: "bulk-prediction",
             tool,
             runName: jobName,
             sample_id: jobName,
             fastaS3Uri,
-            splitOutputDir,
             fastaContent: combinedFasta,
           };
           this.workflowSubmission.submitWorkflowWithDataset(
