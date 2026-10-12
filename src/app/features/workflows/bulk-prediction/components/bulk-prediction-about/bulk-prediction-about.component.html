@@ -1,32 +1,91 @@
 <div class="space-y-2 text-sm text-gray-500">
+  <img
+    src="/assets/images/bulk_prediction_workflow.svg"
+    alt="Diagram of Bulk Prediction workflow"
+  />
   <p>
-    Predicting 3D protein structures using modern AI tools, e.g., AlphaFold2,
-    ColabFold, and Boltz, often requires complex environments, GPU
-    configurations, and command-line execution. Our goal is to make these
-    powerful tools more accessible by providing a user-friendly interface to
-    structural biologists who can easily run, compare, and visualise 3D
-    predictions using these tools through a simple, intuitive dashboard.
-  </p>
-  <p>
-    Under the hood, this interface is powered by the
+    This workflow enables the structure prediction of many molecular systems in
+    a single submission by batching workloads to enable efficient prediction.
+    The interface is powered by the
     <a
-      href="https://github.com/AustralianBioCommons/sbp-proteinfold"
+      href="https://github.com/AustralianBioCommons/sbp-wisps"
       target="_blank"
       rel="noopener noreferrer"
       class="text-sky-700 underline hover:text-sky-800"
-      >sbp-proteinfold<span class="sr-only"> (opens in a new tab)</span></a
+      >sbp-wisps<span class="sr-only"> (opens in a new tab)</span></a
     >
-    repository, a bioinformatics best-practice Nextflow pipeline optimised for
-    the Structural Biology Platform and forked from the widely adopted
+    repository, a bioinformatics best-practice Nextflow pipeline pre-configured
+    and optimised for the Structural Biology Platform and forked from
     <a
-      href="https://github.com/nf-core/proteinfold"
+      href="https://github.com/Australian-Structural-Biology-Computing/wisps"
       target="_blank"
       rel="noopener noreferrer"
       class="text-sky-700 underline hover:text-sky-800"
-      >nf-core/proteinfold<span class="sr-only"> (opens in a new tab)</span></a
+      >Australian-Structural-Biology-Computing/wisps<span class="sr-only">
+        (opens in a new tab)</span
+      ></a
     >.
   </p>
 </div>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Pipeline Steps</h3>
+  <p class="text-sm text-gray-500">
+    The pipeline contains two main computational stages:
+  </p>
+
+  <div class="space-y-4 text-sm text-gray-500">
+    <div class="space-y-1">
+      <h4 class="font-medium text-gray-900">
+        Multiple Sequence Alignment (MSA) generation
+      </h4>
+      <p>
+        For each input sequence, the workflow searches UniRef30 and a combined
+        environmental (metagenomics) sequence database using MMseqs2-based
+        colabfold_search (<app-citation-link
+          citationKey="colabfold"
+        ></app-citation-link
+        >; <app-citation-link citationKey="mmseqs2"></app-citation-link>).
+        Homologs identified from UniRef30 are paired based on taxonomy labels to
+        support multimer predictions. Independent searches are processed as a
+        large batch so that startup and database-loading costs are not
+        duplicated and the &ldquo;per structure&rdquo; SBP credits are reduced
+        compared to running multiple
+        <a
+          routerLink="/structure-prediction/single-prediction"
+          class="text-sky-700 underline hover:text-sky-800"
+          >single predictions</a
+        >.
+      </p>
+    </div>
+
+    <div
+      class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"
+    >
+      <p>
+        In the SBP deployment, MMSeqs2-based colabfold_search process is
+        conducted locally without calling out to an external public server.
+      </p>
+    </div>
+
+    <div class="space-y-1">
+      <h4 class="font-medium text-gray-900">Structure prediction</h4>
+      <p>
+        MSA information is used as input for neural network -based prediction of
+        molecular structures and associated confidence scores. For each tool,
+        SBP retains the top-ranked structure based on predicted confidence.
+        Independent predictions are processed in batches so that startup costs
+        are not duplicated and the &ldquo;per structure&rdquo; SBP credits are
+        reduced compared to running multiple
+        <a
+          routerLink="/structure-prediction/single-prediction"
+          class="text-sky-700 underline hover:text-sky-800"
+          >single predictions</a
+        >.
+      </p>
+    </div>
+  </div>
+</section>
 
 <section class="space-y-4">
   <h3 class="text-lg font-semibold text-gray-900">Tools</h3>
@@ -37,70 +96,38 @@
     </p>
     <ul class="list-disc space-y-2 pl-5">
       <li>
-        <span class="font-medium text-gray-900">Boltz</span> is an open-source,
-        multimodal AI model developed by researchers at MIT and Recursion that
-        predicts the 3D structures of complex biomolecular assemblies involving
-        proteins, DNA, RNA, and small molecules (<a
-          href="https://github.com/jwohlwend/boltz"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sky-700 underline hover:text-sky-800"
-          >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
-        >). Its breakthrough feature is the ability to simultaneously calculate
-        highly accurate protein-ligand binding affinities ~1,000 times faster
-        than traditional physics-based free-energy perturbation (FEP)
-        simulations, significantly accelerating early-stage drug discovery (<a
-          href="https://github.com/jwohlwend/boltz"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sky-700 underline hover:text-sky-800"
-          >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
-        >;
-        <a
-          href="https://www.cancergrandchallenges.org/news/boltz-2-democratising-the-future-of-drug-design"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sky-700 underline hover:text-sky-800"
-          >Cancer Grand Challenges<span class="sr-only">
-            (opens in a new tab)</span
-          ></a
-        >).
+        <span class="font-medium text-gray-900">ColabFold:</span> uses the
+        AlphaFold2 (<app-citation-link
+          citationKey="alphafold2"
+        ></app-citation-link
+        >) neural network architecture to convert evolutionary information from
+        an MSA into a three-dimensional protein structure and associated
+        confidence scores. One prediction is generated with each of the five
+        independently trained AlphaFold2 models, and the highest-confidence
+        structure is retained.
       </li>
       <li>
-        <span class="font-medium text-gray-900">ColabFold</span> is an
-        open-source platform that drastically accelerates AI-driven protein
-        structure prediction models, such as AlphaFold2, by replacing their
-        standard homology search with the ultra-fast MMseqs2 algorithm. Its
-        breakthrough feature is the ability to generate sequence alignments
-        40–60 times faster than traditional methods, democratising access to
-        complex protein and multimer predictions without requiring massive
-        computational infrastructure (<app-citation-link
-          citationKey="colabfold"
+        <span class="font-medium text-gray-900">Boltz:</span> uses the
+        open-source Boltz-2 (<app-citation-link
+          citationKey="boltz2"
         ></app-citation-link
-        >).
+        >) model, which has a diffusion-based, AlphaFold3-like architecture. The
+        model iteratively refines initially noisy atomic coordinates to generate
+        a complete three-dimensional structure and associated confidence scores.
       </li>
     </ul>
   </div>
 </section>
 
-<!-- TODO: workflow diagram. -->
-
 <section class="space-y-4">
   <h3 class="text-lg font-semibold text-gray-900">Credits Calculation</h3>
   <div class="space-y-2 text-sm text-gray-500">
     <p>
-      Credits are required to execute workflows and will be consumed upon
-      workflow submission. The credit balance refreshes to 1000 on the 1st of
-      each month.
-    </p>
-    <p>
-      For bulk prediction, the number of credits required to run a workflow
-      depends on the tool and the number of input sequences/entries.
-    </p>
-    <p>
-      Total credits required and utilised in a workflow are calculated and
-      displayed during the input configuration and review stages. Below is the
-      formula for calculating total credits for a workflow run.
+      For the bulk prediction workflow, the SBP credit cost depends on the
+      selected <code>Tool</code> and the number of FASTA entries in the input
+      <code>Protein Sequences</code>. Required credits are displayed during the
+      input configuration and review stage. Below is the formula for calculating
+      total credits for a workflow run.
     </p>
   </div>
 
@@ -119,7 +146,7 @@
           <span class="font-medium text-gray-900"
             >Total credits needed/utilised:</span
           >
-          15 × 1 = 15 credits
+          15 x 1 = 15 credits
         </p>
       </div>
     </div>
@@ -138,22 +165,22 @@
           <span class="font-medium text-gray-900"
             >Total credits needed/utilised:</span
           >
-          15 × 3 = 45 credits
+          15 x 3 = 45 credits
         </p>
       </div>
     </div>
   </div>
 
   <p class="text-sm text-gray-500">
-    Since bulk prediction requires at least 10 sequences/entries (the
+    Since bulk prediction requires at least 10 sequences/entries, at least 10
+    credits are required to run a workflow employing Boltz, and 30 credits are
+    required and used to run a workflow employing ColabFold.
     <a
       routerLink="/structure-prediction/single-prediction"
       class="text-sky-700 underline hover:text-sky-800"
       >Single Structure Prediction workflow</a
     >
-    is recommended for fewer than 10 sequences/entries), at least 10 credits are
-    used to run a workflow employing Boltz, and at least 30 credits are required
-    and used to run a workflow employing ColabFold.
+    is recommended for predictions of fewer than 10 FASTA entries
   </p>
 </section>
 
@@ -176,14 +203,14 @@
   >
     <table class="w-full min-w-2xl text-left text-sm">
       <caption id="bulk-input-settings-table-caption" class="sr-only">
-        Input parameters, accepted formats, and behaviour and limits
+        Input parameters, descriptions, accepted formats, and limits
       </caption>
       <thead class="bg-sky-900 text-white">
         <tr>
           <th scope="col" class="px-4 py-2 font-medium">Input</th>
-          <th scope="col" class="px-4 py-2 font-medium">Accepted formats</th>
+          <th scope="col" class="px-4 py-2 font-medium">Description</th>
           <th scope="col" class="px-4 py-2 font-medium">
-            Behaviour and limits
+            Accepted format and Limits
           </th>
         </tr>
       </thead>
@@ -193,14 +220,12 @@
             scope="row"
             class="p-4 font-medium whitespace-nowrap text-gray-900"
           >
-            Job Name
+            Job name
           </th>
-          <td class="p-4">
-            A string containing letters, numbers, hyphens, and underscores
-          </td>
+          <td class="p-4">Identifier for the job/workflow run.</td>
           <td class="space-y-1 p-4">
-            <p>Mandatory/Required identifier for the job/workflow run</p>
-            <p>Must not start with a number</p>
+            <p>Alphanumeric input including hyphens and underscores.</p>
+            <p>Must not start with a number.</p>
           </td>
         </tr>
         <tr class="align-top">
@@ -208,41 +233,26 @@
             scope="row"
             class="p-4 font-medium whitespace-nowrap text-gray-900"
           >
-            Protein Sequences (FASTA)
+            Protein Sequences
           </th>
-          <td class="space-y-1 p-4">
-            <p>One or more protein sequences in FASTA format</p>
-            <p>
-              Each entry must have a unique header line starting with
-              <code class="font-mono">&gt;</code>, followed by the sequence on
-              the next line.
-            </p>
-            <p>
-              Each protein sequence must contain only the 20 canonical amino
-              acids (ARNDCQEGHILKMFPSTWYV).
-            </p>
-            <p>
-              Multimeric sequences are accepted with a header followed by two or
-              more sequences separated by colons, e.g.,
-              <code class="font-mono">SEQUENCEA:SEQUENCEB:SEQUENCEC</code>.
-            </p>
-            <p>
-              Please note that for compute cost calculation, multimeric
-              sequences will be counted as a single sequence.
-            </p>
+          <td class="p-4">
+            Provides the protein sequences to be predicted as independent
+            entries.
           </td>
           <td class="space-y-1 p-4">
-            <p class="font-medium text-gray-900">Mandatory input</p>
-            <p>Minimum 10 entries/sequences</p>
-            <p>Maximum 1000 entries/sequences</p>
+            <p>Multi-entry FASTA format.</p>
+            <p>Each entry must have a unique header.</p>
             <p>
-              Each entry/sequence must not contain more than 1000 amino acid
-              residues.
+              Each entry must contain only the 20 canonical amino-acid
+              characters.
             </p>
             <p>
-              For multimeric sequences, the total size limit of 1000 amino acid
-              residues applies.
+              Multimers can be predicted by including multiple sequences
+              separated by a &ldquo;:&rdquo;
             </p>
+            <p><b>Minimum</b>: 10 sequences.</p>
+            <p><b>Maximum</b>: 1000 sequences.</p>
+            <p><b>Maximum length</b>: 1000</p>
           </td>
         </tr>
       </tbody>

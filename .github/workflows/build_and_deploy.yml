@@ -119,6 +119,8 @@ jobs:
         run: |
           set -euo pipefail
           aws s3 sync dist/sbp-portal-prod/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/prod/${ENV}/" --delete
+          aws s3 cp dist/sbp-portal-prod/browser/assets/themes-bg.avif "s3://${AWS_PORTAL_BUILD_BUCKET}/build/prod/${ENV}/assets/themes-bg.avif" --cache-control "public,max-age=31536000,immutable" --content-type "image/avif"
+          aws s3 cp dist/sbp-portal-prod/browser/assets/workflows-bg.avif "s3://${AWS_PORTAL_BUILD_BUCKET}/build/prod/${ENV}/assets/workflows-bg.avif" --cache-control "public,max-age=31536000,immutable" --content-type "image/avif"
 
       - name: Upload debug bundle to shared bucket
         env:
@@ -127,6 +129,8 @@ jobs:
         run: |
           set -euo pipefail
           aws s3 sync dist/sbp-portal-debug/browser/ "s3://${AWS_PORTAL_BUILD_BUCKET}/build/debug/${ENV}/" --delete
+          aws s3 cp dist/sbp-portal-debug/browser/assets/themes-bg.avif "s3://${AWS_PORTAL_BUILD_BUCKET}/build/debug/${ENV}/assets/themes-bg.avif" --cache-control "public,max-age=31536000,immutable" --content-type "image/avif"
+          aws s3 cp dist/sbp-portal-debug/browser/assets/workflows-bg.avif "s3://${AWS_PORTAL_BUILD_BUCKET}/build/debug/${ENV}/assets/workflows-bg.avif" --cache-control "public,max-age=31536000,immutable" --content-type "image/avif"
 
       - name: Invoke frontend release Lambda
         env:

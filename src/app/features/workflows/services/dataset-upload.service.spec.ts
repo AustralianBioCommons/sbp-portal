@@ -84,11 +84,8 @@ describe("DatasetUploadService", () => {
 
   it("should upload bulk prediction dataset to the correct endpoint", () => {
     const requestBody = {
-      sequences: [
-        { id: "seq1", sequence: "ARNDCQ" },
-        { id: "seq2", sequence: "EGHILK" },
-      ],
       runId: "bulk-run-1",
+      fastaS3Uri: "s3://bucket/input/bulk-prediction/sequences.fasta",
     };
 
     service.uploadBulkPredictionDataset(requestBody).subscribe((response) => {

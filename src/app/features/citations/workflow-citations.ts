@@ -24,7 +24,12 @@ export const CITATIONS = {
     doi: "https://doi.org/10.1038/s41586-021-03819-2",
     formattedCitation:
       "Jumper, J., Evans, R., Pritzel, A. et al. Highly accurate protein structure prediction with AlphaFold. Nature 596, 583-589 (2021).",
-    workflows: ["single prediction", "de novo design"],
+    workflows: [
+      "single prediction",
+      "bulk prediction",
+      "interaction screening",
+      "de novo design",
+    ],
     tools: ["alphafold2", "bindcraft"],
   },
   alphafold2relax: {
@@ -38,6 +43,31 @@ export const CITATIONS = {
       "Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023).",
     workflows: ["de novo design"],
     tools: ["bindcraft", "rfdiffusion"],
+  },
+  alphafoldmultimer: {
+    label: "AlphaFold-Multimer",
+    title: "Protein complex prediction with AlphaFold-Multimer",
+    authors: "Evans, R., O'Neill, M., Pritzel, A. et al.",
+    firstAuthor: "Evans",
+    year: "2021",
+    doi: "https://doi.org/10.1101/2021.10.04.463034",
+    formattedCitation:
+      "Evans, R., O'Neill, M., Pritzel, A. et al. Protein complex prediction with AlphaFold-Multimer. bioRxiv 2021.10.04.463034 (2022).",
+    workflows: ["single prediction", "interaction screening"],
+    tools: [],
+  },
+  bfdplass: {
+    label: "BFD and Plass",
+    title:
+      "Protein-level assembly increases protein sequence recovery from metagenomic samples manyfold",
+    authors: "Steinegger, M., Mirdita, M. & Soeding, J.",
+    firstAuthor: "Steinegger",
+    year: "2019",
+    doi: "https://doi.org/10.1038/s41592-019-0437-4",
+    formattedCitation:
+      "Steinegger, M., Mirdita, M. & Soeding, J. Protein-level assembly increases protein sequence recovery from metagenomic samples manyfold. Nature Methods 16, 603-606 (2019).",
+    workflows: ["single prediction"],
+    tools: [],
   },
   boltz2: {
     label: "Boltz-2",
@@ -58,14 +88,13 @@ export const CITATIONS = {
   },
   bindcraft: {
     label: "BindCraft",
-    title: "BindCraft: one-shot design of functional protein binders",
-    authors:
-      "Pacesa, M., Nickel, L., Schellhaas, C., Schmidt, J., Pyatova, E. et al.",
+    title: "One-shot design of functional protein binders with BindCraft",
+    authors: "Pacesa, M., Nickel, L., Schellhaas, C. et al.",
     firstAuthor: "Pacesa",
-    year: "2024",
-    doi: "https://doi.org/10.1101/2024.09.30.615802",
+    year: "2025",
+    doi: "https://doi.org/10.1038/s41586-025-09429-6",
     formattedCitation:
-      "Pacesa, M., Nickel, L., Schellhaas, C., Schmidt, J., Pyatova, E. et al. BindCraft: one-shot design of functional protein binders. bioRxiv 2024.09.30.615802 (2024).",
+      "Pacesa, M., Nickel, L., Schellhaas, C. et al. One-shot design of functional protein binders with BindCraft. Nature 646, 483-492 (2025).",
     workflows: ["de novo design"],
     tools: ["bindcraft"],
   },
@@ -98,6 +127,73 @@ export const CITATIONS = {
     ],
     tools: ["colabfold"],
   },
+  hhsuite: {
+    label: "HH-suite",
+    title:
+      "HH-suite3 for fast remote homology detection and deep protein annotation",
+    authors: "Steinegger, M., Meier, M., Mirdita, M. et al.",
+    firstAuthor: "Steinegger",
+    year: "2019",
+    doi: "https://doi.org/10.1186/s12859-019-3019-7",
+    formattedCitation:
+      "Steinegger, M., Meier, M., Mirdita, M. et al. HH-suite3 for fast remote homology detection and deep protein annotation. BMC Bioinformatics 20, 473 (2019).",
+    workflows: ["single prediction"],
+    tools: [],
+  },
+  hmmer: {
+    label: "HMMER",
+    title: "Accelerated profile HMM searches",
+    authors: "Eddy, S. R.",
+    firstAuthor: "Eddy",
+    year: "2011",
+    doi: "https://doi.org/10.1371/journal.pcbi.1002195",
+    formattedCitation:
+      "Eddy, S. R. Accelerated profile HMM searches. PLoS Computational Biology 7, e1002195 (2011).",
+    workflows: ["single prediction"],
+    tools: [],
+  },
+  lmi4boltz: {
+    label: "LMI4Boltz",
+    title:
+      "LMI4Boltz: Optimising VRAM utilisation to predict large macromolecular complexes with consumer grade hardware",
+    authors: "Litfin, T., Caley, J.S. & Michie, K.A.",
+    firstAuthor: "Litfin",
+    year: "2025",
+    doi: "https://doi.org/10.1101/2025.10.29.684571",
+    formattedCitation:
+      "Litfin, T., Caley, J.S. & Michie, K.A. LMI4Boltz: Optimising VRAM utilisation to predict large macromolecular complexes with consumer grade hardware. bioRxiv 2025.10.29.684571 (2025).",
+    workflows: ["single prediction"],
+    tools: [],
+  },
+  mgnify: {
+    label: "MGnify",
+    title: "MGnify: the microbiome analysis resource in 2020",
+    authors: "Mitchell, A. L., Almeida, A., Beracochea, M. et al.",
+    firstAuthor: "Mitchell",
+    year: "2020",
+    doi: "https://doi.org/10.1093/nar/gkz1035",
+    formattedCitation:
+      "Mitchell, A. L., Almeida, A., Beracochea, M. et al. MGnify: the microbiome analysis resource in 2020. Nucleic Acids Research 48, D570-D578 (2020).",
+    workflows: ["single prediction"],
+    tools: [],
+  },
+  mmseqs2: {
+    label: "MMseqs2",
+    title:
+      "MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets",
+    authors: "Steinegger, M. & Soeding, J.",
+    firstAuthor: "Steinegger",
+    year: "2017",
+    doi: "https://doi.org/10.1038/nbt.3988",
+    formattedCitation:
+      "Steinegger, M. & Soeding, J. MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets. Nature Biotechnology 35, 1026-1028 (2017).",
+    workflows: [
+      "single prediction",
+      "bulk prediction",
+      "interaction screening",
+    ],
+    tools: [],
+  },
   openmm: {
     label: "OpenMM",
     title:
@@ -107,9 +203,34 @@ export const CITATIONS = {
     year: "2017",
     doi: "https://doi.org/10.1371/journal.pcbi.1005659",
     formattedCitation:
-      "Eastman, P., Swails, J., Chodera, J.D. et al. OpenMM 7: Rapid development of high performance algorithms for molecular dynamics. PLoS Comput Biol 13, e1005659 (2017).",
+      "Eastman, P., Swails, J., Chodera, J.D. et al. OpenMM 7: Rapid development of high performance algorithms for molecular dynamics. PLOS Comput Biol 13(7), e1005659 (2017).",
     workflows: ["de novo design"],
     tools: ["bindcraft", "rfdiffusion"],
+  },
+  pdb: {
+    label: "Protein Data Bank",
+    title:
+      "Protein Data Bank: the single global archive for 3D macromolecular structure data",
+    authors: "Burley, S. K., Berman, H. M., Bhikadiya, C. et al.",
+    firstAuthor: "Burley",
+    year: "2019",
+    doi: "https://doi.org/10.1093/nar/gky949",
+    formattedCitation:
+      "Burley, S. K., Berman, H. M., Bhikadiya, C. et al. Protein Data Bank: the single global archive for 3D macromolecular structure data. Nucleic Acids Research 47, D520-D528 (2019).",
+    workflows: ["single prediction"],
+    tools: [],
+  },
+  proteinfold: {
+    label: "nf-core/proteinfold",
+    title: "nf-core/proteinfold: Protein 3D structure prediction pipeline",
+    authors: "Baltzis, A. et al.",
+    firstAuthor: "Baltzis",
+    year: "2022",
+    doi: "https://doi.org/10.5281/zenodo.7437038",
+    formattedCitation:
+      "Baltzis, A. et al. nf-core/proteinfold: Protein 3D structure prediction pipeline. Zenodo.",
+    workflows: ["single prediction"],
+    tools: [],
   },
   proteindj: {
     label: "ProteinDJ",
@@ -127,13 +248,13 @@ export const CITATIONS = {
   proteinmpnn: {
     label: "ProteinMPNN",
     title:
-      "Robust deep learning-based protein sequence design using ProteinMPNN",
-    authors: "Dauparas, J., Anishchenko, I., Bennett, N. et al.",
+      "Robust deep learning–based protein sequence design using ProteinMPNN",
+    authors: "Dauparas, J. et al.",
     firstAuthor: "Dauparas",
     year: "2022",
     doi: "https://doi.org/10.1126/science.add2187",
     formattedCitation:
-      "Dauparas, J., Anishchenko, I., Bennett, N. et al. Robust deep learning-based protein sequence design using ProteinMPNN. Science 378, 49-56 (2022).",
+      "Dauparas, J. et al. Robust deep learning–based protein sequence design using ProteinMPNN. Science 378, 49-56 (2022).",
     workflows: ["de novo design"],
     tools: ["bindcraft", "rfdiffusion"],
   },
@@ -149,29 +270,165 @@ export const CITATIONS = {
     workflows: ["de novo design"],
     tools: ["rfdiffusion"],
   },
+  solublempnn: {
+    label: "SolubleMPNN",
+    title:
+      "Computational design of soluble and functional membrane protein analogues",
+    authors: "Goverde, C.A., Pacesa, M., Goldbach, N. et al.",
+    firstAuthor: "Goverde",
+    year: "2024",
+    doi: "https://doi.org/10.1038/s41586-024-07601-y",
+    formattedCitation:
+      "Goverde, C.A., Pacesa, M., Goldbach, N. et al. Computational design of soluble and functional membrane protein analogues. Nature 631, 449-458 (2024).",
+    workflows: ["de novo design"],
+    tools: ["bindcraft", "rfdiffusion"],
+  },
+  structuralbiologyai: {
+    label: "Structural Biology AI Reference Collection",
+    title: "Structural Biology AI Reference Collection",
+    authors: "NCI Australia",
+    firstAuthor: "NCI Australia",
+    year: "2026",
+    doi: "https://doi.org/10.25914/q48c-9a86",
+    formattedCitation:
+      "Structural Biology AI Reference Collection. NCI Australia (2026).",
+    workflows: [
+      "single prediction",
+      "bulk prediction",
+      "interaction screening",
+    ],
+    tools: [],
+  },
+  uniref: {
+    label: "UniRef",
+    title:
+      "UniRef clusters: a comprehensive and scalable alternative for improving sequence similarity searches",
+    authors: "Suzek, B. E., Wang, Y., Huang, H. et al.",
+    firstAuthor: "Suzek",
+    year: "2015",
+    doi: "https://doi.org/10.1093/bioinformatics/btu739",
+    formattedCitation:
+      "Suzek, B. E., Wang, Y., Huang, H. et al. UniRef clusters: a comprehensive and scalable alternative for improving sequence similarity searches. Bioinformatics 31, 926-932 (2015).",
+    workflows: ["single prediction"],
+    tools: [],
+  },
 } satisfies Record<string, Citation>;
 
 export const WORKFLOW_PAPER_CITATION_KEYS_BY_WORKFLOW: Record<
   string,
   CitationKey[]
 > = {
-  "bulk prediction": ["boltz2", "colabfold"],
+  "bulk prediction": [
+    "alphafold2",
+    "colabfold",
+    "boltz2",
+    "mmseqs2",
+    "structuralbiologyai",
+  ],
   "de novo design": [
     "proteindj",
     "rfdiffusion",
     "bindcraft",
     "proteinmpnn",
+    "solublempnn",
     "openmm",
     "alphafold2",
     "alphafold2relax",
   ],
-  "interaction screening": ["boltz2", "colabfold"],
-  "single prediction": ["colabfold", "alphafold2", "callaway2020", "boltz2"],
-  "single structure prediction": [
-    "colabfold",
+  "interaction screening": [
     "alphafold2",
-    "callaway2020",
+    "alphafoldmultimer",
+    "colabfold",
     "boltz2",
+    "mmseqs2",
+    "structuralbiologyai",
+  ],
+  "single prediction": [
+    "proteinfold",
+    "alphafold2",
+    "alphafoldmultimer",
+    "colabfold",
+    "boltz2",
+    "lmi4boltz",
+    "mmseqs2",
+    "hmmer",
+    "hhsuite",
+    "bfdplass",
+    "uniref",
+    "mgnify",
+    "structuralbiologyai",
+    "pdb",
+  ],
+  "single structure prediction": [
+    "proteinfold",
+    "alphafold2",
+    "alphafoldmultimer",
+    "colabfold",
+    "boltz2",
+    "lmi4boltz",
+    "mmseqs2",
+    "hmmer",
+    "hhsuite",
+    "bfdplass",
+    "uniref",
+    "mgnify",
+    "structuralbiologyai",
+    "pdb",
+  ],
+};
+
+const SINGLE_PREDICTION_CITATION_KEYS_BY_TOOL: Record<string, CitationKey[]> = {
+  alphafold2: ["alphafold2", "proteinfold", "structuralbiologyai"],
+  boltz: [
+    "lmi4boltz",
+    "boltz2",
+    "colabfold",
+    "proteinfold",
+    "structuralbiologyai",
+  ],
+  boltz2: [
+    "lmi4boltz",
+    "boltz2",
+    "colabfold",
+    "proteinfold",
+    "structuralbiologyai",
+  ],
+  colabfold: ["colabfold", "alphafold2", "proteinfold", "structuralbiologyai"],
+};
+
+const BULK_PREDICTION_CITATION_KEYS_BY_TOOL: Record<string, CitationKey[]> = {
+  boltz: ["boltz2", "colabfold", "structuralbiologyai"],
+  boltz2: ["boltz2", "colabfold", "structuralbiologyai"],
+  colabfold: ["colabfold", "alphafold2", "structuralbiologyai"],
+};
+
+const INTERACTION_SCREENING_CITATION_KEYS_BY_TOOL: Record<
+  string,
+  CitationKey[]
+> = {
+  boltz: ["boltz2", "colabfold", "structuralbiologyai"],
+  boltz2: ["boltz2", "colabfold", "structuralbiologyai"],
+  colabfold: ["colabfold", "alphafoldmultimer", "structuralbiologyai"],
+};
+
+const DE_NOVO_DESIGN_CITATION_KEYS_BY_TOOL: Record<string, CitationKey[]> = {
+  bindcraft: [
+    "proteindj",
+    "bindcraft",
+    "proteinmpnn",
+    "solublempnn",
+    "openmm",
+    "alphafold2relax",
+    "alphafold2",
+  ],
+  rfdiffusion: [
+    "proteindj",
+    "rfdiffusion",
+    "proteinmpnn",
+    "solublempnn",
+    "openmm",
+    "alphafold2relax",
+    "alphafold2",
   ],
 };
 
@@ -243,6 +500,42 @@ export function getWorkflowPaperCitationKeys(
   return (
     WORKFLOW_PAPER_CITATION_KEYS_BY_WORKFLOW[normalizeName(workflow)] ?? []
   );
+}
+
+export function getWorkflowRunCitationKeys(
+  workflow: string | undefined,
+  tool: string | undefined
+): readonly CitationKey[] {
+  const normalizedWorkflow = normalizeName(workflow);
+  if (
+    normalizedWorkflow === "single prediction" ||
+    normalizedWorkflow === "single structure prediction"
+  ) {
+    return (
+      SINGLE_PREDICTION_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
+      getWorkflowPaperCitationKeys(workflow)
+    );
+  }
+  if (normalizedWorkflow === "bulk prediction") {
+    return (
+      BULK_PREDICTION_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
+      getWorkflowPaperCitationKeys(workflow)
+    );
+  }
+  if (normalizedWorkflow === "interaction screening") {
+    return (
+      INTERACTION_SCREENING_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
+      getWorkflowPaperCitationKeys(workflow)
+    );
+  }
+  if (normalizedWorkflow === "de novo design") {
+    return (
+      DE_NOVO_DESIGN_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
+      getWorkflowPaperCitationKeys(workflow)
+    );
+  }
+
+  return getWorkflowPaperCitationKeys(workflow);
 }
 
 export function getWorkflowPaperCitations(

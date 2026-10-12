@@ -1,14 +1,12 @@
 <div class="space-y-2 text-sm text-gray-500">
+  <img
+    src="/assets/images/single_prediction_workflow.svg"
+    alt="Diagram of Single Prediction workflow"
+  />
   <p>
-    Predicting 3D protein structures using modern AI tools, e.g., AlphaFold2,
-    ColabFold, and Boltz, often requires complex environments, GPU
-    configurations, and command-line execution. Our goal is to make these
-    powerful tools more accessible by providing a user-friendly interface to
-    structural biologists who can easily run, compare, and visualise 3D
-    predictions using these tools through a simple, intuitive dashboard.
-  </p>
-  <p>
-    Under the hood, this interface is powered by the
+    This workflow enables the structure prediction of an individual molecular
+    system comprising one or more molecular entities. The interface is powered
+    by the
     <a
       href="https://github.com/AustralianBioCommons/sbp-proteinfold"
       target="_blank"
@@ -16,17 +14,99 @@
       class="text-sky-700 underline hover:text-sky-800"
       >sbp-proteinfold<span class="sr-only"> (opens in a new tab)</span></a
     >
-    repository, a bioinformatics best-practice Nextflow pipeline optimised for
-    the Structural Biology Platform and forked from the widely adopted
-    <a
-      href="https://github.com/nf-core/proteinfold"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="text-sky-700 underline hover:text-sky-800"
-      >nf-core/proteinfold<span class="sr-only"> (opens in a new tab)</span></a
-    >.
+    repository, a bioinformatics best-practice Nextflow pipeline pre-configured
+    and optimised for the Structural Biology Platform and forked from
+    nf-core/proteinfold (<app-citation-link
+      citationKey="proteinfold"
+    ></app-citation-link
+    >).
   </p>
 </div>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Pipeline Steps</h3>
+  <p class="text-sm text-gray-500">
+    The pipeline contains two main computational stages:
+  </p>
+
+  <div class="space-y-4 text-sm text-gray-500">
+    <div class="space-y-1">
+      <h4 class="font-medium text-gray-900">
+        Multiple Sequence Alignment (MSA) generation
+      </h4>
+      <p>
+        For protein inputs, the workflow searches large reference sequence
+        databases for homologs and constructs a multiple sequence alignment
+        (MSA). AlphaFold2 (<app-citation-link
+          citationKey="alphafold2"
+        ></app-citation-link
+        >) uses its standard search workflow, to generate input features
+        including JackHMMER (<app-citation-link
+          citationKey="hmmer"
+        ></app-citation-link
+        >) to search small_bfd (when not using <code>Full DBs</code>), MGnify
+        (<app-citation-link citationKey="mgnify"></app-citation-link>), and
+        uniref90 (plus PDB for structural templates and uniprot for a paired MSA
+        when predicting multimers). HHsearch (<app-citation-link
+          citationKey="hhsuite"
+        ></app-citation-link
+        >) is used to search PDB70 for structural templates (and HHblits
+        (<app-citation-link citationKey="hhsuite"></app-citation-link>) to
+        search UniRef30 + BFD when using <code>Full DBs</code>).
+      </p>
+    </div>
+
+    <div
+      class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"
+    >
+      <p>
+        In the SBP deployment, all reference databases are maintained and
+        regularly updated as part of the &ldquo;AI structural biology reference
+        collection&rdquo; (<app-citation-link
+          citationKey="structuralbiologyai"
+        ></app-citation-link
+        >).
+      </p>
+    </div>
+
+    <div class="space-y-1">
+      <p>
+        ColabFold (<app-citation-link
+          citationKey="colabfold"
+        ></app-citation-link
+        >) and Boltz (<app-citation-link
+          citationKey="boltz2"
+        ></app-citation-link
+        >) use an MMseqs2-based (<app-citation-link
+          citationKey="mmseqs2"
+        ></app-citation-link
+        >) colabfold_search pipeline to generate MSAs more rapidly. MMSeqs2 is
+        used to search UniRef30 and a combined environmental (metagenomics)
+        sequence database. Homologs identified from UniRef30 are paired based on
+        taxonomy labels to support multimer predictions.
+      </p>
+    </div>
+
+    <div
+      class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"
+    >
+      <p>
+        In the SBP deployment, MMSeqs2-based colabfold_search process is
+        conducted locally without calling out to an external public server.
+      </p>
+    </div>
+
+    <div class="space-y-1">
+      <h4 class="font-medium text-gray-900">Structure prediction</h4>
+      <p>
+        The generated MSAs (and structural templates for AlphaFold2) are used as
+        input for neural network -based prediction of molecular structures and
+        associated confidence scores. For each tool, SBP displays the top-ranked
+        structure based on predicted confidence.
+      </p>
+    </div>
+  </div>
+</section>
 
 <section class="space-y-4">
   <h3 class="text-lg font-semibold text-gray-900">Tools</h3>
@@ -37,137 +117,48 @@
     </p>
     <ul class="list-disc space-y-2 pl-5">
       <li>
-        <span class="font-medium text-gray-900">AlphaFold2</span> is an advanced
-        AI system developed by Google DeepMind that predicts the 3D structures
-        of proteins from their one-dimensional amino acid sequences with
-        unprecedented, atomic-level accuracy (<app-citation-link
-          citationKey="alphafold2"
-        ></app-citation-link
-        >). Its breakthrough feature is the use of a novel attention-based
-        neural network architecture that incorporates evolutionary and geometric
-        constraints, effectively solving the 50-year-old "protein folding
-        problem" by matching the accuracy of experimental techniques like X-ray
-        crystallography (<app-citation-link
-          citationKey="alphafold2"
-        ></app-citation-link
-        >; <app-citation-link citationKey="callaway2020"></app-citation-link>).
+        <span class="font-medium text-gray-900">AlphaFold2:</span> uses the
+        standard AlphaFold2 search pipeline to generate an MSA and a list of
+        structural templates. This data is provided as input to an ensemble of 5
+        deep-learning models (repeated 5 times each for multimer predictions) to
+        predict protein structures.
       </li>
       <li>
-        <span class="font-medium text-gray-900">Boltz</span> is an open-source,
-        multimodal AI model developed by researchers at MIT and Recursion that
-        predicts the 3D structures of complex biomolecular assemblies involving
-        proteins, DNA, RNA, and small molecules (<a
-          href="https://github.com/jwohlwend/boltz"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sky-700 underline hover:text-sky-800"
-          >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
-        >). Its breakthrough feature is the ability to simultaneously calculate
-        highly accurate protein-ligand binding affinities ~1,000 times faster
-        than traditional physics-based free-energy perturbation (FEP)
-        simulations, significantly accelerating early-stage drug discovery (<a
-          href="https://github.com/jwohlwend/boltz"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sky-700 underline hover:text-sky-800"
-          >Boltz on GitHub<span class="sr-only"> (opens in a new tab)</span></a
-        >;
-        <a
-          href="https://www.cancergrandchallenges.org/news/boltz-2-democratising-the-future-of-drug-design"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-sky-700 underline hover:text-sky-800"
-          >Cancer Grand Challenges<span class="sr-only">
-            (opens in a new tab)</span
-          ></a
-        >).
+        <span class="font-medium text-gray-900">ColabFold:</span> uses an
+        accelerated MMseqs2-based homology search (colabfold_search) to generate
+        MSAs to use as neural network inputs. A single replicate of each of the
+        5 AlphaFold2 models is used for structure prediction.
       </li>
       <li>
-        <span class="font-medium text-gray-900">ColabFold</span> is an
-        open-source platform that drastically accelerates AI-driven protein
-        structure prediction models, such as AlphaFold2, by replacing their
-        standard homology search with the ultra-fast MMseqs2 algorithm. Its
-        breakthrough feature is the ability to generate sequence alignments
-        40–60 times faster than traditional methods, democratising access to
-        complex protein and multimer predictions without requiring massive
-        computational infrastructure (<app-citation-link
-          citationKey="colabfold"
-        ></app-citation-link
-        >).
+        <span class="font-medium text-gray-900">Boltz:</span> uses MMSeqs2-based
+        colabfold_search to generate input MSAs in combination with a
+        diffusion-based, AlphaFold3-like architecture for structure prediction.
+        As a result, Boltz is able to co-fold complexes containing proteins,
+        DNA, RNA and small molecules.
       </li>
     </ul>
   </div>
 
-  <!-- Focusable so keyboard users can scroll it on narrow screens. -->
   <div
-    class="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-    role="region"
-    aria-labelledby="tool-choice-table-caption"
-    tabindex="0"
+    class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"
   >
-    <table class="w-full min-w-lg text-left text-sm">
-      <caption id="tool-choice-table-caption" class="sr-only">
-        Which tool to use
-      </caption>
-      <thead class="bg-sky-900 text-white">
-        <tr>
-          <th scope="col" class="px-4 py-2 font-medium">Tool</th>
-          <th scope="col" class="px-4 py-2 font-medium">
-            Use it when you want to…
-          </th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 font-medium whitespace-nowrap text-gray-900"
-          >
-            ColabFold
-          </th>
-          <td class="p-4">
-            Quickly predict a protein structure or protein complex using an
-            AlphaFold-based workflow.
-          </td>
-        </tr>
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 font-medium whitespace-nowrap text-gray-900"
-          >
-            AlphaFold2
-          </th>
-          <td class="p-4">
-            Predict the 3D structure of a protein using the established
-            AlphaFold2 approach.
-          </td>
-        </tr>
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 font-medium whitespace-nowrap text-gray-900"
-          >
-            Boltz
-          </th>
-          <td class="p-4">
-            Predict more complex biomolecular systems involving proteins, DNA,
-            RNA, or small molecules.
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <p>
+      In the SBP deployment, the Boltz-2 model is used within the LMI4Boltz
+      (<app-citation-link citationKey="lmi4boltz"></app-citation-link>)
+      framework to increase the maximum prediction size compared to the Boltz-2
+      implementation.
+    </p>
   </div>
 </section>
-
-<!-- TODO: workflow diagram. -->
 
 <section class="space-y-4">
   <h3 class="text-lg font-semibold text-gray-900">Credits Calculation</h3>
   <p class="text-sm text-gray-500">
-    Credits are required to execute workflows and will be consumed upon workflow
-    submission. The credit balance refreshes to 1000 on the 1st of each month.
-    The tools for single structure prediction utilise 50 credits for each run,
-    with different size limits enforced as indicated in the table below.
+    Credits are required to execute workflows and are consumed when a workflow
+    is submitted. The credit balance refreshes to 1000 on the first day of each
+    month. A single prediction run costs 50 credits, irrespective of the
+    selected tool. Tool-specific input-size limits are enforced during
+    configuration.
   </p>
 </section>
 
@@ -181,23 +172,35 @@
     limits, if any, of each parameter.
   </p>
 
+  <div
+    class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"
+  >
+    <p>
+      AlphaFold2 and ColabFold only support protein entities, while Boltz also
+      supports RNA, DNA and small-molecule ligands.
+    </p>
+  </div>
+
   <!-- Focusable so keyboard users can scroll it on narrow screens. -->
   <div
     class="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
     role="region"
-    aria-labelledby="input-settings-table-caption"
+    aria-labelledby="single-prediction-input-settings-table-caption"
     tabindex="0"
   >
     <table class="w-full min-w-2xl text-left text-sm">
-      <caption id="input-settings-table-caption" class="sr-only">
-        Input parameters, accepted formats, and behaviour and limits
+      <caption
+        id="single-prediction-input-settings-table-caption"
+        class="sr-only"
+      >
+        Input parameters, descriptions, accepted formats, and limits
       </caption>
       <thead class="bg-sky-900 text-white">
         <tr>
           <th scope="col" class="px-4 py-2 font-medium">Input</th>
-          <th scope="col" class="px-4 py-2 font-medium">Accepted formats</th>
+          <th scope="col" class="px-4 py-2 font-medium">Description</th>
           <th scope="col" class="px-4 py-2 font-medium">
-            Behaviour and limits
+            Accepted format and limits
           </th>
         </tr>
       </thead>
@@ -207,220 +210,167 @@
             scope="row"
             class="p-4 font-medium whitespace-nowrap text-gray-900"
           >
-            Job Name
+            Job name
+          </th>
+          <td class="p-4">Identifier for the job/workflow run.</td>
+          <td class="space-y-1 p-4">
+            <p>Alphanumeric input including hyphens and underscores.</p>
+            <p>Must not start with a number.</p>
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Entity type
           </th>
           <td class="p-4">
-            A string containing letters, numbers, hyphens, and underscores
+            Defines the type of molecular entity represented by the input.
           </td>
           <td class="space-y-1 p-4">
-            <p>Mandatory/Required identifier for the job/workflow run</p>
-            <p>Must not start with a number</p>
+            <p>Protein, RNA, DNA, ligand (SMILES) or ligand (CCD).</p>
+            <p><b>AlphaFold2</b>: Protein entities only.</p>
+            <p><b>ColabFold</b>: Protein entities only.</p>
+            <p><b>Boltz</b>: Protein, RNA, DNA and small-molecule ligands.</p>
           </td>
-        </tr>
-      </tbody>
-
-      <tbody
-        class="divide-y divide-gray-200 border-t border-gray-200 bg-white text-gray-500"
-      >
-        <tr>
-          <th
-            scope="rowgroup"
-            colspan="3"
-            class="bg-gray-50 px-4 py-2 font-medium text-gray-900"
-          >
-            Entities
-          </th>
         </tr>
         <tr class="align-top">
           <th
             scope="row"
-            class="p-4 pl-8 font-medium whitespace-nowrap text-gray-900"
-          >
-            Type
-          </th>
-          <td class="space-y-1 p-4">
-            <p>A drop-down menu with the following options:</p>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>Protein</li>
-              <li>RNA</li>
-              <li>DNA</li>
-              <li>Ligand (SMILES)</li>
-              <li>Ligand (CCD)</li>
-            </ul>
-          </td>
-          <td class="p-4"></td>
-        </tr>
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 pl-8 font-medium whitespace-nowrap text-gray-900"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
           >
             Copies
           </th>
-          <td class="p-4">A whole number greater than or equal to 1</td>
           <td class="p-4">
-            Copies duplicate a molecule and assign separate chain IDs.
+            Creates the specified number of copies of an entity, each assigned a
+            separate chain identifier.
+          </td>
+          <td class="space-y-1 p-4">
+            <p>Integer</p>
+            <p><b>Minimum</b>: 1.</p>
           </td>
         </tr>
         <tr class="align-top">
           <th
             scope="row"
-            class="p-4 pl-8 font-medium whitespace-nowrap text-gray-900"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
           >
-            Sequence
+            Sequence or ligand identifier
           </th>
           <td class="p-4">
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                <span class="font-medium text-gray-900">Protein:</span> the 20
-                canonical amino acid letters
-              </li>
-              <li>
-                <span class="font-medium text-gray-900">RNA:</span> valid RNA
-                characters only (A, U, G, C)
-              </li>
-              <li>
-                <span class="font-medium text-gray-900">DNA:</span> valid DNA
-                characters only (A, T, G, C)
-              </li>
-              <li>
-                <span class="font-medium text-gray-900">Ligand (SMILES):</span>
-                a valid SMILES string
-              </li>
-              <li>
-                <span class="font-medium text-gray-900">Ligand (CCD):</span>
-                a drop-down menu of entries from the
-                <a
-                  href="https://www.wwpdb.org/data/ccd"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-sky-700 underline hover:text-sky-800"
-                  >Chemical Component Dictionary<span class="sr-only">
-                    (opens in a new tab)</span
-                  ></a
-                >
-              </li>
-            </ul>
+            Provides the sequence or identifier used to define the selected
+            entity.
           </td>
           <td class="space-y-1 p-4">
-            <p>The following limits apply due to computational cost:</p>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                <span class="font-medium text-gray-900">AlphaFold2:</span> Total
-                prediction size must be less than 1000 (amino acids)
-              </li>
-              <li>
-                <span class="font-medium text-gray-900">Boltz:</span> Total
-                prediction size must be less than 4000 (amino acids)
-              </li>
-              <li>
-                <span class="font-medium text-gray-900">ColabFold:</span> Total
-                prediction size must be less than 4000 (amino acids)
-              </li>
-            </ul>
-          </td>
-        </tr>
-      </tbody>
-
-      <tbody
-        class="divide-y divide-gray-200 border-t border-gray-200 bg-white text-gray-500"
-      >
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 font-medium whitespace-nowrap text-gray-900"
-          >
-            Random Seed
-          </th>
-          <td class="space-y-1 p-4">
-            <p>A whole number with at most 8 digits</p>
+            <p><b>Protein</b>: 20 canonical amino acid characters.</p>
+            <p><b>RNA</b>: Canonical RNA characters (A, U, G, C)</p>
+            <p><b>DNA</b>: Canonical DNA characters (A, T, G, C)</p>
+            <p><b>Ligand (SMILES)</b>: Valid SMILES string</p>
             <p>
-              <span class="font-medium text-gray-900">Default:</span> a random
-              8-digit number
+              <b>Ligand (CCD)</b>: Drop-down menu of entries from the Chemical
+              Component Dictionary.
             </p>
-          </td>
-          <td class="space-y-1 p-4">
-            <p>
-              Number of different random seeds used to generate additional
-              structural diversity.
+            <p class="mt-4">
+              Size limits due to GPU VRAM and computational cost:
             </p>
-            <p>
-              A fixed seed is required for reproducibility between two jobs.
-              When not set, tools use their default seed behaviour.
-            </p>
-          </td>
-        </tr>
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 font-medium whitespace-nowrap text-gray-900"
-          >
-            Full DBs
-          </th>
-          <td class="space-y-1 p-4">
-            <p>Boolean</p>
-            <p><span class="font-medium text-gray-900">Default:</span> False</p>
-          </td>
-          <td class="space-y-1 p-4">
-            <p class="font-medium text-gray-900">AlphaFold2 specific</p>
-            <p>
-              The full BFD database is used to improve search sensitivity for
-              MSA generation.
-            </p>
-            <p>Using the full BFD database slows down the prediction.</p>
-          </td>
-        </tr>
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 font-medium whitespace-nowrap text-gray-900"
-          >
-            Recycles
-          </th>
-          <td class="space-y-1 p-4">
-            <p>An integer between 1 and 10</p>
-            <p><span class="font-medium text-gray-900">Default:</span> 3</p>
-          </td>
-          <td class="space-y-1 p-4">
-            <p class="font-medium text-gray-900">ColabFold specific</p>
-            <p>Number of refinement iterations</p>
-            <p>Increasing recycles can improve prediction quality.</p>
-            <p>A higher number of recycles slows down the prediction.</p>
-          </td>
-        </tr>
-        <tr class="align-top">
-          <th
-            scope="row"
-            class="p-4 font-medium whitespace-nowrap text-gray-900"
-          >
-            Use Potentials
-          </th>
-          <td class="space-y-1 p-4">
-            <p>Boolean</p>
-            <p><span class="font-medium text-gray-900">Default:</span> False</p>
-          </td>
-          <td class="space-y-1 p-4">
-            <p class="font-medium text-gray-900">Boltz specific</p>
-            <p>
-              Steering potentials are used by Boltz to improve the physical
-              validity of output predictions (e.g., steric clashes, incorrect
-              chirality) (<a
-                href="https://nf-co.re/proteinfold/dev/docs/usage/boltz"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-sky-700 underline hover:text-sky-800"
-                >nf-core/proteinfold docs<span class="sr-only">
-                  (opens in a new tab)</span
-                ></a
-              >).
-            </p>
-            <p>
-              Using potentials increases execution time and memory requirements
-              and decreases the maximum size limit.
-            </p>
+            <p><b>AlphaFold2</b>: Total size less than 1000.</p>
+            <p><b>ColabFold</b>: Total size less than 4000.</p>
+            <p><b>Boltz</b>: Total size less than 4000.</p>
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
+</section>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Tool-Specific Parameters</h3>
+
+  <div class="overflow-hidden rounded-lg border">
+    <div
+      class="flex flex-wrap gap-1 border-b bg-gray-50 p-1"
+      role="tablist"
+      aria-label="Tool-specific parameters"
+    >
+      @for (tab of toolParameterTabs; track tab.id) {
+      <button
+        type="button"
+        role="tab"
+        [id]="'single-prediction-tool-parameters-tab-' + tab.id"
+        [attr.aria-selected]="activeToolParameterTab() === tab.id"
+        [attr.aria-controls]="
+          activeToolParameterTab() === tab.id
+            ? 'single-prediction-tool-parameters-panel'
+            : null
+        "
+        [class]="
+          activeToolParameterTab() === tab.id
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
+        "
+        class="rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+        (click)="selectToolParameterTab(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+      }
+    </div>
+
+    <div
+      id="single-prediction-tool-parameters-panel"
+      role="tabpanel"
+      [attr.aria-labelledby]="
+        'single-prediction-tool-parameters-tab-' + activeToolParameters().id
+      "
+      tabindex="0"
+      class="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+    >
+      <!-- Focusable so keyboard users can scroll it on narrow screens. -->
+      <div
+        class="overflow-x-auto"
+        role="region"
+        [attr.aria-labelledby]="
+          'single-prediction-tool-parameters-tab-' + activeToolParameters().id
+        "
+        tabindex="0"
+      >
+        <table class="w-full min-w-2xl text-left text-sm">
+          <caption class="sr-only">
+            {{
+              activeToolParameters().label
+            }}
+            parameters, descriptions, and accepted formats and limits
+          </caption>
+          <thead class="bg-sky-900 text-white">
+            <tr>
+              <th scope="col" class="px-4 py-2 font-medium">Input</th>
+              <th scope="col" class="px-4 py-2 font-medium">Description</th>
+              <th scope="col" class="px-4 py-2 font-medium">
+                Accepted format and limits
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
+            @for (row of activeToolParameters().rows; track row.input) {
+            <tr class="align-top">
+              <th
+                scope="row"
+                class="p-4 font-medium whitespace-nowrap text-gray-900"
+              >
+                {{ row.input }}
+              </th>
+              <td class="p-4">{{ row.description }}</td>
+              <td class="space-y-1 p-4">
+                @for (limit of row.formatAndLimits; track limit) {
+                <p>{{ limit }}</p>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </section>

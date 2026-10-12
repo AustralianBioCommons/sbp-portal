@@ -10,6 +10,7 @@ import {
   getRelevantCitations,
   getWorkflowPaperCitationKeys,
   getWorkflowPaperCitations,
+  getWorkflowRunCitationKeys,
 } from "./workflow-citations";
 
 describe("Workflow Citations utilities", () => {
@@ -42,8 +43,19 @@ describe("Workflow Citations utilities", () => {
   it("builds workflow-to-citation records", () => {
     expect(CITATION_KEYS_BY_WORKFLOW["de novo design"]).toContain("proteindj");
     expect(CITATION_KEYS_BY_WORKFLOW["bulk prediction"]).toEqual([
+      "alphafold2",
       "boltz2",
       "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
+    expect(CITATION_KEYS_BY_WORKFLOW["interaction screening"]).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
+      "boltz2",
+      "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
     ]);
   });
 
@@ -57,6 +69,7 @@ describe("Workflow Citations utilities", () => {
       "openmm",
       "proteindj",
       "proteinmpnn",
+      "solublempnn",
     ]);
   });
 
@@ -64,8 +77,23 @@ describe("Workflow Citations utilities", () => {
     const citations = getCitationsByWorkflow("Bulk Prediction");
 
     expect(citations.map((citation) => citation.key)).toEqual([
+      "alphafold2",
       "boltz2",
       "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
+    expect(
+      getCitationsByWorkflow("Interaction Screening").map(
+        (citation) => citation.key
+      )
+    ).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
+      "boltz2",
+      "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
     ]);
   });
 
@@ -75,15 +103,148 @@ describe("Workflow Citations utilities", () => {
       "rfdiffusion",
       "bindcraft",
       "proteinmpnn",
+      "solublempnn",
       "openmm",
       "alphafold2",
       "alphafold2relax",
+    ]);
+    expect(getWorkflowPaperCitationKeys("Bulk Prediction")).toEqual([
+      "alphafold2",
+      "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
+    expect(getWorkflowPaperCitationKeys("Interaction Screening")).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
+      "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
     ]);
     expect(
       getWorkflowPaperCitations("Single Structure Prediction").map(
         (citation) => citation.key
       )
-    ).toEqual(["colabfold", "alphafold2", "callaway2020", "boltz2"]);
+    ).toEqual([
+      "proteinfold",
+      "alphafold2",
+      "alphafoldmultimer",
+      "colabfold",
+      "boltz2",
+      "lmi4boltz",
+      "mmseqs2",
+      "hmmer",
+      "hhsuite",
+      "bfdplass",
+      "uniref",
+      "mgnify",
+      "structuralbiologyai",
+      "pdb",
+    ]);
+  });
+
+  it("gets tool-specific citation keys for Single Prediction job runs", () => {
+    expect(getWorkflowRunCitationKeys("Single Prediction", "Boltz")).toEqual([
+      "lmi4boltz",
+      "boltz2",
+      "colabfold",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
+    expect(
+      getWorkflowRunCitationKeys("single-prediction", "AlphaFold-2")
+    ).toEqual(["alphafold2", "proteinfold", "structuralbiologyai"]);
+    expect(
+      getWorkflowRunCitationKeys("Single Prediction", "ColabFold")
+    ).toEqual([
+      "colabfold",
+      "alphafold2",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
+  });
+
+  it("gets tool-specific citation keys for Bulk Prediction job runs", () => {
+    expect(getWorkflowRunCitationKeys("Bulk Prediction", "Boltz")).toEqual([
+      "boltz2",
+      "colabfold",
+      "structuralbiologyai",
+    ]);
+    expect(getWorkflowRunCitationKeys("bulk-prediction", "ColabFold")).toEqual([
+      "colabfold",
+      "alphafold2",
+      "structuralbiologyai",
+    ]);
+  });
+
+  it("gets tool-specific citation keys for Interaction Screening job runs", () => {
+    expect(
+      getWorkflowRunCitationKeys("Interaction Screening", "Boltz")
+    ).toEqual(["boltz2", "colabfold", "structuralbiologyai"]);
+    expect(
+      getWorkflowRunCitationKeys("interaction-screening", "ColabFold")
+    ).toEqual(["colabfold", "alphafoldmultimer", "structuralbiologyai"]);
+  });
+
+  it("gets tool-specific citation keys for De Novo Design job runs", () => {
+    expect(getWorkflowRunCitationKeys("De Novo Design", "RFdiffusion")).toEqual(
+      [
+        "proteindj",
+        "rfdiffusion",
+        "proteinmpnn",
+        "solublempnn",
+        "openmm",
+        "alphafold2relax",
+        "alphafold2",
+      ]
+    );
+    expect(getWorkflowRunCitationKeys("de-novo-design", "BindCraft")).toEqual([
+      "proteindj",
+      "bindcraft",
+      "proteinmpnn",
+      "solublempnn",
+      "openmm",
+      "alphafold2relax",
+      "alphafold2",
+    ]);
+  });
+
+  it("falls back to workflow citation keys for non-tool-specific runs", () => {
+    expect(getWorkflowRunCitationKeys("Bulk Prediction", "Unknown")).toEqual([
+      "alphafold2",
+      "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
+    expect(
+      getWorkflowRunCitationKeys("Interaction Screening", "Unknown")
+    ).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
+      "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
+    expect(getWorkflowRunCitationKeys("Single Prediction", "Unknown")).toEqual([
+      "proteinfold",
+      "alphafold2",
+      "alphafoldmultimer",
+      "colabfold",
+      "boltz2",
+      "lmi4boltz",
+      "mmseqs2",
+      "hmmer",
+      "hhsuite",
+      "bfdplass",
+      "uniref",
+      "mgnify",
+      "structuralbiologyai",
+      "pdb",
+    ]);
   });
 
   it("returns empty lists for unknown workflow paper citations", () => {
@@ -116,9 +277,20 @@ describe("Workflow Citations utilities", () => {
 
     expect(citations.map((citation) => citation.key)).toEqual([
       "alphafold2",
+      "alphafoldmultimer",
+      "bfdplass",
       "boltz2",
       "callaway2020",
       "colabfold",
+      "hhsuite",
+      "hmmer",
+      "lmi4boltz",
+      "mgnify",
+      "mmseqs2",
+      "pdb",
+      "proteinfold",
+      "structuralbiologyai",
+      "uniref",
     ]);
   });
 
@@ -127,7 +299,13 @@ describe("Workflow Citations utilities", () => {
       getRelevantCitations({ workflow: "Bulk Prediction" }).map(
         (citation) => citation.key
       )
-    ).toEqual(["boltz2", "colabfold"]);
+    ).toEqual([
+      "alphafold2",
+      "boltz2",
+      "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
     expect(
       getRelevantCitations({
         workflow: "unknown workflow",
@@ -157,5 +335,31 @@ describe("Workflow Citations utilities", () => {
     expect(formatCitation(citation!)).toBe(
       "Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023)."
     );
+  });
+
+  it("includes the SolubleMPNN citation", () => {
+    const citation = getCitation("solublempnn");
+
+    expect(citation?.label).toBe("SolubleMPNN");
+    expect(citation?.doi).toBe("https://doi.org/10.1038/s41586-024-07601-y");
+    expect(formatCitation(citation!)).toBe(
+      "Goverde, C.A., Pacesa, M., Goldbach, N. et al. Computational design of soluble and functional membrane protein analogues. Nature 631, 449-458 (2024)."
+    );
+  });
+
+  it("includes the Single Prediction supporting reference citations", () => {
+    expect(getCitation("proteinfold")?.doi).toBe(
+      "https://doi.org/10.5281/zenodo.7437038"
+    );
+    expect(getCitation("alphafoldmultimer")?.doi).toBe(
+      "https://doi.org/10.1101/2021.10.04.463034"
+    );
+    expect(getCitation("lmi4boltz")?.doi).toBe(
+      "https://doi.org/10.1101/2025.10.29.684571"
+    );
+    expect(getCitation("structuralbiologyai")?.doi).toBe(
+      "https://doi.org/10.25914/q48c-9a86"
+    );
+    expect(getCitation("pdb")?.label).toBe("Protein Data Bank");
   });
 });
