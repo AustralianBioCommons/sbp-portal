@@ -28,6 +28,11 @@ import { MsaCoverageComponent } from "../msa-coverage/msa-coverage.component";
 import { PaeMatrixComponent } from "../pae-matrix/pae-matrix.component";
 import { LoadingComponent } from "../../../../components/loading/loading.component";
 import { TooltipComponent } from "../../../../components/tooltip/tooltip.component";
+import {
+  PREDICTION_SCORE_HINTS,
+  PredictionConfidenceScore,
+  PredictionConfidenceScoresComponent,
+} from "../../../../components/prediction-confidence-scores/prediction-confidence-scores.component";
 import { ResultsService } from "../../services/results.service";
 import {
   ChainPairScore,
@@ -61,6 +66,7 @@ import { formatDecimals } from "../../shared/job-results-report.utils";
     PlddtLegendComponent,
     LoadingComponent,
     TooltipComponent,
+    PredictionConfidenceScoresComponent,
     NgIconComponent,
   ],
   providers: [
@@ -146,32 +152,25 @@ export class SinglePredictionReportComponent {
 
   /** Global confidence scores; ipTM only exists for multimers. */
   readonly scores = computed(() => {
-    const items: Array<{ label: string; value: string; hint: string }> = [];
+    const items: PredictionConfidenceScore[] = [];
     const ptm = this.ptm();
     const iptm = this.iptm();
     if (iptm !== null) {
       items.push({
         label: "ipTM",
         value: formatDecimals(iptm),
-        hint: "Predicted TM-score across the chain interfaces (0–1, higher is better)",
+        hint: PREDICTION_SCORE_HINTS.ipTM,
       });
     }
     if (ptm !== null) {
       items.push({
         label: "pTM",
         value: formatDecimals(ptm),
-        hint: "Predicted TM-score for the structure as a whole (0–1, higher is better)",
+        hint: PREDICTION_SCORE_HINTS.pTM,
       });
     }
     return items;
   });
-
-  /** One tooltip for every score; it renders pre-line, so blank lines separate them. */
-  readonly scoresHint = computed(() =>
-    this.scores()
-      .map((score) => `${score.label}: ${score.hint}`)
-      .join("\n\n")
-  );
 
   /** Tooltip instructions */
   readonly viewerHelp = [

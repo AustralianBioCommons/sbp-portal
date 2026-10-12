@@ -51,8 +51,6 @@ export class ExampleOutputComponent {
   readonly heading = input.required<string>();
   /** Until it is set, a placeholder stands in for the image. */
   readonly image = input<ExampleOutputImage>();
-  /** A wide strip shown above the image, such as the results page's scores. Hidden on phones, where its text would be cut off. */
-  readonly banner = input<ExampleOutputImage>();
   /** Shows the explanation in a side panel that can be closed, like de novo design's. */
   readonly collapsible = input(false, { transform: booleanAttribute });
 

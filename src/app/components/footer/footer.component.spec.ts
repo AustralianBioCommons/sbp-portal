@@ -23,12 +23,23 @@ describe("FooterSectionsComponent", () => {
 
   describe("data properties", () => {
     it("should have correct logos data", () => {
-      expect(component.logos.length).toBe(3);
-      expect(component.logos[0]).toEqual({
-        href: "http://biocommons.org.au",
-        alt: "Australian BioCommons logo",
-        src: "https://images.squarespace-cdn.com/content/v1/5d3a4213cf4f5b00014ea1db/1690418382186-WCV54ZDHSSC3CIQ94MK2/Australian-Biocommons-Logo-Horizontal-RGB.png?format=300w",
-      });
+      expect(component.logos).toEqual([
+        {
+          href: "http://biocommons.org.au",
+          alt: "Australian BioCommons logo",
+          src: "/assets/images/Australian-Biocommons-Logo-Horizontal-RGB.png",
+        },
+        {
+          href: "https://bioplatforms.com/",
+          alt: "Bioplatforms Australia logo",
+          src: "/assets/images/bioplatforms-australia-logo.png",
+        },
+        {
+          href: "https://www.education.gov.au/ncris",
+          alt: "NCRIS logo",
+          src: "/assets/images/ncris-provider.png",
+        },
+      ]);
     });
 
     it("should have correct link groups data", () => {

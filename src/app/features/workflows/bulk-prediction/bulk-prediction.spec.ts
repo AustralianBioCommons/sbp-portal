@@ -42,8 +42,6 @@ const MOCK_DATASET_RESPONSE: DatasetUploadResponse = {
   success: true,
   message: "ok",
   s3Key: "inputs/samplesheets/dataset-456.csv",
-  splitOutputDir:
-    "/g/data/yz52/sbp-service/input/bulk_prediction/bulk-job_20240101-120000_ab3x",
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -330,18 +328,21 @@ describe("BulkPredictionComponent", () => {
     );
     expect(
       datasetUploadService.uploadBulkPredictionDataset
-    ).toHaveBeenCalledWith(
-      jasmine.objectContaining({
-        runId: "bulk-job",
-        sequences: jasmine.arrayContaining([
-          jasmine.objectContaining({ id: "seq1" }),
-        ]),
-      })
-    );
+    ).toHaveBeenCalledWith({
+      runId: "bulk-job",
+      fastaS3Uri: MOCK_FASTA_RESPONSE.s3Uri,
+    });
+    const [submittedFormData] =
+      workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+        .args;
+    expect("splitOutputDir" in submittedFormData).toBeFalse();
     expect(
       workflowSubmissionService.submitWorkflowWithDataset
     ).toHaveBeenCalledWith(
-      jasmine.objectContaining({ runName: "bulk-job" }),
+      jasmine.objectContaining({
+        runName: "bulk-job",
+        fastaS3Uri: MOCK_FASTA_RESPONSE.s3Uri,
+      }),
       "inputs/samplesheets/dataset-456.csv",
       jasmine.any(Function)
     );
@@ -407,21 +408,6 @@ describe("BulkPredictionComponent", () => {
 
     expect(component.showAlert()).toBe(true);
     expect(component.alertMessage()).toContain("no S3 key");
-  });
-
-  it("should show error when dataset upload returns s3Key but no splitOutputDir", () => {
-    fillValidForm();
-    datasetUploadService.uploadBulkPredictionDataset.and.returnValue(
-      of({
-        success: true,
-        message: "ok",
-        s3Key: "inputs/samplesheets/dataset-456.csv",
-      })
-    );
-    component.submitWorkflow();
-
-    expect(component.showAlert()).toBe(true);
-    expect(component.alertMessage()).toContain("split output directory");
   });
 
   // ── 14. getJobNameError ───────────────────────────────────────────────

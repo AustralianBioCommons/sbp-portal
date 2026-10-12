@@ -57,7 +57,9 @@ import {
   WorkflowTool,
 } from "../shared/workflow.interfaces";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
-import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
+import { DeNovoDesignAboutComponent } from "./components/de-novo-design-about/de-novo-design-about.component";
+import { DeNovoDesignExampleOutputComponent } from "./components/de-novo-design-example-output/de-novo-design-example-output.component";
+import { DeNovoDesignPapersComponent } from "./components/de-novo-design-papers/de-novo-design-papers.component";
 
 interface ToolChip extends ToolOption {
   id: Extract<WorkflowTool, "bindcraft" | "rfdiffusion">;
@@ -91,7 +93,9 @@ const DEFAULT_MAX_LENGTH = 150;
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
     NgIconComponent,
-    WorkflowPapersComponent,
+    DeNovoDesignAboutComponent,
+    DeNovoDesignExampleOutputComponent,
+    DeNovoDesignPapersComponent,
   ],
   providers: [
     provideIcons({

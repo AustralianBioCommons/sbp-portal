@@ -24,7 +24,8 @@ import { CreditSummaryComponent } from "../components/credit-summary/credit-summ
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { BulkPredictionAboutComponent } from "./components/bulk-prediction-about/bulk-prediction-about.component";
-import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
+import { BulkPredictionExampleOutputComponent } from "./components/bulk-prediction-example-output/bulk-prediction-example-output.component";
+import { BulkPredictionPapersComponent } from "./components/bulk-prediction-papers/bulk-prediction-papers.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
 import {
   WorkflowFormComponent,
@@ -65,7 +66,8 @@ interface ToolChip extends ToolOption {
     WorkflowFormComponent,
     WorkflowLayoutComponent,
     BulkPredictionAboutComponent,
-    WorkflowPapersComponent,
+    BulkPredictionExampleOutputComponent,
+    BulkPredictionPapersComponent,
     StepContentComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,
@@ -237,8 +239,8 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
         switchMap((uploadResp) => {
           fastaS3Uri = uploadResp.s3Uri;
           return this.datasetUploadService.uploadBulkPredictionDataset({
-            sequences,
             runId: jobName,
+            fastaS3Uri,
           });
         })
       )
@@ -252,21 +254,12 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
             );
             return;
           }
-          const splitOutputDir = datasetResponse.splitOutputDir;
-          if (!splitOutputDir) {
-            this.workflowSubmission.isSubmitting.set(false);
-            this.showError(
-              "Dataset upload did not return a split output directory."
-            );
-            return;
-          }
           const formData: BulkPredictionPayload = {
             workflow: "bulk-prediction",
             tool,
             runName: jobName,
             sample_id: jobName,
             fastaS3Uri,
-            splitOutputDir,
             fastaContent: combinedFasta,
           };
           this.workflowSubmission.submitWorkflowWithDataset(

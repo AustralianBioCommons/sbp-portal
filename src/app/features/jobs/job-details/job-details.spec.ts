@@ -38,6 +38,7 @@ type JobDetailsPrivateApi = {
     details: string[];
     url?: string;
     openInline?: boolean;
+    openableText?: string;
   }>;
   formatSettingLabel: (key: string) => string;
   formatSettingValue: (value: unknown) => string;
@@ -855,7 +856,7 @@ describe("JobDetailsComponent", () => {
   it("should provide fallback values for helper methods", () => {
     const summaryItems = component.getSummaryItems(fallbackJob);
     const files = component.getFiles(fallbackJob);
-    const citations = component.getCitations(fallbackJob);
+    const citationKeys = component.getCitationKeys(fallbackJob);
 
     const valueOf = (label: string) =>
       summaryItems.find((item) => item.label === label)?.value;
@@ -863,7 +864,7 @@ describe("JobDetailsComponent", () => {
     expect(valueOf("Tool")).toBe("N/A");
     expect(valueOf("Max score")).toBe("N/A");
     expect(files[0]).toBe("queued_job_summary.json");
-    expect(citations).toEqual([]);
+    expect(citationKeys).toEqual([]);
   });
 
   it("should normalize tool casing regardless of how the API sent it", () => {
@@ -873,13 +874,78 @@ describe("JobDetailsComponent", () => {
 
     expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
-    expect(component.getCitations(deNovoDesignJob)[0].label).toBe("BindCraft");
-    expect(component.getCitations(bulkPredictionJob)[0].label).toBe(
-      "ColabFold"
-    );
+    expect(component.getCitationKeys(deNovoDesignJob)).toEqual([
+      "proteindj",
+      "bindcraft",
+      "proteinmpnn",
+      "solublempnn",
+      "openmm",
+      "alphafold2relax",
+      "alphafold2",
+    ]);
+    expect(
+      component.getCitationKeys({
+        ...deNovoDesignJob,
+        tool: "RFdiffusion",
+      })
+    ).toEqual([
+      "proteindj",
+      "rfdiffusion",
+      "proteinmpnn",
+      "solublempnn",
+      "openmm",
+      "alphafold2relax",
+      "alphafold2",
+    ]);
+    expect(component.getCitationKeys(bulkPredictionJob)).toEqual([
+      "colabfold",
+      "alphafold2",
+      "structuralbiologyai",
+    ]);
+    expect(
+      component.getCitationKeys({
+        ...bulkPredictionJob,
+        tool: "Boltz",
+      })
+    ).toEqual(["boltz2", "colabfold", "structuralbiologyai"]);
+    expect(component.getCitationKeys(singlePredictionJob)).toEqual([
+      "lmi4boltz",
+      "boltz2",
+      "colabfold",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
+    expect(
+      component.getCitationKeys({
+        ...singlePredictionJob,
+        tool: "AlphaFold-2",
+      })
+    ).toEqual(["alphafold2", "proteinfold", "structuralbiologyai"]);
+    expect(
+      component.getCitationKeys({
+        ...singlePredictionJob,
+        tool: "ColabFold",
+      })
+    ).toEqual([
+      "colabfold",
+      "alphafold2",
+      "proteinfold",
+      "structuralbiologyai",
+    ]);
+    expect(component.getCitationKeys(mockJob)).toEqual([
+      "boltz2",
+      "colabfold",
+      "structuralbiologyai",
+    ]);
+    expect(
+      component.getCitationKeys({
+        ...mockJob,
+        tool: "ColabFold",
+      })
+    ).toEqual(["colabfold", "alphafoldmultimer", "structuralbiologyai"]);
   });
 
-  it("should render the selected job tool citation in the citations tab", () => {
+  it("should render the selected job workflow citations in the citations tab", () => {
     render();
 
     component.setActiveTab("citations");
@@ -890,14 +956,115 @@ describe("JobDetailsComponent", () => {
       'a[href="https://doi.org/10.1101/2025.06.14.659707"]'
     );
 
-    expect(element.textContent).toContain("Boltz-2");
     expect(element.textContent).toContain(
       "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
+    );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Protein complex prediction with AlphaFold-Multimer"
+    );
+    expect(element.textContent).not.toContain(
+      "MMseqs2 enables sensitive protein sequence searching"
     );
     expect(citationLink).not.toBeNull();
   });
 
-  it("should show a citation fallback when the job tool has no citation", () => {
+  it("should render selected Interaction Screening ColabFold citations in the citations tab", () => {
+    render();
+
+    component.job.set({
+      ...mockJob,
+      tool: "ColabFold",
+    });
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
+    );
+    expect(element.textContent).toContain(
+      "Protein complex prediction with AlphaFold-Multimer"
+    );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).not.toContain(
+      "Highly accurate protein structure prediction with AlphaFold"
+    );
+  });
+
+  it("should render selected Single Prediction tool citations in the citations tab", () => {
+    render();
+
+    component.job.set(singlePredictionJob);
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.textContent).toContain(
+      "LMI4Boltz: Optimising VRAM utilisation to predict large macromolecular complexes with consumer grade hardware"
+    );
+    expect(element.textContent).toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
+    );
+    expect(element.textContent).toContain(
+      "nf-core/proteinfold: Protein 3D structure prediction pipeline"
+    );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Protein complex prediction with AlphaFold-Multimer"
+    );
+  });
+
+  it("should render selected Bulk Prediction tool citations in the citations tab", () => {
+    render();
+
+    component.job.set({
+      ...bulkPredictionJob,
+      tool: "Boltz",
+    });
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.textContent).toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
+    );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Highly accurate protein structure prediction with AlphaFold"
+    );
+    expect(element.textContent).not.toContain(
+      "MMseqs2 enables sensitive protein sequence searching"
+    );
+  });
+
+  it("should show a citation fallback when the job workflow has no citations", () => {
     render();
 
     component.job.set(fallbackJob);
@@ -906,7 +1073,7 @@ describe("JobDetailsComponent", () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
-      "No citation is available for this workflow tool yet."
+      "No citations are available for this workflow yet."
     );
   });
 
@@ -1243,9 +1410,9 @@ describe("JobDetailsComponent", () => {
         "FASTA Content",
         "Use Potentials",
       ]);
-      expect(items.find((item) => item.label === "FASTA Content")?.value).toBe(
-        ">seq1|protein\nMV"
-      );
+      const fastaItem = items.find((item) => item.label === "FASTA Content");
+      expect(fastaItem?.value).toBe("sequences.fasta");
+      expect(fastaItem?.openableText).toBe(">seq1|protein\nMV");
     });
 
     it("shows each colabfold tool setting once, even when the backend echoes it twice", () => {
@@ -1276,7 +1443,7 @@ describe("JobDetailsComponent", () => {
       ]);
     });
 
-    it("always shows FASTA content for single prediction, never the download link", () => {
+    it("shows single prediction's FASTA content as a filename link, never the download link", () => {
       component.job.set(singlePredictionJob);
       const items = privateApi().normalizeSettings({
         workflow: "single-prediction",
@@ -1286,9 +1453,27 @@ describe("JobDetailsComponent", () => {
       });
 
       const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
-      expect(fastaItems.length).toBe(1);
-      expect(fastaItems[0].label).toBe("FASTA Content");
-      expect(fastaItems[0].value).toBe(">seq1|protein\nMV");
+      expect(fastaItems).toEqual([
+        {
+          label: "FASTA Content",
+          value: "sarm1-nad.fasta",
+          details: [],
+          openableText: ">seq1|protein\nMV",
+        },
+      ]);
+    });
+
+    it("opens the submitted FASTA text as plain text in a new tab", () => {
+      const createSpy = spyOn(URL, "createObjectURL").and.returnValue(
+        "blob:fasta"
+      );
+      const openSpy = spyOn(window, "open");
+
+      component.openSettingText(">seq1|protein\nMV");
+
+      const blob = createSpy.calls.mostRecent().args[0] as Blob;
+      expect(blob.type).toBe("text/plain;charset=utf-8");
+      expect(openSpy).toHaveBeenCalledWith("blob:fasta", "_blank", "noopener");
     });
 
     it("falls back to a download link for older interaction screening jobs with no fastaContent", () => {

@@ -76,7 +76,6 @@ export interface InteractionScreeningPayload extends DefaultWorkflowPayload {
 
 export interface BulkPredictionPayload extends DefaultWorkflowPayload {
   fastaS3Uri: string;
-  splitOutputDir: string;
   /** Combined FASTA text, already in memory from the fasta textarea — sent
    *  alongside fastaS3Uri purely so the results page can show it inline
    *  instead of only a download link. */

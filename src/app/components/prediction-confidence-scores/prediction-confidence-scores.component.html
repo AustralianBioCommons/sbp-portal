@@ -1,0 +1,17 @@
+<div
+  role="group"
+  aria-label="Prediction confidence scores"
+  class="flex flex-wrap items-center justify-center border border-sky-200 text-sky-800 rounded-lg p-4 bg-sky-50 gap-x-6 gap-y-2"
+>
+  <div class="flex flex-wrap items-center gap-6 text-sm">
+    @for (score of scores(); track score.label) {
+    <span class="whitespace-nowrap">{{ score.label }} = {{ score.value }}</span>
+    }
+  </div>
+  @if (showTooltip()) {
+  <app-tooltip
+    [message]="scoresHint()"
+    iconColor="text-gray-400 hover:text-gray-500"
+  ></app-tooltip>
+  }
+</div>

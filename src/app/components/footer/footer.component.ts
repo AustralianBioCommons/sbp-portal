@@ -53,17 +53,17 @@ export class FooterSectionsComponent {
     {
       href: "http://biocommons.org.au",
       alt: "Australian BioCommons logo",
-      src: "https://images.squarespace-cdn.com/content/v1/5d3a4213cf4f5b00014ea1db/1690418382186-WCV54ZDHSSC3CIQ94MK2/Australian-Biocommons-Logo-Horizontal-RGB.png?format=300w",
+      src: "/assets/images/Australian-Biocommons-Logo-Horizontal-RGB.png",
     },
     {
       href: "https://bioplatforms.com/",
       alt: "Bioplatforms Australia logo",
-      src: "https://images.squarespace-cdn.com/content/v1/5d3a4213cf4f5b00014ea1db/1574384007383-HZO8HOU1FCS2O6CWQ8XQ/bioplatforms-audtralia-logo.png?format=300w",
+      src: "/assets/images/bioplatforms-australia-logo.png",
     },
     {
       href: "https://www.education.gov.au/ncris",
       alt: "NCRIS logo",
-      src: "https://images.squarespace-cdn.com/content/v1/5d3a4213cf4f5b00014ea1db/1721773167630-02V5S6Z7X3HJ9C1EQHEK/NCRIS-PROVIDER+%281%29.png?format=300w",
+      src: "/assets/images/ncris-provider.png",
     },
   ];
 

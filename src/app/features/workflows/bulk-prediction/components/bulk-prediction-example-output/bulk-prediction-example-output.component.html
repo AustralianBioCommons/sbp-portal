@@ -1,0 +1,232 @@
+<app-example-output
+  heading="Structure Preview"
+  collapsible
+  [image]="images.structure"
+>
+  <ul class="list-disc space-y-2 pl-5">
+    <li>
+      The structure preview window allows interactive visualisation of the
+      predicted structure.
+    </li>
+    <li>
+      Structures are coloured by pLDDT to represent the residue-level
+      confidence.
+    </li>
+    <li>
+      Different structures can be previewed by selecting the corresponding row
+      in the results summary table.
+    </li>
+    <li>
+      The preview window can be resized to increase/decrease the viewable area.
+    </li>
+  </ul>
+</app-example-output>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">What am I looking at?</h3>
+  <div class="space-y-2 text-sm text-gray-500">
+    <p>
+      The 3D viewer shows the predicted arrangement of the predicted structure
+      in three-dimensional space. Individual residues are coloured by predicted
+      Local Distance Difference Test (pLDDT) score. The score ranges from 0 to
+      100 and reflects the confidence in the local geometry of each residue.
+      Confidence levels often fluctuate across a single protein chain. A
+      detailed module for understanding pLDDT is available in the
+      <a
+        href="https://www.ebi.ac.uk/training/online/courses/alphafold/inputs-and-outputs/evaluating-alphafolds-predicted-structures-using-confidence-scores/plddt-understanding-local-confidence/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sky-700 underline hover:text-sky-800"
+        >EBI AlphaFold2 guide<span class="sr-only">
+          (opens in a new tab)</span
+        ></a
+      >.
+    </p>
+  </div>
+
+  <!-- Focusable so keyboard users can scroll it on narrow screens. -->
+  <div
+    class="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+    role="region"
+    aria-labelledby="bulk-plddt-table-caption"
+    tabindex="0"
+  >
+    <table class="w-full min-w-lg text-left text-sm">
+      <caption id="bulk-plddt-table-caption" class="sr-only">
+        How to interpret pLDDT scores
+      </caption>
+      <thead class="bg-sky-900 text-white">
+        <tr>
+          <th scope="col" class="px-4 py-2 font-medium whitespace-nowrap">
+            pLDDT
+          </th>
+          <th scope="col" class="px-4 py-2 font-medium">Interpretation</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
+        <tr class="align-top">
+          <th scope="row" class="w-48 min-w-48 p-4 font-normal">
+            <app-plddt-legend confidence="Very high"></app-plddt-legend>
+          </th>
+          <td class="p-4">
+            The local structure is predicted with very high confidence.
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th scope="row" class="w-48 min-w-48 p-4 font-normal">
+            <app-plddt-legend confidence="High"></app-plddt-legend>
+          </th>
+          <td class="p-4">The local structure is generally reliable.</td>
+        </tr>
+        <tr class="align-top">
+          <th scope="row" class="w-48 min-w-48 p-4 font-normal">
+            <app-plddt-legend confidence="Low"></app-plddt-legend>
+          </th>
+          <td class="p-4">Treat the predicted region with caution.</td>
+        </tr>
+        <tr class="align-top">
+          <th scope="row" class="w-48 min-w-48 p-4 font-normal">
+            <app-plddt-legend confidence="Very low"></app-plddt-legend>
+          </th>
+          <td class="space-y-1 p-4">
+            <p>Unreliable prediction often caused by:</p>
+            <ol class="list-[lower-alpha] pl-5">
+              <li>Naturally unstructured or flexible "disordered" regions</li>
+              <li>
+                Insufficient information (e.g. MSA depth) to predict structure
+                with confidence.
+              </li>
+            </ol>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<app-example-output heading="Results Summary Table" [image]="images.table">
+  <ul class="list-disc space-y-2 pl-5">
+    <li>
+      The total number of predictions is described in the table header (11
+      here).
+    </li>
+    <li>
+      <span class="font-medium text-gray-900">Query ID</span> is the identifier
+      for each prediction derived from the FASTA header of the input
+      <code class="font-mono">Protein Sequences</code>.
+    </li>
+    <li>
+      <span class="font-medium text-gray-900">pTM</span> represents a measure of
+      overall confidence in the global arrangement of the predicted structure.
+      It is a score between 0 and 1 where higher is better.
+    </li>
+    <li>
+      <span class="font-medium text-gray-900">pLDDT</span> represents the
+      confidence in local structure geometry (averaged over the entire
+      prediction). It is a score between 0 and 100 where higher is better.
+    </li>
+  </ul>
+</app-example-output>
+
+<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
+  See
+  <a
+    routerLink="/structure-prediction/single-prediction"
+    [queryParams]="{ tab: 'output' }"
+    class="text-sky-700 underline hover:text-sky-800"
+    >example data</a
+  >
+  for the single prediction workflow for a detailed description of structure
+  prediction confidence scores.
+</p>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Interpreting Your Results</h3>
+  <ol class="grid gap-4 lg:grid-cols-2">
+    <li class="space-y-4 rounded-lg border p-4 text-sm text-gray-500">
+      <div class="space-y-2">
+        <h4 class="font-medium text-gray-900">
+          Scenario 1:
+          <span class="inline-flex items-center gap-1 whitespace-nowrap">
+            <span aria-hidden="true">🟢</span> High pTM
+          </span>
+          &amp;
+          <span class="inline-flex items-center gap-1 whitespace-nowrap">
+            <span aria-hidden="true">🟢</span> High pLDDT
+          </span>
+        </h4>
+        <p>
+          In this scenario, the model has high confidence in both the overall
+          arrangement and local geometry. This prediction is likely high
+          quality.
+        </p>
+      </div>
+    </li>
+    <li class="space-y-4 rounded-lg border p-4 text-sm text-gray-500">
+      <div class="space-y-2">
+        <h4 class="font-medium text-gray-900">
+          Scenario 2:
+          <span class="inline-flex items-center gap-1 whitespace-nowrap">
+            <span aria-hidden="true">🔴</span> Low pTM
+          </span>
+          &amp;
+          <span class="inline-flex items-center gap-1 whitespace-nowrap">
+            <span aria-hidden="true">🟢</span> High pLDDT
+          </span>
+        </h4>
+        <p>
+          In this scenario, the model is highly confident in the local
+          structural geometry but has some uncertainty about global arrangement.
+          This may occur if 2 confidently predicted domains are separated by a
+          flexible linker.
+        </p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Download Example Results</h3>
+  <div class="flex flex-wrap gap-4">
+    <app-button
+      class="min-w-0 max-w-full"
+      variant="secondary"
+      widthClass="w-auto max-w-full max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]"
+      [disabled]="true"
+    >
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download PDB files
+    </app-button>
+    <app-button
+      class="min-w-0 max-w-full"
+      variant="secondary"
+      widthClass="w-auto max-w-full max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]"
+      [disabled]="true"
+    >
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download PAE files
+    </app-button>
+    <app-button
+      class="min-w-0 max-w-full"
+      variant="secondary"
+      widthClass="w-auto max-w-full max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]"
+      [disabled]="true"
+    >
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download confidence_scores_full.csv
+    </app-button>
+  </div>
+  <p class="text-sm text-gray-500">Example files coming soon.</p>
+</section>

@@ -26,7 +26,8 @@ import { CreditSummaryComponent } from "../components/credit-summary/credit-summ
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { InteractionScreeningAboutComponent } from "./components/interaction-screening-about/interaction-screening-about.component";
-import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
+import { InteractionScreeningExampleOutputComponent } from "./components/interaction-screening-example-output/interaction-screening-example-output.component";
+import { InteractionScreeningPapersComponent } from "./components/interaction-screening-papers/interaction-screening-papers.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
 import {
   WorkflowFormComponent,
@@ -112,7 +113,8 @@ interface ToolChip extends ToolOption {
     WorkflowFormComponent,
     WorkflowLayoutComponent,
     InteractionScreeningAboutComponent,
-    WorkflowPapersComponent,
+    InteractionScreeningExampleOutputComponent,
+    InteractionScreeningPapersComponent,
     StepContentComponent,
     CreditSummaryComponent,
     WorkflowPreviewModalComponent,

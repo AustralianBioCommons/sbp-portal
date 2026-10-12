@@ -5,15 +5,12 @@
   (alertDismissed)="closeAlert()"
 >
   <span description>
-    Design a protein binder to your target protein using your preferred tool.
-    Configure inputs, choose parameters, and review before submission.</span
-  >
-  <span overview>
-    This workflow enables the de novo design of protein binders by defining
-    hotspot residues on the surface of the target. Choose a tool from the
-    options below and configure the necessary job parameters to execute the
-    workflow.</span
-  >
+    Design de novo protein binders against a selected region of a target protein
+    structure.
+  </span>
+  <app-de-novo-design-about overview></app-de-novo-design-about>
+  <app-de-novo-design-papers papers></app-de-novo-design-papers>
+  <app-de-novo-design-example-output output></app-de-novo-design-example-output>
   <app-workflow-form
     [sections]="sections"
     [isSectionValid]="isSectionValid"
@@ -361,10 +358,4 @@
     (confirmed)="onPreviewConfirmed()"
     (cancelled)="showPreview.set(false)"
   ></app-workflow-preview-modal>
-
-  <app-workflow-papers
-    papers
-    workflowName="De Novo Design"
-    [tools]="['alphafold2', 'colabfold', 'bindcraft']"
-  ></app-workflow-papers>
 </app-workflow-layout>

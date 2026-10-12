@@ -11,18 +11,7 @@
       <div
         class="flex min-w-0 flex-1 flex-col items-center justify-center gap-4 bg-white p-4"
       >
-        @if (banner(); as banner) {
-        <!-- Natural size, cropped at the sides, so its text stays readable in a narrow column. -->
-        <div class="hidden w-full justify-center overflow-hidden sm:flex">
-          <img
-            class="max-w-none shrink-0"
-            [ngSrc]="banner.src"
-            [width]="banner.width"
-            [height]="banner.height"
-            [alt]="banner.alt"
-          />
-        </div>
-        }
+        <ng-content select="[exampleOutputBanner]"></ng-content>
         <img
           class="block h-auto max-h-[65vh] w-auto max-w-full"
           [ngSrc]="image.src"

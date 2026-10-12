@@ -1,12 +1,10 @@
-<p>Tools included in {{ workflowName() }} can be cited as below:</p>
-
-@for (citation of citations(); track citation.label) {
+@for (citation of resolvedCitations(); track citation.key) {
 <div class="space-y-2">
   <h3 class="font-medium text-gray-900">{{ citation.label }}</h3>
   <p>
-    {{ citation.reference }}
+    {{ formatCitation(citation) }}
     <a
-      [href]="citation.doi"
+      [href]="getCitationHref(citation)"
       target="_blank"
       rel="noopener noreferrer"
       class="wrap-break-word text-sky-700 underline hover:text-sky-800"

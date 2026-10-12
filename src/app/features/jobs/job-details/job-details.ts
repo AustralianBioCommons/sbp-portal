@@ -30,6 +30,7 @@ import { DialogComponent } from "../../../components/dialog/dialog.component";
 import { ButtonComponent } from "../../../components/button/button.component";
 import { SinglePredictionReportComponent } from "../components/single-prediction-report/single-prediction-report.component";
 import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
+import { WorkflowPapersComponent } from "../../workflows/components/workflow-papers/workflow-papers.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { statusTagClass, type JobStatusUi } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
@@ -40,10 +41,7 @@ import {
   ResultLogsResponse,
   ResultsService,
 } from "../services/results.service";
-import {
-  getToolCitation,
-  ToolCitation,
-} from "../../workflows/shared/workflow-citations";
+import { getWorkflowRunCitationKeys } from "../../citations/workflow-citations";
 import { environment } from "../../../../environments/environment";
 
 type JobResultsTab = "results" | "files" | "settings" | "logs" | "citations";
@@ -78,6 +76,8 @@ type JobSettingItem = {
   url?: string;
   /** Open the link in the browser (served as plain text) rather than download it. */
   openInline?: boolean;
+  /** Raw text shown as a filename link that opens it as plain text in a new tab. */
+  openableText?: string;
 };
 
 /** Settings actually exposed in each workflow's submission form, keyed by
@@ -167,6 +167,7 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     ButtonComponent,
     SinglePredictionReportComponent,
     JobResultsReportComponent,
+    WorkflowPapersComponent,
   ],
   providers: [
     provideIcons({
@@ -534,9 +535,8 @@ export default class JobDetailsComponent implements OnInit {
     ];
   }
 
-  getCitations(job: JobListItem): ToolCitation[] {
-    const citation = getToolCitation(job.tool);
-    return citation ? [citation] : [];
+  getCitationKeys(job: JobListItem): readonly string[] {
+    return getWorkflowRunCitationKeys(job.workflow, job.tool);
   }
 
   formatCategoryName(category: string): string {
@@ -639,6 +639,17 @@ export default class JobDetailsComponent implements OnInit {
     link.click();
     link.remove();
     URL.revokeObjectURL(objectUrl);
+  }
+
+  /** Opens a setting's raw text (e.g. the submitted FASTA) as plain text in a
+   *  new tab, like the presigned FASTA links of the other workflows. */
+  openSettingText(text: string): void {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(blob);
+    window.open(objectUrl, "_blank", "noopener");
+    // The new tab loads the blob asynchronously; give it time before
+    // releasing the URL.
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
   }
 
   onInteractiveReportUnavailable(): void {
@@ -854,7 +865,11 @@ export default class JobDetailsComponent implements OnInit {
 
       if (isKeyVisible(key)) {
         seenKeys.add(key);
-        items.push(this.normalizeSettingItem(key, value));
+        items.push(
+          key === "fastaContent" && typeof value === "string" && value
+            ? this.fastaContentItem(value, settingParams)
+            : this.normalizeSettingItem(key, value)
+        );
       }
     }
 
@@ -884,6 +899,25 @@ export default class JobDetailsComponent implements OnInit {
     // chain-list requirement — not something the user enters directly.
     "chains",
   ]);
+
+  /** The submitted FASTA as a filename link (opened via openSettingText)
+   *  rather than the raw sequences inline. */
+  private fastaContentItem(
+    content: string,
+    settingParams: Record<string, unknown>
+  ): JobSettingItem {
+    const fileUrl = settingParams["fastaFileUrl"];
+    const filename =
+      typeof fileUrl === "string" && fileUrl
+        ? this.extractFilename(fileUrl)
+        : "sequences.fasta";
+    return {
+      label: this.formatSettingLabel("fastaContent"),
+      value: filename,
+      details: [],
+      openableText: content,
+    };
+  }
 
   private shouldHideSettingKey(key: string): boolean {
     return JobDetailsComponent.HIDDEN_SETTING_KEYS.has(key.toLowerCase());

@@ -1,0 +1,11 @@
+@if (citation(); as citation) {
+<a
+  [href]="href()"
+  target="_blank"
+  rel="noopener noreferrer"
+  class="text-sky-700 underline hover:text-sky-800"
+  >{{ label() }}<span class="sr-only"> (opens in a new tab)</span></a
+>
+} @else {
+<span>{{ label() }}</span>
+}
