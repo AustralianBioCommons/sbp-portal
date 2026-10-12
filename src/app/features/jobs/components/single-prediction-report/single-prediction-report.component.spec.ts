@@ -348,6 +348,12 @@ describe("SinglePredictionReportComponent", () => {
       { label: "ipTM", value: "0.274", hint: jasmine.any(String) },
       { label: "pTM", value: "0.287", hint: jasmine.any(String) },
     ]);
+
+    const element: HTMLElement = fixture.nativeElement;
+    const scores = element.querySelector("app-prediction-confidence-scores")!;
+    expect(scores.textContent).toContain("ipTM = 0.274");
+    expect(scores.textContent).toContain("pTM = 0.287");
+    expect(scores.querySelector("app-tooltip button")).not.toBeNull();
   });
 
   it("omits ipTM for a single-chain prediction that has no ipTM file", () => {

@@ -58,6 +58,7 @@ import {
 } from "../shared/workflow.interfaces";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
 import { DeNovoDesignAboutComponent } from "./components/de-novo-design-about/de-novo-design-about.component";
+import { DeNovoDesignExampleOutputComponent } from "./components/de-novo-design-example-output/de-novo-design-example-output.component";
 import { DeNovoDesignPapersComponent } from "./components/de-novo-design-papers/de-novo-design-papers.component";
 
 interface ToolChip extends ToolOption {
@@ -93,6 +94,7 @@ const DEFAULT_MAX_LENGTH = 150;
     WorkflowPreviewModalComponent,
     NgIconComponent,
     DeNovoDesignAboutComponent,
+    DeNovoDesignExampleOutputComponent,
     DeNovoDesignPapersComponent,
   ],
   providers: [
