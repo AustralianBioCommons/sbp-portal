@@ -38,6 +38,7 @@ type JobDetailsPrivateApi = {
     details: string[];
     url?: string;
     openInline?: boolean;
+    openableText?: string;
   }>;
   formatSettingLabel: (key: string) => string;
   formatSettingValue: (value: unknown) => string;
@@ -1409,9 +1410,9 @@ describe("JobDetailsComponent", () => {
         "FASTA Content",
         "Use Potentials",
       ]);
-      expect(items.find((item) => item.label === "FASTA Content")?.value).toBe(
-        ">seq1|protein\nMV"
-      );
+      const fastaItem = items.find((item) => item.label === "FASTA Content");
+      expect(fastaItem?.value).toBe("sequences.fasta");
+      expect(fastaItem?.openableText).toBe(">seq1|protein\nMV");
     });
 
     it("shows each colabfold tool setting once, even when the backend echoes it twice", () => {
@@ -1442,7 +1443,7 @@ describe("JobDetailsComponent", () => {
       ]);
     });
 
-    it("always shows FASTA content for single prediction, never the download link", () => {
+    it("shows single prediction's FASTA content as a filename link, never the download link", () => {
       component.job.set(singlePredictionJob);
       const items = privateApi().normalizeSettings({
         workflow: "single-prediction",
@@ -1452,9 +1453,27 @@ describe("JobDetailsComponent", () => {
       });
 
       const fastaItems = items.filter((item) => item.label.startsWith("FASTA"));
-      expect(fastaItems.length).toBe(1);
-      expect(fastaItems[0].label).toBe("FASTA Content");
-      expect(fastaItems[0].value).toBe(">seq1|protein\nMV");
+      expect(fastaItems).toEqual([
+        {
+          label: "FASTA Content",
+          value: "sarm1-nad.fasta",
+          details: [],
+          openableText: ">seq1|protein\nMV",
+        },
+      ]);
+    });
+
+    it("opens the submitted FASTA text as plain text in a new tab", () => {
+      const createSpy = spyOn(URL, "createObjectURL").and.returnValue(
+        "blob:fasta"
+      );
+      const openSpy = spyOn(window, "open");
+
+      component.openSettingText(">seq1|protein\nMV");
+
+      const blob = createSpy.calls.mostRecent().args[0] as Blob;
+      expect(blob.type).toBe("text/plain;charset=utf-8");
+      expect(openSpy).toHaveBeenCalledWith("blob:fasta", "_blank", "noopener");
     });
 
     it("falls back to a download link for older interaction screening jobs with no fastaContent", () => {
