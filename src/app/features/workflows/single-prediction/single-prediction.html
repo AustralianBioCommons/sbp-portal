@@ -333,7 +333,7 @@
               for="random-seed"
               class="inline-flex items-center justify-center gap-1 text-sm font-medium"
             >
-              Random Seed
+              Random Seed (coming soon)
               <app-tooltip
                 message="Set a random seed to ensure the same output between multiple runs."
                 iconColor="text-gray-400 hover:text-gray-500"
@@ -345,6 +345,7 @@
               min="0"
               max="99999999"
               step="1"
+              disabled
               [value]="randomSeed()"
               (input)="updateRandomSeed($any($event.target).value)"
               (blur)="setRandomSeedTouched()"
@@ -353,7 +354,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
             />
             @if ((stepTwoTouched() || randomSeedTouched()) &&
             toolSettingErrors().randomSeed) {
