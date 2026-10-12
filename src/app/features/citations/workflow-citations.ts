@@ -20,11 +20,16 @@ export const CITATIONS = {
     title: "Highly accurate protein structure prediction with AlphaFold",
     authors: "Jumper, J., Evans, R., Pritzel, A. et al.",
     firstAuthor: "Jumper",
-    year: "2021",
+    year: "2022",
     doi: "https://doi.org/10.1038/s41586-021-03819-2",
     formattedCitation:
       "Jumper, J., Evans, R., Pritzel, A. et al. Highly accurate protein structure prediction with AlphaFold. Nature 596, 583-589 (2021).",
-    workflows: ["single prediction", "bulk prediction", "de novo design"],
+    workflows: [
+      "single prediction",
+      "bulk prediction",
+      "interaction screening",
+      "de novo design",
+    ],
     tools: ["alphafold2", "bindcraft"],
   },
   alphafold2relax: {
@@ -47,8 +52,8 @@ export const CITATIONS = {
     year: "2021",
     doi: "https://doi.org/10.1101/2021.10.04.463034",
     formattedCitation:
-      "Evans, R., O'Neill, M., Pritzel, A. et al. Protein complex prediction with AlphaFold-Multimer. bioRxiv (2021).",
-    workflows: ["single prediction"],
+      "Evans, R., O'Neill, M., Pritzel, A. et al. Protein complex prediction with AlphaFold-Multimer. bioRxiv 2021.10.04.463034 (2022).",
+    workflows: ["single prediction", "interaction screening"],
     tools: [],
   },
   bfdplass: {
@@ -183,7 +188,11 @@ export const CITATIONS = {
     doi: "https://doi.org/10.1038/nbt.3988",
     formattedCitation:
       "Steinegger, M. & Soeding, J. MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets. Nature Biotechnology 35, 1026-1028 (2017).",
-    workflows: ["single prediction", "bulk prediction"],
+    workflows: [
+      "single prediction",
+      "bulk prediction",
+      "interaction screening",
+    ],
     tools: [],
   },
   openmm: {
@@ -271,7 +280,11 @@ export const CITATIONS = {
     doi: "https://doi.org/10.25914/q48c-9a86",
     formattedCitation:
       "Structural Biology AI Reference Collection. NCI Australia (2026).",
-    workflows: ["single prediction", "bulk prediction"],
+    workflows: [
+      "single prediction",
+      "bulk prediction",
+      "interaction screening",
+    ],
     tools: [],
   },
   uniref: {
@@ -309,7 +322,14 @@ export const WORKFLOW_PAPER_CITATION_KEYS_BY_WORKFLOW: Record<
     "alphafold2",
     "alphafold2relax",
   ],
-  "interaction screening": ["boltz2", "colabfold"],
+  "interaction screening": [
+    "alphafold2",
+    "alphafoldmultimer",
+    "colabfold",
+    "boltz2",
+    "mmseqs2",
+    "structuralbiologyai",
+  ],
   "single prediction": [
     "proteinfold",
     "alphafold2",
@@ -367,6 +387,15 @@ const BULK_PREDICTION_CITATION_KEYS_BY_TOOL: Record<string, CitationKey[]> = {
   boltz: ["boltz2", "colabfold", "structuralbiologyai"],
   boltz2: ["boltz2", "colabfold", "structuralbiologyai"],
   colabfold: ["colabfold", "alphafold2", "structuralbiologyai"],
+};
+
+const INTERACTION_SCREENING_CITATION_KEYS_BY_TOOL: Record<
+  string,
+  CitationKey[]
+> = {
+  boltz: ["boltz2", "colabfold", "structuralbiologyai"],
+  boltz2: ["boltz2", "colabfold", "structuralbiologyai"],
+  colabfold: ["colabfold", "alphafoldmultimer", "structuralbiologyai"],
 };
 
 function normalizeName(value: string | undefined): string {
@@ -456,6 +485,12 @@ export function getWorkflowRunCitationKeys(
   if (normalizedWorkflow === "bulk prediction") {
     return (
       BULK_PREDICTION_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
+      getWorkflowPaperCitationKeys(workflow)
+    );
+  }
+  if (normalizedWorkflow === "interaction screening") {
+    return (
+      INTERACTION_SCREENING_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
       getWorkflowPaperCitationKeys(workflow)
     );
   }

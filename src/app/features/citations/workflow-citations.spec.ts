@@ -49,6 +49,14 @@ describe("Workflow Citations utilities", () => {
       "mmseqs2",
       "structuralbiologyai",
     ]);
+    expect(CITATION_KEYS_BY_WORKFLOW["interaction screening"]).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
+      "boltz2",
+      "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
   });
 
   it("gets citations by tool", () => {
@@ -74,6 +82,18 @@ describe("Workflow Citations utilities", () => {
       "mmseqs2",
       "structuralbiologyai",
     ]);
+    expect(
+      getCitationsByWorkflow("Interaction Screening").map(
+        (citation) => citation.key
+      )
+    ).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
+      "boltz2",
+      "colabfold",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
   });
 
   it("gets the same paper citation keys used by workflow forms", () => {
@@ -88,6 +108,14 @@ describe("Workflow Citations utilities", () => {
     ]);
     expect(getWorkflowPaperCitationKeys("Bulk Prediction")).toEqual([
       "alphafold2",
+      "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
+    expect(getWorkflowPaperCitationKeys("Interaction Screening")).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
       "colabfold",
       "boltz2",
       "mmseqs2",
@@ -149,9 +177,28 @@ describe("Workflow Citations utilities", () => {
     ]);
   });
 
+  it("gets tool-specific citation keys for Interaction Screening job runs", () => {
+    expect(
+      getWorkflowRunCitationKeys("Interaction Screening", "Boltz")
+    ).toEqual(["boltz2", "colabfold", "structuralbiologyai"]);
+    expect(
+      getWorkflowRunCitationKeys("interaction-screening", "ColabFold")
+    ).toEqual(["colabfold", "alphafoldmultimer", "structuralbiologyai"]);
+  });
+
   it("falls back to workflow citation keys for non-tool-specific runs", () => {
     expect(getWorkflowRunCitationKeys("Bulk Prediction", "Unknown")).toEqual([
       "alphafold2",
+      "colabfold",
+      "boltz2",
+      "mmseqs2",
+      "structuralbiologyai",
+    ]);
+    expect(
+      getWorkflowRunCitationKeys("Interaction Screening", "Unknown")
+    ).toEqual([
+      "alphafold2",
+      "alphafoldmultimer",
       "colabfold",
       "boltz2",
       "mmseqs2",

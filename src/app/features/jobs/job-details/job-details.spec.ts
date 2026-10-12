@@ -909,6 +909,17 @@ describe("JobDetailsComponent", () => {
       "proteinfold",
       "structuralbiologyai",
     ]);
+    expect(component.getCitationKeys(mockJob)).toEqual([
+      "boltz2",
+      "colabfold",
+      "structuralbiologyai",
+    ]);
+    expect(
+      component.getCitationKeys({
+        ...mockJob,
+        tool: "ColabFold",
+      })
+    ).toEqual(["colabfold", "alphafoldmultimer", "structuralbiologyai"]);
   });
 
   it("should render the selected job workflow citations in the citations tab", () => {
@@ -928,7 +939,46 @@ describe("JobDetailsComponent", () => {
     expect(element.textContent).toContain(
       "ColabFold: making protein folding accessible to all"
     );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Protein complex prediction with AlphaFold-Multimer"
+    );
+    expect(element.textContent).not.toContain(
+      "MMseqs2 enables sensitive protein sequence searching"
+    );
     expect(citationLink).not.toBeNull();
+  });
+
+  it("should render selected Interaction Screening ColabFold citations in the citations tab", () => {
+    render();
+
+    component.job.set({
+      ...mockJob,
+      tool: "ColabFold",
+    });
+    fixture.detectChanges();
+    component.setActiveTab("citations");
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.textContent).toContain(
+      "ColabFold: making protein folding accessible to all"
+    );
+    expect(element.textContent).toContain(
+      "Protein complex prediction with AlphaFold-Multimer"
+    );
+    expect(element.textContent).toContain(
+      "Structural Biology AI Reference Collection"
+    );
+    expect(element.textContent).not.toContain(
+      "Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction"
+    );
+    expect(element.textContent).not.toContain(
+      "Highly accurate protein structure prediction with AlphaFold"
+    );
   });
 
   it("should render selected Single Prediction tool citations in the citations tab", () => {
