@@ -36,9 +36,9 @@ import {
 } from "../components/listbox-select/listbox-select.component";
 import { SinglePredictionAboutComponent } from "./components/single-prediction-about/single-prediction-about.component";
 import { SinglePredictionExampleOutputComponent } from "./components/single-prediction-example-output/single-prediction-example-output.component";
+import { SinglePredictionPapersComponent } from "./components/single-prediction-papers/single-prediction-papers.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
-import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
 import {
   WorkflowFormComponent,
   WorkflowSection,
@@ -149,7 +149,7 @@ function generateRandomSeed(): string {
     WorkflowLayoutComponent,
     SinglePredictionAboutComponent,
     SinglePredictionExampleOutputComponent,
-    WorkflowPapersComponent,
+    SinglePredictionPapersComponent,
     StepContentComponent,
     NgIconComponent,
     CreditSummaryComponent,

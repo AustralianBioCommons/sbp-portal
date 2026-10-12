@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="784" height="218" viewBox="0 0 784 218">
+<defs>
+</defs>
+<metadata id="diagram-manifest" data-schema-version="1.0"><![CDATA[{"groups":[{"color":"#2db572","id":"colabfold","label":"ColabFold"},{"color":"#9c4dcc","id":"boltz2","label":"Boltz-2"}],"height":218,"match":{"flags":"i","target":"fqProcessName","type":"regex"},"nodes":[{"groups":["boltz2","colabfold"],"h":14.0,"id":"protein_sequence","label":"protein_sequence","patterns":[],"r":5.0,"region":"msa_generation","rx":5.0,"w":10.0,"x":80.0,"y":122.0},{"groups":["boltz2","colabfold"],"h":14.0,"id":"colabfold_search","label":"colabfold_search","patterns":[],"r":5.0,"region":"msa_generation","rx":5.0,"w":10.0,"x":200.0,"y":122.0},{"groups":["colabfold"],"h":10.0,"id":"colabfold_predict","label":"ColabFold","patterns":[],"r":5.0,"region":"structure_prediction","rx":5.0,"w":10.0,"x":438.2,"y":100.0},{"groups":["boltz2"],"h":10.0,"id":"boltz2_predict","label":"Boltz-2","patterns":[],"r":5.0,"region":"structure_prediction","rx":5.0,"w":10.0,"x":438.2,"y":144.0},{"groups":["boltz2","colabfold"],"h":14.0,"id":"summarize_node","label":"Summarise","patterns":[],"r":5.0,"region":"structure_prediction","rx":5.0,"w":10.0,"x":542.0,"y":122.0},{"groups":["boltz2","colabfold"],"h":14.0,"id":"predicted_structures","label":"predicted_structures","patterns":[],"r":5.0,"region":"structure_prediction","rx":5.0,"w":10.0,"x":602.0,"y":122.0}],"regions":[{"id":"msa_generation","label":"MSA generation"},{"id":"structure_prediction","label":"Structure prediction"}],"title":"","version":"1.0","width":784}]]></metadata>
+<style>.nf-metro-bg { fill: #f5f5f5; }
+.nf-metro-title { fill: #111111; }
+.nf-metro-station-label { fill: #333333; }
+.nf-metro-section-box { fill: #ededed; stroke: #e6e6e6; }
+.nf-metro-section-label { fill: #666666; }
+.nf-metro-group-label { fill: #666666; }
+.nf-metro-group-underline { stroke: #666666; }
+.nf-metro-legend-bg { fill: rgba(255, 255, 255, 0.8); }
+.nf-metro-legend-text { fill: #333333; }
+.nf-metro-marker-stroke { stroke: #333333; }
+.nf-metro-label-halo { fill: #f5f5f5; stroke: #f5f5f5; }</style>
+<rect x="0" y="0" width="784" height="218" fill="#2b2b2b" class="nf-metro-bg" />
+<rect x="22.0" y="70.0" width="288.0" height="100.0" rx="8" ry="8" fill="#373737" stroke="#595959" stroke-width="1.0" class="nf-metro-section-box" data-section-id="msa_generation" data-section-lines="boltz2,colabfold" />
+<circle cx="33.0" cy="55.0" r="11" fill="#333333" class="nf-metro-section-num-circle" data-section-id="msa_generation" />
+<text x="33.0" y="55.0" font-size="12" fill="#ffffff" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dy="0.3em" data-section-id="msa_generation">1</text>
+<text x="49.0" y="55.0" font-size="16.0" fill="#c8c8c8" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" dy="0.3em" class="nf-metro-section-label" data-section-id="msa_generation">MSA generation</text>
+<rect x="360.0" y="50.0" width="364.0" height="144.0" rx="8" ry="8" fill="#373737" stroke="#595959" stroke-width="1.0" class="nf-metro-section-box" data-section-id="structure_prediction" data-section-lines="boltz2,colabfold" />
+<circle cx="371.0" cy="35.0" r="11" fill="#333333" class="nf-metro-section-num-circle" data-section-id="structure_prediction" />
+<text x="371.0" y="35.0" font-size="12" fill="#ffffff" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dy="0.3em" data-section-id="structure_prediction">2</text>
+<text x="387.0" y="35.0" font-size="16.0" fill="#c8c8c8" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" dy="0.3em" class="nf-metro-section-label" data-section-id="structure_prediction">Structure prediction</text>
+<path d="M80.0,124.0 L140.0,124.0" stroke="#9c4dcc" stroke-width="3.0" stroke-linecap="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M140.0,124.0 L200.0,124.0" stroke="#9c4dcc" stroke-width="3.0" stroke-linecap="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M200.0,124.0 L260.0,124.0" stroke="#9c4dcc" stroke-width="3.0" stroke-linecap="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M438.25,144.0 L461.5,144.0 Q471.5,144.0,479.8205029433784,138.4529980377477 L493.1794970566216,129.5470019622523 Q501.5,124.0,511.5,124.0 L542.0,124.0" stroke="#9c4dcc" stroke-width="3.0" fill="none" stroke-linecap="round" stroke-linejoin="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M542.0,124.0 L602.0,124.0" stroke="#9c4dcc" stroke-width="3.0" stroke-linecap="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M260.0,124.0 L310.0,124.0" stroke="#9c4dcc" stroke-width="3.0" stroke-linecap="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M360.0,124.0 L365.0,124.0 Q375.0,124.0,383.3205029433784,129.5470019622523 L396.6794970566216,138.4529980377477 Q405.0,144.0,415.0,144.0 L438.25,144.0" stroke="#9c4dcc" stroke-width="3.0" fill="none" stroke-linecap="round" stroke-linejoin="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M310.0,124.0 L360.0,124.0" stroke="#9c4dcc" stroke-width="3.0" stroke-linecap="round" class="metro-line-boltz2" data-line-id="boltz2" />
+<path d="M80.0,120.0 L140.0,120.0" stroke="#2db572" stroke-width="3.0" stroke-linecap="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<path d="M140.0,120.0 L200.0,120.0" stroke="#2db572" stroke-width="3.0" stroke-linecap="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<path d="M200.0,120.0 L260.0,120.0" stroke="#2db572" stroke-width="3.0" stroke-linecap="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<path d="M438.25,100.0 L461.5,100.0 Q471.5,100.0,479.8205029433784,105.5470019622523 L493.1794970566216,114.4529980377477 Q501.5,120.0,511.5,120.0 L542.0,120.0" stroke="#2db572" stroke-width="3.0" fill="none" stroke-linecap="round" stroke-linejoin="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<path d="M542.0,120.0 L602.0,120.0" stroke="#2db572" stroke-width="3.0" stroke-linecap="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<path d="M260.0,120.0 L310.0,120.0" stroke="#2db572" stroke-width="3.0" stroke-linecap="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<path d="M360.0,120.0 L365.0,120.0 Q375.0,120.0,383.3205029433784,114.4529980377477 L396.6794970566216,105.5470019622523 Q405.0,100.0,415.0,100.0 L438.25,100.0" stroke="#2db572" stroke-width="3.0" fill="none" stroke-linecap="round" stroke-linejoin="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<path d="M310.0,120.0 L360.0,120.0" stroke="#2db572" stroke-width="3.0" stroke-linecap="round" class="metro-line-colabfold" data-line-id="colabfold" />
+<g class="nf-metro-station-group" data-node-id="protein_sequence" data-node-cx="80.0" data-node-cy="122.0" data-node-r="5.0" data-node-groups="boltz2,colabfold" data-node-region="msa_generation" data-node-w="10.0" data-node-h="14.0" data-node-rx="5.0">
+<rect x="75.0" y="115.0" width="10.0" height="14.0" fill="#ffffff" stroke="#333333" stroke-width="1.5" class="nf-metro-station" data-station-id="protein_sequence" data-station-lines="boltz2,colabfold" data-station-label="protein_sequence" data-section-id="msa_generation" data-section-name="MSA generation" />
+<g data-station-id="protein_sequence">
+<path d="M43.0,106.0 L61.0,106.0 L69.0,114.0 L69.0,136.0 Q69.0,138.0,67.0,138.0 L43.0,138.0 Q41.0,138.0,41.0,136.0 L41.0,108.0 Q41.0,106.0,43.0,106.0 Z" fill="#ffffff" stroke="#333333" stroke-width="1.5" stroke-linejoin="round" />
+<path d="M61.0,106.0 L61.0,114.0 L69.0,114.0 Z" fill="#333333" opacity="0.15" stroke="none" />
+<path d="M61.0,106.0 L61.0,114.0 L69.0,114.0" fill="none" stroke="#333333" stroke-width="0.8999999999999999" />
+<text x="55.0" y="123.2" font-size="7.5" fill="#000000" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dy="0.3em">FASTA</text>
+</g>
+</g>
+<g class="nf-metro-station-group" data-node-id="colabfold_search" data-node-cx="200.0" data-node-cy="122.0" data-node-r="5.0" data-node-groups="boltz2,colabfold" data-node-region="msa_generation" data-node-w="10.0" data-node-h="14.0" data-node-rx="5.0">
+<rect x="195.0" y="115.0" width="10.0" height="14.0" rx="5.0" ry="5.0" fill="#ffffff" stroke="#333333" stroke-width="1.5" class="nf-metro-station" data-station-id="colabfold_search" data-station-lines="boltz2,colabfold" data-station-label="colabfold_search" data-section-id="msa_generation" data-section-name="MSA generation" />
+</g>
+<g class="nf-metro-station-group" data-node-id="colabfold_predict" data-node-cx="438.2" data-node-cy="100.0" data-node-r="5.0" data-node-groups="colabfold" data-node-region="structure_prediction" data-node-w="10.0" data-node-h="10.0" data-node-rx="5.0">
+<rect x="433.25" y="95.0" width="10.0" height="10.0" rx="5.0" ry="5.0" fill="#ffffff" stroke="#333333" stroke-width="1.5" class="nf-metro-station" data-station-id="colabfold_predict" data-station-lines="colabfold" data-station-label="ColabFold" data-section-id="structure_prediction" data-section-name="Structure prediction" />
+</g>
+<g class="nf-metro-station-group" data-node-id="boltz2_predict" data-node-cx="438.2" data-node-cy="144.0" data-node-r="5.0" data-node-groups="boltz2" data-node-region="structure_prediction" data-node-w="10.0" data-node-h="10.0" data-node-rx="5.0">
+<rect x="433.25" y="139.0" width="10.0" height="10.0" rx="5.0" ry="5.0" fill="#ffffff" stroke="#333333" stroke-width="1.5" class="nf-metro-station" data-station-id="boltz2_predict" data-station-lines="boltz2" data-station-label="Boltz-2" data-section-id="structure_prediction" data-section-name="Structure prediction" />
+</g>
+<g class="nf-metro-station-group" data-node-id="summarize_node" data-node-cx="542.0" data-node-cy="122.0" data-node-r="5.0" data-node-groups="boltz2,colabfold" data-node-region="structure_prediction" data-node-w="10.0" data-node-h="14.0" data-node-rx="5.0">
+<rect x="537.0" y="115.0" width="10.0" height="14.0" rx="5.0" ry="5.0" fill="#ffffff" stroke="#333333" stroke-width="1.5" class="nf-metro-station" data-station-id="summarize_node" data-station-lines="boltz2,colabfold" data-station-label="Summarise" data-section-id="structure_prediction" data-section-name="Structure prediction" />
+</g>
+<g class="nf-metro-station-group" data-node-id="predicted_structures" data-node-cx="602.0" data-node-cy="122.0" data-node-r="5.0" data-node-groups="boltz2,colabfold" data-node-region="structure_prediction" data-node-w="10.0" data-node-h="14.0" data-node-rx="5.0">
+<rect x="597.0" y="115.0" width="10.0" height="14.0" fill="#ffffff" stroke="#333333" stroke-width="1.5" class="nf-metro-station" data-station-id="predicted_structures" data-station-lines="boltz2,colabfold" data-station-label="predicted_structures" data-section-id="structure_prediction" data-section-name="Structure prediction" />
+<g data-station-id="predicted_structures">
+<path d="M619.2,101.8 L637.2,101.8 L645.2,109.8 L645.2,131.8 Q645.2,133.8,643.2,133.8 L619.2,133.8 Q617.2,133.8,617.2,131.8 L617.2,103.8 Q617.2,101.8,619.2,101.8 Z" fill="#ffffff" stroke="#333333" stroke-width="1.5" stroke-linejoin="round" />
+<path d="M637.2,101.8 L637.2,109.8 L645.2,109.8 Z" fill="#333333" opacity="0.15" stroke="none" />
+<path d="M637.2,101.8 L637.2,109.8 L645.2,109.8" fill="none" stroke="#333333" stroke-width="0.8999999999999999" />
+<path d="M615.0,106.0 L633.0,106.0 L641.0,114.0 L641.0,136.0 Q641.0,138.0,639.0,138.0 L615.0,138.0 Q613.0,138.0,613.0,136.0 L613.0,108.0 Q613.0,106.0,615.0,106.0 Z" fill="#ffffff" stroke="#333333" stroke-width="1.5" stroke-linejoin="round" />
+<path d="M633.0,106.0 L633.0,114.0 L641.0,114.0 Z" fill="#333333" opacity="0.15" stroke="none" />
+<path d="M633.0,106.0 L633.0,114.0 L641.0,114.0" fill="none" stroke="#333333" stroke-width="0.8999999999999999" />
+<text x="627.0" y="123.2" font-size="7.5" fill="#000000" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dy="0.3em">PDB</text>
+<path d="M651.2,101.8 L669.2,101.8 L677.2,109.8 L677.2,131.8 Q677.2,133.8,675.2,133.8 L651.2,133.8 Q649.2,133.8,649.2,131.8 L649.2,103.8 Q649.2,101.8,651.2,101.8 Z" fill="#ffffff" stroke="#333333" stroke-width="1.5" stroke-linejoin="round" />
+<path d="M669.2,101.8 L669.2,109.8 L677.2,109.8 Z" fill="#333333" opacity="0.15" stroke="none" />
+<path d="M669.2,101.8 L669.2,109.8 L677.2,109.8" fill="none" stroke="#333333" stroke-width="0.8999999999999999" />
+<path d="M647.0,106.0 L665.0,106.0 L673.0,114.0 L673.0,136.0 Q673.0,138.0,671.0,138.0 L647.0,138.0 Q645.0,138.0,645.0,136.0 L645.0,108.0 Q645.0,106.0,647.0,106.0 Z" fill="#ffffff" stroke="#333333" stroke-width="1.5" stroke-linejoin="round" />
+<path d="M665.0,106.0 L665.0,114.0 L673.0,114.0 Z" fill="#333333" opacity="0.15" stroke="none" />
+<path d="M665.0,106.0 L665.0,114.0 L673.0,114.0" fill="none" stroke="#333333" stroke-width="0.8999999999999999" />
+<text x="659.0" y="123.2" font-size="7.5" fill="#000000" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dy="0.3em">PAE</text>
+<path d="M679.0,106.0 L697.0,106.0 L705.0,114.0 L705.0,136.0 Q705.0,138.0,703.0,138.0 L679.0,138.0 Q677.0,138.0,677.0,136.0 L677.0,108.0 Q677.0,106.0,679.0,106.0 Z" fill="#ffffff" stroke="#333333" stroke-width="1.5" stroke-linejoin="round" />
+<path d="M697.0,106.0 L697.0,114.0 L705.0,114.0 Z" fill="#333333" opacity="0.15" stroke="none" />
+<path d="M697.0,106.0 L697.0,114.0 L705.0,114.0" fill="none" stroke="#333333" stroke-width="0.8999999999999999" />
+<text x="691.0" y="123.2" font-size="7.5" fill="#000000" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dy="0.3em">CSV</text>
+</g>
+</g>
+<text x="438.25" y="86.0" font-size="13.0" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="3.0" stroke-linejoin="round" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" aria-hidden="true" class="nf-metro-label-halo" text-anchor="middle" dominant-baseline="auto">ColabFold</text>
+<text x="438.25" y="86.0" font-size="13.0" fill="#e0e0e0" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="auto" data-station-id="colabfold_predict" class="nf-metro-station-label">ColabFold</text>
+<text x="438.25" y="155.0" font-size="13.0" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="3.0" stroke-linejoin="round" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" aria-hidden="true" class="nf-metro-label-halo" text-anchor="middle" dominant-baseline="hanging">Boltz-2</text>
+<text x="438.25" y="155.0" font-size="13.0" fill="#e0e0e0" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="hanging" data-station-id="boltz2_predict" class="nf-metro-station-label">Boltz-2</text>
+<text x="542.0" y="106.0" font-size="13.0" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="3.0" stroke-linejoin="round" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" aria-hidden="true" class="nf-metro-label-halo" text-anchor="middle" dominant-baseline="auto">Summarise</text>
+<text x="542.0" y="106.0" font-size="13.0" fill="#e0e0e0" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="auto" data-station-id="summarize_node" class="nf-metro-station-label">Summarise</text>
+<text x="200.0" y="135.0" font-size="13.0" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="3.0" stroke-linejoin="round" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" aria-hidden="true" class="nf-metro-label-halo" text-anchor="middle" dominant-baseline="hanging">colabfold_search</text>
+<text x="200.0" y="135.0" font-size="13.0" fill="#e0e0e0" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="hanging" data-station-id="colabfold_search" class="nf-metro-station-label">colabfold_search</text>
+<text x="754.0" y="210.0" font-size="8" fill="rgba(150, 150, 150, 0.6)" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" text-anchor="end">created with nf-metro v2.1.0</text>
+</svg>
