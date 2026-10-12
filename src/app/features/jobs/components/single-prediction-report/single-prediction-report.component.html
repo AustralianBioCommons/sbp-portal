@@ -22,19 +22,9 @@
   } @else {
   <div class="space-y-12">
     @if (scores().length > 0) {
-    <div
-      class="flex flex-wrap items-center justify-center border border-sky-200 text-sky-800 rounded-lg p-4 bg-sky-50 gap-x-6 gap-y-2"
-    >
-      <div class="flex flex-wrap items-center gap-6 text-sm">
-        @for (score of scores(); track score.label) {
-        <span>{{ score.label }} = {{ score.value }}</span>
-        }
-      </div>
-      <app-tooltip
-        [message]="scoresHint()"
-        iconColor="text-gray-400 hover:text-gray-500"
-      ></app-tooltip>
-    </div>
+    <app-prediction-confidence-scores
+      [scores]="scores()"
+    ></app-prediction-confidence-scores>
     }
 
     <!-- 60/40: the structure viewer gets the larger share -->

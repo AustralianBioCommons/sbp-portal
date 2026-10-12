@@ -1041,7 +1041,7 @@ describe("JobResultsReportComponent", () => {
       expect(component.chainLegend()).toEqual([]);
       const key = fixture.nativeElement.textContent as string;
       expect(key).toContain("Very high");
-      expect(key).toContain("pLDDT < 50");
+      expect(key).toContain("pLDDT ≤ 50");
     });
 
     it("says so, without failing, when nothing passed the score filter", () => {

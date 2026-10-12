@@ -1,0 +1,225 @@
+<app-example-output
+  heading="Structure Preview"
+  collapsible
+  [image]="images.structure"
+>
+  <ul class="list-disc space-y-2 pl-5">
+    <li>
+      The structure preview window allows interactive visualisation of the
+      complex structure of the designed binder (orange) and the protein target
+      (blue) predicted by AlphaFold2 “initial guess”.
+    </li>
+    <li>
+      Different binders can be previewed by selecting the corresponding row in
+      the results summary table.
+    </li>
+    <li>
+      The binder name is displayed in the figure legend and corresponds to the
+      binder ID in the results summary and downloadable files.
+    </li>
+    <li>
+      The preview window can be resized to increase/decrease the viewable area.
+    </li>
+  </ul>
+</app-example-output>
+
+<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
+  SBP only keeps designed binders that pass the predefined filters. Some runs
+  will generate no outputs that meet the filtering criteria and will not return
+  any output files. To overcome this limitation, you can try different
+  <code class="font-mono">Target Hotspot Residues</code> combinations or
+  increase the <code class="font-mono">Number of Designs</code>.
+</p>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">
+    Does the designed binder look like a globular protein?
+  </h3>
+  <p class="text-sm text-gray-500">
+    While the automated pipeline can produce binders that meet in silico quality
+    control criteria, it is worth looking at the predicted structures to perform
+    some manual assessment. Outputs will often be globular helical bundles, but
+    the pipeline (particularly RFdiffusion) can occasionally produce elongated,
+    isolated helices which are likely poor candidates for experimental study.
+  </p>
+</section>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">
+    Does the designed binder target the desired epitope?
+  </h3>
+  <p class="text-sm text-gray-500">
+    While the model is encouraged to design binders in the vicinity of
+    user-supplied hotspots, this requirement is not enforced during design.
+    Binders can often ‘escape’ to privileged hydrophobic patches which may not
+    lead to biologically relevant candidates (particularly for transmembrane
+    targets). You can check the predicted complex structure to ensure the binder
+    appears at the intended site.
+  </p>
+</section>
+
+<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
+  During the design process, the target structure is renumbered from 1. If the
+  input structure was not numbered from 1, the input residue hotspots will
+  appear at a different residue index in the output target-binder complex.
+</p>
+
+<app-example-output heading="Results Summary Table" [image]="images.table">
+  <p>
+    The results summary table contains an overview of designed binders that
+    passed the SBP quality control filters. The total number of ranked designs
+    passing the design filters is described in the table header (16 in the
+    example above). Results are ranked by the PAE interaction score.
+  </p>
+</app-example-output>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Interpreting Your Results</h3>
+  <!-- Focusable so keyboard users can scroll it on narrow screens. -->
+  <div
+    class="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+    role="region"
+    aria-labelledby="de-novo-results-table-caption"
+    tabindex="0"
+  >
+    <table class="w-full min-w-lg text-left text-sm">
+      <caption id="de-novo-results-table-caption" class="sr-only">
+        De novo design result definitions
+      </caption>
+      <thead class="bg-sky-900 text-white">
+        <tr>
+          <th scope="col" class="px-4 py-2 font-medium">Column</th>
+          <th scope="col" class="px-4 py-2 font-medium">Description</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Rank
+          </th>
+          <td class="p-4">
+            The rank of the designed binder based on PAE interaction score.
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            PAE interaction
+          </th>
+          <td class="p-4">
+            The bidirectional mean cross-chain PAE between all binder and target
+            residue pairs, used as the primary measure of binder confidence.
+            Lower is better.
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            ipTM
+          </th>
+          <td class="p-4">
+            TM-score-like confidence score based on a normalised PAE used as an
+            alternative measure of binder confidence (closely related to PAE
+            interaction). Higher is better.
+          </td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Design Length
+          </th>
+          <td class="p-4">The length of the designed binder.</td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Design Sequence
+          </th>
+          <td class="p-4">The amino acid sequence of the designed binder.</td>
+        </tr>
+        <tr class="align-top">
+          <th
+            scope="row"
+            class="p-4 font-medium whitespace-nowrap text-gray-900"
+          >
+            Design Name
+          </th>
+          <td class="p-4">The identifier of the designed binder.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-sm text-gray-500">
+    Any binder that passes the SBP quality control filters could be considered a
+    plausible candidate for experimental evaluation.
+  </p>
+</section>
+
+<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
+  Structure prediction confidence scores (such as PAE interaction and ipTM) are
+  widely used as discrete filters, but once above the passing threshold, scores
+  are not found to correlate with binding affinity or success rate (<a
+    href="https://www.adaptyvbio.com/blog/po104/"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="text-sky-700 underline hover:text-sky-800"
+    >Adaptyv blog<span class="sr-only"> (opens in a new tab)</span></a
+  >).
+</p>
+
+<section class="space-y-4">
+  <h3 class="text-lg font-semibold text-gray-900">Download Example Results</h3>
+  <div class="flex flex-wrap gap-4">
+    <app-button
+      class="min-w-0 max-w-full"
+      variant="secondary"
+      widthClass="w-auto max-w-full max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]"
+      [disabled]="true"
+    >
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download PDB files
+    </app-button>
+    <app-button
+      class="min-w-0 max-w-full"
+      variant="secondary"
+      widthClass="w-auto max-w-full max-sm:whitespace-normal max-sm:[overflow-wrap:anywhere]"
+      [disabled]="true"
+    >
+      <ng-icon
+        name="heroArrowDownTray"
+        class="mr-1.5 inline-block h-3.5 w-3.5"
+        aria-hidden="true"
+      ></ng-icon>
+      Download ranked_designs.csv
+    </app-button>
+  </div>
+  <p class="text-sm text-gray-500">Example files coming soon.</p>
+  <p class="text-sm text-gray-500">
+    A full description of information contained in the analysis files can be
+    found in the
+    <a
+      href="https://github.com/PapenfussLab/proteindj/blob/main/docs/metrics.md"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-sky-700 underline hover:text-sky-800"
+      >ProteinDJ documentation<span class="sr-only">
+        (opens in a new tab)</span
+      ></a
+    >.
+  </p>
+</section>

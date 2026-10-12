@@ -2,6 +2,12 @@ import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroArrowDownTray } from "@ng-icons/heroicons/outline";
 import { ButtonComponent } from "../../../../../components/button/button.component";
+import { PlddtLegendComponent } from "../../../../jobs/components/plddt-legend/plddt-legend.component";
+import {
+  PREDICTION_SCORE_HINTS,
+  PredictionConfidenceScore,
+  PredictionConfidenceScoresComponent,
+} from "../../../../../components/prediction-confidence-scores/prediction-confidence-scores.component";
 import {
   ExampleOutputComponent,
   ExampleOutputImage,
@@ -10,7 +16,13 @@ import {
 /** Example Output tab content for the Single Prediction workflow. */
 @Component({
   selector: "app-single-prediction-example-output",
-  imports: [ButtonComponent, ExampleOutputComponent, NgIconComponent],
+  imports: [
+    ButtonComponent,
+    ExampleOutputComponent,
+    NgIconComponent,
+    PlddtLegendComponent,
+    PredictionConfidenceScoresComponent,
+  ],
   providers: [provideIcons({ heroArrowDownTray })],
   templateUrl: "./single-prediction-example-output.component.html",
   styleUrl: "./single-prediction-example-output.component.scss",
@@ -18,16 +30,15 @@ import {
   host: { class: "block space-y-8 pt-4" },
 })
 export class SinglePredictionExampleOutputComponent {
+  readonly scores = [
+    { label: "ipTM", value: "0.91", hint: PREDICTION_SCORE_HINTS.ipTM },
+    { label: "pTM", value: "0.88", hint: PREDICTION_SCORE_HINTS.pTM },
+  ] satisfies readonly PredictionConfidenceScore[];
+
   /** Screenshots of an example run's results page, at their pixel sizes. */
   readonly images = {
-    scores: {
-      src: "assets/sp-example-iptm-ptm.png",
-      alt: "Scores from the results page: ipTM = 0.91, pTM = 0.88.",
-      width: 1211,
-      height: 88,
-    },
     structure: {
-      src: "assets/sp-example-viewer.png",
+      src: "assets/sp-example-structure.png",
       alt: "Predicted 3D structure of the example complex in the viewer, coloured by pLDDT: mostly very high confidence (dark blue), with a very low confidence tail (orange).",
       width: 712,
       height: 590,

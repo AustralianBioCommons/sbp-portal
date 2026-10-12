@@ -24,6 +24,7 @@ import { CreditSummaryComponent } from "../components/credit-summary/credit-summ
 import { WorkflowPreviewModalComponent } from "../components/workflow-preview-modal/workflow-preview-modal.component";
 import { StepContentComponent } from "../components/step-content/step-content.component";
 import { BulkPredictionAboutComponent } from "./components/bulk-prediction-about/bulk-prediction-about.component";
+import { BulkPredictionExampleOutputComponent } from "./components/bulk-prediction-example-output/bulk-prediction-example-output.component";
 import { WorkflowPapersComponent } from "../components/workflow-papers/workflow-papers.component";
 import { WorkflowLayoutComponent } from "../layout/workflow-layout/workflow-layout.component";
 import {
@@ -65,6 +66,7 @@ interface ToolChip extends ToolOption {
     WorkflowFormComponent,
     WorkflowLayoutComponent,
     BulkPredictionAboutComponent,
+    BulkPredictionExampleOutputComponent,
     WorkflowPapersComponent,
     StepContentComponent,
     CreditSummaryComponent,
