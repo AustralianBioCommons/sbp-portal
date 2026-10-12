@@ -76,6 +76,8 @@ type JobSettingItem = {
   url?: string;
   /** Open the link in the browser (served as plain text) rather than download it. */
   openInline?: boolean;
+  /** Raw text shown as a filename link that opens it as plain text in a new tab. */
+  openableText?: string;
 };
 
 /** Settings actually exposed in each workflow's submission form, keyed by
@@ -639,6 +641,17 @@ export default class JobDetailsComponent implements OnInit {
     URL.revokeObjectURL(objectUrl);
   }
 
+  /** Opens a setting's raw text (e.g. the submitted FASTA) as plain text in a
+   *  new tab, like the presigned FASTA links of the other workflows. */
+  openSettingText(text: string): void {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(blob);
+    window.open(objectUrl, "_blank", "noopener");
+    // The new tab loads the blob asynchronously; give it time before
+    // releasing the URL.
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  }
+
   onInteractiveReportUnavailable(): void {
     if (this.reportFallback()) return;
     this.reportFallback.set(true);
@@ -852,7 +865,11 @@ export default class JobDetailsComponent implements OnInit {
 
       if (isKeyVisible(key)) {
         seenKeys.add(key);
-        items.push(this.normalizeSettingItem(key, value));
+        items.push(
+          key === "fastaContent" && typeof value === "string" && value
+            ? this.fastaContentItem(value, settingParams)
+            : this.normalizeSettingItem(key, value)
+        );
       }
     }
 
@@ -882,6 +899,25 @@ export default class JobDetailsComponent implements OnInit {
     // chain-list requirement — not something the user enters directly.
     "chains",
   ]);
+
+  /** The submitted FASTA as a filename link (opened via openSettingText)
+   *  rather than the raw sequences inline. */
+  private fastaContentItem(
+    content: string,
+    settingParams: Record<string, unknown>
+  ): JobSettingItem {
+    const fileUrl = settingParams["fastaFileUrl"];
+    const filename =
+      typeof fileUrl === "string" && fileUrl
+        ? this.extractFilename(fileUrl)
+        : "sequences.fasta";
+    return {
+      label: this.formatSettingLabel("fastaContent"),
+      value: filename,
+      details: [],
+      openableText: content,
+    };
+  }
 
   private shouldHideSettingKey(key: string): boolean {
     return JobDetailsComponent.HIDDEN_SETTING_KEYS.has(key.toLowerCase());

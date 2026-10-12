@@ -359,7 +359,15 @@
                 <div class="text-xs font-semibold uppercase text-gray-600">
                   {{ setting.label }}
                 </div>
-                @if (setting.url) {
+                @if (setting.openableText) {
+                <button
+                  type="button"
+                  (click)="openSettingText(setting.openableText)"
+                  class="text-left text-sky-600 hover:underline transition-all hover:text-sky-800 text-xs wrap-break-word font-mono"
+                >
+                  {{ setting.value }}
+                </button>
+                } @else if (setting.url) {
                 <a
                   [href]="setting.url"
                   target="_blank"
