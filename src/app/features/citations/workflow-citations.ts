@@ -20,7 +20,7 @@ export const CITATIONS = {
     title: "Highly accurate protein structure prediction with AlphaFold",
     authors: "Jumper, J., Evans, R., Pritzel, A. et al.",
     firstAuthor: "Jumper",
-    year: "2022",
+    year: "2021",
     doi: "https://doi.org/10.1038/s41586-021-03819-2",
     formattedCitation:
       "Jumper, J., Evans, R., Pritzel, A. et al. Highly accurate protein structure prediction with AlphaFold. Nature 596, 583-589 (2021).",
@@ -88,14 +88,13 @@ export const CITATIONS = {
   },
   bindcraft: {
     label: "BindCraft",
-    title: "BindCraft: one-shot design of functional protein binders",
-    authors:
-      "Pacesa, M., Nickel, L., Schellhaas, C., Schmidt, J., Pyatova, E. et al.",
+    title: "One-shot design of functional protein binders with BindCraft",
+    authors: "Pacesa, M., Nickel, L., Schellhaas, C. et al.",
     firstAuthor: "Pacesa",
-    year: "2024",
-    doi: "https://doi.org/10.1101/2024.09.30.615802",
+    year: "2025",
+    doi: "https://doi.org/10.1038/s41586-025-09429-6",
     formattedCitation:
-      "Pacesa, M., Nickel, L., Schellhaas, C., Schmidt, J., Pyatova, E. et al. BindCraft: one-shot design of functional protein binders. bioRxiv 2024.09.30.615802 (2024).",
+      "Pacesa, M., Nickel, L., Schellhaas, C. et al. One-shot design of functional protein binders with BindCraft. Nature 646, 483-492 (2025).",
     workflows: ["de novo design"],
     tools: ["bindcraft"],
   },
@@ -204,7 +203,7 @@ export const CITATIONS = {
     year: "2017",
     doi: "https://doi.org/10.1371/journal.pcbi.1005659",
     formattedCitation:
-      "Eastman, P., Swails, J., Chodera, J.D. et al. OpenMM 7: Rapid development of high performance algorithms for molecular dynamics. PLoS Comput Biol 13, e1005659 (2017).",
+      "Eastman, P., Swails, J., Chodera, J.D. et al. OpenMM 7: Rapid development of high performance algorithms for molecular dynamics. PLOS Comput Biol 13(7), e1005659 (2017).",
     workflows: ["de novo design"],
     tools: ["bindcraft", "rfdiffusion"],
   },
@@ -249,13 +248,13 @@ export const CITATIONS = {
   proteinmpnn: {
     label: "ProteinMPNN",
     title:
-      "Robust deep learning-based protein sequence design using ProteinMPNN",
-    authors: "Dauparas, J., Anishchenko, I., Bennett, N. et al.",
+      "Robust deep learning–based protein sequence design using ProteinMPNN",
+    authors: "Dauparas, J. et al.",
     firstAuthor: "Dauparas",
     year: "2022",
     doi: "https://doi.org/10.1126/science.add2187",
     formattedCitation:
-      "Dauparas, J., Anishchenko, I., Bennett, N. et al. Robust deep learning-based protein sequence design using ProteinMPNN. Science 378, 49-56 (2022).",
+      "Dauparas, J. et al. Robust deep learning–based protein sequence design using ProteinMPNN. Science 378, 49-56 (2022).",
     workflows: ["de novo design"],
     tools: ["bindcraft", "rfdiffusion"],
   },
@@ -270,6 +269,19 @@ export const CITATIONS = {
       "Watson, J.L., Juergens, D., Bennett, N.R. et al. De novo design of protein structure and function with RFdiffusion. Nature 620, 1089–1100 (2023).",
     workflows: ["de novo design"],
     tools: ["rfdiffusion"],
+  },
+  solublempnn: {
+    label: "SolubleMPNN",
+    title:
+      "Computational design of soluble and functional membrane protein analogues",
+    authors: "Goverde, C.A., Pacesa, M., Goldbach, N. et al.",
+    firstAuthor: "Goverde",
+    year: "2024",
+    doi: "https://doi.org/10.1038/s41586-024-07601-y",
+    formattedCitation:
+      "Goverde, C.A., Pacesa, M., Goldbach, N. et al. Computational design of soluble and functional membrane protein analogues. Nature 631, 449-458 (2024).",
+    workflows: ["de novo design"],
+    tools: ["bindcraft", "rfdiffusion"],
   },
   structuralbiologyai: {
     label: "Structural Biology AI Reference Collection",
@@ -318,6 +330,7 @@ export const WORKFLOW_PAPER_CITATION_KEYS_BY_WORKFLOW: Record<
     "rfdiffusion",
     "bindcraft",
     "proteinmpnn",
+    "solublempnn",
     "openmm",
     "alphafold2",
     "alphafold2relax",
@@ -396,6 +409,27 @@ const INTERACTION_SCREENING_CITATION_KEYS_BY_TOOL: Record<
   boltz: ["boltz2", "colabfold", "structuralbiologyai"],
   boltz2: ["boltz2", "colabfold", "structuralbiologyai"],
   colabfold: ["colabfold", "alphafoldmultimer", "structuralbiologyai"],
+};
+
+const DE_NOVO_DESIGN_CITATION_KEYS_BY_TOOL: Record<string, CitationKey[]> = {
+  bindcraft: [
+    "proteindj",
+    "bindcraft",
+    "proteinmpnn",
+    "solublempnn",
+    "openmm",
+    "alphafold2relax",
+    "alphafold2",
+  ],
+  rfdiffusion: [
+    "proteindj",
+    "rfdiffusion",
+    "proteinmpnn",
+    "solublempnn",
+    "openmm",
+    "alphafold2relax",
+    "alphafold2",
+  ],
 };
 
 function normalizeName(value: string | undefined): string {
@@ -491,6 +525,12 @@ export function getWorkflowRunCitationKeys(
   if (normalizedWorkflow === "interaction screening") {
     return (
       INTERACTION_SCREENING_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
+      getWorkflowPaperCitationKeys(workflow)
+    );
+  }
+  if (normalizedWorkflow === "de novo design") {
+    return (
+      DE_NOVO_DESIGN_CITATION_KEYS_BY_TOOL[normalizeKey(tool)] ??
       getWorkflowPaperCitationKeys(workflow)
     );
   }

@@ -69,6 +69,7 @@ describe("Workflow Citations utilities", () => {
       "openmm",
       "proteindj",
       "proteinmpnn",
+      "solublempnn",
     ]);
   });
 
@@ -102,6 +103,7 @@ describe("Workflow Citations utilities", () => {
       "rfdiffusion",
       "bindcraft",
       "proteinmpnn",
+      "solublempnn",
       "openmm",
       "alphafold2",
       "alphafold2relax",
@@ -184,6 +186,29 @@ describe("Workflow Citations utilities", () => {
     expect(
       getWorkflowRunCitationKeys("interaction-screening", "ColabFold")
     ).toEqual(["colabfold", "alphafoldmultimer", "structuralbiologyai"]);
+  });
+
+  it("gets tool-specific citation keys for De Novo Design job runs", () => {
+    expect(getWorkflowRunCitationKeys("De Novo Design", "RFdiffusion")).toEqual(
+      [
+        "proteindj",
+        "rfdiffusion",
+        "proteinmpnn",
+        "solublempnn",
+        "openmm",
+        "alphafold2relax",
+        "alphafold2",
+      ]
+    );
+    expect(getWorkflowRunCitationKeys("de-novo-design", "BindCraft")).toEqual([
+      "proteindj",
+      "bindcraft",
+      "proteinmpnn",
+      "solublempnn",
+      "openmm",
+      "alphafold2relax",
+      "alphafold2",
+    ]);
   });
 
   it("falls back to workflow citation keys for non-tool-specific runs", () => {
@@ -309,6 +334,16 @@ describe("Workflow Citations utilities", () => {
     expect(citation?.doi).toBe("https://doi.org/10.1038/s41467-023-38328-5");
     expect(formatCitation(citation!)).toBe(
       "Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023)."
+    );
+  });
+
+  it("includes the SolubleMPNN citation", () => {
+    const citation = getCitation("solublempnn");
+
+    expect(citation?.label).toBe("SolubleMPNN");
+    expect(citation?.doi).toBe("https://doi.org/10.1038/s41586-024-07601-y");
+    expect(formatCitation(citation!)).toBe(
+      "Goverde, C.A., Pacesa, M., Goldbach, N. et al. Computational design of soluble and functional membrane protein analogues. Nature 631, 449-458 (2024)."
     );
   });
 

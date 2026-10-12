@@ -873,7 +873,29 @@ describe("JobDetailsComponent", () => {
 
     expect(valueOf(deNovoDesignJob)).toBe("BindCraft");
     expect(valueOf(bulkPredictionJob)).toBe("ColabFold");
-    expect(component.getCitationKeys(deNovoDesignJob)[0]).toBe("proteindj");
+    expect(component.getCitationKeys(deNovoDesignJob)).toEqual([
+      "proteindj",
+      "bindcraft",
+      "proteinmpnn",
+      "solublempnn",
+      "openmm",
+      "alphafold2relax",
+      "alphafold2",
+    ]);
+    expect(
+      component.getCitationKeys({
+        ...deNovoDesignJob,
+        tool: "RFdiffusion",
+      })
+    ).toEqual([
+      "proteindj",
+      "rfdiffusion",
+      "proteinmpnn",
+      "solublempnn",
+      "openmm",
+      "alphafold2relax",
+      "alphafold2",
+    ]);
     expect(component.getCitationKeys(bulkPredictionJob)).toEqual([
       "colabfold",
       "alphafold2",
