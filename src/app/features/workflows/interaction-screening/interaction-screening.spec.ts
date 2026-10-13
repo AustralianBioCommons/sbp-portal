@@ -408,6 +408,40 @@ describe("InteractionScreeningComponent", () => {
     expect(component.getTargetError()).toBe("");
   });
 
+  it("should show pair-length error when any query + target pair exceeds 1000 aa", () => {
+    // Longest query (600) + longest target (401) = 1001
+    const queryFasta = [
+      `>short\n${"A".repeat(10)}`,
+      `>longq\n${"A".repeat(600)}`,
+    ].join("\n");
+    const targetFasta = [
+      `>longt\n${"A".repeat(401)}`,
+      `>tiny\n${"A".repeat(5)}`,
+    ].join("\n");
+    component.form.controls.queryFasta.setValue(queryFasta);
+    component.form.controls.targetFasta.setValue(targetFasta);
+
+    expect(component.hasPairLengthError()).toBe(true);
+    const msg = component.getPairLengthError();
+    expect(msg).toContain('"longq"');
+    expect(msg).toContain('"longt"');
+    expect(msg).toContain("1001");
+    expect(component.isSectionValid("input-config")).toBe(false);
+  });
+
+  it("should allow pairs up to 1000 aa even when the overall total is larger", () => {
+    // Every pair is 500 + 500 = 1000; overall total is 10 × 500 + 500 = 5500
+    const queryFasta = Array.from(
+      { length: 10 },
+      (_, i) => `>q${i}\n${"A".repeat(500)}`
+    ).join("\n");
+    component.form.controls.queryFasta.setValue(queryFasta);
+    component.form.controls.targetFasta.setValue(`>t\n${"A".repeat(500)}`);
+
+    expect(component.hasPairLengthError()).toBe(false);
+    expect(component.getPairLengthError()).toBe("");
+  });
+
   // ── 13. hasProductError / getProductError ─────────────────────────────
 
   it("should show product error when query × target >= 1000", () => {
