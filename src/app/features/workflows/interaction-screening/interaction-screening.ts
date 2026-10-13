@@ -57,6 +57,44 @@ function multiFastaValidator(
   return result.valid ? null : { fasta: result.errorMessage };
 }
 
+/** Maximum combined amino-acid length of each query × target pair. */
+const MAX_PAIR_AA_LENGTH = 1000;
+
+/**
+ * Every query × target pair is predicted as one complex, so each pair's
+ * combined length must stay within `max`. Checking the longest query against
+ * the longest target covers all combinations.
+ */
+function maxPairLengthValidator(max: number): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const queryVal = group.get("queryFasta")?.value ?? "";
+    const targetVal = group.get("targetFasta")?.value ?? "";
+    if (
+      !validateMultiFastaProtein(queryVal).valid ||
+      !validateMultiFastaProtein(targetVal).valid
+    ) {
+      return null;
+    }
+    const longest = (fasta: string) =>
+      parseMultiFasta(fasta).reduce((a, b) =>
+        b.sequence.length > a.sequence.length ? b : a
+      );
+    const query = longest(queryVal);
+    const target = longest(targetVal);
+    const actual = query.sequence.length + target.sequence.length;
+    return actual > max
+      ? {
+          maxPairLength: {
+            query: query.header,
+            target: target.header,
+            actual,
+            max,
+          },
+        }
+      : null;
+  };
+}
+
 const MAX_SEQUENCE_PRODUCT = 1000;
 const MIN_SEQUENCE_PRODUCT = 10;
 
@@ -151,6 +189,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     {
       validators: [
         maxProductValidator(MAX_SEQUENCE_PRODUCT),
+        maxPairLengthValidator(MAX_PAIR_AA_LENGTH),
         minProductValidator(MIN_SEQUENCE_PRODUCT),
         uniqueSequencesValidator,
       ],
@@ -221,6 +260,7 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
           this.form.controls.targetFasta.valid &&
           !this.form.errors?.["maxProduct"] &&
           !this.form.errors?.["minProduct"] &&
+          !this.form.errors?.["maxPairLength"] &&
           !this.form.errors?.["duplicateSequences"]
         );
       case "review":
@@ -271,13 +311,15 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
   } {
     const productError = !!this.form.errors?.["maxProduct"];
     const minProductError = !!this.form.errors?.["minProduct"];
+    const pairLengthError = !!this.form.errors?.["maxPairLength"];
     const errorCount =
       (this.form.controls.selectedTool.valid ? 0 : 1) +
       (this.form.controls.jobName.valid ? 0 : 1) +
       (this.form.controls.queryFasta.valid ? 0 : 1) +
       (this.form.controls.targetFasta.valid ? 0 : 1) +
       (productError ? 1 : 0) +
-      (minProductError ? 1 : 0);
+      (minProductError ? 1 : 0) +
+      (pairLengthError ? 1 : 0);
     return { valid: this.isFormValid(), errorCount, rowCount: 3 };
   }
 
@@ -330,6 +372,16 @@ export default class InteractionScreeningComponent extends WorkflowPageBase {
     const err = this.form.errors?.["minProduct"];
     if (!err) return "";
     return `Minimum ${err.min} interactions at once. Please use the Single Prediction workflow for individual predictions.`;
+  }
+
+  hasPairLengthError(): boolean {
+    return !!this.form.errors?.["maxPairLength"];
+  }
+
+  getPairLengthError(): string {
+    const err = this.form.errors?.["maxPairLength"];
+    if (!err) return "";
+    return `Query "${err.query}" and target "${err.target}" have ${err.actual} amino acids combined. Each query and target pair must not exceed ${err.max}`;
   }
 
   hasDuplicateSequencesError(): boolean {
