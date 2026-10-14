@@ -1,6 +1,8 @@
 <app-example-output
   heading="Structure Preview"
   collapsible
+  centerExplanation
+  equalColumns
   [image]="images.structure"
 >
   <ul class="list-disc space-y-2 pl-5">
@@ -21,20 +23,24 @@
       The preview window can be resized to increase/decrease the viewable area.
     </li>
   </ul>
+  <p
+    class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+  >
+    SBP only keeps designed binders that pass the predefined filters. Some runs
+    will generate no outputs that meet the filtering criteria and will not
+    return any output files. To overcome this limitation, you can try different
+    <span class="text-sm font-medium text-gray-900"
+      >Target Hotspot Residues</span
+    >
+    combinations or increase the
+    <span class="text-sm font-medium text-gray-900">Number of Designs</span>.
+  </p>
 </app-example-output>
 
-<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
-  SBP only keeps designed binders that pass the predefined filters. Some runs
-  will generate no outputs that meet the filtering criteria and will not return
-  any output files. To overcome this limitation, you can try different
-  <code class="font-mono">Target Hotspot Residues</code> combinations or
-  increase the <code class="font-mono">Number of Designs</code>.
-</p>
-
-<section class="space-y-4">
-  <h3 class="text-lg font-semibold text-gray-900">
+<section class="space-y-2">
+  <h4 class="text-sm font-medium text-gray-900">
     Does the designed binder look like a globular protein?
-  </h3>
+  </h4>
   <p class="text-sm text-gray-500">
     While the automated pipeline can produce binders that meet in silico quality
     control criteria, it is worth looking at the predicted structures to perform
@@ -44,10 +50,10 @@
   </p>
 </section>
 
-<section class="space-y-4">
-  <h3 class="text-lg font-semibold text-gray-900">
+<section class="space-y-2">
+  <h4 class="text-sm font-medium text-gray-900">
     Does the designed binder target the desired epitope?
-  </h3>
+  </h4>
   <p class="text-sm text-gray-500">
     While the model is encouraged to design binders in the vicinity of
     user-supplied hotspots, this requirement is not enforced during design.
@@ -64,13 +70,24 @@
   appear at a different residue index in the output target-binder complex.
 </p>
 
-<app-example-output heading="Results Summary Table" [image]="images.table">
-  <p>
-    The results summary table contains an overview of designed binders that
-    passed the SBP quality control filters. The total number of ranked designs
-    passing the design filters is described in the table header (16 in the
-    example above). Results are ranked by the PAE interaction score.
-  </p>
+<app-example-output
+  heading="Results Summary Table"
+  centerExplanation
+  equalColumns
+  [image]="images.table"
+>
+  <ul class="list-disc space-y-2 pl-5">
+    <li>
+      The results summary table contains an overview of designed binders that
+      passed the SBP quality control filters (PAE interaction &lt; 10 Å, pLDDT
+      &gt; 80, and binder RMSD &lt; 1 Å).
+    </li>
+    <li>
+      The total number of ranked designs passing the design filters is described
+      in the table header (16 in the example above).
+    </li>
+    <li>Results are ranked by the PAE interaction score.</li>
+  </ul>
 </app-example-output>
 
 <section class="space-y-4">

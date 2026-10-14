@@ -29,8 +29,7 @@ describe("SinglePredictionExampleOutputComponent", () => {
 
     expect(scores.parentElement).toBe(structure.parentElement);
     expect(explanation.contains(scores)).toBe(false);
-    expect(scores.textContent).toContain("ipTM = 0.91");
-    expect(scores.textContent).toContain("pTM = 0.88");
+    expect(scores.textContent).toMatch(/pTM = 0\.88\s*ipTM = 0\.91/);
     expect(scores.querySelector("app-tooltip")).toBeNull();
     expect(
       element.querySelector('img[src$="sp-example-iptm-ptm.png"]')

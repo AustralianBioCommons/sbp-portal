@@ -340,13 +340,12 @@ describe("SinglePredictionReportComponent", () => {
 
   // --- Confidence scores ----------------------------------------------------
 
-  it("shows pTM and ipTM when a run reports both", () => {
+  it("shows pTM before ipTM when a run reports both", () => {
     render([...files, ...scoreFiles]);
 
-    // ipTM leads: for a complex it is the score that matters most.
     expect(component.scores()).toEqual([
-      { label: "ipTM", value: "0.274", hint: jasmine.any(String) },
       { label: "pTM", value: "0.287", hint: jasmine.any(String) },
+      { label: "ipTM", value: "0.274", hint: jasmine.any(String) },
     ]);
 
     const element: HTMLElement = fixture.nativeElement;

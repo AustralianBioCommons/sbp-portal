@@ -1,6 +1,8 @@
 <app-example-output
   heading="Structure Preview"
   collapsible
+  centerExplanation
+  equalColumns
   [image]="images.structure"
 >
   <ul class="list-disc space-y-2 pl-5">
@@ -19,21 +21,19 @@
       The preview window can be resized to increase/decrease the viewable area.
     </li>
   </ul>
+  <p
+    class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+  >
+    Using model confidence to identify novel interactions is less well validated
+    than predicting the structures of known complexes. Screening results should
+    be interpreted carefully.
+  </p>
 </app-example-output>
 
-<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
-  Structure prediction models were designed to predict the most likely structure
-  of a complex under the assumption that the components are known to interact.
-  In that setting, predictions have been shown to closely match experimental
-  structures. Using model confidence as a proxy to identify previously unknown
-  protein complexes has been less well validated and results should be
-  interpreted carefully.
-</p>
-
-<section class="space-y-4">
-  <h3 class="text-lg font-semibold text-gray-900">
+<section class="space-y-2">
+  <h4 class="text-sm font-medium text-gray-900">
     Is the identified interaction biologically plausible?
-  </h3>
+  </h4>
   <p class="text-sm text-gray-500">
     When evaluating putative novel complexes, care should be taken to consider
     the biological context. When considering a transmembrane query, it is
@@ -44,7 +44,12 @@
   </p>
 </section>
 
-<app-example-output heading="Results Summary Table" [image]="images.table">
+<app-example-output
+  heading="Results Summary Table"
+  centerExplanation
+  equalColumns
+  [image]="images.table"
+>
   <ul class="list-disc space-y-2 pl-5">
     <li>
       The total number of predicted interactions is described in the table
@@ -53,12 +58,12 @@
     <li>
       <span class="font-medium text-gray-900">Query ID</span> is the identifier
       for the interaction component derived from the FASTA header of the input
-      <code class="font-mono">Query Sequences</code>.
+      <span class="text-sm font-medium text-gray-900">Query Sequences</span>.
     </li>
     <li>
       <span class="font-medium text-gray-900">Target ID</span> is the identifier
       for the interaction component derived from the FASTA header of the input
-      <code class="font-mono">Target Sequences</code>.
+      <span class="text-sm font-medium text-gray-900">Target Sequences</span>.
     </li>
     <li>
       <span class="font-medium text-gray-900">ipSAE</span> is a score
@@ -72,19 +77,20 @@
       the same score but includes confidence in the intra-chain arrangement.
     </li>
   </ul>
-</app-example-output>
-
-<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
-  See
-  <a
-    routerLink="/structure-prediction/single-prediction"
-    [queryParams]="{ tab: 'output' }"
-    class="text-sky-700 underline hover:text-sky-800"
-    >example data</a
+  <p
+    class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700"
   >
-  for the single prediction workflow for a detailed description of structure
-  prediction confidence scores.
-</p>
+    See
+    <a
+      routerLink="/structure-prediction/single-prediction"
+      [queryParams]="{ tab: 'output' }"
+      class="text-sky-700 underline hover:text-sky-800"
+      >example data</a
+    >
+    for the single prediction workflow for a detailed description of structure
+    prediction confidence scores.
+  </p>
+</app-example-output>
 
 <section class="space-y-4">
   <h3 class="text-lg font-semibold text-gray-900">Interpreting Your Results</h3>
