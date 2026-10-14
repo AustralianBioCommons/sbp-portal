@@ -1,6 +1,8 @@
 <app-example-output
   heading="Structure Preview"
   collapsible
+  centerExplanation
+  equalColumns
   [image]="images.structure"
 >
   <ul class="list-disc space-y-2 pl-5">
@@ -104,7 +106,12 @@
   </div>
 </section>
 
-<app-example-output heading="Results Summary Table" [image]="images.table">
+<app-example-output
+  heading="Results Summary Table"
+  centerExplanation
+  equalColumns
+  [image]="images.table"
+>
   <ul class="list-disc space-y-2 pl-5">
     <li>
       The total number of predictions is described in the table header (11
@@ -113,7 +120,9 @@
     <li>
       <span class="font-medium text-gray-900">Query ID</span> is the identifier
       for each prediction derived from the FASTA header of the input
-      <code class="font-mono">Protein Sequences</code>.
+      <span class="text-sm font-medium text-gray-900"
+        >Protein Sequences (FASTA)</span
+      >.
     </li>
     <li>
       <span class="font-medium text-gray-900">pTM</span> represents a measure of
@@ -126,19 +135,20 @@
       prediction). It is a score between 0 and 100 where higher is better.
     </li>
   </ul>
-</app-example-output>
-
-<p class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">
-  See
-  <a
-    routerLink="/structure-prediction/single-prediction"
-    [queryParams]="{ tab: 'output' }"
-    class="text-sky-700 underline hover:text-sky-800"
-    >example data</a
+  <p
+    class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-700"
   >
-  for the single prediction workflow for a detailed description of structure
-  prediction confidence scores.
-</p>
+    See
+    <a
+      routerLink="/structure-prediction/single-prediction"
+      [queryParams]="{ tab: 'output' }"
+      class="text-sky-700 underline hover:text-sky-800"
+      >example data</a
+    >
+    for the single prediction workflow for a detailed description of structure
+    prediction confidence scores.
+  </p>
+</app-example-output>
 
 <section class="space-y-4">
   <h3 class="text-lg font-semibold text-gray-900">Interpreting Your Results</h3>

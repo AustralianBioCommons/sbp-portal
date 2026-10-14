@@ -7,7 +7,7 @@ import {
 } from "@angular/core/testing";
 import { DomSanitizer } from "@angular/platform-browser";
 import { provideRouter, Router } from "@angular/router";
-import { Observable, of, throwError } from "rxjs";
+import { BehaviorSubject, Observable, of, Subject, throwError } from "rxjs";
 import { ResultsService } from "../services/results.service";
 import { AuthService } from "../../../core/services/auth.service";
 import JobsListComponent from "./jobs-list";
@@ -142,6 +142,84 @@ describe("JobsListComponent", () => {
   it("should create", () => {
     expect(component).toBeTruthy();
   });
+
+  it("shows a loading indicator through authentication, permission checks and the jobs request", async () => {
+    fixture.destroy();
+    const authLoading$ = new BehaviorSubject(true);
+    const canExecuteWorkflows$ = new Subject<boolean>();
+    const jobs$ = new Subject<JobListResponse>();
+    mockAuthService.isLoading$ = authLoading$;
+    mockAuthService.canExecuteWorkflows$ = canExecuteWorkflows$;
+    mockJobsService.listJobs.calls.reset();
+    mockJobsService.listJobs.and.returnValue(jobs$);
+    fixture = TestBed.createComponent(JobsListComponent);
+    component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    await detectComponentChanges();
+
+    expect(element.querySelector('[role="status"]')?.textContent).toContain(
+      "Loading..."
+    );
+    expect(element.querySelector("table")).toBeNull();
+    expect(mockJobsService.listJobs).not.toHaveBeenCalled();
+
+    authLoading$.next(false);
+    await detectComponentChanges();
+
+    expect(element.querySelector('[role="status"]')?.textContent).toContain(
+      "Loading..."
+    );
+    expect(element.textContent).not.toContain("Access Restricted");
+    expect(mockJobsService.listJobs).not.toHaveBeenCalled();
+
+    canExecuteWorkflows$.next(true);
+    await detectComponentChanges();
+
+    expect(element.querySelector("table")).not.toBeNull();
+    expect(element.querySelector("tbody app-loading")?.textContent).toContain(
+      "Loading jobs..."
+    );
+    expect(element.textContent).not.toContain("No jobs to display yet");
+    expect(mockJobsService.listJobs).toHaveBeenCalledTimes(1);
+
+    jobs$.next(mockResponse);
+    await detectComponentChanges();
+
+    expect(element.querySelector("app-loading")).toBeNull();
+    expect(element.querySelector("tbody")?.textContent).toContain(
+      mockJob.jobName
+    );
+  });
+
+  for (const isAuthenticated of [false, true]) {
+    it(`replaces the loading indicator with restricted access for an ${
+      isAuthenticated ? "authenticated" : "anonymous"
+    } user without permission`, async () => {
+      fixture.destroy();
+      const canExecuteWorkflows$ = new Subject<boolean>();
+      mockAuthService.isAuthenticated$ = of(isAuthenticated);
+      mockAuthService.canExecuteWorkflows$ = canExecuteWorkflows$;
+      mockJobsService.listJobs.calls.reset();
+      fixture = TestBed.createComponent(JobsListComponent);
+      component = fixture.componentInstance;
+      const element: HTMLElement = fixture.nativeElement;
+
+      await detectComponentChanges();
+
+      expect(element.querySelector("app-loading")).not.toBeNull();
+
+      canExecuteWorkflows$.next(false);
+      await detectComponentChanges();
+
+      expect(element.querySelector("app-loading")).toBeNull();
+      expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+        "Access Restricted"
+      );
+      expect(element.querySelector("table")).toBeNull();
+      expect(mockJobsService.listJobs).not.toHaveBeenCalled();
+    });
+  }
 
   it("does not flag a warning when all components are healthy", () => {
     expect(mockHealthService.getComponentsHealth).toHaveBeenCalled();

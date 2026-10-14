@@ -31,8 +31,8 @@ import {
 })
 export class SinglePredictionExampleOutputComponent {
   readonly scores = [
-    { label: "ipTM", value: "0.91", hint: PREDICTION_SCORE_HINTS.ipTM },
     { label: "pTM", value: "0.88", hint: PREDICTION_SCORE_HINTS.pTM },
+    { label: "ipTM", value: "0.91", hint: PREDICTION_SCORE_HINTS.ipTM },
   ] satisfies readonly PredictionConfidenceScore[];
 
   /** Screenshots of an example run's results page, at their pixel sizes. */
