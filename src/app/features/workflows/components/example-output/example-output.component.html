@@ -52,11 +52,12 @@
     <!-- The panel is sized to the card, not this column, so its text doesn't reflow as it slides. -->
     <div
       class="shrink-0 overflow-hidden transition-all duration-300 ease-in-out"
-      [class]="expanded() ? 'lg:w-3/5' : 'max-lg:hidden lg:w-0'"
+      [class]="expanded() ? explanationWidthClass() : 'max-lg:hidden lg:w-0'"
     >
       <div
         [id]="panelId"
-        class="flex h-full flex-col border-t bg-white lg:w-[60cqw] lg:border-t-0 lg:border-l"
+        class="flex h-full flex-col border-t bg-white lg:border-t-0 lg:border-l"
+        [class]="equalColumns() ? 'lg:w-[50cqw]' : 'lg:w-[60cqw]'"
         role="region"
         [attr.aria-label]="heading() + ' explanation'"
         [attr.inert]="expanded() ? null : ''"
@@ -73,14 +74,25 @@
             <ng-icon name="heroXMark" size="18" aria-hidden="true"></ng-icon>
           </button>
         </div>
-        <div class="space-y-4 p-4 text-sm text-gray-500">
+        <div
+          class="space-y-4 p-4 text-sm text-gray-500"
+          [class]="
+            centerExplanation()
+              ? 'lg:flex lg:flex-1 lg:flex-col lg:justify-center'
+              : ''
+          "
+        >
           <ng-container [ngTemplateOutlet]="explanation"></ng-container>
         </div>
       </div>
     </div>
     } @else {
     <div
-      class="space-y-4 border-t bg-white p-4 text-sm text-gray-500 lg:w-3/5 lg:shrink-0 lg:border-t-0 lg:border-l"
+      class="space-y-4 border-t bg-white p-4 text-sm text-gray-500 lg:shrink-0 lg:border-t-0 lg:border-l"
+      [class]="
+        explanationWidthClass() +
+        (centerExplanation() ? ' lg:flex lg:flex-col lg:justify-center' : '')
+      "
     >
       <ng-container [ngTemplateOutlet]="explanation"></ng-container>
     </div>

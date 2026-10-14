@@ -17,8 +17,6 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/sbp-portal",
-            "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
@@ -30,7 +28,6 @@
               "src/assets"
             ],
             "styles": ["src/styles.scss"],
-            "scripts": [],
             "allowedCommonJsDependencies": [
               "als-normalize-urlpath",
               "react",
@@ -53,37 +50,24 @@
           },
           "configurations": {
             "production": {
-              "optimization": true,
-              "sourceMap": false,
-              "outputHashing": "bundles",
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "10MB",
-                  "maximumError": "15MB"
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
                 },
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "4kB",
                   "maximumError": "8kB"
                 }
-              ]
+              ],
+              "outputHashing": "all"
             },
             "debug": {
               "optimization": false,
-              "sourceMap": true,
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "10MB",
-                  "maximumError": "15MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "20kB",
-                  "maximumError": "40kB"
-                }
-              ]
+              "extractLicenses": false,
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
@@ -118,7 +102,6 @@
               }
             ],
             "styles": ["src/styles.scss"],
-            "scripts": [],
             "karmaConfig": "karma.conf.js",
             "watch": false,
             "fileReplacements": [
@@ -143,6 +126,7 @@
     }
   },
   "cli": {
+    "packageManager": "npm",
     "schematicCollections": ["@angular-eslint/schematics"],
     "analytics": "5eecd573-aa65-4560-8253-126238bc0189"
   }

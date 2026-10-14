@@ -155,18 +155,18 @@ export class SinglePredictionReportComponent {
     const items: PredictionConfidenceScore[] = [];
     const ptm = this.ptm();
     const iptm = this.iptm();
-    if (iptm !== null) {
-      items.push({
-        label: "ipTM",
-        value: formatDecimals(iptm),
-        hint: PREDICTION_SCORE_HINTS.ipTM,
-      });
-    }
     if (ptm !== null) {
       items.push({
         label: "pTM",
         value: formatDecimals(ptm),
         hint: PREDICTION_SCORE_HINTS.pTM,
+      });
+    }
+    if (iptm !== null) {
+      items.push({
+        label: "ipTM",
+        value: formatDecimals(iptm),
+        hint: PREDICTION_SCORE_HINTS.ipTM,
       });
     }
     return items;

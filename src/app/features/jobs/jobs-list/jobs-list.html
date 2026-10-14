@@ -32,7 +32,13 @@
     <!-- Page Header -->
     <h1 class="text-4xl font-semibold mb-12">My Jobs</h1>
 
-    @if (!authLoading()) { @if (!canExecuteWorkflows()) {
+    @if (authLoading()) {
+    <app-loading
+      message="Loading..."
+      [inline]="true"
+      role="status"
+    ></app-loading>
+    } @else if (!canExecuteWorkflows()) {
     <!-- Access Restricted -->
     <div
       class="rounded-lg bg-white border mt-12 text-center py-8 px-4"
@@ -349,6 +355,7 @@
                 <app-loading
                   message="Loading jobs..."
                   [inline]="true"
+                  role="status"
                 ></app-loading>
               </td>
             </tr>
@@ -510,6 +517,6 @@
       </div>
       }
     </div>
-    } }
+    }
   </div>
 </div>

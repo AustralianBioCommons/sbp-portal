@@ -6,6 +6,7 @@ import {
   Signal,
   afterNextRender,
   booleanAttribute,
+  computed,
   inject,
   input,
   signal,
@@ -53,6 +54,12 @@ export class ExampleOutputComponent {
   readonly image = input<ExampleOutputImage>();
   /** Shows the explanation in a side panel that can be closed, like de novo design's. */
   readonly collapsible = input(false, { transform: booleanAttribute });
+  readonly equalColumns = input(false, { transform: booleanAttribute });
+  readonly centerExplanation = input(false, { transform: booleanAttribute });
+
+  readonly explanationWidthClass = computed(() =>
+    this.equalColumns() ? "lg:w-1/2" : "lg:w-3/5"
+  );
 
   readonly expanded = signal(true);
   readonly panelId = `example-output-panel-${nextExampleOutputId++}`;
