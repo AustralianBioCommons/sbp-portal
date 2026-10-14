@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/AustralianBioCommons/sbp-portal/compare/v1.0.2...v1.1.0) (2026-10-14)
+
+
+### Features
+
+* update example output components ([07aa4ff](https://github.com/AustralianBioCommons/sbp-portal/commit/07aa4ffda87d0cb0e32347e49802629765a361fc))
+* update workflows' example outputs, build configuration and improve My Jobs loading ([ca74fd3](https://github.com/AustralianBioCommons/sbp-portal/commit/ca74fd343d3b942d935fa893a98060575dcd45ab))
+
 ## [1.0.2](https://github.com/AustralianBioCommons/sbp-portal/compare/v1.0.2...v1.0.2) (2026-10-14)
 
 
