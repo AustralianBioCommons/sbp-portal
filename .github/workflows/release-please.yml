@@ -26,23 +26,13 @@ jobs:
       - uses: googleapis/release-please-action@v5
         id: release
         with:
-          release-type: node
-          package-name: sbp-portal
           # Releases are cut at the promotion point. A dev -> staging merge lands
           # the promoted commits on staging; release-please compiles them into the
           # staging release PR / notes. dev has no release line of its own.
           target-branch: staging
           token: ${{ steps.app-token.outputs.token }}
-          changelog-types: |
-            [
-              {"type":"feat","section":"Features","hidden":false},
-              {"type":"fix","section":"Bug Fixes","hidden":false},
-              {"type":"perf","section":"Performance","hidden":false},
-              {"type":"refactor","section":"Refactoring","hidden":true},
-              {"type":"docs","section":"Docs","hidden":true},
-              {"type":"chore","section":"Chores","hidden":true},
-              {"type":"test","section":"Tests","hidden":true}
-            ]
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   # Publishes an immutable, version-tagged portal build for prod to promote,
   # right at the point a release is cut (merging the release-please PR) — no
