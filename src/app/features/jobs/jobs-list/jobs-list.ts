@@ -145,7 +145,6 @@ export default class JobsListComponent implements OnInit, OnDestroy {
     "In queue",
     "In progress",
     "Completed",
-    "Failed",
     "Stopped",
   ];
 

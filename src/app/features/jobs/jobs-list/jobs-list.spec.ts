@@ -339,14 +339,14 @@ describe("JobsListComponent", () => {
 
     it("should load the page, search, statuses and sort from the URL", async () => {
       await navigateTo(
-        "/?page=2&search=pdl1&status=Failed&status=Stopped&sort=score&order=asc"
+        "/?page=2&search=pdl1&status=Completed&status=Stopped&sort=score&order=asc"
       );
 
       expect(lastListParams()).toEqual({
         limit: 10,
         offset: 10,
         search: "pdl1",
-        status: ["Failed", "Stopped"],
+        status: ["Completed", "Stopped"],
         sortBy: "score",
         sortOrder: "asc",
       });
@@ -545,14 +545,13 @@ describe("JobsListComponent", () => {
     );
   });
 
-  it("should expose every status the backend can return as a filter option", () => {
+  it("should expose every status the UI can show as a filter option", () => {
     expect(component.statusOptions).toEqual([
       "Staging",
       "Pending",
       "In queue",
       "In progress",
       "Completed",
-      "Failed",
       "Stopped",
     ]);
   });

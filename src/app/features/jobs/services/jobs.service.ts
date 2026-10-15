@@ -58,6 +58,20 @@ export interface BulkDeleteJobsResponse {
 }
 
 /**
+ * Failed jobs are shown as "In progress" in the UI, so the "In progress"
+ * filter has to ask the backend for both.
+ */
+function toDisplayStatus(status: string): string {
+  return status === "Failed" ? "In progress" : status;
+}
+
+function toBackendStatusFilter(statuses: string[]): string[] {
+  return statuses.includes("In progress") && !statuses.includes("Failed")
+    ? [...statuses, "Failed"]
+    : statuses;
+}
+
+/**
  * Service for fetching workflow jobs from the backend API
  */
 @Injectable({
@@ -80,7 +94,7 @@ export class JobsService {
         httpParams = httpParams.set("search", params.search);
       }
       if (params.status && params.status.length > 0) {
-        params.status.forEach((s) => {
+        toBackendStatusFilter(params.status).forEach((s) => {
           httpParams = httpParams.append("status", s);
         });
       }
@@ -98,7 +112,17 @@ export class JobsService {
       }
     }
 
-    return this.http.get<JobListResponse>(this.jobsUrl, { params: httpParams });
+    return this.http
+      .get<JobListResponse>(this.jobsUrl, { params: httpParams })
+      .pipe(
+        map((response) => ({
+          ...response,
+          jobs: response.jobs.map((job) => ({
+            ...job,
+            status: toDisplayStatus(job.status),
+          })),
+        }))
+      );
   }
 
   /**
