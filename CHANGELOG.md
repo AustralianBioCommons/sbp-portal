@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/AustralianBioCommons/sbp-portal/compare/v1.1.0...v1.1.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* map failed job to be in progress ([c4b7e2b](https://github.com/AustralianBioCommons/sbp-portal/commit/c4b7e2b779a5dae99d72c4e69ebc4694c1c01c9b))
+* map failed job to be in progress ([445f38b](https://github.com/AustralianBioCommons/sbp-portal/commit/445f38b79943c2f4c742977624fadc6026f21c9f))
+* sync staging with dev (temporary status fix) ([63f8479](https://github.com/AustralianBioCommons/sbp-portal/commit/63f8479f82e6793463779481b3edd7715f6ef056))
+
 ## [1.1.0](https://github.com/AustralianBioCommons/sbp-portal/compare/v1.0.2...v1.1.0) (2026-10-14)
 
 ### Features
