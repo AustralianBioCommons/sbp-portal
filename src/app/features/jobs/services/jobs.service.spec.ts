@@ -65,6 +65,38 @@ describe("JobsService", () => {
     req.flush({ jobs: [], total: 0, limit: 25, offset: 50 });
   });
 
+  it("should also request failed jobs when filtering by In progress", () => {
+    service.listJobs({ status: ["In progress"] }).subscribe();
+
+    const req = httpMock.expectOne(
+      (request) => request.url === `${environment.apiBaseUrl}/api/jobs`
+    );
+    expect(req.request.params.getAll("status")).toEqual([
+      "In progress",
+      "Failed",
+    ]);
+    req.flush({ jobs: [], total: 0, limit: 50, offset: 0 });
+  });
+
+  it("should show failed jobs as In progress", () => {
+    let statuses: string[] = [];
+    service
+      .listJobs()
+      .subscribe((res) => (statuses = res.jobs.map((job) => job.status)));
+
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/api/jobs`);
+    req.flush({
+      jobs: [
+        { id: "a", status: "Failed" },
+        { id: "b", status: "Completed" },
+      ],
+      total: 2,
+      limit: 50,
+      offset: 0,
+    });
+    expect(statuses).toEqual(["In progress", "Completed"]);
+  });
+
   it("should include sort_by and sort_order when listing jobs", () => {
     service.listJobs({ sortBy: "score", sortOrder: "asc" }).subscribe();
 
