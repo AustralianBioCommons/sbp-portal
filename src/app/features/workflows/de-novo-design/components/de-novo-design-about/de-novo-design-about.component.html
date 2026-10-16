@@ -54,11 +54,18 @@
           citationKey="bindcraft"
         ></app-citation-link
         >) generates candidate protein backbones designed to interact with the
-        uploaded <code>Target Structure</code> at a site defined by
-        user-supplied <code>Target Hotspot Residues</code>. In the SBP
-        deployment, the number of generated backbones is determined by the user
-        supplied <code>Number of designs</code> with lengths sampled uniformly
-        in the <code>Binder Length Range</code>.
+        uploaded
+        <span class="text-sm font-medium text-gray-900">Target Structure</span>
+        at a site defined by user-supplied
+        <span class="text-sm font-medium text-gray-900"
+          >Target Hotspot Residues</span
+        >. In the SBP deployment, the number of generated backbones is
+        determined by the user supplied
+        <span class="text-sm font-medium text-gray-900">Number of Designs</span>
+        with lengths sampled uniformly in the
+        <span class="text-sm font-medium text-gray-900"
+          >Binder Length Range</span
+        >.
       </p>
     </div>
 
@@ -83,7 +90,8 @@
         ></app-citation-link
         >). In the SBP deployment, 8 sequences are designed for each generated
         backbone (i.e. 8 x 100 sequences when selecting 100
-        <code>Number of Designs</code>).
+        <span class="text-sm font-medium text-gray-900">Number of Designs</span
+        >).
       </p>
     </div>
 
@@ -124,8 +132,11 @@
     Filter pass rate can be highly target- and hotspot-dependent. Some runs will
     generate no outputs that meet the filtering criteria and will not return any
     output files. To overcome this limitation, you can try different
-    <code>Target Hotspot Residues</code> combinations or increase the
-    <code>Number of Designs</code>.
+    <span class="text-sm font-medium text-gray-900"
+      >Target Hotspot Residues</span
+    >
+    combinations or increase the
+    <span class="text-sm font-medium text-gray-900">Number of Designs</span>.
   </p>
 </div>
 
@@ -177,7 +188,9 @@
   <div class="space-y-2 text-sm text-gray-500">
     <p>
       For the de novo design workflow, the SBP credit cost depends on the
-      selected <code>Tool</code> and the <code>Number of Designs</code>.
+      selected <span class="text-sm font-medium text-gray-900">Tool</span> and
+      the
+      <span class="text-sm font-medium text-gray-900">Number of Designs</span>.
       Required credits are displayed during the input configuration and review
       stage. Below is the formula for calculating total credits for a workflow
       run.
@@ -185,7 +198,7 @@
   </div>
 
   <div class="grid gap-4 lg:grid-cols-2">
-    <div class="space-y-2 rounded-lg border p-4 text-sm text-gray-500">
+    <div class="space-y-2 rounded-lg border bg-white p-4 text-sm text-gray-500">
       <h4 class="font-medium text-gray-900">RFdiffusion example</h4>
       <div class="space-y-1">
         <p>
@@ -202,7 +215,7 @@
       </div>
     </div>
 
-    <div class="space-y-2 rounded-lg border p-4 text-sm text-gray-500">
+    <div class="space-y-2 rounded-lg border bg-white p-4 text-sm text-gray-500">
       <h4 class="font-medium text-gray-900">BindCraft example</h4>
       <div class="space-y-1">
         <p>
@@ -293,7 +306,12 @@
               A string containing comma separated residues defined by chain ID
               and residue index.
             </p>
-            <p>E.g. <code class="font-mono">&ldquo;A56,A58&rdquo;</code></p>
+            <p>
+              E.g.
+              <span class="text-sm font-medium text-gray-900"
+                >&ldquo;A56,A58&rdquo;</span
+              >
+            </p>
           </td>
           <td class="space-y-1 p-4">
             <p>

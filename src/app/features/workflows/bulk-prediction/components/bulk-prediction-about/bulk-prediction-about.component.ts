@@ -9,6 +9,6 @@ import { CitationLinkComponent } from "../../../components/citation-link/citatio
   templateUrl: "./bulk-prediction-about.component.html",
   styleUrl: "./bulk-prediction-about.component.scss",
   changeDetection: ChangeDetectionStrategy.Eager,
-  host: { class: "block space-y-8 pt-4" },
+  host: { class: "block space-y-8" },
 })
 export class BulkPredictionAboutComponent {}

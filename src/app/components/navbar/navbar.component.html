@@ -48,7 +48,7 @@
               ? 'border-biocommons-primary'
               : 'border-transparent hover:border-biocommons-primary/20'
           "
-          [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
+          [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
         >
           {{ item.label }}
         </a>
@@ -247,7 +247,7 @@
           (click)="closeMobileMenu()"
           class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary"
           [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
-          [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
+          [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
         >
           {{ item.label }}
         </a>
@@ -260,7 +260,7 @@
             [class]="
               isNavItemActive(child) ? 'bg-sky-50 ' : ' hover:bg-gray-50'
             "
-            [attr.aria-current]="isNavItemActive(child) ? 'page' : null"
+            [attr.aria-current]="currentRoute() === child.path ? 'page' : null"
           >
             {{ child.label }}
           </a>
@@ -283,7 +283,7 @@
         (click)="closeMobileMenu()"
         class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary"
         [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
-        [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
+        [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
       >
         {{ item.label }}
       </a>
@@ -291,22 +291,3 @@
     </nav>
   </div>
 </nav>
-
-<!-- Breadcrumb (only show on workflow pages) — non-sticky, scrolls with content -->
-@if (showBreadcrumb() && breadcrumb(); as crumb) {
-<nav
-  class="w-full bg-gray-50 px-6 mx-auto flex items-center gap-2 py-3 text-xs font-medium"
-  aria-label="Breadcrumb"
->
-  <a
-    [routerLink]="'/' + crumb.themeTab"
-    class="text-biocommons-primary hover:text-sky-800 transition-all hover:underline no-underline"
-  >
-    {{ crumb.themeLabel }}
-  </a>
-  <ng-icon name="heroChevronRight" size="16" aria-hidden="true"></ng-icon>
-  <span class="text-gray-600" aria-current="page">
-    {{ crumb.workflowLabel }}
-  </span>
-</nav>
-}

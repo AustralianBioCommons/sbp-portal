@@ -16,10 +16,10 @@ import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDownTray,
   heroArrowLeft,
-  heroBookOpen,
   heroChartBarSquare,
   heroCog6Tooth,
   heroCommandLine,
+  heroDocumentText,
   heroExclamationCircle,
   heroFolder,
   heroTrash,
@@ -173,10 +173,10 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     provideIcons({
       heroArrowDownTray,
       heroArrowLeft,
-      heroBookOpen,
       heroChartBarSquare,
       heroCog6Tooth,
       heroCommandLine,
+      heroDocumentText,
       heroExclamationCircle,
       heroFolder,
       heroTrash,
@@ -289,7 +289,7 @@ export default class JobDetailsComponent implements OnInit {
     {
       id: "citations",
       label: "Citations",
-      icon: "heroBookOpen",
+      icon: "heroDocumentText",
       description:
         "Cite the workflow and platform used to produce the results from this run.",
     },

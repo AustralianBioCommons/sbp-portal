@@ -39,7 +39,7 @@
       <app-step-content
         [step]="2"
         heading="Input Configuration"
-        description="Configure workflow input parameters"
+        description="Configure workflow input parameters."
       >
         <div class="space-y-4">
           <!-- PDB viewer + right-side sliding config panel -->
@@ -65,6 +65,7 @@
                 type="file"
                 class="sr-only"
                 accept=".pdb"
+                aria-label="Upload a target PDB structure"
                 [disabled]="isPdbUploading()"
                 (change)="$any($event.target).files?.[0] && onPdbFilePicked($any($event.target).files[0])"
               />
