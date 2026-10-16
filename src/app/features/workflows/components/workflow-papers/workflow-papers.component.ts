@@ -19,7 +19,7 @@ import {
   templateUrl: "./workflow-papers.component.html",
   styleUrl: "./workflow-papers.component.scss",
   changeDetection: ChangeDetectionStrategy.Eager,
-  host: { class: "block space-y-4 pt-4 text-sm text-gray-500" },
+  host: { class: "block space-y-4 text-sm text-gray-500" },
 })
 export class WorkflowPapersComponent {
   /** Name used in the intro sentence. */

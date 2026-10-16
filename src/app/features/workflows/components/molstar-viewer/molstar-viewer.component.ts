@@ -165,7 +165,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
    *  WebGL. */
   roundBottomRight = input(false);
   /** Overlay hint shown once a structure is on screen. Empty hides it. */
-  hint = input("Click residues in the viewer to add them as hotspots");
+  hint = input("Click residues in the viewer to add them as hotspots.");
   /** The default adds the stick overlay residues are picked from; "cartoon" is
    *  the plain fold view. */
   representation = input<"cartoon" | "cartoon-and-sticks">(

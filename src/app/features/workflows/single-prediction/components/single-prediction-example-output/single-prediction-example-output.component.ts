@@ -27,7 +27,7 @@ import {
   templateUrl: "./single-prediction-example-output.component.html",
   styleUrl: "./single-prediction-example-output.component.scss",
   changeDetection: ChangeDetectionStrategy.Eager,
-  host: { class: "block space-y-8 pt-4" },
+  host: { class: "block space-y-8" },
 })
 export class SinglePredictionExampleOutputComponent {
   readonly scores = [

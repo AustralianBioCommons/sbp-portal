@@ -13,7 +13,7 @@ import {
   providers: [provideIcons({ heroArrowDownTray })],
   templateUrl: "./de-novo-design-example-output.component.html",
   styleUrl: "./de-novo-design-example-output.component.scss",
-  host: { class: "block space-y-8 pt-4" },
+  host: { class: "block space-y-8" },
 })
 export class DeNovoDesignExampleOutputComponent {
   readonly images = {

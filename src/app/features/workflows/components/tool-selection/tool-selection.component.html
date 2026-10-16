@@ -9,7 +9,11 @@
   <label
     class="flex items-center cursor-pointer gap-2 border rounded-full p-2 pr-3 transition-all hover:bg-gray-50"
     [class]="
-      selectedToolId() === tool.id ? 'border-gray-900' : 'border-gray-300'
+      showRequiredError()
+        ? 'border-red-500'
+        : selectedToolId() === tool.id
+        ? 'border-gray-900'
+        : 'border-gray-300'
     "
   >
     <input
