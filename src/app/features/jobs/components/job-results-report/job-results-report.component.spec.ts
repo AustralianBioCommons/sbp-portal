@@ -935,9 +935,10 @@ describe("JobResultsReportComponent", () => {
       expect(viewer()!.colorTheme()).toBe("binder-target");
       expect(viewer()!.binderChainId()).toBe("A");
       expect(viewer()!.structureSource()?.format).toBe("mmcif");
+      // Named after the selected pair's own ids, not generic roles.
       expect(component.chainLegend().map((band) => band.label)).toEqual([
-        "Query",
-        "Target",
+        "seq1",
+        "seq3",
       ]);
     });
 

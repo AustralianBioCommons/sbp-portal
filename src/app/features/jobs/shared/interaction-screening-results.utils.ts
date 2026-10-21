@@ -314,9 +314,11 @@ function interactionAdapter(
     primaryChainId: "A",
     panelHeading: "Interactions",
     emptyMessage: NO_INTERACTIONS_MESSAGE,
+    // Each band takes the selected pair's own ids, or the generic name when
+    // the pair id could not be split.
     legend: [
-      { label: "Query", band: "primary" },
-      { label: "Target", band: "secondary" },
+      { label: "Query", band: "primary", valueKey: QUERY_KEY },
+      { label: "Target", band: "secondary", valueKey: TARGET_KEY },
     ],
     // Each row is a different pair of proteins, with nothing to line up on.
     superpose: false,

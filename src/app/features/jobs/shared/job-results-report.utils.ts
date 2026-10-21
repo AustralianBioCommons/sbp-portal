@@ -58,6 +58,11 @@ export interface ReportRow {
 export interface ReportLegendBand {
   label: string | null;
   band: "primary" | "secondary";
+  /**
+   * Column whose value in the selected row names the band, e.g. the row's
+   * own query id. Falls back to `label` when that cell is blank.
+   */
+  valueKey?: string;
 }
 
 /** Everything a row can be built from beyond the results table itself. */

@@ -346,8 +346,8 @@ describe("interaction screening results utils", () => {
     it("colours chain A as the query and names both bands", () => {
       expect(interactionScreeningBoltzAdapter.primaryChainId).toBe("A");
       expect(interactionScreeningBoltzAdapter.legend).toEqual([
-        { label: "Query", band: "primary" },
-        { label: "Target", band: "secondary" },
+        { label: "Query", band: "primary", valueKey: "queryId" },
+        { label: "Target", band: "secondary", valueKey: "targetId" },
       ]);
     });
 
