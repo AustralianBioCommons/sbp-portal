@@ -257,7 +257,11 @@ export class JobResultsReportComponent {
   readonly chainLegend = computed(() =>
     (this.adapter()?.legend ?? []).map((band) => ({
       // A band without a label of its own takes the selected row's.
-      label: band.label ?? this.selectedRow()?.label ?? "",
+      label:
+        (band.valueKey
+          ? this.selectedRow()?.values[band.valueKey]?.trim()
+          : "") ||
+        (band.label ?? this.selectedRow()?.label ?? ""),
       color: band.band === "primary" ? BINDER_COLOR : TARGET_COLOR,
     }))
   );
