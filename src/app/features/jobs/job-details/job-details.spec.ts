@@ -366,7 +366,10 @@ describe("JobDetailsComponent", () => {
     const router = TestBed.inject(Router);
     const navigateSpy = spyOn(router, "navigate");
 
-    component.openDeleteDialog();
+    const deleteButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Delete job"]'
+    ) as HTMLButtonElement;
+    deleteButton.click();
     expect(component.showDeleteDialog()).toBeTrue();
 
     component.confirmDelete();
@@ -400,7 +403,7 @@ describe("JobDetailsComponent", () => {
     });
   });
 
-  it("should render an enabled download all files button for the selected job", () => {
+  it("should show download all files only on the files tab", () => {
     resultsService.getJobDownloads.and.returnValue(
       of({
         runId: mockJob.id,
@@ -416,6 +419,15 @@ describe("JobDetailsComponent", () => {
     );
     render();
 
+    const downloadButtonSelector =
+      'app-button[data-testid="download-all-files"] button';
+    expect(
+      fixture.nativeElement.querySelector(downloadButtonSelector)
+    ).toBeNull();
+
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
     const downloadLink = fixture.nativeElement.querySelector(
       'a[title="Download all files"]'
     ) as HTMLAnchorElement;
@@ -425,6 +437,16 @@ describe("JobDetailsComponent", () => {
 
     expect(downloadLink).toBeNull();
     expect(downloadButton.disabled).toBeFalse();
+
+    const downloadAllFilesSpy = spyOn(component, "downloadAllFiles");
+    downloadButton.click();
+    expect(downloadAllFilesSpy).toHaveBeenCalled();
+
+    component.setActiveTab("results");
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector(downloadButtonSelector)
+    ).toBeNull();
   });
 
   it("should download all files through the results service", () => {
@@ -459,6 +481,8 @@ describe("JobDetailsComponent", () => {
 
   it("should render a disabled download all files button when no files are available", () => {
     render();
+    component.setActiveTab("files");
+    fixture.detectChanges();
 
     const downloadLink = fixture.nativeElement.querySelector(
       'a[title="Download all files"]'

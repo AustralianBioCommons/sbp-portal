@@ -20,14 +20,13 @@ const LEADING_COLUMNS: readonly ReportColumn[] = [
 
 const TRAILING_COLUMNS: readonly ReportColumn[] = [
   { key: "seq_length", heading: "Design Length", numeric: true },
-  // Alphabetical order says nothing about a sequence or a generated name.
+  // Alphabetical order says nothing about a sequence.
   {
     key: "sequence",
     heading: "Design Sequence",
     sequence: true,
     sortable: false,
   },
-  { key: "description", heading: "Design Name", sortable: false },
 ];
 
 /** AlphaFold2 Initial Guess: PAE is in Angstroms and ipTM runs 0-1. */

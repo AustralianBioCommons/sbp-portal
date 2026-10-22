@@ -9,6 +9,7 @@ import {
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDown,
+  heroArrowDownTray,
   heroArrowUp,
   heroArrowsUpDown,
 } from "@ng-icons/heroicons/outline";
@@ -19,11 +20,19 @@ import {
   formatDecimals,
   sortReportRows,
 } from "../../shared/job-results-report.utils";
+import { ResultFileRef } from "../../shared/prediction-results.utils";
 
 @Component({
   selector: "app-job-results-table",
   imports: [NgIconComponent],
-  providers: [provideIcons({ heroArrowDown, heroArrowUp, heroArrowsUpDown })],
+  providers: [
+    provideIcons({
+      heroArrowDown,
+      heroArrowDownTray,
+      heroArrowUp,
+      heroArrowsUpDown,
+    }),
+  ],
   templateUrl: "./job-results-table.component.html",
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./job-results-table.component.scss",
@@ -35,6 +44,11 @@ export class JobResultsTableComponent {
   selectedId = input<string | null>(null);
   caption = input("Designs");
   framed = input(true);
+  downloadFiles = input<readonly ResultFileRef[] | null>(null);
+
+  readonly downloadFilesByKey = computed(
+    () => new Map((this.downloadFiles() ?? []).map((file) => [file.key, file]))
+  );
 
   rowSelected = output<ReportRow>();
 
@@ -86,7 +100,7 @@ export class JobResultsTableComponent {
     if (row.id === this.selectedId()) {
       classes.push("cap");
       if (first) classes.push("cap-left");
-      if (last) classes.push("cap-right");
+      if (last && this.downloadFiles() === null) classes.push("cap-right");
     }
     return classes.join(" ");
   }
@@ -102,6 +116,7 @@ export class JobResultsTableComponent {
   }
 
   selectByKey(row: ReportRow, event: Event): void {
+    if (event.target !== event.currentTarget) return;
     event.preventDefault();
     this.select(row);
   }

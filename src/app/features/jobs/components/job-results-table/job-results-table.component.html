@@ -42,6 +42,13 @@
             }}</span>
             }
           </th>
+          } @if (downloadFiles() !== null) {
+          <th
+            scope="col"
+            class="w-px whitespace-nowrap px-4 py-2 text-left align-middle text-sm font-medium"
+          >
+            Download
+          </th>
           }
         </tr>
       </thead>
@@ -50,7 +57,9 @@
         @if (sortedRows().length === 0) {
         <tr>
           <td
-            [attr.colspan]="columns().length"
+            [attr.colspan]="
+              columns().length + (downloadFiles() !== null ? 1 : 0)
+            "
             class="px-4 py-8 text-center text-sm text-gray-500"
           >
             No rows to display.
@@ -74,6 +83,34 @@
             [class]="cellClasses(column, row, first, last)"
           >
             {{ cellText(column, row) }}
+          </td>
+          } @if (downloadFiles() !== null) {
+          <td
+            class="w-px whitespace-nowrap px-2 py-4 text-center text-sm text-gray-700"
+            [class.cap]="row.id === selectedId()"
+            [class.cap-right]="row.id === selectedId()"
+          >
+            @let file = row.structure ?
+            downloadFilesByKey().get(row.structure.key) : null; @if (file) {
+            <a
+              [href]="file.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center justify-center rounded-lg border bg-white p-2 transition-all hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+              [title]="'Download ' + file.label"
+              [attr.aria-label]="'Download ' + file.label"
+              (click)="$event.stopPropagation()"
+            >
+              <ng-icon
+                name="heroArrowDownTray"
+                size="20"
+                class="shrink-0 text-sky-600"
+                aria-hidden="true"
+              />
+            </a>
+            } @else {
+            <span>—</span>
+            }
           </td>
           }
         </tr>

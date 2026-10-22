@@ -25,7 +25,6 @@
 
 <div class="bg-gray-50 p-6 sm:p-12">
   <div class="max-w-7xl mx-auto space-y-6">
-    <!-- Top bar: back link + actions -->
     <div class="flex items-center justify-between">
       <a
         routerLink="/my-jobs"
@@ -35,37 +34,6 @@
         <ng-icon name="heroArrowLeft" size="16"></ng-icon>
         Back to My Jobs
       </a>
-
-      @if (job()) {
-      <div class="flex items-center gap-4">
-        <app-button
-          type="button"
-          variant="primary"
-          widthClass="w-auto"
-          colorClasses="bg-red-600 enabled:hover:bg-red-700"
-          (click)="openDeleteDialog()"
-        >
-          <span class="flex items-center gap-2">
-            <ng-icon name="heroTrash" size="16"></ng-icon>
-            Delete job
-          </span>
-        </app-button>
-        <app-button
-          type="button"
-          variant="primary"
-          widthClass="w-auto"
-          data-testid="download-all-files"
-          [disabled]="!canDownloadAllFiles()"
-          [loading]="downloadingAllFiles()"
-          (click)="downloadAllFiles()"
-        >
-          <span class="flex items-center gap-2">
-            <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
-            Download all files
-          </span>
-        </app-button>
-      </div>
-      }
     </div>
 
     @if (loading()) {
@@ -108,15 +76,28 @@
     </div>
     <div class="relative w-full rounded-lg border bg-white shadow-sm">
       <div class="p-6 space-y-6">
-        <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          @for (item of getSummaryItems(selectedJob); track item.label) {
-          <div class="rounded border bg-gray-50 p-4">
-            <p class="text-xs font-semibold uppercase text-gray-600">
-              {{ item.label }}
-            </p>
-            <p class="mt-2 text-xs text-gray-900 font-mono">{{ item.value }}</p>
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div class="grid min-w-0 flex-1 gap-4 grid-cols-2 lg:grid-cols-4">
+            @for (item of getSummaryItems(selectedJob); track item.label) {
+            <div class="rounded border bg-gray-50 p-4">
+              <p class="text-xs font-semibold uppercase text-gray-600">
+                {{ item.label }}
+              </p>
+              <p class="mt-2 text-xs text-gray-900 font-mono">
+                {{ item.value }}
+              </p>
+            </div>
+            }
           </div>
-          }
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 shrink-0 self-end items-center justify-center rounded-md bg-red-600 text-white transition-all hover:bg-red-700 lg:self-center"
+            title="Delete job"
+            aria-label="Delete job"
+            (click)="openDeleteDialog()"
+          >
+            <ng-icon name="heroTrash" size="20" aria-hidden="true"></ng-icon>
+          </button>
         </div>
 
         <div class="-mt-6">
@@ -149,10 +130,30 @@
 
           <div class="space-y-6 rounded-b-lg border border-t-0 p-6">
             @if (activeTabInfo(); as tabInfo) {
-            <div class="space-y-2">
-              <div class="font-semibold text-gray-900">{{ tabInfo.label }}</div>
-              @if (tabInfo.description) {
-              <p class="text-sm text-gray-500">{{ tabInfo.description }}</p>
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="space-y-2">
+                <div class="font-semibold text-gray-900">
+                  {{ tabInfo.label }}
+                </div>
+                @if (tabInfo.description) {
+                <p class="text-sm text-gray-500">{{ tabInfo.description }}</p>
+                }
+              </div>
+              @if (tabInfo.id === 'files') {
+              <app-button
+                type="button"
+                variant="primary"
+                widthClass="w-auto"
+                data-testid="download-all-files"
+                [disabled]="!canDownloadAllFiles()"
+                [loading]="downloadingAllFiles()"
+                (click)="downloadAllFiles()"
+              >
+                <span class="flex items-center gap-2">
+                  <ng-icon name="heroArrowDownTray" size="16"></ng-icon>
+                  Download all files
+                </span>
+              </app-button>
               }
             </div>
             }
@@ -252,7 +253,7 @@
                         downloadingCategory() === category
                       "
                       (click)="downloadCategoryZip(category)"
-                      class="flex h-full w-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                      class="flex h-full w-full items-center gap-4 rounded-lg p-4 text-sky-600 hover:text-sky-700 hover:bg-sky-50 border transition-all disabled:cursor-not-allowed disabled:opacity-50"
                       [title]="
                         'Download all ' + formatCategoryName(category) + ' files'
                       "
@@ -261,13 +262,13 @@
                       "
                     >
                       <span
-                        class="min-w-0 flex-1 truncate text-left text-sm font-medium text-sky-600 hover:text-sky-700"
+                        class="min-w-0 flex-1 truncate text-left text-sm font-medium"
                       >
                         {{ formatCategoryName(category) }} files
                       </span>
                       @if (downloadingCategory() === category) {
                       <svg
-                        class="h-5 w-5 shrink-0 animate-spin text-sky-600"
+                        class="h-5 w-5 shrink-0 animate-spin"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -290,7 +291,7 @@
                       <ng-icon
                         name="heroArrowDownTray"
                         size="20"
-                        class="shrink-0 text-sky-600"
+                        class="shrink-0"
                       />
                       }
                     </button>
@@ -312,19 +313,17 @@
                       [href]="file.url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="flex h-full items-center gap-4 rounded-lg p-4 hover:bg-sky-50 border transition-all"
+                      class="flex h-full items-center gap-4 rounded-lg p-4 text-sky-600 hover:text-sky-700 hover:bg-sky-50 border transition-all"
                       [title]="'Download ' + file.label"
                       [attr.aria-label]="'Download ' + file.label"
                     >
-                      <span
-                        class="min-w-0 flex-1 truncate text-sm font-medium text-sky-600 hover:text-sky-700"
-                      >
+                      <span class="min-w-0 flex-1 truncate text-sm font-medium">
                         {{ file.label }}
                       </span>
                       <ng-icon
                         name="heroArrowDownTray"
                         size="20"
-                        class="shrink-0 text-sky-600"
+                        class="shrink-0"
                       />
                     </a>
                   </li>

@@ -191,6 +191,7 @@ describe("JobResultsReportComponent", () => {
     );
     expect(component.rows().length).toBe(2);
     expect(table()!.rows().length).toBe(2);
+    expect(table()!.downloadFiles()).toBeNull();
     expect(
       table()!
         .columns()
@@ -201,7 +202,6 @@ describe("JobResultsReportComponent", () => {
       "ipTM",
       "Design Length",
       "Design Sequence",
-      "Design Name",
     ]);
   });
 
@@ -833,7 +833,6 @@ describe("JobResultsReportComponent", () => {
         "ipTM",
         "Design Length",
         "Design Sequence",
-        "Design Name",
       ]);
     });
 
@@ -928,6 +927,19 @@ describe("JobResultsReportComponent", () => {
       ]);
     });
 
+    it("offers a download for the pair's structure file", () => {
+      respondWith({ [IS_CSV]: isCsv, [IS_CIF]: PDB });
+      renderIs();
+
+      const link = fixture.nativeElement.querySelector(
+        "app-job-results-table tbody a"
+      ) as HTMLAnchorElement;
+      expect(link.href).toBe(isFiles[1].url);
+      expect(link.getAttribute("aria-label")).toBe(
+        `Download ${isFiles[1].label}`
+      );
+    });
+
     it("shows the selected pair's complex, coloured query against target", () => {
       respondWith({ [IS_CSV]: isCsv, [IS_CIF]: PDB });
       renderIs();
@@ -1019,6 +1031,19 @@ describe("JobResultsReportComponent", () => {
         "pTM",
         "pLDDT",
       ]);
+    });
+
+    it("offers a download for the prediction's structure file", () => {
+      respondWith({ [BP_CSV]: bpCsv, [BP_CIF]: PDB });
+      renderBp();
+
+      const link = fixture.nativeElement.querySelector(
+        "app-job-results-table tbody a"
+      ) as HTMLAnchorElement;
+      expect(link.href).toBe(bpFiles[1].url);
+      expect(link.getAttribute("aria-label")).toBe(
+        `Download ${bpFiles[1].label}`
+      );
     });
 
     it("previews the row's own structure file", () => {

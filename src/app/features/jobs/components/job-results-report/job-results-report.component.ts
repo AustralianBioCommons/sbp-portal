@@ -86,6 +86,13 @@ export class JobResultsReportComponent {
   filesLoading = input(false);
   filesError = input<string | null>(null);
 
+  readonly tableDownloadFiles = computed(() =>
+    this.workflow() === "bulk prediction" ||
+    this.workflow() === "interaction screening"
+      ? this.files()
+      : null
+  );
+
   /** Falls back to the packaged report when nothing can be shown. */
   unavailable = output<void>();
 
