@@ -20,17 +20,26 @@ export interface ReportColumn {
   sortable?: boolean;
   /** Long free text: monospace and wrapped. */
   sequence?: boolean;
+  /** Fixed decimal places for a score. Unset shows the value as written. */
+  decimals?: number;
 }
 
-const MAX_DECIMALS = 3;
+/** pTM, ipTM, ipSAE and PAE interaction, across the platform. */
+export const SCORE_DECIMALS = 2;
+/** pLDDT, on its 0-100 scale. */
+export const PLDDT_DECIMALS = 1;
 
-/** Rounds a number with more than three places; anything shorter shows as written. */
-export function formatDecimals(value: string | number): string {
-  const text = String(value);
+/** Rounds to exactly `decimals` places, padding with zeros; text that is not a number shows as written. */
+export function formatDecimals(
+  value: string | number,
+  decimals: number
+): string {
+  const text = String(value).trim();
   const number = Number(text);
-  if (!Number.isFinite(number)) return text;
-  const rounded = Number(number.toFixed(MAX_DECIMALS));
-  return rounded === number ? text : String(rounded);
+  if (!text || !Number.isFinite(number)) return String(value);
+  const fixed = number.toFixed(decimals);
+  // A tiny negative would otherwise round to "-0.00".
+  return Number(fixed) === 0 ? (0).toFixed(decimals) : fixed;
 }
 
 /** The structure a row was written to, ready for the viewer. */

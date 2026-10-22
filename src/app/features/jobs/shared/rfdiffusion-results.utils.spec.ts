@@ -230,4 +230,20 @@ describe("rfdiffusion results utils", () => {
       expect(rows[0].id).not.toBe(rows[1].id);
     });
   });
+
+  describe("putting Boltz pLDDT on the 0-100 scale", () => {
+    it("scales a 0-1 value", () => {
+      const csv = ["rank,boltz_plddt", "1,0.8712"].join("\n");
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, []);
+
+      expect(Number(rows[0].values["boltz_plddt"])).toBeCloseTo(87.12, 6);
+    });
+
+    it("leaves a blank or unreadable value alone", () => {
+      const csv = ["rank,boltz_plddt", "1,", "2,NA"].join("\n");
+      const rows = parseRfDiffusionDesigns(parseCsvTable(csv).rows, []);
+
+      expect(rows.map((row) => row.values["boltz_plddt"])).toEqual(["", "NA"]);
+    });
+  });
 });

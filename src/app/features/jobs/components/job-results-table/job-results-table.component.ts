@@ -94,7 +94,9 @@ export class JobResultsTableComponent {
   cellText(column: ReportColumn, row: ReportRow): string {
     const value = row.values[column.key] ?? "";
     if (!value) return "—";
-    return column.numeric ? formatDecimals(value) : value;
+    return column.decimals === undefined
+      ? value
+      : formatDecimals(value, column.decimals);
   }
 
   select(row: ReportRow): void {

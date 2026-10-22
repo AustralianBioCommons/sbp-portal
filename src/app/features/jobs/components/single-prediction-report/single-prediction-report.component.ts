@@ -53,7 +53,10 @@ import {
   parsePaeMatrix,
   residueIndicesToTokens,
 } from "../../shared/prediction-results.utils";
-import { formatDecimals } from "../../shared/job-results-report.utils";
+import {
+  SCORE_DECIMALS,
+  formatDecimals,
+} from "../../shared/job-results-report.utils";
 
 /** The predicted structure beside its PAE matrix, sharing one residue selection. */
 @Component({
@@ -158,14 +161,14 @@ export class SinglePredictionReportComponent {
     if (ptm !== null) {
       items.push({
         label: "pTM",
-        value: formatDecimals(ptm),
+        value: formatDecimals(ptm, SCORE_DECIMALS),
         hint: PREDICTION_SCORE_HINTS.pTM,
       });
     }
     if (iptm !== null) {
       items.push({
         label: "ipTM",
-        value: formatDecimals(iptm),
+        value: formatDecimals(iptm, SCORE_DECIMALS),
         hint: PREDICTION_SCORE_HINTS.ipTM,
       });
     }
