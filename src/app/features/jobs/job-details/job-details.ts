@@ -206,6 +206,7 @@ export default class JobDetailsComponent implements OnInit {
   healthMessage = signal<string | null>(null);
   showDeleteDialog = signal<boolean>(false);
   deleting = signal<boolean>(false);
+  deleteError = signal<string | null>(null);
 
   // Results state
   activeTab = signal<JobResultsTab>(DEFAULT_JOB_RESULTS_TAB);
@@ -392,6 +393,7 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   openDeleteDialog(): void {
+    this.deleteError.set(null);
     this.showDeleteDialog.set(true);
   }
 
@@ -406,13 +408,14 @@ export default class JobDetailsComponent implements OnInit {
       return;
     }
 
+    this.deleteError.set(null);
     this.deleting.set(true);
     this.jobsService
       .deleteJob(job.id)
       .pipe(
         catchError((err) => {
           console.error("Error deleting job:", err);
-          this.error.set("Failed to delete job. Please try again.");
+          this.deleteError.set("Failed to delete job. Please try again.");
           this.deleting.set(false);
           this.closeDeleteDialog();
           return EMPTY;

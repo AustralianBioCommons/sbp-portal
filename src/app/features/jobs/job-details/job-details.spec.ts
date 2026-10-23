@@ -381,6 +381,62 @@ describe("JobDetailsComponent", () => {
     expect(component.showDeleteDialog()).toBeFalse();
   });
 
+  it("keeps job details and the delete action available after a failed deletion", () => {
+    spyOn(console, "error");
+    const navigateSpy = spyOn(TestBed.inject(Router), "navigate");
+    mockJobsService.deleteJob.and.returnValues(
+      throwError(() => new Error("delete failed")),
+      of({
+        runId: mockJob.id,
+        deleted: true,
+        cancelledBeforeDelete: false,
+        message: "Deleted",
+      })
+    );
+    render();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const deleteButton = () =>
+      host.querySelector<HTMLButtonElement>('button[aria-label="Delete job"]');
+    const confirmButton = () =>
+      host.querySelector<HTMLButtonElement>(
+        'app-dialog app-button[variant="primary"] button'
+      )!;
+
+    deleteButton()!.click();
+    fixture.detectChanges();
+    expect(host.querySelector("dialog")!.open).toBeTrue();
+    confirmButton().click();
+    fixture.detectChanges();
+
+    expect(component.error()).toBeNull();
+    expect(component.job()).toEqual(mockJob);
+    expect(component.deleting()).toBeFalse();
+    expect(component.showDeleteDialog()).toBeFalse();
+    expect(host.querySelector("h1")?.textContent).toContain(mockJob.jobName);
+    expect(host.textContent).toContain("Workflow type");
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain(
+      "Failed to delete job. Please try again."
+    );
+    expect(deleteButton()?.disabled).toBeFalse();
+    expect(navigateSpy).not.toHaveBeenCalled();
+
+    deleteButton()?.click();
+    fixture.detectChanges();
+    expect(host.querySelector("dialog")!.open).toBeTrue();
+    expect(host.querySelector('[role="alert"]')).toBeNull();
+    confirmButton().click();
+    fixture.detectChanges();
+
+    expect(mockJobsService.deleteJob).toHaveBeenCalledTimes(2);
+    expect(mockJobsService.deleteJob).toHaveBeenCalledWith(mockJob.id);
+    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs"], {
+      queryParams: {},
+    });
+    expect(component.deleting()).toBeFalse();
+    expect(component.showDeleteDialog()).toBeFalse();
+  });
+
   it("should return to the jobs list with the page and filters it came from", () => {
     const router = TestBed.inject(Router);
     const jobsListQueryParams = { page: "2", status: "Failed" };

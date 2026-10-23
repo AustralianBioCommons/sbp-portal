@@ -7,6 +7,15 @@
   [dismissible]="true"
   (dismissed)="dismissHealthAlert()"
 ></app-alert>
+} @if (deleteError(); as deleteMessage) {
+<app-alert
+  type="error"
+  position="fixed"
+  [message]="deleteMessage"
+  [dismissible]="true"
+  role="alert"
+  (dismissed)="deleteError.set(null)"
+></app-alert>
 }
 
 <!-- Delete Confirmation Dialog -->
