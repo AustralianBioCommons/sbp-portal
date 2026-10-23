@@ -34,7 +34,10 @@ import { WorkflowPapersComponent } from "../../workflows/components/workflow-pap
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { statusTagClass, type JobStatusUi } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
-import { formatDecimals } from "../shared/job-results-report.utils";
+import {
+  SCORE_DECIMALS,
+  formatDecimals,
+} from "../shared/job-results-report.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import {
@@ -521,7 +524,10 @@ export default class JobDetailsComponent implements OnInit {
       },
       {
         label: "Max score",
-        value: job.score === null ? "N/A" : formatDecimals(job.score),
+        value:
+          job.score === null
+            ? "N/A"
+            : formatDecimals(job.score, SCORE_DECIMALS),
       },
     ];
   }

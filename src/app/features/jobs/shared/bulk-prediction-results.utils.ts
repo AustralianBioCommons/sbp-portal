@@ -4,6 +4,8 @@ import {
   JobResultsAdapter,
   parseCsvTable,
   NO_PREDICTIONS_MESSAGE,
+  PLDDT_DECIMALS,
+  SCORE_DECIMALS,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef } from "./prediction-results.utils";
@@ -23,8 +25,20 @@ const PLDDT_KEY = "plddt";
 const BULK_COLUMNS: readonly ReportColumn[] = [
   // The submitted FASTA header, whole.
   { key: "id", heading: "Query ID", emphasised: true },
-  { key: "ptm", heading: "pTM", numeric: true, higherIsBetter: true },
-  { key: PLDDT_KEY, heading: "pLDDT", numeric: true, higherIsBetter: true },
+  {
+    key: "ptm",
+    heading: "pTM",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
+  {
+    key: PLDDT_KEY,
+    heading: "pLDDT",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: PLDDT_DECIMALS,
+  },
 ];
 
 /** ColabFold writes pLDDT on 0–100 and Boltz on 0–1; both come out on 0–100. */

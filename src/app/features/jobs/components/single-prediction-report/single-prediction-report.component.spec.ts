@@ -344,14 +344,14 @@ describe("SinglePredictionReportComponent", () => {
     render([...files, ...scoreFiles]);
 
     expect(component.scores()).toEqual([
-      { label: "pTM", value: "0.287", hint: jasmine.any(String) },
-      { label: "ipTM", value: "0.274", hint: jasmine.any(String) },
+      { label: "pTM", value: "0.29", hint: jasmine.any(String) },
+      { label: "ipTM", value: "0.27", hint: jasmine.any(String) },
     ]);
 
     const element: HTMLElement = fixture.nativeElement;
     const scores = element.querySelector("app-prediction-confidence-scores")!;
-    expect(scores.textContent).toContain("ipTM = 0.274");
-    expect(scores.textContent).toContain("pTM = 0.287");
+    expect(scores.textContent).toContain("ipTM = 0.27");
+    expect(scores.textContent).toContain("pTM = 0.29");
     expect(scores.querySelector("app-tooltip button")).not.toBeNull();
   });
 

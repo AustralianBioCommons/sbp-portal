@@ -5,6 +5,8 @@ import {
   ReportStructure,
   parseCsvTable,
   NO_DESIGNS_MESSAGE,
+  PLDDT_DECIMALS,
+  SCORE_DECIMALS,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
@@ -32,27 +34,61 @@ const TRAILING_COLUMNS: readonly ReportColumn[] = [
 /** AlphaFold2 Initial Guess: PAE is in Angstroms and ipTM runs 0-1. */
 const AF2_COLUMNS: readonly ReportColumn[] = [
   // The AF2 ranking metric, so rank and this column agree.
-  { key: "af2_pae_interaction", heading: "PAE Interaction", numeric: true },
-  { key: "af2_iptm", heading: "ipTM", numeric: true, higherIsBetter: true },
+  {
+    key: "af2_pae_interaction",
+    heading: "PAE Interaction",
+    numeric: true,
+    decimals: SCORE_DECIMALS,
+  },
+  {
+    key: "af2_iptm",
+    heading: "ipTM",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
 ];
 
-/** Boltz-2 scores pLDDT and ipSAE 0-1, so these are not the AF2 columns rescaled. */
+const BOLTZ_PLDDT_KEY = "boltz_plddt";
+
+/**
+ * Boltz-2 scores pLDDT and ipSAE 0-1, so these are not the AF2 columns rescaled.
+ * pLDDT is shown on 0-100 like everywhere else on the platform.
+ */
 const BOLTZ_COLUMNS: readonly ReportColumn[] = [
-  { key: "boltz_plddt", heading: "pLDDT", numeric: true, higherIsBetter: true },
+  {
+    key: BOLTZ_PLDDT_KEY,
+    heading: "pLDDT",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: PLDDT_DECIMALS,
+  },
   {
     // Header case is the pipeline's own.
     key: "boltz_ipSAE_min",
     heading: "ipSAE",
     numeric: true,
     higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
   },
   {
     key: "boltz_iptm",
     heading: "ipTM",
     numeric: true,
     higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
   },
 ];
+
+/** Boltz's 0-1 pLDDT on the 0-100 scale; anything unreadable is left alone. */
+function scaleBoltzPlddt(
+  row: Readonly<Record<string, string>>
+): Record<string, string> {
+  const raw = row[BOLTZ_PLDDT_KEY]?.trim();
+  const value = Number(raw);
+  if (!raw || !Number.isFinite(value)) return { ...row };
+  return { ...row, [BOLTZ_PLDDT_KEY]: String(value * 100) };
+}
 
 function withMetrics(
   metrics: readonly ReportColumn[]
@@ -176,7 +212,7 @@ export function parseRfDiffusionDesigns(
     return {
       id: `${index}-${rank}-${description}`,
       label: description || `Design ${rank || index + 1}`,
-      values: row,
+      values: scaleBoltzPlddt(row),
       structure,
     };
   });

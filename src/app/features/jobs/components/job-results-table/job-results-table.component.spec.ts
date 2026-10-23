@@ -58,12 +58,12 @@ describe("JobResultsTableComponent", () => {
     }).compileComponents();
   });
 
-  it("shortens a long number for display, and sorts by the raw value", () => {
+  it("rounds a score to its column's places, and sorts by the raw value", () => {
     fixture = TestBed.createComponent(JobResultsTableComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput("columns", [
       { key: "Design", heading: "Design name" },
-      { key: "Score", heading: "pTM", numeric: true },
+      { key: "Score", heading: "pTM", numeric: true, decimals: 2 },
     ]);
     fixture.componentRef.setInput("rows", [
       {
@@ -81,7 +81,7 @@ describe("JobResultsTableComponent", () => {
     ]);
     fixture.detectChanges();
 
-    expect(bodyRows().map((r) => cellText(r)[1])).toEqual(["0.123", "0.123"]);
+    expect(bodyRows().map((r) => cellText(r)[1])).toEqual(["0.12", "0.12"]);
 
     component.toggleSort({ key: "Score", heading: "pTM", numeric: true });
     component.toggleSort({ key: "Score", heading: "pTM", numeric: true });

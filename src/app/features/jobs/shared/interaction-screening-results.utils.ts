@@ -10,6 +10,7 @@ import {
   JobResultsAdapter,
   parseCsvTable,
   NO_INTERACTIONS_MESSAGE,
+  SCORE_DECIMALS,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
@@ -36,9 +37,27 @@ const IPSAE_FILE = "ipsae_scores.csv";
 const IPSAE_DIR = "/ipsae/";
 
 const SCORE_COLUMNS: readonly ReportColumn[] = [
-  { key: IPSAE_KEY, heading: "ipSAE", numeric: true, higherIsBetter: true },
-  { key: "iptm", heading: "ipTM", numeric: true, higherIsBetter: true },
-  { key: "ptm", heading: "pTM", numeric: true, higherIsBetter: true },
+  {
+    key: IPSAE_KEY,
+    heading: "ipSAE",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
+  {
+    key: "iptm",
+    heading: "ipTM",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
+  {
+    key: "ptm",
+    heading: "pTM",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
 ];
 
 const INTERACTION_COLUMNS: readonly ReportColumn[] = [
