@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 
 import { JobResultsTableComponent } from "./job-results-table.component";
 import { ReportColumn, ReportRow } from "../../shared/job-results-report.utils";
+import { ResultFileRef } from "../../shared/prediction-results.utils";
 
 const columns: ReportColumn[] = [
   { key: "Rank", heading: "Rank", emphasised: true, numeric: true },
@@ -26,11 +27,15 @@ describe("JobResultsTableComponent", () => {
   let fixture: ComponentFixture<JobResultsTableComponent>;
   let component: JobResultsTableComponent;
 
-  const render = (rows: ReportRow[]) => {
+  const render = (
+    rows: ReportRow[],
+    downloadFiles: readonly ResultFileRef[] | null = null
+  ) => {
     fixture = TestBed.createComponent(JobResultsTableComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput("columns", columns);
     fixture.componentRef.setInput("rows", rows);
+    fixture.componentRef.setInput("downloadFiles", downloadFiles);
     fixture.detectChanges();
   };
 
@@ -137,6 +142,83 @@ describe("JobResultsTableComponent", () => {
     render([]);
 
     expect(bodyRows()[0].textContent).toContain("No rows to display");
+  });
+
+  it("keeps each download matched to its row after sorting", () => {
+    const rows = makeRows(2).map((row) => ({
+      ...row,
+      structure: {
+        key: `${row.id}.pdb`,
+        label: `${row.id}.pdb`,
+        format: "pdb" as const,
+      },
+    }));
+    const files = rows.map((row) => ({
+      ...row.structure,
+      url: `https://s3.test/${row.structure.key}?signature=1`,
+      category: "pdb",
+    }));
+    render(rows, files);
+
+    component.toggleSort(columns[0]);
+    component.sortDirection.set("desc");
+    fixture.componentRef.setInput("selectedId", "design-2");
+    fixture.detectChanges();
+
+    const links = bodyRows().map((row) => row.querySelector("a")!);
+    expect(links.map((link) => link.href)).toEqual([
+      files[1].url,
+      files[0].url,
+    ]);
+    expect(links[0].getAttribute("aria-label")).toBe("Download design-2.pdb");
+    expect(links[0].target).toBe("_blank");
+    expect(links[0].rel).toBe("noopener noreferrer");
+    expect(headers()[3].textContent!.trim()).toBe("Download");
+    expect(headers()[3].querySelector("button")).toBeNull();
+    expect(bodyRows()[0].lastElementChild!.classList).toContain("cap-right");
+    expect(bodyRows()[0].children[2].classList).not.toContain("cap-right");
+  });
+
+  it("lets downloads receive focus and activate without selecting their row", () => {
+    const file = {
+      key: "design-1.pdb",
+      label: "design-1.pdb",
+      url: "https://s3.test/design-1.pdb",
+      category: "pdb",
+    };
+    render(
+      [{ ...makeRows(1)[0], structure: { ...file, format: "pdb" } }],
+      [file]
+    );
+    const selected = jasmine.createSpy("rowSelected");
+    component.rowSelected.subscribe(selected);
+    const link = bodyRows()[0].querySelector("a")!;
+
+    link.focus();
+    expect(document.activeElement).toBe(link);
+    for (const key of ["Enter", " "]) {
+      const event = new KeyboardEvent("keydown", {
+        key,
+        bubbles: true,
+        cancelable: true,
+      });
+      link.dispatchEvent(event);
+      expect(event.defaultPrevented).toBeFalse();
+    }
+    // Cancel navigation while keeping the click's propagation observable.
+    link.addEventListener("click", (event) => event.preventDefault());
+    link.click();
+    expect(selected).not.toHaveBeenCalled();
+  });
+
+  it("omits unavailable downloads and spans the empty state across the download column", () => {
+    render(makeRows(1), []);
+    expect(bodyRows()[0].querySelector("a")).toBeNull();
+    expect(cellText(bodyRows()[0])[3]).toBe("—");
+
+    fixture.componentRef.setInput("rows", []);
+    fixture.detectChanges();
+    expect(bodyRows()[0].querySelector("td")!.colSpan).toBe(4);
   });
 
   // ── Sorting ───────────────────────────────────────────────────────────────
