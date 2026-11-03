@@ -229,18 +229,28 @@ describe("BulkPredictionComponent", () => {
 
   // ── 6. FASTA validation — sequence length ─────────────────────────────
 
-  it("should be invalid when a sequence exceeds 1000 amino-acid characters", () => {
-    const longSeq = "A".repeat(1001);
-    component.form.setValue({
-      jobName: "bulk-job",
-      fasta: `>longseq\n${longSeq}`,
-      selectedTool: "boltz",
+  for (const selectedTool of ["boltz", "colabfold"] as const) {
+    it(`should accept 4000 amino acids per entry for ${selectedTool}`, () => {
+      component.form.setValue({
+        jobName: "bulk-job",
+        fasta: `${VALID_FASTA}\n>longseq\n${"A".repeat(4000)}`,
+        selectedTool,
+      });
+      expect(component.isFormValid()).toBe(true);
     });
-    expect(component.isFormValid()).toBe(false);
-    expect(component.form.controls.fasta.errors?.["fasta"]).toContain(
-      "amino-acid characters"
-    );
-  });
+
+    it(`should reject 4001 amino acids per entry for ${selectedTool}`, () => {
+      component.form.setValue({
+        jobName: "bulk-job",
+        fasta: `${VALID_FASTA}\n>longseq\n${"A".repeat(4001)}`,
+        selectedTool,
+      });
+      expect(component.isFormValid()).toBe(false);
+      expect(component.form.controls.fasta.errors?.["fasta"]).toContain(
+        "exceeding the maximum of 4000"
+      );
+    });
+  }
 
   // ── 7. FASTA validation — multimer delimiter ───────────────────────────
 

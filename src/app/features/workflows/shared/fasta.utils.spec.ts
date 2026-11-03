@@ -415,10 +415,31 @@ describe("fasta.utils", () => {
       expect(result.errorMessage).toContain('invalid ":" placement');
     });
 
-    it("rejects sequences exceeding the maximum amino-acid length", () => {
-      const result = validateBulkFastaProtein(`>seq1\n${"A".repeat(1001)}`);
-      expect(result.valid).toBe(false);
-      expect(result.errorMessage).toContain("exceeding the maximum of 1000");
+    it("accepts 4000 amino acids per entry, excluding chain delimiters", () => {
+      for (const sequence of [
+        "A".repeat(4000),
+        `${"A".repeat(2000)}:${"A".repeat(2000)}`,
+      ]) {
+        const fasta = Array.from(
+          { length: 10 },
+          (_, i) => `>seq${i}\n${sequence}`
+        ).join("\n");
+        expect(validateBulkFastaProtein(fasta)).toEqual({
+          valid: true,
+          sequenceCount: 10,
+        });
+      }
+    });
+
+    it("rejects entries exceeding 4000 amino acids across all chains", () => {
+      for (const sequence of [
+        "A".repeat(4001),
+        `${"A".repeat(2000)}:${"A".repeat(2001)}`,
+      ]) {
+        const result = validateBulkFastaProtein(`>seq1\n${sequence}`);
+        expect(result.valid).toBe(false);
+        expect(result.errorMessage).toContain("exceeding the maximum of 4000");
+      }
     });
 
     it("rejects fewer than 10 entries", () => {
