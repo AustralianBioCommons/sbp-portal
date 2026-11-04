@@ -114,8 +114,14 @@ describe("BulkPredictionComponent", () => {
               {
                 category: "bulk-prediction",
                 displayName: "Bulk Prediction",
-                basis: "sequence",
+                basis: "fasta_size_per_entry",
                 toolMultipliers: { boltz: 2, colabfold: 3 },
+                sizeMultipliers: [
+                  { minLength: 1, maxLength: 1000, multiplier: 1 },
+                  { minLength: 1001, maxLength: 1999, multiplier: 4 },
+                  { minLength: 2000, maxLength: 2999, multiplier: 10 },
+                  { minLength: 3000, maxLength: 4000, multiplier: 16 },
+                ],
               },
             ],
           })
@@ -520,13 +526,71 @@ describe("BulkPredictionComponent", () => {
   // ── 25. creditCost ───────────────────────────────────────────────────
 
   describe("creditCost", () => {
-    it("computes tool multiplier × number of FASTA entries", () => {
+    it("computes the cost for short FASTA entries", () => {
       component["toolMultipliers"].set({ boltz: 1, colabfold: 1 });
       component.form.controls.selectedTool.setValue("boltz");
       component.form.controls.fasta.setValue(VALID_FASTA);
       fixture.detectChanges();
 
       expect(component.creditCost()).toBe(10);
+    });
+
+    it("sums size multipliers per entry at inclusive range boundaries for each tool", () => {
+      const lengths = [1, 1000, 1001, 1999, 2000, 2999, 3000, 4000, 20, 20];
+      component.form.controls.fasta.setValue(
+        lengths.map((length, i) => `>seq${i}\n${"A".repeat(length)}`).join("\n")
+      );
+      component["toolMultipliers"].set({ boltz: 1, colabfold: 3 });
+      component.form.controls.selectedTool.setValue("boltz");
+      expect(component.creditCost()).toBe(64);
+
+      component.form.controls.selectedTool.setValue("colabfold");
+      expect(component.creditCost()).toBe(192);
+
+      component.form.controls.fasta.setValue(VALID_FASTA);
+      expect(component.creditCost()).toBe(30);
+    });
+
+    it("combines multimer chains and excludes separators and line breaks from length", () => {
+      component.form.controls.selectedTool.setValue("boltz");
+      component["toolMultipliers"].set({ boltz: 1 });
+      component.form.controls.fasta.setValue(
+        VALID_FASTA +
+          `\n>multimer\n${"A".repeat(500)}:\n${"G".repeat(500)}\n` +
+          `>longmultimer\n${"A".repeat(1000)}:${"G".repeat(1000)}`
+      );
+      expect(component.creditCost()).toBe(21);
+    });
+
+    it("uses updated size ranges and multipliers from the config", () => {
+      component.form.controls.selectedTool.setValue("boltz");
+      component.form.controls.fasta.setValue(VALID_FASTA);
+      component["sizeMultipliers"].set([
+        { minLength: 1, maxLength: 19, multiplier: 2 },
+        { minLength: 20, maxLength: 4000, multiplier: 7 },
+      ]);
+      expect(component.creditCost()).toBe(140);
+    });
+
+    it("returns null when size ranges are unavailable or an entry is outside them", () => {
+      component.form.controls.selectedTool.setValue("boltz");
+      component.form.controls.fasta.setValue(VALID_FASTA);
+      component["sizeMultipliers"].set([]);
+      expect(component.creditCost()).toBeNull();
+
+      component["sizeMultipliers"].set([
+        { minLength: 1, maxLength: 19, multiplier: 1 },
+      ]);
+      expect(component.creditCost()).toBeNull();
+    });
+
+    it("returns null when no tool or tool multiplier is available", () => {
+      component.form.controls.fasta.setValue(VALID_FASTA);
+      expect(component.creditCost()).toBeNull();
+
+      component.form.controls.selectedTool.setValue("boltz");
+      component["toolMultipliers"].set({});
+      expect(component.creditCost()).toBeNull();
     });
 
     it("returns null when the FASTA input is empty or invalid", () => {

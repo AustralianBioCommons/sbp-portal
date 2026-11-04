@@ -101,6 +101,7 @@ describe("InteractionScreeningComponent", () => {
             displayName: "Interaction Screening",
             basis: "per-pair",
             toolMultipliers: { boltz: 2 },
+            sizeMultipliers: [],
           },
         ],
       })
