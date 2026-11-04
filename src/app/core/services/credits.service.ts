@@ -29,7 +29,6 @@ export interface UserCreditResponse {
   credit: number;
 }
 
-
 export interface FastaSizeRangeMultiplier {
   minLength: number;
   maxLength: number;
