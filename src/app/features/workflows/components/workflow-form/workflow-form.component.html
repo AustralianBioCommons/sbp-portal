@@ -1,6 +1,6 @@
 <!-- Sticky progress bar -->
-<div class="sticky top-22 z-30 w-full bg-white pt-4">
-  <div class="border-biocommons-secondary border rounded-t-lg">
+<div class="sticky top-22 z-30 w-full bg-gray-50 pt-4">
+  <div class="border-biocommons-secondary border rounded-t-lg bg-white">
     <div class="mx-auto max-w-4xl px-6 pb-2 pt-4">
       <div class="flex items-start justify-between">
         @for (section of sections(); track section.id; let index = $index) {
@@ -110,7 +110,9 @@
   </div>
 </div>
 
-<div class="border border-t-0 rounded-b-lg border-biocommons-secondary">
+<div
+  class="border border-t-0 rounded-b-lg border-biocommons-secondary bg-white"
+>
   <ng-content></ng-content>
 
   <div #submitArea class="flex items-center justify-end p-4">

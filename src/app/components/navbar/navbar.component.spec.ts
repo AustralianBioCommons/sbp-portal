@@ -33,7 +33,7 @@ describe("Navbar", () => {
       "Router",
       ["createUrlTree", "serializeUrl"],
       {
-        url: "/themes",
+        url: "/binder-design/de-novo-design?tab=about#overview",
         events: routerEventsSubject.asObservable(),
       }
     );
@@ -64,72 +64,105 @@ describe("Navbar", () => {
   });
 
   describe("router events", () => {
-    it("should update breadcrumb state on NavigationEnd events", () => {
-      const url = "/binder-design/de-novo-design";
+    it("should activate the workflow category on initial load without a breadcrumb", () => {
+      const el: HTMLElement = fixture.nativeElement;
+      const activeLink = el.querySelector(
+        '[aria-label="Main navigation"] .border-biocommons-primary'
+      );
 
-      routerEventsSubject.next(new NavigationEnd(1, url, url));
+      expect(activeLink?.textContent?.trim()).toBe("Binder Design");
+      expect(activeLink?.classList.contains("border-biocommons-primary")).toBe(
+        true
+      );
+      expect(activeLink?.getAttribute("aria-current")).toBeNull();
+      expect(el.querySelector('[aria-label="Breadcrumb"]')).toBeNull();
+    });
 
-      expect(component.showBreadcrumb()).toBe(true);
-      expect(component.breadcrumb()?.workflowLabel).toBe("De Novo Design");
+    for (const { url, category } of [
+      { url: "/binder-design/de-novo-design", category: "Binder Design" },
+      {
+        url: "/structure-prediction/single-prediction",
+        category: "Structure Prediction",
+      },
+      {
+        url: "/structure-prediction/bulk-prediction",
+        category: "Structure Prediction",
+      },
+      {
+        url: "/structure-prediction/interaction-screening",
+        category: "Structure Prediction",
+      },
+    ]) {
+      it(`should keep the category underline active on ${url}`, () => {
+        routerEventsSubject.next(new NavigationEnd(1, url, url));
+        fixture.detectChanges();
+
+        const el: HTMLElement = fixture.nativeElement;
+        const activeLinks = el.querySelectorAll(
+          '[aria-label="Main navigation"] .border-biocommons-primary'
+        );
+        const activeWorkflow = el.querySelector(
+          '[aria-label="Mobile navigation"] .ml-6 [aria-current="page"]'
+        );
+        const currentPages = el.querySelectorAll(
+          '[aria-label="Mobile navigation"] [aria-current="page"]'
+        );
+
+        expect(activeLinks.length).toBe(1);
+        expect(activeLinks[0].textContent?.trim()).toBe(category);
+        expect(activeLinks[0].getAttribute("aria-current")).toBeNull();
+        expect(activeWorkflow?.classList.contains("bg-sky-50")).toBe(true);
+        expect(currentPages.length).toBe(1);
+        expect(activeWorkflow).toBe(currentPages[0]);
+      });
+    }
+
+    for (const { url, label } of [
+      { url: "/binder-design", label: "Binder Design" },
+      { url: "/structure-prediction", label: "Structure Prediction" },
+      { url: "/my-jobs", label: "My Jobs" },
+    ]) {
+      it(`should mark only ${url} as the current page in each navigation`, () => {
+        const route = `${url}?source=nav#top`;
+        routerEventsSubject.next(new NavigationEnd(1, route, route));
+        fixture.detectChanges();
+
+        const el: HTMLElement = fixture.nativeElement;
+        for (const navigation of ["Main navigation", "Mobile navigation"]) {
+          const currentPages = el.querySelectorAll(
+            `[aria-label="${navigation}"] [aria-current="page"]`
+          );
+
+          expect(currentPages.length).toBe(1);
+          expect(currentPages[0].textContent?.trim()).toBe(label);
+        }
+      });
+    }
+
+    it("should use the redirected route without query params or fragments", () => {
+      routerEventsSubject.next(
+        new NavigationEnd(
+          1,
+          "/legacy-workflow",
+          "/structure-prediction/single-prediction?tab=about#overview"
+        )
+      );
+
+      expect(component.currentRoute()).toBe(
+        "/structure-prediction/single-prediction"
+      );
+      expect(component.isNavItemActive(component.desktopNavItems[0])).toBe(
+        false
+      );
+      expect(component.isNavItemActive(component.desktopNavItems[1])).toBe(
+        true
+      );
     });
 
     it("should ignore non-NavigationEnd router events", () => {
       routerEventsSubject.next({} as NavigationEnd);
 
-      expect(component.showBreadcrumb()).toBe(false);
-    });
-  });
-
-  describe("breadcrumb behaviour", () => {
-    it("should show breadcrumb for a known workflow route", () => {
-      component["checkRoute"]("/binder-design/de-novo-design");
-
-      expect(component.showBreadcrumb()).toBe(true);
-      expect(component.breadcrumb()).toEqual({
-        themeLabel: "Binder Design",
-        themeTab: "binder-design",
-        workflowLabel: "De Novo Design",
-      });
-    });
-
-    it("should show correct breadcrumb for single-prediction route", () => {
-      component["checkRoute"]("/structure-prediction/single-prediction");
-
-      expect(component.showBreadcrumb()).toBe(true);
-      expect(component.breadcrumb()).toEqual({
-        themeLabel: "Structure Prediction",
-        themeTab: "structure-prediction",
-        workflowLabel: "Single Prediction",
-      });
-    });
-
-    it("should not show breadcrumb for /themes route", () => {
-      component["checkRoute"]("/themes");
-
-      expect(component.showBreadcrumb()).toBe(false);
-      expect(component.breadcrumb()).toBeNull();
-    });
-
-    it("should not show breadcrumb for unknown routes", () => {
-      component["checkRoute"]("/unknown-path");
-
-      expect(component.showBreadcrumb()).toBe(false);
-      expect(component.breadcrumb()).toBeNull();
-    });
-
-    it("should clear breadcrumb when navigating back to a home route", () => {
-      component["checkRoute"]("/binder-design/de-novo-design");
-      expect(component.showBreadcrumb()).toBe(true);
-
-      component["checkRoute"]("/binder-design");
-      expect(component.showBreadcrumb()).toBe(false);
-      expect(component.breadcrumb()).toBeNull();
-    });
-
-    it("should strip query params when matching workflow routes", () => {
-      component["checkRoute"]("/binder-design/de-novo-design?foo=bar");
-
-      expect(component.showBreadcrumb()).toBe(true);
+      expect(component.currentRoute()).toBe("/binder-design/de-novo-design");
     });
   });
 
@@ -146,6 +179,14 @@ describe("Navbar", () => {
     it("should return true when current route matches item path", () => {
       const item: NavItem = { label: "Themes", path: "/themes" };
       expect(component.isNavItemActive(item)).toBe(true);
+    });
+
+    it("should not activate items with a shared path prefix", () => {
+      component.currentRoute.set("/binder-design-other/de-novo-design");
+
+      expect(component.isNavItemActive(component.desktopNavItems[0])).toBe(
+        false
+      );
     });
   });
 

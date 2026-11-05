@@ -58,8 +58,8 @@ describe("ChainMatrixComponent", () => {
 
     // A vs A is blank; A vs B and A vs C carry the scores.
     expect(cells[0]).toContain("—");
-    expect(cells[1]).toBe("0.200");
-    expect(cells[2]).toBe("0.800");
+    expect(cells[1]).toBe("0.20");
+    expect(cells[2]).toBe("0.80");
   });
 
   it("names the metric in the heading and the caption", () => {

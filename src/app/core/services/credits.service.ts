@@ -29,6 +29,12 @@ export interface UserCreditResponse {
   credit: number;
 }
 
+export interface FastaSizeRangeMultiplier {
+  minLength: number;
+  maxLength: number;
+  multiplier: number;
+}
+
 /** Credit-cost rules for a single workflow category. */
 export interface WorkflowCreditConfig {
   category: WorkflowName;
@@ -36,6 +42,7 @@ export interface WorkflowCreditConfig {
   basis: string;
   /** Per-tool credit multiplier, keyed by tool id. */
   toolMultipliers: Partial<Record<WorkflowTool, number>>;
+  sizeMultipliers: FastaSizeRangeMultiplier[];
 }
 
 /** Response shape of GET /api/workflows/credits. */

@@ -45,7 +45,7 @@
           @for (value of matrix().rows[row]; track $index) {
           <td class="px-2.5 py-2 text-right text-gray-900 tabular-nums">
             @if (value !== null) {
-            {{ value.toFixed(precision()) }}
+            {{ formatDecimals(value, precision()) }}
             } @else {
             <span class="text-gray-300" aria-hidden="true">—</span>
             <span class="sr-only">

@@ -17,7 +17,6 @@ import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowRightStartOnRectangle,
   heroBars3,
-  heroChevronRight,
   heroInformationCircle,
   heroUser,
   heroUserCircle,
@@ -44,12 +43,6 @@ export interface NavItem {
   external?: boolean;
 }
 
-export interface BreadcrumbInfo {
-  themeLabel: string;
-  themeTab: string;
-  workflowLabel: string;
-}
-
 @Component({
   selector: "app-navbar",
   imports: [
@@ -65,7 +58,6 @@ export interface BreadcrumbInfo {
     provideIcons({
       heroArrowRightStartOnRectangle,
       heroBars3,
-      heroChevronRight,
       heroInformationCircle,
       heroUser,
       heroUserCircle,
@@ -112,28 +104,13 @@ export class Navbar {
 
   // Navbar state
   isMobileMenuOpen = signal(false);
-  currentRoute = signal("");
+  currentRoute = signal(this.router.url.split(/[?#]/)[0]);
 
   // User menu state
   userMenuOpen = signal(false);
   profileImageLoaded = signal(false);
 
-  // Header/breadcrumb state
-  showBreadcrumb = signal(false);
-  breadcrumb = signal<BreadcrumbInfo | null>(null);
   scrolled = signal(false);
-
-  private readonly workflowBreadcrumbs: Record<string, BreadcrumbInfo> =
-    THEMES.reduce((acc, theme) => {
-      for (const wf of theme.workflows) {
-        acc[wf.href] = {
-          themeLabel: theme.label,
-          themeTab: theme.id,
-          workflowLabel: wf.label,
-        };
-      }
-      return acc;
-    }, {} as Record<string, BreadcrumbInfo>);
 
   readonly navItems: NavItem[] = [
     ...THEMES.map((theme) => ({
@@ -161,8 +138,7 @@ export class Navbar {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        this.checkRoute(event.url);
-        this.updateRouteState();
+        this.updateRouteState(event.urlAfterRedirects);
       });
 
     if (this.creditsEnabled) {
@@ -207,9 +183,6 @@ export class Navbar {
     });
 
     afterNextRender(() => {
-      this.checkRoute(this.router.url);
-      this.updateRouteState();
-
       const sentinel = this.topSentinel()?.nativeElement;
       if (sentinel) {
         this.scrollObserver = new IntersectionObserver(([entry]) =>
@@ -218,12 +191,6 @@ export class Navbar {
         this.scrollObserver.observe(sentinel);
       }
     });
-  }
-
-  private checkRoute(url: string) {
-    const crumb = this.workflowBreadcrumbs[url.split("?")[0]] ?? null;
-    this.showBreadcrumb.set(crumb !== null);
-    this.breadcrumb.set(crumb);
   }
 
   // Auth methods
@@ -259,10 +226,11 @@ export class Navbar {
   }
 
   isNavItemActive(item: NavItem): boolean {
-    return this.currentRoute() === item.path;
+    const route = this.currentRoute();
+    return route === item.path || route.startsWith(`${item.path}/`);
   }
 
-  private updateRouteState(): void {
-    this.currentRoute.set(this.router.url.split("?")[0]);
+  private updateRouteState(url: string): void {
+    this.currentRoute.set(url.split(/[?#]/)[0]);
   }
 }

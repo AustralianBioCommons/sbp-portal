@@ -86,6 +86,13 @@ export class JobResultsReportComponent {
   filesLoading = input(false);
   filesError = input<string | null>(null);
 
+  readonly tableDownloadFiles = computed(() =>
+    this.workflow() === "bulk prediction" ||
+    this.workflow() === "interaction screening"
+      ? this.files()
+      : null
+  );
+
   /** Falls back to the packaged report when nothing can be shown. */
   unavailable = output<void>();
 
@@ -257,7 +264,11 @@ export class JobResultsReportComponent {
   readonly chainLegend = computed(() =>
     (this.adapter()?.legend ?? []).map((band) => ({
       // A band without a label of its own takes the selected row's.
-      label: band.label ?? this.selectedRow()?.label ?? "",
+      label:
+        (band.valueKey
+          ? this.selectedRow()?.values[band.valueKey]?.trim()
+          : "") ||
+        (band.label ?? this.selectedRow()?.label ?? ""),
       color: band.band === "primary" ? BINDER_COLOR : TARGET_COLOR,
     }))
   );

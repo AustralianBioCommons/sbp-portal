@@ -27,7 +27,7 @@ interface ToolParameterTab {
   templateUrl: "./single-prediction-about.component.html",
   styleUrl: "./single-prediction-about.component.scss",
   changeDetection: ChangeDetectionStrategy.Eager,
-  host: { class: "block space-y-8 pt-4" },
+  host: { class: "block space-y-8" },
 })
 export class SinglePredictionAboutComponent {
   protected readonly toolParameterTabs: readonly ToolParameterTab[] = [

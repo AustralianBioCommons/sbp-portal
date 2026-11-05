@@ -37,7 +37,7 @@ export class ToolSelectionComponent<ToolId extends string = string>
 {
   readonly tools = input.required<ToolOption<ToolId>[]>();
   readonly name = input(`selectedTool-${nextToolSelectionId++}`);
-  readonly requiredErrorMessage = input("Select a tool to continue.");
+  readonly requiredErrorMessage = input("Select a tool to continue");
 
   private readonly ngControl = inject(NgControl, {
     optional: true,

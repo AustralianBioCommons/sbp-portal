@@ -10,6 +10,7 @@ import {
   JobResultsAdapter,
   parseCsvTable,
   NO_INTERACTIONS_MESSAGE,
+  SCORE_DECIMALS,
   registerJobResultsAdapter,
 } from "./job-results-report.utils";
 import { ResultFileRef, resultFilenames } from "./prediction-results.utils";
@@ -36,9 +37,27 @@ const IPSAE_FILE = "ipsae_scores.csv";
 const IPSAE_DIR = "/ipsae/";
 
 const SCORE_COLUMNS: readonly ReportColumn[] = [
-  { key: IPSAE_KEY, heading: "ipSAE", numeric: true, higherIsBetter: true },
-  { key: "iptm", heading: "ipTM", numeric: true, higherIsBetter: true },
-  { key: "ptm", heading: "pTM", numeric: true, higherIsBetter: true },
+  {
+    key: IPSAE_KEY,
+    heading: "ipSAE",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
+  {
+    key: "iptm",
+    heading: "ipTM",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
+  {
+    key: "ptm",
+    heading: "pTM",
+    numeric: true,
+    higherIsBetter: true,
+    decimals: SCORE_DECIMALS,
+  },
 ];
 
 const INTERACTION_COLUMNS: readonly ReportColumn[] = [
@@ -314,9 +333,11 @@ function interactionAdapter(
     primaryChainId: "A",
     panelHeading: "Interactions",
     emptyMessage: NO_INTERACTIONS_MESSAGE,
+    // Each band takes the selected pair's own ids, or the generic name when
+    // the pair id could not be split.
     legend: [
-      { label: "Query", band: "primary" },
-      { label: "Target", band: "secondary" },
+      { label: "Query", band: "primary", valueKey: QUERY_KEY },
+      { label: "Target", band: "secondary", valueKey: TARGET_KEY },
     ],
     // Each row is a different pair of proteins, with nothing to line up on.
     superpose: false,

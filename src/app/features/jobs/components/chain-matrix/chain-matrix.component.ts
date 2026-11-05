@@ -1,5 +1,9 @@
 import { Component, input, ChangeDetectionStrategy } from "@angular/core";
 import { ChainPairMatrix } from "../../shared/prediction-results.utils";
+import {
+  SCORE_DECIMALS,
+  formatDecimals,
+} from "../../shared/job-results-report.utils";
 
 @Component({
   selector: "app-chain-matrix",
@@ -10,5 +14,7 @@ import { ChainPairMatrix } from "../../shared/prediction-results.utils";
 export class ChainMatrixComponent {
   matrix = input.required<ChainPairMatrix>();
   metric = input.required<string>();
-  precision = input(3);
+  precision = input(SCORE_DECIMALS);
+
+  readonly formatDecimals = formatDecimals;
 }

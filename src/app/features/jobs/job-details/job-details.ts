@@ -16,10 +16,10 @@ import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   heroArrowDownTray,
   heroArrowLeft,
-  heroBookOpen,
   heroChartBarSquare,
   heroCog6Tooth,
   heroCommandLine,
+  heroDocumentText,
   heroExclamationCircle,
   heroFolder,
   heroTrash,
@@ -34,7 +34,10 @@ import { WorkflowPapersComponent } from "../../workflows/components/workflow-pap
 import { ResultFileRef } from "../shared/prediction-results.utils";
 import { statusTagClass, type JobStatusUi } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
-import { formatDecimals } from "../shared/job-results-report.utils";
+import {
+  SCORE_DECIMALS,
+  formatDecimals,
+} from "../shared/job-results-report.utils";
 import { JobListItem, JobsService } from "../services/jobs.service";
 import { HealthService } from "../services/health.service";
 import {
@@ -173,10 +176,10 @@ const SETTING_LABEL_OVERRIDES: Record<string, string> = {
     provideIcons({
       heroArrowDownTray,
       heroArrowLeft,
-      heroBookOpen,
       heroChartBarSquare,
       heroCog6Tooth,
       heroCommandLine,
+      heroDocumentText,
       heroExclamationCircle,
       heroFolder,
       heroTrash,
@@ -206,6 +209,7 @@ export default class JobDetailsComponent implements OnInit {
   healthMessage = signal<string | null>(null);
   showDeleteDialog = signal<boolean>(false);
   deleting = signal<boolean>(false);
+  deleteError = signal<string | null>(null);
 
   // Results state
   activeTab = signal<JobResultsTab>(DEFAULT_JOB_RESULTS_TAB);
@@ -289,7 +293,7 @@ export default class JobDetailsComponent implements OnInit {
     {
       id: "citations",
       label: "Citations",
-      icon: "heroBookOpen",
+      icon: "heroDocumentText",
       description:
         "Cite the workflow and platform used to produce the results from this run.",
     },
@@ -392,6 +396,7 @@ export default class JobDetailsComponent implements OnInit {
   }
 
   openDeleteDialog(): void {
+    this.deleteError.set(null);
     this.showDeleteDialog.set(true);
   }
 
@@ -406,13 +411,14 @@ export default class JobDetailsComponent implements OnInit {
       return;
     }
 
+    this.deleteError.set(null);
     this.deleting.set(true);
     this.jobsService
       .deleteJob(job.id)
       .pipe(
         catchError((err) => {
           console.error("Error deleting job:", err);
-          this.error.set("Failed to delete job. Please try again.");
+          this.deleteError.set("Failed to delete job. Please try again.");
           this.deleting.set(false);
           this.closeDeleteDialog();
           return EMPTY;
@@ -518,7 +524,10 @@ export default class JobDetailsComponent implements OnInit {
       },
       {
         label: "Max score",
-        value: job.score === null ? "N/A" : formatDecimals(job.score),
+        value:
+          job.score === null
+            ? "N/A"
+            : formatDecimals(job.score, SCORE_DECIMALS),
       },
     ];
   }

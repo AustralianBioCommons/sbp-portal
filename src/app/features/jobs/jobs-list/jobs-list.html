@@ -428,9 +428,9 @@
               <td
                 class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
               >
-                @if (job.score !== null) { {{ formatDecimals(job.score) }} @if
-                (job.finalDesignCount !== null && job.finalDesignCount !==
-                undefined) {
+                @if (job.score !== null) { {{ formatDecimals(job.score,
+                scoreDecimals) }} @if (job.finalDesignCount !== null &&
+                job.finalDesignCount !== undefined) {
                 <span class="text-xs text-gray-500">
                   ({{ job.finalDesignCount }} designs)
                 </span>

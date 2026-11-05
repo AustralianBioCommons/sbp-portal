@@ -11,6 +11,13 @@ import {
 } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
+import {
+  heroChartBarSquare,
+  heroDocumentText,
+  heroInformationCircle,
+  heroPlay,
+} from "@ng-icons/heroicons/outline";
 import { map } from "rxjs";
 import { AlertComponent } from "../../../../components/alert/alert.component";
 import { ButtonComponent } from "../../../../components/button/button.component";
@@ -23,6 +30,7 @@ import { WorkflowSubmissionService } from "../../services/workflow-submission.se
 export interface WorkflowTabItem {
   id: "execute" | "about" | "output" | "papers";
   label: string;
+  icon: string;
   shortLabel?: string;
 }
 
@@ -44,6 +52,15 @@ export interface WorkflowTabItem {
     ButtonComponent,
     DialogComponent,
     LoadingComponent,
+    NgIconComponent,
+  ],
+  providers: [
+    provideIcons({
+      heroChartBarSquare,
+      heroDocumentText,
+      heroInformationCircle,
+      heroPlay,
+    }),
   ],
   templateUrl: "./workflow-layout.component.html",
   styleUrl: "./workflow-layout.component.scss",
@@ -68,10 +85,15 @@ export class WorkflowLayoutComponent {
   private readonly route = inject(ActivatedRoute);
 
   readonly tabs: WorkflowTabItem[] = [
-    { id: "execute", label: "Execute" },
-    { id: "about", label: "About" },
-    { id: "output", label: "Example Output", shortLabel: "Output" },
-    { id: "papers", label: "Papers" },
+    { id: "execute", label: "Execute", icon: "heroPlay" },
+    { id: "about", label: "About", icon: "heroInformationCircle" },
+    {
+      id: "output",
+      label: "Example Output",
+      shortLabel: "Output",
+      icon: "heroChartBarSquare",
+    },
+    { id: "papers", label: "Papers", icon: "heroDocumentText" },
   ];
   private readonly tabParam = toSignal(
     this.route.queryParamMap.pipe(map((params) => params.get("tab"))),

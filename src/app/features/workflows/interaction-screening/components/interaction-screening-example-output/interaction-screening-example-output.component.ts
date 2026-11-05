@@ -19,7 +19,7 @@ import {
   providers: [provideIcons({ heroArrowDownTray })],
   templateUrl: "./interaction-screening-example-output.component.html",
   styleUrl: "./interaction-screening-example-output.component.scss",
-  host: { class: "block space-y-8 pt-4" },
+  host: { class: "block space-y-8" },
 })
 export class InteractionScreeningExampleOutputComponent {
   readonly images = {

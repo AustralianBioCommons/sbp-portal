@@ -42,10 +42,12 @@
       </h4>
       <p>
         Inputs are processed to generate pairwise combinations from the
-        <code>Query Sequences</code> and <code>Target Sequences</code>. For each
-        input combination, the workflow searches UniRef30 and a combined
-        environmental (metagenomics) sequence database using MMseqs2-based
-        colabfold_search (<app-citation-link
+        <span class="text-sm font-medium text-gray-900">Query Sequences</span>
+        and
+        <span class="text-sm font-medium text-gray-900">Target Sequences</span>.
+        For each input combination, the workflow searches UniRef30 and a
+        combined environmental (metagenomics) sequence database using
+        MMseqs2-based colabfold_search (<app-citation-link
           citationKey="colabfold"
         ></app-citation-link
         >; <app-citation-link citationKey="mmseqs2"></app-citation-link>).
@@ -126,15 +128,18 @@
   <div class="space-y-2 text-sm text-gray-500">
     <p>
       For the interaction screening workflow, the SBP credit cost depends on the
-      selected <code>Tool</code> and the number of combinations of
-      <code>Query Sequences</code> and <code>Target Sequences</code>. Required
-      credits are displayed during the input configuration and review stage.
-      Below is the formula for calculating total credits for a workflow run.
+      selected <span class="text-sm font-medium text-gray-900">Tool</span> and
+      the number of combinations of
+      <span class="text-sm font-medium text-gray-900">Query Sequences</span> and
+      <span class="text-sm font-medium text-gray-900">Target Sequences</span>.
+      Required credits are displayed during the input configuration and review
+      stage. Below is the formula for calculating total credits for a workflow
+      run.
     </p>
   </div>
 
   <div class="grid gap-4 lg:grid-cols-2">
-    <div class="space-y-2 rounded-lg border p-4 text-sm text-gray-500">
+    <div class="space-y-2 rounded-lg border bg-white p-4 text-sm text-gray-500">
       <h4 class="font-medium text-gray-900">Boltz example</h4>
       <div class="space-y-1">
         <p>
@@ -160,7 +165,7 @@
       </div>
     </div>
 
-    <div class="space-y-2 rounded-lg border p-4 text-sm text-gray-500">
+    <div class="space-y-2 rounded-lg border bg-white p-4 text-sm text-gray-500">
       <h4 class="font-medium text-gray-900">ColabFold example</h4>
       <div class="space-y-1">
         <p>
@@ -253,7 +258,10 @@
           </th>
           <td class="p-4">
             Provides the protein sequences to be predicted in combination with
-            partners from <code>Target Sequences</code>.
+            partners from
+            <span class="text-sm font-medium text-gray-900"
+              >Target Sequences</span
+            >.
           </td>
           <td class="space-y-1 p-4">
             <p>Multi-entry FASTA format.</p>
@@ -264,7 +272,10 @@
             </p>
             <p>
               Multimers are possible using a &ldquo;:&rdquo;-delimited format
-              (eg <code class="font-mono">SEQUENCEA:SEQUENCEB</code>)
+              (eg
+              <span class="text-sm font-medium text-gray-900"
+                >SEQUENCEA:SEQUENCEB</span
+              >)
             </p>
             <p><b>Minimum</b>: 10 query&ndash;target pairs</p>
             <p><b>Maximum</b>: 1000 query&ndash;target pairs</p>
@@ -280,7 +291,10 @@
           </th>
           <td class="p-4">
             Provides the protein sequences to be predicted in combination with
-            partners from <code>Query Sequences</code>.
+            partners from
+            <span class="text-sm font-medium text-gray-900"
+              >Query Sequences</span
+            >.
           </td>
           <td class="space-y-1 p-4">
             <p>Multi-entry FASTA format.</p>
@@ -291,7 +305,10 @@
             </p>
             <p>
               Multimers are possible using a &ldquo;:&rdquo;-delimited format
-              (eg <code class="font-mono">SEQUENCEA:SEQUENCEB</code>)
+              (eg
+              <span class="text-sm font-medium text-gray-900"
+                >SEQUENCEA:SEQUENCEB</span
+              >)
             </p>
             <p><b>Minimum</b>: 10 query&ndash;target pairs</p>
             <p><b>Maximum</b>: 1000 query&ndash;target pairs</p>

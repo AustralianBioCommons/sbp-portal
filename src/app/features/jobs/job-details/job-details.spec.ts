@@ -366,7 +366,10 @@ describe("JobDetailsComponent", () => {
     const router = TestBed.inject(Router);
     const navigateSpy = spyOn(router, "navigate");
 
-    component.openDeleteDialog();
+    const deleteButton = fixture.nativeElement.querySelector(
+      'button[aria-label="Delete job"]'
+    ) as HTMLButtonElement;
+    deleteButton.click();
     expect(component.showDeleteDialog()).toBeTrue();
 
     component.confirmDelete();
@@ -375,6 +378,62 @@ describe("JobDetailsComponent", () => {
     expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs"], {
       queryParams: {},
     });
+    expect(component.showDeleteDialog()).toBeFalse();
+  });
+
+  it("keeps job details and the delete action available after a failed deletion", () => {
+    spyOn(console, "error");
+    const navigateSpy = spyOn(TestBed.inject(Router), "navigate");
+    mockJobsService.deleteJob.and.returnValues(
+      throwError(() => new Error("delete failed")),
+      of({
+        runId: mockJob.id,
+        deleted: true,
+        cancelledBeforeDelete: false,
+        message: "Deleted",
+      })
+    );
+    render();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const deleteButton = () =>
+      host.querySelector<HTMLButtonElement>('button[aria-label="Delete job"]');
+    const confirmButton = () =>
+      host.querySelector<HTMLButtonElement>(
+        'app-dialog app-button[variant="primary"] button'
+      )!;
+
+    deleteButton()!.click();
+    fixture.detectChanges();
+    expect(host.querySelector("dialog")!.open).toBeTrue();
+    confirmButton().click();
+    fixture.detectChanges();
+
+    expect(component.error()).toBeNull();
+    expect(component.job()).toEqual(mockJob);
+    expect(component.deleting()).toBeFalse();
+    expect(component.showDeleteDialog()).toBeFalse();
+    expect(host.querySelector("h1")?.textContent).toContain(mockJob.jobName);
+    expect(host.textContent).toContain("Workflow type");
+    expect(host.querySelector('[role="alert"]')?.textContent).toContain(
+      "Failed to delete job. Please try again."
+    );
+    expect(deleteButton()?.disabled).toBeFalse();
+    expect(navigateSpy).not.toHaveBeenCalled();
+
+    deleteButton()?.click();
+    fixture.detectChanges();
+    expect(host.querySelector("dialog")!.open).toBeTrue();
+    expect(host.querySelector('[role="alert"]')).toBeNull();
+    confirmButton().click();
+    fixture.detectChanges();
+
+    expect(mockJobsService.deleteJob).toHaveBeenCalledTimes(2);
+    expect(mockJobsService.deleteJob).toHaveBeenCalledWith(mockJob.id);
+    expect(navigateSpy).toHaveBeenCalledWith(["/my-jobs"], {
+      queryParams: {},
+    });
+    expect(component.deleting()).toBeFalse();
     expect(component.showDeleteDialog()).toBeFalse();
   });
 
@@ -400,7 +459,7 @@ describe("JobDetailsComponent", () => {
     });
   });
 
-  it("should render an enabled download all files button for the selected job", () => {
+  it("should show download all files only on the files tab", () => {
     resultsService.getJobDownloads.and.returnValue(
       of({
         runId: mockJob.id,
@@ -416,6 +475,15 @@ describe("JobDetailsComponent", () => {
     );
     render();
 
+    const downloadButtonSelector =
+      'app-button[data-testid="download-all-files"] button';
+    expect(
+      fixture.nativeElement.querySelector(downloadButtonSelector)
+    ).toBeNull();
+
+    component.setActiveTab("files");
+    fixture.detectChanges();
+
     const downloadLink = fixture.nativeElement.querySelector(
       'a[title="Download all files"]'
     ) as HTMLAnchorElement;
@@ -425,6 +493,16 @@ describe("JobDetailsComponent", () => {
 
     expect(downloadLink).toBeNull();
     expect(downloadButton.disabled).toBeFalse();
+
+    const downloadAllFilesSpy = spyOn(component, "downloadAllFiles");
+    downloadButton.click();
+    expect(downloadAllFilesSpy).toHaveBeenCalled();
+
+    component.setActiveTab("results");
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector(downloadButtonSelector)
+    ).toBeNull();
   });
 
   it("should download all files through the results service", () => {
@@ -459,6 +537,8 @@ describe("JobDetailsComponent", () => {
 
   it("should render a disabled download all files button when no files are available", () => {
     render();
+    component.setActiveTab("files");
+    fixture.detectChanges();
 
     const downloadLink = fixture.nativeElement.querySelector(
       'a[title="Download all files"]'
