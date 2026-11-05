@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0](https://github.com/AustralianBioCommons/sbp-portal/compare/v1.1.1...v1.2.0) (2026-11-05)
+
+
+### Features
+
+* add download functionality for job results and update job details UI ([e958f95](https://github.com/AustralianBioCommons/sbp-portal/commit/e958f957850269cc64a1ceae8b6a2f1377be8ec7))
+* add download functionality for job results and update job details UI (SBP-697 SBP-701) ([c8df878](https://github.com/AustralianBioCommons/sbp-portal/commit/c8df878a3e75911261d5e56890d2505fa254519b))
+* add error handling for job deletion and display alert on failure ([fc2b642](https://github.com/AustralianBioCommons/sbp-portal/commit/fc2b64262694dc76f3726231b586196d8887898f))
+* calculate bulk prediction cost on bulk prediction form ([729dfad](https://github.com/AustralianBioCommons/sbp-portal/commit/729dfad050ff8b81caa25d4a715c8edc0a033717))
+* increase bulk prediction limit to 4000 ([2f96406](https://github.com/AustralianBioCommons/sbp-portal/commit/2f9640639af3e37288b4d124a0b04a5bd6857d51))
+* increase bulk prediction validation limit to 4000 (SBP-704) ([77a51cc](https://github.com/AustralianBioCommons/sbp-portal/commit/77a51cce0c95217f4ea87338443cdd4344c41e99))
+* replace query, target by their ids ([45a0dd2](https://github.com/AustralianBioCommons/sbp-portal/commit/45a0dd2dae5b48ac97c4cbfa95505f89f7d8c855))
+* replace query, target by their ids ([0ab3866](https://github.com/AustralianBioCommons/sbp-portal/commit/0ab38662e91eadd03fb4789c3b20a036828630b8))
+* update bulk prediction credit calculations (SBP-703) ([9c1fcb5](https://github.com/AustralianBioCommons/sbp-portal/commit/9c1fcb5d021ad290147d41368220c888b1fe1715))
+* various UI optimizations ([42a8f89](https://github.com/AustralianBioCommons/sbp-portal/commit/42a8f89c67afcce5b8b18a60662034b6fe4ea5bf))
+
+
+### Bug Fixes
+
+* consistent decimal places for max scores ([00aeb1c](https://github.com/AustralianBioCommons/sbp-portal/commit/00aeb1c3842ea9be06e4d63858c6d11636a61f58))
+* consistent decimal places for max scores ([3c86261](https://github.com/AustralianBioCommons/sbp-portal/commit/3c8626159515a44ca465923d943770dc402f33e9))
+
 ## [1.1.1](https://github.com/AustralianBioCommons/sbp-portal/compare/v1.1.0...v1.1.1) (2026-10-15)
 
 
