@@ -6,7 +6,12 @@
       <div class="md:col-span-3">
         <div class="grid grid-cols-3 gap-6">
           @for (logo of logos; track logo.href) {
-          <a [href]="logo.href" target="_blank" rel="noopener noreferrer">
+          <a
+            [href]="logo.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-biocommons-primary hover:text-sky-900"
+          >
             <img
               [src]="logo.src"
               [alt]="logo.alt"
@@ -29,13 +34,22 @@
             <ul class="space-y-2">
               @for (link of group.links; track link.href) {
               <li>
+                @if (link.external) {
                 <a
                   [href]="link.href"
-                  [attr.target]="link.external ? '_blank' : null"
-                  [attr.rel]="link.external ? 'noopener noreferrer' : null"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-biocommons-primary hover:text-sky-900"
                 >
                   {{ link.label }}
                 </a>
+                } @else {
+                <a
+                  [routerLink]="link.href"
+                  class="text-biocommons-primary hover:text-sky-900"
+                  >{{ link.label }}</a
+                >
+                }
               </li>
               }
             </ul>
@@ -47,13 +61,19 @@
 
     <!-- Bottom Legal Information -->
     <div class="mt-12 border-t pt-12">
-      <div
-        class="max-w-4xl mx-auto space-y-6 text-center text-sm footer-legal-text"
-      >
+      <div class="max-w-4xl mx-auto space-y-6 text-center text-sm">
         <p>
-          <a href="/homepage"> Australian BioCommons </a>
+          <a
+            class="text-biocommons-primary underline underline-offset-2 hover:text-sky-900"
+            href="https://www.biocommons.org.au/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Australian BioCommons
+          </a>
           is supported by
           <a
+            class="text-biocommons-primary underline underline-offset-2 hover:text-sky-900"
             href="https://www.bioplatforms.com/"
             target="_blank"
             rel="noopener noreferrer"
@@ -61,6 +81,7 @@
             Bioplatforms Australia</a
           >.
           <a
+            class="text-biocommons-primary underline underline-offset-2 hover:text-sky-900"
             href="https://www.bioplatforms.com/"
             target="_blank"
             rel="noopener noreferrer"
@@ -69,6 +90,7 @@
           </a>
           is enabled by
           <a
+            class="text-biocommons-primary underline underline-offset-2 hover:text-sky-900"
             href="https://www.education.gov.au/national-collaborative-research-infrastructure-strategy-ncris"
             target="_blank"
             rel="noopener noreferrer"
@@ -79,12 +101,14 @@
         <p>
           The Australian BioCommons project is led by the
           <a
+            class="text-biocommons-primary underline underline-offset-2 hover:text-sky-900"
             href="https://www.unimelb.edu.au/"
             target="_blank"
             rel="noopener noreferrer"
             >University of Melbourne</a
           >, and hosted within the University's
           <a
+            class="text-biocommons-primary underline underline-offset-2 hover:text-sky-900"
             href="https://mdhs.unimelb.edu.au/research/research/other-research-partnerships,-networks,-centres-and-initiatives"
             target="_blank"
             rel="noopener noreferrer"
@@ -97,7 +121,7 @@
       <div class="flex justify-center gap-4 pt-12">
         @for (social of socialLinks; track social.href) {
         <a
-          class="inline-flex h-12 w-12 items-center justify-center rounded-full border"
+          class="inline-flex h-12 w-12 items-center justify-center rounded-full border text-biocommons-primary hover:text-sky-900"
           [href]="social.href"
           target="_blank"
           rel="noopener noreferrer"

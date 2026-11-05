@@ -1,0 +1,172 @@
+<div id="home-page" class="relative isolate grid bg-gray-100 text-gray-900">
+  <div
+    id="home-background"
+    class="pointer-events-none sticky top-0 col-start-1 row-start-1 -z-10 h-150 self-start bg-black bg-linear-to-r from-biocommons-primary/80 via-biocommons-primary/15 to-biocommons-secondary/50 bg-fixed"
+    aria-hidden="true"
+  ></div>
+  <div class="col-start-1 row-start-1 mx-auto w-full max-w-7xl px-6 pb-12">
+    <section
+      class="bg-black bg-linear-to-r from-biocommons-primary/80 via-biocommons-primary/15 to-biocommons-secondary/50 bg-fixed py-12 text-left text-white"
+      aria-labelledby="home-heading"
+    >
+      <p class="mb-6 text-xs uppercase font-semibold text-gray-200">
+        Structural Biology Platform
+      </p>
+      <h1
+        #heading
+        id="home-heading"
+        class="font-semibold outline-none text-4xl sm:text-5xl lg:text-6xl"
+        tabindex="-1"
+      >
+        <div class="mb-4">
+          Design
+          <span class="text-sky-400">proteins</span>.
+        </div>
+        <div>
+          Predict
+          <span class="text-teal-400">structures</span>.
+          </div>
+      </h1>
+      <p class="mt-6 max-w-2xl text-gray-200 lg:text-lg">
+        Powering protein research with accessible tools and without needing to
+        set up complex computational environments.
+      </p>
+    </section>
+
+    <div
+      id="home-information"
+      class="space-y-12 rounded-lg border bg-white p-6 shadow-sm sm:p-12"
+    >
+      <section id="getting-started" aria-labelledby="getting-started-heading">
+        <h2 id="getting-started-heading" class="mb-6 text-2xl font-semibold">
+          Getting started
+        </h2>
+        <div class="grid gap-6 md:grid-cols-2">
+          <a
+            routerLink="/binder-design"
+            aria-labelledby="binder-design-heading"
+            aria-describedby="binder-design-description"
+            class="group flex min-w-0 flex-col items-start gap-4 rounded-lg border bg-white p-6 text-inherit no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:translate-none motion-reduce:transition-none"
+          >
+            <h3 id="binder-design-heading" class="text-lg font-semibold">
+              Binder Design
+            </h3>
+            <p id="binder-design-description" class="text-gray-500">
+              Design and optimise protein for your research
+            </p>
+            <span
+              class="mt-auto flex items-center justify-start gap-1 text-sm font-semibold text-sky-600 transition-colors group-hover:text-sky-700"
+            >
+              Start a binder design
+              <ng-icon
+                name="heroChevronRight"
+                size="12"
+                class="mt-0.5"
+                aria-hidden="true"
+              />
+            </span>
+          </a>
+          <a
+            routerLink="/structure-prediction"
+            aria-labelledby="structure-prediction-heading"
+            aria-describedby="structure-prediction-description"
+            class="group flex min-w-0 flex-col items-start gap-4 rounded-lg border bg-white p-6 text-inherit no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:translate-none motion-reduce:transition-none"
+          >
+            <h3 id="structure-prediction-heading" class="text-lg font-semibold">
+              Structure Prediction
+            </h3>
+            <p id="structure-prediction-description" class="text-gray-500">
+              Get accurate, high-confidence 3D structures and insights
+            </p>
+            <span
+              class="mt-auto flex items-center justify-start gap-1 text-sm font-semibold text-sky-600 transition-colors group-hover:text-sky-700"
+            >
+              Start a structure prediction
+              <ng-icon
+                name="heroChevronRight"
+                size="12"
+                class="mt-0.5"
+                aria-hidden="true"
+              />
+            </span>
+          </a>
+        </div>
+      </section>
+
+      <section aria-labelledby="how-it-works-heading">
+        <h2 id="how-it-works-heading" class="mb-6 text-2xl font-semibold">
+          How it works
+        </h2>
+        <ol class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" role="list">
+          <li class="relative flex gap-4 sm:block">
+            <span
+              class="absolute -bottom-6 left-5 top-10 w-0.5 bg-gray-300 sm:hidden lg:-right-6 lg:bottom-auto lg:left-5 lg:top-5 lg:block lg:h-0.5 lg:w-auto"
+              aria-hidden="true"
+            ></span>
+            <span
+              class="relative z-10 inline-flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-biocommons-primary bg-white font-medium text-biocommons-primary sm:mb-6"
+              aria-hidden="true"
+              >1</span
+            >
+            <div class="min-w-0">
+              <h3 class="mb-4 text-lg font-semibold">Set up your input</h3>
+              <p class="text-gray-500">
+                Provide your protein sequence, target or other required inputs.
+              </p>
+            </div>
+          </li>
+          <li class="relative flex gap-4 sm:block">
+            <span
+              class="absolute -bottom-6 left-5 top-10 w-0.5 bg-gray-300 sm:hidden lg:-right-6 lg:bottom-auto lg:left-5 lg:top-5 lg:block lg:h-0.5 lg:w-auto"
+              aria-hidden="true"
+            ></span>
+            <span
+              class="relative z-10 inline-flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-biocommons-primary bg-white font-medium text-biocommons-primary sm:mb-6"
+              aria-hidden="true"
+              >2</span
+            >
+            <div class="min-w-0">
+              <h3 class="mb-4 text-lg font-semibold">
+                Configure your analysis
+              </h3>
+              <p class="text-gray-500">
+                Choose the workflow and relevant parameters.
+              </p>
+            </div>
+          </li>
+          <li class="relative flex gap-4 sm:block">
+            <span
+              class="absolute -bottom-6 left-5 top-10 w-0.5 bg-gray-300 sm:hidden lg:-right-6 lg:bottom-auto lg:left-5 lg:top-5 lg:block lg:h-0.5 lg:w-auto"
+              aria-hidden="true"
+            ></span>
+            <span
+              class="relative z-10 inline-flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-biocommons-primary bg-white font-medium text-biocommons-primary sm:mb-6"
+              aria-hidden="true"
+              >3</span
+            >
+            <div class="min-w-0">
+              <h3 class="mb-4 text-lg font-semibold">Submit your job</h3>
+              <p class="text-gray-500">
+                The platform runs the computational workflow for you.
+              </p>
+            </div>
+          </li>
+          <li class="relative flex gap-4 sm:block">
+            <span
+              class="relative z-10 inline-flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-biocommons-primary bg-white font-medium text-biocommons-primary sm:mb-6"
+              aria-hidden="true"
+              >4</span
+            >
+            <div class="min-w-0">
+              <h3 class="mb-4 text-lg font-semibold">Explore your results</h3>
+              <p class="text-gray-500">
+                Review predictions, confidence metrics and structural
+                visualisations.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
+    </div>
+  </div>
+</div>

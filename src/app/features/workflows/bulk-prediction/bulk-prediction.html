@@ -29,7 +29,7 @@
         description="Choose the design tool to run this workflow with."
       >
         <app-tool-selection
-          [tools]="tools"
+          [tools]="toolOptions()"
           [formControl]="form.controls.selectedTool"
         ></app-tool-selection>
       </app-step-content>

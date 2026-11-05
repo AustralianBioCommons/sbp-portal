@@ -7,7 +7,10 @@
 >
   @for (tool of tools(); track tool.id) {
   <label
-    class="flex items-center cursor-pointer gap-2 border rounded-full p-2 pr-3 transition-all hover:bg-gray-50"
+    class="flex items-center cursor-pointer gap-2 border rounded-full p-2 transition-all hover:bg-gray-50 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-600"
+    [class.pl-4]="!!tool.description"
+    [class.pr-4]="!!tool.description"
+    [class.pr-3]="!tool.description"
     [class]="
       showRequiredError()
         ? 'border-red-500'
@@ -27,18 +30,25 @@
       class="sr-only"
     />
     <div
-      class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all border-sky-500 bg-white"
+      class="w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center transition-all border-sky-500 bg-white"
     >
       @if (selectedToolId() === tool.id) {
       <div class="w-2 h-2 rounded-full bg-sky-500"></div>
       }
     </div>
     <span class="text-sm">
-      <span class="font-semibold">{{ tool.label }}</span>
-      @if (tool.credits !== undefined) {
-      <span class="text-gray-500">
-        from {{ tool.credits }}
-        {{ tool.credits === 1 ? "credit" : "credits" }}
+      <span class="block">
+        <span class="font-semibold">{{ tool.label }}</span>
+        @if (tool.credits !== undefined) {
+        <span class="text-gray-500">
+          from {{ tool.credits }}
+          {{ tool.credits === 1 ? "credit" : "credits" }}
+        </span>
+        }
+      </span>
+      @if (tool.description) {
+      <span class="block text-xs text-gray-600">
+        {{ tool.description }}
       </span>
       }
     </span>

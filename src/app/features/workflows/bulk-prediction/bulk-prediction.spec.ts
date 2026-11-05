@@ -557,6 +557,15 @@ describe("BulkPredictionComponent", () => {
       expect(creditsService.getMyCredit).toHaveBeenCalled();
       // Multiplier (2) × the workflow's 10-entry minimum.
       expect(component.tools.find((t) => t.id === "boltz")?.credits).toBe(20);
+      const toolLabels = (
+        fixture.nativeElement as HTMLElement
+      ).querySelectorAll("app-tool-selection label");
+      expect(toolLabels[0].textContent).toContain(
+        "2 credits per prediction · 10 Minimum"
+      );
+      expect(toolLabels[1].textContent).toContain(
+        "3 credits per prediction · 10 Minimum"
+      );
       expect(component.creditsRemaining()).toBe(100);
     });
 
@@ -567,6 +576,11 @@ describe("BulkPredictionComponent", () => {
       expect(
         fresh.componentInstance.tools.find((t) => t.id === "boltz")?.credits
       ).toBeUndefined();
+      expect(
+        (fresh.nativeElement as HTMLElement).querySelector(
+          "app-tool-selection .text-xs"
+        )
+      ).toBeNull();
     });
 
     it("warns and continues when the credit requests fail", () => {

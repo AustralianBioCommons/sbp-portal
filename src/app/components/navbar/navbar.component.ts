@@ -113,6 +113,10 @@ export class Navbar {
   scrolled = signal(false);
 
   readonly navItems: NavItem[] = [
+    {
+      label: "Home",
+      path: "/home",
+    },
     ...THEMES.map((theme) => ({
       label: theme.label,
       path: `/${theme.id}`,

@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import { heroMagnifyingGlass } from "@ng-icons/heroicons/outline";
 import {
@@ -34,7 +35,7 @@ type SocialLink = {
 
 @Component({
   selector: "app-footer",
-  imports: [FormsModule, NgIconComponent],
+  imports: [FormsModule, NgIconComponent, RouterLink],
   providers: [
     provideIcons({
       heroMagnifyingGlass,
@@ -47,6 +48,7 @@ type SocialLink = {
   templateUrl: "./footer.component.html",
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./footer.component.scss",
+  host: { class: "relative z-10 block" },
 })
 export class FooterSectionsComponent {
   readonly logos: LogoLink[] = [
@@ -96,6 +98,7 @@ export class FooterSectionsComponent {
     {
       heading: "Other",
       links: [
+        { label: "Home", href: "/home" },
         { label: "My Jobs", href: "/my-jobs" },
         {
           label: "Support",

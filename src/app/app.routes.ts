@@ -1,7 +1,11 @@
 import { Routes } from "@angular/router";
 
 export const routes: Routes = [
-  { path: "", redirectTo: "/binder-design", pathMatch: "full" },
+  { path: "", redirectTo: "/home", pathMatch: "full" },
+  {
+    path: "home",
+    loadComponent: () => import("./features/home/home"),
+  },
   {
     path: "binder-design",
     children: [

@@ -131,6 +131,21 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
     { id: "boltz", label: "Boltz" },
     { id: "colabfold", label: "ColabFold" },
   ];
+  readonly toolOptions = computed(() => {
+    const multipliers = this.toolMultipliers();
+    return this.tools.map((tool) => {
+      const multiplier = multipliers[tool.id];
+      return {
+        ...tool,
+        description:
+          multiplier == null
+            ? undefined
+            : `${multiplier} ${
+                multiplier === 1 ? "credit" : "credits"
+              } per prediction · ${MIN_BULK_ENTRIES} Minimum`,
+      };
+    });
+  });
   selectedToolLabel: Signal<string> = computed(() =>
     getToolLabel(this.tools, this.formValue().selectedTool)
   );
