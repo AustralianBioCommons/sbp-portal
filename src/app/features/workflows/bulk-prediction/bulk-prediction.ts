@@ -115,15 +115,26 @@ export default class BulkPredictionComponent extends WorkflowPageBase {
     { initialValue: this.form.getRawValue() }
   );
 
-  /** Credit cost of the run: tool multiplier × number of FASTA entries. */
+  /** Credit cost: tool multiplier × sum of the per-entry FASTA size multipliers. */
   readonly creditCost = computed<number | null>(() => {
     const tool = this.formValue().selectedTool;
     if (!tool) return null;
     const multiplier = this.toolMultipliers()[tool];
     if (multiplier == null) return null;
-    const result = validateBulkFastaProtein(this.formValue()?.fasta ?? "");
+    const fasta = this.formValue().fasta;
+    const result = validateBulkFastaProtein(fasta);
     if (!result.valid || !result.sequenceCount) return null;
-    return multiplier * result.sequenceCount;
+    const sizeMultipliers = this.sizeMultipliers();
+    let quantity = 0;
+    for (const entry of parseMultiFasta(fasta)) {
+      const length = entry.sequence.replace(/:/g, "").length;
+      const band = sizeMultipliers.find(
+        (range) => range.minLength <= length && length <= range.maxLength
+      );
+      if (!band) return null;
+      quantity += band.multiplier;
+    }
+    return multiplier * quantity;
   });
 
   // Tools

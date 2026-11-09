@@ -16,6 +16,7 @@ import { WorkflowFormComponent } from "../components/workflow-form/workflow-form
 import { AuthService } from "../../../core/services/auth.service";
 import {
   CreditsService,
+  FastaSizeRangeMultiplier,
   USER_CREDITS_ENABLED,
 } from "../../../core/services/credits.service";
 import { WorkflowSubmissionService } from "../services/workflow-submission.service";
@@ -65,6 +66,8 @@ export abstract class WorkflowPageBase implements OnInit {
   protected readonly toolMultipliers = signal<
     Partial<Record<WorkflowTool, number>>
   >({});
+  // Multipliers applied to the size of each entry - currently only used for bulk prediction
+  protected readonly sizeMultipliers = signal<FastaSizeRangeMultiplier[]>([]);
   readonly creditsRemaining = signal<number | null>(null);
   readonly creditsInsufficient = computed<boolean>(() => {
     const cost = this.creditCost();
@@ -134,6 +137,7 @@ export abstract class WorkflowPageBase implements OnInit {
           );
           if (!config) return;
           this.toolMultipliers.set(config.toolMultipliers);
+          this.sizeMultipliers.set(config.sizeMultipliers ?? []);
           for (const tool of this.tools) {
             const multiplier = config.toolMultipliers[tool.id];
             if (multiplier != null) {
