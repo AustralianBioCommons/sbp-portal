@@ -32,6 +32,7 @@ import { SinglePredictionReportComponent } from "../components/single-prediction
 import { JobResultsReportComponent } from "../components/job-results-report/job-results-report.component";
 import { WorkflowPapersComponent } from "../../workflows/components/workflow-papers/workflow-papers.component";
 import { ResultFileRef } from "../shared/prediction-results.utils";
+import { startBrowserDownload } from "../shared/download.utils";
 import { statusTagClass, type JobStatusUi } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
 import {
@@ -458,7 +459,7 @@ export default class JobDetailsComponent implements OnInit {
           this.getDownloadFilename(
             response.headers.get("content-disposition")
           ) ?? `${job.id}_results.zip`;
-        this.startBrowserDownload(response.body, filename);
+        startBrowserDownload(response.body, filename);
       });
   }
 
@@ -491,7 +492,7 @@ export default class JobDetailsComponent implements OnInit {
           this.getDownloadFilename(
             response.headers.get("content-disposition")
           ) ?? this.getCategoryZipFilename(category, job.jobName);
-        this.startBrowserDownload(response.body, filename);
+        startBrowserDownload(response.body, filename);
       });
   }
 
@@ -636,18 +637,6 @@ export default class JobDetailsComponent implements OnInit {
       contentDisposition.match(/filename=([^;]+)/i)?.[1]?.trim() ??
       null
     );
-  }
-
-  private startBrowserDownload(blob: Blob, filename: string): void {
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = filename;
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(objectUrl);
   }
 
   /** Opens a setting's raw text (e.g. the submitted FASTA) as plain text in a

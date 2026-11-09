@@ -29,7 +29,20 @@
     ></ng-icon>
     <p class="wrap-break-word">{{ resultsError() }}</p>
   </div>
-  } @else {
+  } @else { @if (downloadError()) {
+  <div
+    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+    role="alert"
+  >
+    <ng-icon
+      name="heroExclamationCircle"
+      size="20"
+      class="shrink-0 text-red-500"
+      aria-hidden="true"
+    ></ng-icon>
+    <p class="wrap-break-word">{{ downloadError() }}</p>
+  </div>
+  }
   <div class="space-y-2">
     <!-- Sits over the viewer's column; the table has the right. -->
     <div>
@@ -209,7 +222,9 @@
                 [columns]="columns()"
                 [rows]="rows()"
                 [downloadFiles]="tableDownloadFiles()"
+                [downloadingKey]="downloadingKey()"
                 [selectedId]="selectedId()"
+                (downloadRequested)="downloadPrediction($event)"
                 (rowSelected)="onRowSelected($event)"
               ></app-job-results-table>
             </div>

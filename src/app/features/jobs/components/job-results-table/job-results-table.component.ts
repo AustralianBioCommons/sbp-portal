@@ -12,6 +12,7 @@ import {
   heroArrowDownTray,
   heroArrowUp,
   heroArrowsUpDown,
+  heroArrowPath,
 } from "@ng-icons/heroicons/outline";
 import {
   ReportColumn,
@@ -31,6 +32,7 @@ import { ResultFileRef } from "../../shared/prediction-results.utils";
       heroArrowDownTray,
       heroArrowUp,
       heroArrowsUpDown,
+      heroArrowPath,
     }),
   ],
   templateUrl: "./job-results-table.component.html",
@@ -45,6 +47,8 @@ export class JobResultsTableComponent {
   caption = input("Designs");
   framed = input(true);
   downloadFiles = input<readonly ResultFileRef[] | null>(null);
+  downloadingKey = input<string | null>(null);
+  downloadRequested = output<ResultFileRef>();
 
   readonly downloadFilesByKey = computed(
     () => new Map((this.downloadFiles() ?? []).map((file) => [file.key, file]))

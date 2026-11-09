@@ -6,6 +6,7 @@ import {
 } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
+import { HttpErrorResponse } from "@angular/common/http";
 import { Subject, of, throwError } from "rxjs";
 
 import { JobResultsReportComponent } from "./job-results-report.component";
@@ -160,6 +161,7 @@ describe("JobResultsReportComponent", () => {
     resultsService = jasmine.createSpyObj<ResultsService>("ResultsService", [
       "getResultFileText",
       "getJobSettingParams",
+      "downloadPrediction",
     ]);
     resultsService.getJobSettingParams.and.returnValue(
       of({ runId: RUN, settingParams: {} })
@@ -927,17 +929,32 @@ describe("JobResultsReportComponent", () => {
       ]);
     });
 
-    it("offers a download for the pair's structure file", () => {
+    it("downloads the pair's structure and PAE as one ZIP", () => {
       respondWith({ [IS_CSV]: isCsv, [IS_CIF]: PDB });
+      const pending = new Subject<Blob>();
+      resultsService.downloadPrediction.and.returnValue(pending);
+      spyOn(URL, "createObjectURL").and.returnValue("blob:zip");
+      const click = spyOn(HTMLAnchorElement.prototype, "click");
       renderIs();
 
-      const link = fixture.nativeElement.querySelector(
-        "app-job-results-table tbody a"
-      ) as HTMLAnchorElement;
-      expect(link.href).toBe(isFiles[1].url);
-      expect(link.getAttribute("aria-label")).toBe(
-        `Download ${isFiles[1].label}`
+      const button = fixture.nativeElement.querySelector(
+        "app-job-results-table tbody button"
+      ) as HTMLButtonElement;
+      button.click();
+      fixture.detectChanges();
+      expect(resultsService.downloadPrediction).toHaveBeenCalledOnceWith(
+        RUN,
+        IS_CIF
       );
+      expect(button.disabled).toBeTrue();
+      const zip = new Blob(["zip"]);
+      pending.next(zip);
+      pending.complete();
+      fixture.detectChanges();
+      expect(
+        (click.calls.mostRecent().object as HTMLAnchorElement).download
+      ).toBe("seq1-seq3_model_0.zip");
+      expect(button.disabled).toBeFalse();
     });
 
     it("shows the selected pair's complex, coloured query against target", () => {
@@ -1034,17 +1051,33 @@ describe("JobResultsReportComponent", () => {
       ]);
     });
 
-    it("offers a download for the prediction's structure file", () => {
+    it("shows missing PAE errors and clears them when the run changes", () => {
       respondWith({ [BP_CSV]: bpCsv, [BP_CIF]: PDB });
-      renderBp();
-
-      const link = fixture.nativeElement.querySelector(
-        "app-job-results-table tbody a"
-      ) as HTMLAnchorElement;
-      expect(link.href).toBe(bpFiles[1].url);
-      expect(link.getAttribute("aria-label")).toBe(
-        `Download ${bpFiles[1].label}`
+      resultsService.downloadPrediction.and.returnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 }))
       );
+      renderBp();
+      component.downloadPrediction(bpFiles[1]);
+      fixture.detectChanges();
+      expect(
+        fixture.nativeElement.querySelector('[role="alert"]').textContent
+      ).toContain("matching PAE files are unavailable");
+      expect(component.downloadingKey()).toBeNull();
+      fixture.componentRef.setInput("runId", "second-run");
+      fixture.detectChanges();
+      expect(component.downloadError()).toBeNull();
+    });
+
+    it("cancels pending downloads when the run changes", () => {
+      respondWith({ [BP_CSV]: bpCsv, [BP_CIF]: PDB });
+      const pending = new Subject<Blob>();
+      resultsService.downloadPrediction.and.returnValue(pending);
+      renderBp();
+      component.downloadPrediction(bpFiles[1]);
+      fixture.componentRef.setInput("runId", "second-run");
+      fixture.detectChanges();
+      expect(pending.observed).toBeFalse();
+      expect(component.downloadingKey()).toBeNull();
     });
 
     it("previews the row's own structure file", () => {

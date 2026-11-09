@@ -13,6 +13,7 @@ import {
 } from "@angular/core";
 import type { WritableSignal } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
+import { HttpErrorResponse } from "@angular/common/http";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   EMPTY,
@@ -44,6 +45,7 @@ import { LoadingComponent } from "../../../../components/loading/loading.compone
 import { TooltipComponent } from "../../../../components/tooltip/tooltip.component";
 import { ResultsService } from "../../services/results.service";
 import { ResultFileRef } from "../../shared/prediction-results.utils";
+import { startBrowserDownload } from "../../shared/download.utils";
 import {
   ReportRow,
   ReportSources,
@@ -108,6 +110,8 @@ export class JobResultsReportComponent {
   /** A stats file that loaded fine but ranked nothing: not an error. */
   readonly resultsEmpty = signal(false);
   readonly resultsError = signal<string | null>(null);
+  readonly downloadingKey = signal<string | null>(null);
+  readonly downloadError = signal<string | null>(null);
 
   /** Kept so an adapter that varies its columns can read the file again. */
   private readonly resultsText = signal<string | null>(null);
@@ -135,6 +139,7 @@ export class JobResultsReportComponent {
 
   private resultsFetch: Subscription | null = null;
   private structureFetch: Subscription | null = null;
+  private downloadFetch: Subscription | null = null;
 
   readonly resultsArtifact = computed(
     () => this.adapter()?.findResultsArtifact(this.files()) ?? null
@@ -286,6 +291,12 @@ export class JobResultsReportComponent {
   ].join("\n");
 
   constructor() {
+    effect((onCleanup) => {
+      this.runId();
+      this.downloadError.set(null);
+      onCleanup(() => this.downloadFetch?.unsubscribe());
+    });
+
     effect(() => {
       if (this.coreUnavailable()) this.unavailable.emit();
     });
@@ -348,6 +359,29 @@ export class JobResultsReportComponent {
 
   onRowSelected(row: ReportRow): void {
     this.selectedId.set(row.id);
+  }
+
+  downloadPrediction(file: ResultFileRef): void {
+    if (this.downloadingKey() !== null) return;
+    this.downloadingKey.set(file.key);
+    this.downloadError.set(null);
+    this.downloadFetch = this.resultsService
+      .downloadPrediction(this.runId(), file.key)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError((err: HttpErrorResponse) => {
+          this.downloadError.set(
+            err.status === 404
+              ? "Structure or matching PAE files are unavailable. Results may still be syncing. Please try again."
+              : "Failed to download prediction files. Please try again."
+          );
+          return EMPTY;
+        }),
+        finalize(() => this.downloadingKey.set(null))
+      )
+      .subscribe((blob) => {
+        startBrowserDownload(blob, file.label.replace(/\.[^.]+$/, ".zip"));
+      });
   }
 
   // ── Designs panel ─────────────────────────────────────────────────────────
