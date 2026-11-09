@@ -380,7 +380,8 @@ export class JobResultsReportComponent {
         finalize(() => this.downloadingKey.set(null))
       )
       .subscribe((blob) => {
-        startBrowserDownload(blob, file.label.replace(/\.[^.]+$/, ".zip"));
+        const filename = file.key.slice(file.key.lastIndexOf("/") + 1);
+        startBrowserDownload(blob, `${filename.replace(/\.[^.]+$/, "")}.zip`);
       });
   }
 

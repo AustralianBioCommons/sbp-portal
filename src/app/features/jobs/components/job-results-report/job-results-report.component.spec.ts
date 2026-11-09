@@ -935,7 +935,7 @@ describe("JobResultsReportComponent", () => {
       resultsService.downloadPrediction.and.returnValue(pending);
       spyOn(URL, "createObjectURL").and.returnValue("blob:zip");
       const click = spyOn(HTMLAnchorElement.prototype, "click");
-      renderIs();
+      renderIs([isFiles[0], { ...isFiles[1], label: "Structure PDB" }]);
 
       const button = fixture.nativeElement.querySelector(
         "app-job-results-table tbody button"
