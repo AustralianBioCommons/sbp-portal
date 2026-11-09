@@ -165,14 +165,14 @@ describe("JobResultsTableComponent", () => {
     fixture.componentRef.setInput("selectedId", "design-2");
     fixture.detectChanges();
 
-    const links = bodyRows().map((row) => row.querySelector("a")!);
-    expect(links.map((link) => link.href)).toEqual([
-      files[1].url,
-      files[0].url,
-    ]);
-    expect(links[0].getAttribute("aria-label")).toBe("Download design-2.pdb");
-    expect(links[0].target).toBe("_blank");
-    expect(links[0].rel).toBe("noopener noreferrer");
+    const requested = jasmine.createSpy("downloadRequested");
+    component.downloadRequested.subscribe(requested);
+    const buttons = bodyRows().map((row) => row.querySelector("button")!);
+    buttons[0].click();
+    expect(requested).toHaveBeenCalledOnceWith(files[1]);
+    expect(buttons[0].getAttribute("aria-label")).toBe(
+      "Download structure and PAE for design-2 (ZIP)"
+    );
     expect(headers()[3].textContent!.trim()).toBe("Download");
     expect(headers()[3].querySelector("button")).toBeNull();
     expect(bodyRows()[0].lastElementChild!.classList).toContain("cap-right");
@@ -192,28 +192,26 @@ describe("JobResultsTableComponent", () => {
     );
     const selected = jasmine.createSpy("rowSelected");
     component.rowSelected.subscribe(selected);
-    const link = bodyRows()[0].querySelector("a")!;
+    const button = bodyRows()[0].querySelector("button")!;
 
-    link.focus();
-    expect(document.activeElement).toBe(link);
+    button.focus();
+    expect(document.activeElement).toBe(button);
     for (const key of ["Enter", " "]) {
       const event = new KeyboardEvent("keydown", {
         key,
         bubbles: true,
         cancelable: true,
       });
-      link.dispatchEvent(event);
+      button.dispatchEvent(event);
       expect(event.defaultPrevented).toBeFalse();
     }
-    // Cancel navigation while keeping the click's propagation observable.
-    link.addEventListener("click", (event) => event.preventDefault());
-    link.click();
+    button.click();
     expect(selected).not.toHaveBeenCalled();
   });
 
   it("omits unavailable downloads and spans the empty state across the download column", () => {
     render(makeRows(1), []);
-    expect(bodyRows()[0].querySelector("a")).toBeNull();
+    expect(bodyRows()[0].querySelector("button")).toBeNull();
     expect(cellText(bodyRows()[0])[3]).toBe("—");
 
     fixture.componentRef.setInput("rows", []);

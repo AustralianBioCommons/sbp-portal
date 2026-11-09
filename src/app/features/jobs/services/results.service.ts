@@ -108,6 +108,13 @@ export class ResultsService {
     });
   }
 
+  downloadPrediction(runId: string, key: string): Observable<Blob> {
+    return this.http.get(
+      `${this.resultsUrl}/${encodeURIComponent(runId)}/download-prediction`,
+      { params: { key }, responseType: "blob" }
+    );
+  }
+
   /**
    * Normalizes report preview URLs into an absolute HTTPS URL that is safe to hand to an iframe.
    *
