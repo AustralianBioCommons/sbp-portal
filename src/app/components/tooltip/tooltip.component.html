@@ -11,7 +11,7 @@
   <ng-content>
     <button
       type="button"
-      class="flex items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+      class="flex items-center rounded-full focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none"
       aria-label="More information"
       [attr.aria-describedby]="tooltipId"
     >
@@ -26,16 +26,16 @@
 
 <!-- Tooltip -->
 @if (open()) {
-<div
-  [id]="tooltipId"
-  role="tooltip"
-  class="fixed z-1000 w-max max-w-48 -translate-x-1/2 whitespace-pre-line rounded-md bg-gray-900 px-3 py-2 text-xs text-white opacity-95 shadow-lg sm:max-w-56 md:max-w-64 lg:max-w-72"
-  [style.left.px]="left()"
-  [style.top.px]="top()"
->
-  <span class="wrap-break-word">{{ message() }}</span>
   <div
-    class="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-gray-900"
-  ></div>
-</div>
+    [id]="tooltipId"
+    role="tooltip"
+    class="fixed z-1000 w-max max-w-48 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-xs whitespace-pre-line text-white opacity-95 shadow-lg sm:max-w-56 md:max-w-64 lg:max-w-72"
+    [style.left.px]="left()"
+    [style.top.px]="top()"
+  >
+    <span class="wrap-break-word">{{ message() }}</span>
+    <div
+      class="absolute top-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-gray-900"
+    ></div>
+  </div>
 }

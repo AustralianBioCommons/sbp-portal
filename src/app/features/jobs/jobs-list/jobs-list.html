@@ -28,9 +28,9 @@
 }
 
 <div class="bg-gray-50 py-12">
-  <div class="max-w-7xl px-6 mx-auto">
+  <div class="mx-auto max-w-7xl px-6">
     <!-- Page Header -->
-    <h1 class="text-4xl font-semibold mb-12">My Jobs</h1>
+    <h1 class="mb-12 text-4xl leading-none font-semibold">My Jobs</h1>
 
     @if (authLoading()) {
     <app-loading
@@ -41,12 +41,12 @@
     } @else if (!canExecuteWorkflows()) {
     <!-- Access Restricted -->
     <div
-      class="rounded-lg bg-white border mt-12 text-center py-8 px-4"
+      class="mt-12 rounded-lg border bg-white px-4 py-8 text-center"
       role="alert"
     >
       <p class="text-base font-semibold">Access Restricted</p>
       @if (!isAuthenticated()) {
-      <p class="text-sm text-gray-500 mt-4 mb-6">
+      <p class="mt-4 mb-6 text-sm text-gray-500">
         To view your jobs, please log in or register for a BioCommons Access
         account and add the
         <span class="font-semibold">SBP Workflow Execution bundle</span> to your
@@ -61,7 +61,7 @@
         Log in or Register
       </app-button>
       } @else {
-      <p class="text-sm text-gray-500 mt-4 mb-6">
+      <p class="mt-4 mb-6 text-sm text-gray-500">
         You currently do not have access to view jobs; please go to your profile
         page to add the
         <span class="font-semibold">SBP Workflow Execution</span> bundle.
@@ -70,7 +70,7 @@
         [href]="profileUrl"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
+        class="inline-flex w-auto items-center justify-center overflow-hidden rounded-md bg-biocommons-primary px-4 py-2.5 text-sm font-medium whitespace-nowrap text-white no-underline transition-all hover:bg-sky-900"
       >
         Add bundle
       </a>
@@ -94,11 +94,11 @@
     }
 
     <!-- Jobs Table -->
-    <div class="bg-white shadow-sm rounded-lg border">
+    <div class="rounded-lg border bg-white shadow-sm">
       <!-- A scroll container stops the header sticking, so horizontal scroll is below md only -->
       <!-- min-h leaves room for the status menu, which the scroll container would otherwise clip -->
       <div
-        class="@container max-md:overflow-x-auto max-md:rounded-lg max-md:min-h-112"
+        class="@container max-md:min-h-112 max-md:overflow-x-auto max-md:rounded-lg"
       >
         <table
           #jobsTable
@@ -107,7 +107,7 @@
           class="min-w-full divide-y divide-gray-200 focus:outline-none"
         >
           <!-- Search/filter sits in the sticky thead so it all sticks as one block -->
-          <thead class="md:sticky md:top-26 z-20">
+          <thead class="z-20 md:sticky md:top-26">
             <tr role="presentation">
               <!-- Gray backdrop masks rows in the gap below the navbar and the card borders beside the rounded corners -->
               <td
@@ -116,7 +116,7 @@
                 class="relative p-0 md:before:absolute md:before:-inset-x-6 md:before:-top-4 md:before:bottom-0 md:before:bg-gray-50"
               >
                 <div
-                  class="relative max-md:sticky max-md:left-0 max-md:w-[100cqw] md:-mx-px md:-mt-px bg-white rounded-t-lg md:border md:border-b-0 px-4 pt-4 pb-2"
+                  class="relative rounded-t-lg bg-white px-4 pt-4 pb-2 max-md:sticky max-md:left-0 max-md:w-[100cqw] md:-mx-px md:-mt-px md:border md:border-b-0"
                 >
                   <div
                     class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
@@ -130,7 +130,7 @@
                         Search
                       </label>
                       <div
-                        class="flex h-10 w-full text-sm flex-1 items-center justify-between rounded-md border border-gray-300 bg-white pl-4 pr-2 focus-within:ring-2 focus-within:ring-sky-100"
+                        class="flex h-10 w-full flex-1 items-center justify-between rounded-md border border-gray-300 bg-white pr-2 pl-4 text-sm focus-within:ring-2 focus-within:ring-sky-100"
                       >
                         <input
                           type="text"
@@ -155,7 +155,7 @@
 
                     <!-- Status Filter + Clear + Delete -->
                     <div
-                      class="flex max-md:flex-wrap items-end gap-4 w-full md:w-auto"
+                      class="flex w-full items-end gap-4 max-md:flex-wrap md:w-auto"
                     >
                       <div class="min-w-0 flex-1 md:w-48 md:flex-none">
                         <p class="mb-1 block text-sm font-medium">Filter</p>
@@ -169,15 +169,15 @@
                               (click)="toggleStatusDropdown()"
                               [attr.aria-expanded]="showStatusDropdown()"
                               aria-haspopup="true"
-                              class="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-4 focus-within:ring-2 focus-within:ring-sky-100 focus-visible:outline-none hover:cursor-pointer"
+                              class="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-4 focus-within:ring-2 focus-within:ring-sky-100 hover:cursor-pointer focus-visible:outline-none"
                             >
                               <span class="flex items-center">
-                                <span class="text-sm font-medium mr-2"
+                                <span class="mr-2 text-sm font-medium"
                                   >Status:</span
                                 >
                                 @if (selectedStatuses().length > 0) {
                                 <span
-                                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800"
+                                  class="inline-flex items-center rounded bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800"
                                 >
                                   {{ selectedStatuses().length }}
                                 </span>
@@ -214,7 +214,7 @@
                         type="button"
                         (click)="clearFilters()"
                         [disabled]="selectedStatuses().length === 0"
-                        class="h-10 whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                        class="h-10 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium whitespace-nowrap text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
                       >
                         Clear Filters
                       </button>
@@ -225,7 +225,7 @@
                         [disabled]="
                           selectedJobs().length === 0 || bulkDeleting() || loading()
                         "
-                        class="inline-flex h-10 items-center justify-center gap-2 max-md:basis-full whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-red-600 hover:bg-gray-50 disabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                        class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium whitespace-nowrap text-red-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white max-md:basis-full"
                       >
                         <ng-icon
                           name="heroTrash"
@@ -260,48 +260,48 @@
               </td>
             </tr>
             <tr class="bg-sky-900 text-white">
-              <th scope="col" class="px-4 py-2 align-middle text-center">
+              <th scope="col" class="px-4 py-2 text-center align-middle">
                 <input
                   type="checkbox"
                   [checked]="isAllSelected()"
                   (change)="toggleAllJobs()"
                   [disabled]="loading()"
                   aria-label="Select all jobs"
-                  class="block h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                  class="block h-4 w-4 cursor-pointer rounded border-gray-300 text-sky-600 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </th>
               <th
                 scope="col"
-                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+                class="px-6 py-2 text-left text-sm font-medium md:max-lg:px-4"
               >
                 Job Name
               </th>
               <th
                 scope="col"
-                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+                class="px-6 py-2 text-left text-sm font-medium md:max-lg:px-4"
               >
                 Workflow Type
               </th>
               <th
                 scope="col"
-                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+                class="px-6 py-2 text-left text-sm font-medium md:max-lg:px-4"
               >
                 Tool
               </th>
               <th
                 scope="col"
-                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+                class="px-6 py-2 text-left text-sm font-medium md:max-lg:px-4"
               >
                 Status
               </th>
               <th
                 scope="col"
-                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium"
+                class="px-6 py-2 text-left text-sm font-medium md:max-lg:px-4"
               >
                 <button
                   type="button"
                   (click)="toggleSubmittedSort()"
-                  class="inline-flex items-center gap-1 text-sm font-medium hover:text-sky-400 rounded transition-all"
+                  class="inline-flex items-center gap-1 rounded text-sm font-medium transition-all hover:text-sky-400"
                 >
                   Submitted @if (submittedSortDirection() === "asc") {
                   <ng-icon
@@ -322,12 +322,12 @@
               </th>
               <th
                 scope="col"
-                class="px-6 md:max-lg:px-4 py-2 text-left text-sm font-medium whitespace-nowrap"
+                class="px-6 py-2 text-left text-sm font-medium whitespace-nowrap md:max-lg:px-4"
               >
                 <button
                   type="button"
                   (click)="toggleScoreSort()"
-                  class="inline-flex items-center gap-1 text-sm font-semibold hover:text-sky-400 rounded transition-all"
+                  class="inline-flex items-center gap-1 rounded text-sm font-semibold transition-all hover:text-sky-400"
                 >
                   Max score @if (scoreSortDirection() === "asc") {
                   <ng-icon
@@ -372,7 +372,7 @@
             </tr>
             } @else { @for (job of jobs(); track job.id) {
             <tr
-              class="hover:bg-gray-50 cursor-pointer"
+              class="cursor-pointer hover:bg-gray-50"
               role="button"
               tabindex="0"
               (click)="viewJobDetails(job)"
@@ -390,43 +390,43 @@
                   [checked]="isJobSelected(job.id)"
                   (change)="toggleJob(job.id)"
                   [attr.aria-label]="'Select ' + job.jobName"
-                  class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded cursor-pointer"
+                  class="h-4 w-4 cursor-pointer rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                 />
               </td>
               <td
-                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm font-medium text-sky-600"
+                class="px-6 py-4 text-sm font-medium whitespace-nowrap text-sky-600 md:max-lg:px-4 md:max-lg:wrap-anywhere md:max-lg:whitespace-normal"
               >
                 {{ job.jobName }}
               </td>
               <td
-                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
+                class="px-6 py-4 text-sm whitespace-nowrap text-gray-500 md:max-lg:px-4 md:max-lg:wrap-anywhere md:max-lg:whitespace-normal"
               >
                 {{ job.workflow || "—" }}
               </td>
               <td
-                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
+                class="px-6 py-4 text-sm whitespace-nowrap text-gray-500 md:max-lg:px-4 md:max-lg:wrap-anywhere md:max-lg:whitespace-normal"
               >
                 {{ getToolName(job.tool) || "—" }}
               </td>
-              <td class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap">
+              <td class="px-6 py-4 whitespace-nowrap md:max-lg:px-4">
                 <span
                   [class]="getStatusClass(job.status)"
-                  class="px-2 py-1 inline-flex justify-center items-center text-xs font-semibold rounded-full"
+                  class="inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-semibold"
                 >
                   @if (job.status === 'In progress') {
                   <span
-                    class="h-1.5 w-1.5 rounded-full mr-1.5 bg-blue-600 animate-pulse"
+                    class="mr-1.5 h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600"
                   ></span>
                   } {{ job.status }}
                 </span>
               </td>
               <td
-                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap text-sm text-gray-500"
+                class="px-6 py-4 text-sm whitespace-nowrap text-gray-500 md:max-lg:px-4"
               >
                 {{ job.submittedAt | date:'dd/MM/yyyy' }}
               </td>
               <td
-                class="px-6 md:max-lg:px-4 py-4 whitespace-nowrap md:max-lg:whitespace-normal md:max-lg:wrap-anywhere text-sm text-gray-500"
+                class="px-6 py-4 text-sm whitespace-nowrap text-gray-500 md:max-lg:px-4 md:max-lg:wrap-anywhere md:max-lg:whitespace-normal"
               >
                 @if (job.score !== null) { {{ formatDecimals(job.score,
                 scoreDecimals) }} @if (job.finalDesignCount !== null &&
@@ -445,14 +445,14 @@
       <!-- Pagination -->
       @if (!loading() && total() > 0) {
       <div
-        class="bg-white rounded-b-lg p-4 flex items-center justify-between border-t"
+        class="flex items-center justify-between rounded-b-lg border-t bg-white p-4"
       >
-        <div class="flex-1 flex justify-between sm:hidden">
+        <div class="flex flex-1 justify-between sm:hidden">
           <button
             type="button"
             (click)="previousPage()"
             [disabled]="!hasPreviousPage"
-            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
           </button>
@@ -460,13 +460,13 @@
             type="button"
             (click)="nextPage()"
             [disabled]="!hasNextPage"
-            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
         </div>
         <div
-          class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+          class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between"
         >
           <div>
             <p class="text-sm text-gray-700">
@@ -492,13 +492,13 @@
                 type="button"
                 (click)="previousPage()"
                 [disabled]="!hasPreviousPage"
-                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-r-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                class="relative inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span class="sr-only">Previous</span>
                 <ng-icon name="heroChevronLeft" size="16"></ng-icon>
               </button>
               <span
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                class="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700"
               >
                 Page {{ currentPage() }} of {{ totalPages }}
               </span>
@@ -506,7 +506,7 @@
                 type="button"
                 (click)="nextPage()"
                 [disabled]="!hasNextPage"
-                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-l-0 border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                class="relative inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span class="sr-only">Next</span>
                 <ng-icon name="heroChevronRight" size="16"></ng-icon>

@@ -1,145 +1,148 @@
 <div class="space-y-4">
   @if (filesError()) {
-  <div
-    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-    role="alert"
-  >
-    <ng-icon
-      name="heroExclamationCircle"
-      size="20"
-      class="shrink-0 text-red-500"
-      aria-hidden="true"
-    ></ng-icon>
-    <p class="wrap-break-word">{{ filesError() }}</p>
-  </div>
+    <div
+      class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+      role="alert"
+    >
+      <ng-icon
+        name="heroExclamationCircle"
+        size="20"
+        class="shrink-0 text-red-500"
+        aria-hidden="true"
+      ></ng-icon>
+      <p class="wrap-break-word">{{ filesError() }}</p>
+    </div>
   } @else if (loading()) {
-  <app-loading message="Loading results..." [inline]="true"></app-loading>
+    <app-loading message="Loading results..." [inline]="true"></app-loading>
   } @else if (missingStructure()) {
-  <p class="text-sm text-gray-900 wrap-break-word">
-    This run is missing a structure file (.cif/.pdb), so the results cannot be
-    shown. The individual output files are listed under the Files tab.
-  </p>
+    <p class="text-sm wrap-break-word text-gray-900">
+      This run is missing a structure file (.cif/.pdb), so the results cannot be
+      shown. The individual output files are listed under the Files tab.
+    </p>
   } @else {
-  <div class="space-y-12">
-    @if (scores().length > 0) {
-    <app-prediction-confidence-scores
-      [scores]="scores()"
-    ></app-prediction-confidence-scores>
-    }
+    <div class="space-y-12">
+      @if (scores().length > 0) {
+        <app-prediction-confidence-scores
+          [scores]="scores()"
+        ></app-prediction-confidence-scores>
+      }
 
-    <!-- 60/40: the structure viewer gets the larger share -->
-    <div class="grid gap-12 lg:grid-cols-[3fr_2fr] lg:items-start">
-      <!-- min-w-0 so the canvas cannot widen the column into a page scroll. -->
-      <section class="min-w-0 space-y-2" aria-label="Predicted structure">
-        @if (structureError()) {
-        <div
-          class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-          role="alert"
-        >
-          <ng-icon
-            name="heroExclamationCircle"
-            size="20"
-            class="shrink-0 text-red-500"
-            aria-hidden="true"
-          ></ng-icon>
-          <p class="wrap-break-word">{{ structureError() }}</p>
-        </div>
-        } @else {
-        <app-plddt-legend></app-plddt-legend>
-
-        <div class="relative h-128 overflow-hidden rounded-lg border bg-white">
-          <app-molstar-viewer
-            #viewer
-            class="absolute inset-0"
-            [structureSource]="structureSource()"
-            [enableUpload]="false"
-            [roundBottomRight]="true"
-            [selectionRequest]="viewerSelectionRequest()"
-            representation="cartoon"
-            colorTheme="plddt"
-            [showSequencePanel]="false"
-            [enablePicking]="false"
-            [isolateSelection]="true"
-            hint=""
-            (residueIndexDetected)="onResidueIndexDetected($event)"
-            (loadError)="onViewerLoadError()"
-          ></app-molstar-viewer>
-
-          <div
-            class="absolute right-4 top-4 z-10 flex flex-col items-center gap-4"
-          >
-            <button
-              type="button"
-              class="flex items-center rounded-lg border bg-white p-1.5 text-gray-600 shadow-sm transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-              aria-label="Reset the view"
-              (click)="viewer.resetCamera()"
+      <!-- 60/40: the structure viewer gets the larger share -->
+      <div class="grid gap-12 lg:grid-cols-[3fr_2fr] lg:items-start">
+        <!-- min-w-0 so the canvas cannot widen the column into a page scroll. -->
+        <section class="min-w-0 space-y-2" aria-label="Predicted structure">
+          @if (structureError()) {
+            <div
+              class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+              role="alert"
             >
-              <ng-icon name="heroArrowPath" size="20"></ng-icon>
-            </button>
+              <ng-icon
+                name="heroExclamationCircle"
+                size="20"
+                class="shrink-0 text-red-500"
+                aria-hidden="true"
+              ></ng-icon>
+              <p class="wrap-break-word">{{ structureError() }}</p>
+            </div>
+          } @else {
+            <app-plddt-legend></app-plddt-legend>
 
-            <app-tooltip [message]="viewerHelp">
+            <div
+              class="relative h-128 overflow-hidden rounded-lg border bg-white"
+            >
+              <app-molstar-viewer
+                #viewer
+                class="absolute inset-0"
+                [structureSource]="structureSource()"
+                [enableUpload]="false"
+                [roundBottomRight]="true"
+                [selectionRequest]="viewerSelectionRequest()"
+                representation="cartoon"
+                colorTheme="plddt"
+                [showSequencePanel]="false"
+                [enablePicking]="false"
+                [isolateSelection]="true"
+                hint=""
+                (residueIndexDetected)="onResidueIndexDetected($event)"
+                (loadError)="onViewerLoadError()"
+              ></app-molstar-viewer>
+
               <div
-                class="flex items-center rounded-full bg-white border p-1.5 text-gray-500"
-                tabindex="0"
-                aria-label="How to use the 3D viewer"
+                class="absolute top-4 right-4 z-10 flex flex-col items-center gap-4"
               >
-                <ng-icon name="heroLifebuoy" size="22"></ng-icon>
+                <button
+                  type="button"
+                  class="flex items-center rounded-lg border bg-white p-1.5 text-gray-600 shadow-sm transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  aria-label="Reset the view"
+                  (click)="viewer.resetCamera()"
+                >
+                  <ng-icon name="heroArrowPath" size="20"></ng-icon>
+                </button>
+
+                <app-tooltip [message]="viewerHelp">
+                  <div
+                    class="flex items-center rounded-full border bg-white p-1.5 text-gray-500"
+                    tabindex="0"
+                    aria-label="How to use the 3D viewer"
+                  >
+                    <ng-icon name="heroLifebuoy" size="22"></ng-icon>
+                  </div>
+                </app-tooltip>
               </div>
-            </app-tooltip>
-          </div>
-        </div>
-        }
-      </section>
+            </div>
+          }
+        </section>
 
-      <section class="min-w-0" aria-label="Predicted aligned error matrix">
-        <app-pae-matrix
-          [matrix]="paeMatrix()"
-          [residues]="residueIndex()"
-          [highlightedIndices]="selectedIndices()"
-          [errorMessage]="paeError()"
-          (selectionChange)="onMatrixSelectionChange($event)"
-        ></app-pae-matrix>
-      </section>
-    </div>
+        <section class="min-w-0" aria-label="Predicted aligned error matrix">
+          <app-pae-matrix
+            [matrix]="paeMatrix()"
+            [residues]="residueIndex()"
+            [highlightedIndices]="selectedIndices()"
+            [errorMessage]="paeError()"
+            (selectionChange)="onMatrixSelectionChange($event)"
+          ></app-pae-matrix>
+        </section>
+      </div>
 
-    <!-- Plot at half width, each matrix a quarter. Equal auto columns with the plot
+      <!-- Plot at half width, each matrix a quarter. Equal auto columns with the plot
        spanning two, so a run missing a metric redistributes instead of gapping. -->
-    @if (msaArtifact() || hasInterfaceMatrices()) {
-    <div class="grid gap-6 xl:auto-cols-fr xl:grid-flow-col">
-      @if (msaArtifact()) {
-      <section
-        class="min-w-0 space-y-2 xl:col-span-2"
-        aria-label="Alignment coverage"
-      >
-        <h3 class="text-sm font-semibold text-gray-900">
-          MSA sequence coverage
-        </h3>
-        <app-msa-coverage
-          [coverage]="msaCoverage()"
-          [errorMessage]="msaError()"
-          [centered]="!hasInterfaceMatrices()"
-        ></app-msa-coverage>
-      </section>
-      }
+      @if (msaArtifact() || hasInterfaceMatrices()) {
+        <div class="grid gap-6 xl:auto-cols-fr xl:grid-flow-col">
+          @if (msaArtifact()) {
+            <section
+              class="min-w-0 space-y-2 xl:col-span-2"
+              aria-label="Alignment coverage"
+            >
+              <h3 class="text-sm font-semibold text-gray-900">
+                MSA sequence coverage
+              </h3>
+              <app-msa-coverage
+                [coverage]="msaCoverage()"
+                [errorMessage]="msaError()"
+                [centered]="!hasInterfaceMatrices()"
+              ></app-msa-coverage>
+            </section>
+          }
 
-      <!-- Only multimers produce chain pairs. -->
-      @if (hasIpsaeMatrix()) {
-      <section class="min-w-0" aria-label="Interface confidence, ipSAE">
-        <app-chain-matrix
-          metric="ipSAE"
-          [matrix]="ipsaeMatrix()"
-        ></app-chain-matrix>
-      </section>
-      } @if (hasChainIptmMatrix()) {
-      <section class="min-w-0" aria-label="Interface confidence, ipTM">
-        <app-chain-matrix
-          metric="ipTM"
-          [matrix]="chainIptmMatrix()"
-        ></app-chain-matrix>
-      </section>
+          <!-- Only multimers produce chain pairs. -->
+          @if (hasIpsaeMatrix()) {
+            <section class="min-w-0" aria-label="Interface confidence, ipSAE">
+              <app-chain-matrix
+                metric="ipSAE"
+                [matrix]="ipsaeMatrix()"
+              ></app-chain-matrix>
+            </section>
+          }
+          @if (hasChainIptmMatrix()) {
+            <section class="min-w-0" aria-label="Interface confidence, ipTM">
+              <app-chain-matrix
+                metric="ipTM"
+                [matrix]="chainIptmMatrix()"
+              ></app-chain-matrix>
+            </section>
+          }
+        </div>
       }
     </div>
-    }
-  </div>
   }
 </div>

@@ -1,17 +1,17 @@
 <div [class]="rootClasses()" [class.pr-8]="!dismissible()">
   <!-- Icon -->
   @if (type() === "success") {
-  <span class="inline-flex shrink-0 text-green-500 mr-4">
-    <ng-icon name="heroCheckCircleSolid" size="20"></ng-icon>
-  </span>
+    <span class="mr-4 inline-flex shrink-0 text-green-500">
+      <ng-icon name="heroCheckCircleSolid" size="20"></ng-icon>
+    </span>
   } @else if (type() === "warning") {
-  <span class="inline-flex shrink-0 text-amber-600 mr-4">
-    <ng-icon name="heroExclamationTriangleSolid" size="20"></ng-icon>
-  </span>
+    <span class="mr-4 inline-flex shrink-0 text-amber-600">
+      <ng-icon name="heroExclamationTriangleSolid" size="20"></ng-icon>
+    </span>
   } @else {
-  <span class="inline-flex shrink-0 text-red-500 mr-4">
-    <ng-icon name="heroXCircleSolid" size="20"></ng-icon>
-  </span>
+    <span class="mr-4 inline-flex shrink-0 text-red-500">
+      <ng-icon name="heroXCircleSolid" size="20"></ng-icon>
+    </span>
   }
 
   <!-- Content -->
@@ -21,28 +21,28 @@
       type() === 'success'
         ? 'text-green-500'
         : type() === 'warning'
-        ? 'text-amber-800'
-        : 'text-red-500'
+          ? 'text-amber-800'
+          : 'text-red-500'
     "
   >
     {{ message() }}
   </div>
 
   @if (dismissible()) {
-  <!-- Dismiss button -->
-  <button
-    (click)="onDismiss()"
-    aria-label="close"
-    class="inline-flex shrink-0 items-center justify-center rounded-md ml-2 p-1"
-    [class]="
-      type() === 'success'
-        ? 'text-green-500 hover:bg-green-100'
-        : type() === 'warning'
-        ? 'text-amber-700 hover:bg-amber-100'
-        : 'text-red-500 hover:bg-red-100'
-    "
-  >
-    <ng-icon name="heroXMarkSolid" size="16"></ng-icon>
-  </button>
+    <!-- Dismiss button -->
+    <button
+      (click)="onDismiss()"
+      aria-label="close"
+      class="ml-2 inline-flex shrink-0 items-center justify-center rounded-md p-1"
+      [class]="
+        type() === 'success'
+          ? 'text-green-500 hover:bg-green-100'
+          : type() === 'warning'
+            ? 'text-amber-700 hover:bg-amber-100'
+            : 'text-red-500 hover:bg-red-100'
+      "
+    >
+      <ng-icon name="heroXMarkSolid" size="16"></ng-icon>
+    </button>
   }
 </div>

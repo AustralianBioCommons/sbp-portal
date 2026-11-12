@@ -73,7 +73,9 @@ describe("jobNameErrorMessage", () => {
 
   it("returns pattern message", () => {
     expect(
-      jobNameErrorMessage({ pattern: { requiredPattern: "", actualValue: "" } })
+      jobNameErrorMessage({
+        pattern: { requiredPattern: "", actualValue: "" },
+      })
     ).toBe(
       "Job Name may only contain letters, numbers, hyphens, and underscores, and must not start with a number"
     );

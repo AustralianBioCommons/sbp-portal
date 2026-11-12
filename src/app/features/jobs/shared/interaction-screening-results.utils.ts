@@ -307,7 +307,9 @@ export function parseInteractionRows(
         [TARGET_KEY]: target,
         [PAIR_KEY]: id,
         // The collected table wins once it carries the column.
-        [IPSAE_KEY]: ipsaeHeader ? row[ipsaeHeader] : ipsaeScores.get(id) ?? "",
+        [IPSAE_KEY]: ipsaeHeader
+          ? row[ipsaeHeader]
+          : (ipsaeScores.get(id) ?? ""),
       },
       structure: {
         key: structure.key,

@@ -295,26 +295,26 @@
       aria-label="Tool-specific parameters"
     >
       @for (tab of toolParameterTabs; track tab.id) {
-      <button
-        type="button"
-        role="tab"
-        [id]="'single-prediction-tool-parameters-tab-' + tab.id"
-        [attr.aria-selected]="activeToolParameterTab() === tab.id"
-        [attr.aria-controls]="
-          activeToolParameterTab() === tab.id
-            ? 'single-prediction-tool-parameters-panel'
-            : null
-        "
-        [class]="
-          activeToolParameterTab() === tab.id
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
-        "
-        class="rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-        (click)="selectToolParameterTab(tab.id)"
-      >
-        {{ tab.label }}
-      </button>
+        <button
+          type="button"
+          role="tab"
+          [id]="'single-prediction-tool-parameters-tab-' + tab.id"
+          [attr.aria-selected]="activeToolParameterTab() === tab.id"
+          [attr.aria-controls]="
+            activeToolParameterTab() === tab.id
+              ? 'single-prediction-tool-parameters-panel'
+              : null
+          "
+          [class]="
+            activeToolParameterTab() === tab.id
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
+          "
+          class="rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+          (click)="selectToolParameterTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
       }
     </div>
 
@@ -354,20 +354,20 @@
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
             @for (row of activeToolParameters().rows; track row.input) {
-            <tr class="align-top">
-              <th
-                scope="row"
-                class="p-4 font-medium whitespace-nowrap text-gray-900"
-              >
-                {{ row.input }}
-              </th>
-              <td class="p-4">{{ row.description }}</td>
-              <td class="space-y-1 p-4">
-                @for (limit of row.formatAndLimits; track limit) {
-                <p>{{ limit }}</p>
-                }
-              </td>
-            </tr>
+              <tr class="align-top">
+                <th
+                  scope="row"
+                  class="p-4 font-medium whitespace-nowrap text-gray-900"
+                >
+                  {{ row.input }}
+                </th>
+                <td class="p-4">{{ row.description }}</td>
+                <td class="space-y-1 p-4">
+                  @for (limit of row.formatAndLimits; track limit) {
+                    <p>{{ limit }}</p>
+                  }
+                </td>
+              </tr>
             }
           </tbody>
         </table>

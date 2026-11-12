@@ -1,21 +1,21 @@
-<div id="home-page" class="relative isolate grid bg-gray-100 text-gray-900">
+<div id="home-page" class="relative isolate bg-gray-100 text-gray-900">
   <div
     id="home-background"
-    class="pointer-events-none sticky top-0 col-start-1 row-start-1 -z-10 h-150 self-start bg-black bg-linear-to-r from-biocommons-primary/80 via-biocommons-primary/15 to-biocommons-secondary/50 bg-fixed"
+    class="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r bg-[linear-gradient(var(--tw-gradient-stops)),linear-gradient(black,black)] from-biocommons-primary/80 via-biocommons-primary/15 to-biocommons-secondary/50 bg-size-[100%_600px] bg-fixed bg-top bg-no-repeat xl:bg-size-[100%_40vw]"
     aria-hidden="true"
   ></div>
-  <div class="col-start-1 row-start-1 mx-auto w-full max-w-7xl px-6 pb-12">
+  <div class="mx-auto w-full max-w-7xl px-6 pb-12">
     <section
       class="bg-black bg-linear-to-r from-biocommons-primary/80 via-biocommons-primary/15 to-biocommons-secondary/50 bg-fixed py-12 text-left text-white"
       aria-labelledby="home-heading"
     >
-      <p class="mb-6 text-xs uppercase font-semibold text-gray-200">
+      <p class="mb-6 text-xs font-semibold text-gray-200 uppercase">
         Structural Biology Platform
       </p>
       <h1
         #heading
         id="home-heading"
-        class="font-semibold outline-none text-4xl sm:text-5xl lg:text-6xl"
+        class="text-4xl leading-none font-semibold outline-none sm:text-5xl lg:text-6xl"
         tabindex="-1"
       >
         <div class="mb-4">
@@ -25,7 +25,7 @@
         <div>
           Predict
           <span class="text-teal-400">structures</span>.
-          </div>
+        </div>
       </h1>
       <p class="mt-6 max-w-2xl text-gray-200 lg:text-lg">
         Powering protein research with accessible tools and without needing to
@@ -38,7 +38,10 @@
       class="space-y-12 rounded-lg border bg-white p-6 shadow-sm sm:p-12"
     >
       <section id="getting-started" aria-labelledby="getting-started-heading">
-        <h2 id="getting-started-heading" class="mb-6 text-2xl font-semibold">
+        <h2
+          id="getting-started-heading"
+          class="mb-6 text-2xl leading-none font-semibold"
+        >
           Getting started
         </h2>
         <div class="grid gap-6 md:grid-cols-2">
@@ -46,7 +49,7 @@
             routerLink="/binder-design"
             aria-labelledby="binder-design-heading"
             aria-describedby="binder-design-description"
-            class="group flex min-w-0 flex-col items-start gap-4 rounded-lg border bg-white p-6 text-inherit no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:translate-none motion-reduce:transition-none"
+            class="group flex min-w-0 flex-col items-start gap-4 rounded-lg border bg-white p-6 text-inherit no-underline shadow-sm transition-all hover:shadow-md motion-safe:hover:-translate-y-0.5 motion-reduce:transition-none"
           >
             <h3 id="binder-design-heading" class="text-lg font-semibold">
               Binder Design
@@ -55,22 +58,22 @@
               Design and optimise protein for your research
             </p>
             <span
-              class="mt-auto flex items-center justify-start gap-1 text-sm font-semibold text-sky-600 transition-colors group-hover:text-sky-700"
+              class="mt-auto flex items-center justify-start gap-2 text-sm font-semibold text-sky-600 transition-colors group-hover:text-sky-700"
             >
               Start a binder design
-              <ng-icon
-                name="heroChevronRight"
-                size="12"
-                class="mt-0.5"
+              <span
+                class="inline-flex shrink-0 items-center justify-center rounded-full bg-sky-100 p-1 text-sky-800"
                 aria-hidden="true"
-              />
+              >
+                <ng-icon name="heroArrowRight" size="16" />
+              </span>
             </span>
           </a>
           <a
             routerLink="/structure-prediction"
             aria-labelledby="structure-prediction-heading"
             aria-describedby="structure-prediction-description"
-            class="group flex min-w-0 flex-col items-start gap-4 rounded-lg border bg-white p-6 text-inherit no-underline shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:translate-none motion-reduce:transition-none"
+            class="group flex min-w-0 flex-col items-start gap-4 rounded-lg border bg-white p-6 text-inherit no-underline shadow-sm transition-all hover:shadow-md motion-safe:hover:-translate-y-0.5 motion-reduce:transition-none"
           >
             <h3 id="structure-prediction-heading" class="text-lg font-semibold">
               Structure Prediction
@@ -79,28 +82,31 @@
               Get accurate, high-confidence 3D structures and insights
             </p>
             <span
-              class="mt-auto flex items-center justify-start gap-1 text-sm font-semibold text-sky-600 transition-colors group-hover:text-sky-700"
+              class="mt-auto flex items-center justify-start gap-2 text-sm font-semibold text-sky-600 transition-colors group-hover:text-sky-700"
             >
               Start a structure prediction
-              <ng-icon
-                name="heroChevronRight"
-                size="12"
-                class="mt-0.5"
+              <span
+                class="inline-flex shrink-0 items-center justify-center rounded-full bg-sky-100 p-1 text-sky-800"
                 aria-hidden="true"
-              />
+              >
+                <ng-icon name="heroArrowRight" size="16" />
+              </span>
             </span>
           </a>
         </div>
       </section>
 
       <section aria-labelledby="how-it-works-heading">
-        <h2 id="how-it-works-heading" class="mb-6 text-2xl font-semibold">
+        <h2
+          id="how-it-works-heading"
+          class="mb-6 text-2xl leading-none font-semibold"
+        >
           How it works
         </h2>
         <ol class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" role="list">
           <li class="relative flex gap-4 sm:block">
             <span
-              class="absolute -bottom-6 left-5 top-10 w-0.5 bg-gray-300 sm:hidden lg:-right-6 lg:bottom-auto lg:left-5 lg:top-5 lg:block lg:h-0.5 lg:w-auto"
+              class="absolute top-10 -bottom-6 left-5 w-0.5 bg-gray-300 sm:hidden lg:top-5 lg:-right-6 lg:bottom-auto lg:left-5 lg:block lg:h-0.5 lg:w-auto"
               aria-hidden="true"
             ></span>
             <span
@@ -117,7 +123,7 @@
           </li>
           <li class="relative flex gap-4 sm:block">
             <span
-              class="absolute -bottom-6 left-5 top-10 w-0.5 bg-gray-300 sm:hidden lg:-right-6 lg:bottom-auto lg:left-5 lg:top-5 lg:block lg:h-0.5 lg:w-auto"
+              class="absolute top-10 -bottom-6 left-5 w-0.5 bg-gray-300 sm:hidden lg:top-5 lg:-right-6 lg:bottom-auto lg:left-5 lg:block lg:h-0.5 lg:w-auto"
               aria-hidden="true"
             ></span>
             <span
@@ -136,7 +142,7 @@
           </li>
           <li class="relative flex gap-4 sm:block">
             <span
-              class="absolute -bottom-6 left-5 top-10 w-0.5 bg-gray-300 sm:hidden lg:-right-6 lg:bottom-auto lg:left-5 lg:top-5 lg:block lg:h-0.5 lg:w-auto"
+              class="absolute top-10 -bottom-6 left-5 w-0.5 bg-gray-300 sm:hidden lg:top-5 lg:-right-6 lg:bottom-auto lg:left-5 lg:block lg:h-0.5 lg:w-auto"
               aria-hidden="true"
             ></span>
             <span

@@ -1,237 +1,240 @@
 <div class="space-y-4">
   @if (filesError()) {
-  <div
-    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-    role="alert"
-  >
-    <ng-icon
-      name="heroExclamationCircle"
-      size="20"
-      class="shrink-0 text-red-500"
-      aria-hidden="true"
-    ></ng-icon>
-    <p class="wrap-break-word">{{ filesError() }}</p>
-  </div>
-  } @else if (loading()) {
-  <app-loading message="Loading results..." [inline]="true"></app-loading>
-  } @else if (noResultsAvailable()) {
-  <p class="text-sm text-gray-900 wrap-break-word">{{ emptyMessage() }}</p>
-  } @else if (resultsError()) {
-  <div
-    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-    role="alert"
-  >
-    <ng-icon
-      name="heroExclamationCircle"
-      size="20"
-      class="shrink-0 text-red-500"
-      aria-hidden="true"
-    ></ng-icon>
-    <p class="wrap-break-word">{{ resultsError() }}</p>
-  </div>
-  } @else { @if (downloadError()) {
-  <div
-    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-    role="alert"
-  >
-    <ng-icon
-      name="heroExclamationCircle"
-      size="20"
-      class="shrink-0 text-red-500"
-      aria-hidden="true"
-    ></ng-icon>
-    <p class="wrap-break-word">{{ downloadError() }}</p>
-  </div>
-  }
-  <div class="space-y-2">
-    <!-- Sits over the viewer's column; the table has the right. -->
-    <div>
-      @if (showPlddtLegend()) {
-      <app-plddt-legend></app-plddt-legend>
-      } @else {
-      <ul class="flex flex-wrap items-center gap-x-6 gap-y-2">
-        @for (band of chainLegend(); track $index) {
-        <li class="flex items-center gap-2 text-xs font-medium">
-          <span
-            class="h-2 w-12 rounded-full"
-            [style.background]="band.color"
-            aria-hidden="true"
-          ></span>
-          {{ band.label }}
-        </li>
-        }
-      </ul>
-      }
-    </div>
-
-    <!-- Viewport height: the canvas has no height of its own, so a content-fit
-         container would be sized by the table's row count. -->
     <div
-      class="flex h-[65vh] min-h-80 overflow-hidden rounded-lg border bg-white"
+      class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+      role="alert"
     >
-      <!-- min-w-0 so the canvas cannot widen the column. -->
-      <section
-        class="relative min-w-48 flex-1 overflow-hidden"
-        [attr.aria-label]="panelTitle() + ' structure'"
-      >
-        <app-molstar-viewer
-          #viewer
-          class="absolute inset-0"
-          [structureSource]="structureSource()"
-          [sourceLoading]="structureLoading()"
-          [enableUpload]="false"
-          [roundBottomRight]="!isPanelOpen()"
-          representation="cartoon"
-          [colorTheme]="colorTheme()"
-          [binderChainId]="primaryChainId()"
-          [designLength]="primaryLength()"
-          [superposeKey]="superposeKey()"
-          [showSequencePanel]="false"
-          [enablePicking]="false"
-          hint=""
-          (loadError)="onViewerLoadError()"
-        ></app-molstar-viewer>
-
-        @if (structureError()) {
-        <!-- Floats the standard banner over the canvas. -->
-        <div class="absolute inset-x-4 top-4 z-10 shadow-sm">
-          <div
-            class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-            role="alert"
-          >
-            <ng-icon
-              name="heroExclamationCircle"
-              size="20"
-              class="shrink-0 text-red-500"
-              aria-hidden="true"
-            ></ng-icon>
-            <p class="wrap-break-word">{{ structureError() }}</p>
-          </div>
-        </div>
-        } @else if (!selectedRow()?.structure) {
-        <p
-          class="absolute inset-0 z-10 flex items-center justify-center bg-white p-6 text-center text-sm text-gray-500"
-        >
-          No structure file was found for this row.
-        </p>
-        }
-
-        <!-- Dropped clear of the reopen pill in this corner. -->
-        <div
-          class="absolute right-4 z-10 flex flex-col items-center gap-4"
-          [class]="isPanelOpen() ? 'top-4' : 'top-16'"
-        >
-          <button
-            type="button"
-            class="flex items-center rounded-lg border bg-white p-1.5 text-gray-600 shadow-sm transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-            aria-label="Reset the view"
-            (click)="viewer.resetCamera()"
-          >
-            <ng-icon name="heroArrowPath" size="20"></ng-icon>
-          </button>
-
-          <app-tooltip [message]="viewerHelp">
-            <button
-              type="button"
-              class="flex items-center rounded-full border bg-white p-1.5 text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
-              aria-label="How to use the 3D viewer"
-            >
-              <ng-icon name="heroLifebuoy" size="22"></ng-icon>
-            </button>
-          </app-tooltip>
-        </div>
-      </section>
-
-      <!-- Hidden when the panel is collapsed. -->
-      @if (isPanelOpen()) {
+      <ng-icon
+        name="heroExclamationCircle"
+        size="20"
+        class="shrink-0 text-red-500"
+        aria-hidden="true"
+      ></ng-icon>
+      <p class="wrap-break-word">{{ filesError() }}</p>
+    </div>
+  } @else if (loading()) {
+    <app-loading message="Loading results..." [inline]="true"></app-loading>
+  } @else if (noResultsAvailable()) {
+    <p class="text-sm wrap-break-word text-gray-900">{{ emptyMessage() }}</p>
+  } @else if (resultsError()) {
+    <div
+      class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+      role="alert"
+    >
+      <ng-icon
+        name="heroExclamationCircle"
+        size="20"
+        class="shrink-0 text-red-500"
+        aria-hidden="true"
+      ></ng-icon>
+      <p class="wrap-break-word">{{ resultsError() }}</p>
+    </div>
+  } @else {
+    @if (downloadError()) {
       <div
-        class="relative w-1 shrink-0 cursor-col-resize select-none bg-gray-200 transition-colors hover:bg-sky-200 focus-visible:bg-sky-400 focus-visible:outline-none"
-        role="separator"
-        aria-orientation="vertical"
-        [attr.aria-label]="'Resize the ' + panelTitle() + ' panel'"
-        tabindex="0"
-        [attr.aria-valuemin]="panelWidthRange().min"
-        [attr.aria-valuemax]="panelWidthRange().max"
-        [attr.aria-valuenow]="panelWidthNow()"
-        [attr.aria-valuetext]="panelWidthText()"
-        (mousedown)="onDividerMouseDown($event)"
-        (keydown)="onDividerKeydown($event)"
+        class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+        role="alert"
       >
         <ng-icon
-          name="heroEllipsisVertical"
-          class="pointer-events-none absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-400"
+          name="heroExclamationCircle"
+          size="20"
+          class="shrink-0 text-red-500"
           aria-hidden="true"
         ></ng-icon>
+        <p class="wrap-break-word">{{ downloadError() }}</p>
       </div>
-      }
-
-      <div
-        #reportPanel
-        id="report-panel"
-        class="relative min-w-0"
-        [class]="isDragging() ? '' : 'transition-all duration-300 ease-in-out'"
-        [style.width]="panelStyleWidth()"
-        role="region"
-        [attr.aria-label]="panelTitle()"
-      >
-        @if (!isPanelOpen()) {
-        <button
-          type="button"
-          class="absolute right-0 top-4 z-10 flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 border-gray-300 bg-white p-2 text-sm font-medium shadow-md transition-colors hover:bg-gray-50 focus:outline-none"
-          (click)="openPanel()"
-          [title]="'Open ' + panelTitle()"
-        >
-          <ng-icon
-            name="heroChevronDoubleLeft"
-            class="h-4 w-4 text-gray-500"
-            aria-hidden="true"
-          ></ng-icon>
-          <span>{{ panelTitle() }}</span>
-        </button>
+    }
+    <div class="space-y-2">
+      <!-- Sits over the viewer's column; the table has the right. -->
+      <div>
+        @if (showPlddtLegend()) {
+          <app-plddt-legend></app-plddt-legend>
+        } @else {
+          <ul class="flex flex-wrap items-center gap-x-6 gap-y-2">
+            @for (band of chainLegend(); track $index) {
+              <li class="flex items-center gap-2 text-xs font-medium">
+                <span
+                  class="h-2 w-12 rounded-full"
+                  [style.background]="band.color"
+                  aria-hidden="true"
+                ></span>
+                {{ band.label }}
+              </li>
+            }
+          </ul>
         }
+      </div>
 
-        <!-- Clips content to the panel's width. Clipped is not gone: without
-             `inert`, every control in here stays focusable at zero width. -->
-        <div
-          class="h-full overflow-hidden"
-          [attr.inert]="isPanelOpen() ? null : ''"
+      <!-- Viewport height: the canvas has no height of its own, so a content-fit
+         container would be sized by the table's row count. -->
+      <div
+        class="flex h-[65vh] min-h-80 overflow-hidden rounded-lg border bg-white"
+      >
+        <!-- min-w-0 so the canvas cannot widen the column. -->
+        <section
+          class="relative min-w-48 flex-1 overflow-hidden"
+          [attr.aria-label]="panelTitle() + ' structure'"
         >
-          <div class="flex h-full w-full flex-col bg-white">
-            <div class="flex shrink-0 items-center gap-2 border-b p-4">
-              <span class="flex-1 truncate text-sm font-medium">
-                {{ panelHeading() }}
-              </span>
-              <button
-                type="button"
-                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
-                (click)="closePanel()"
-                title="Close"
+          <app-molstar-viewer
+            #viewer
+            class="absolute inset-0"
+            [structureSource]="structureSource()"
+            [sourceLoading]="structureLoading()"
+            [enableUpload]="false"
+            [roundBottomRight]="!isPanelOpen()"
+            representation="cartoon"
+            [colorTheme]="colorTheme()"
+            [binderChainId]="primaryChainId()"
+            [designLength]="primaryLength()"
+            [superposeKey]="superposeKey()"
+            [showSequencePanel]="false"
+            [enablePicking]="false"
+            hint=""
+            (loadError)="onViewerLoadError()"
+          ></app-molstar-viewer>
+
+          @if (structureError()) {
+            <!-- Floats the standard banner over the canvas. -->
+            <div class="absolute inset-x-4 top-4 z-10 shadow-sm">
+              <div
+                class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+                role="alert"
               >
                 <ng-icon
-                  name="heroXMark"
+                  name="heroExclamationCircle"
+                  size="20"
+                  class="shrink-0 text-red-500"
                   aria-hidden="true"
-                  size="18"
                 ></ng-icon>
-              </button>
+                <p class="wrap-break-word">{{ structureError() }}</p>
+              </div>
             </div>
+          } @else if (!selectedRow()?.structure) {
+            <p
+              class="absolute inset-0 z-10 flex items-center justify-center bg-white p-6 text-center text-sm text-gray-500"
+            >
+              No structure file was found for this row.
+            </p>
+          }
 
-            <div class="min-h-0 flex-1">
-              <app-job-results-table
-                [caption]="panelTitle()"
-                [framed]="false"
-                [columns]="columns()"
-                [rows]="rows()"
-                [downloadFiles]="tableDownloadFiles()"
-                [downloadingKey]="downloadingKey()"
-                [selectedId]="selectedId()"
-                (downloadRequested)="downloadPrediction($event)"
-                (rowSelected)="onRowSelected($event)"
-              ></app-job-results-table>
+          <!-- Dropped clear of the reopen pill in this corner. -->
+          <div
+            class="absolute right-4 z-10 flex flex-col items-center gap-4"
+            [class]="isPanelOpen() ? 'top-4' : 'top-16'"
+          >
+            <button
+              type="button"
+              class="flex items-center rounded-lg border bg-white p-1.5 text-gray-600 shadow-sm transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              aria-label="Reset the view"
+              (click)="viewer.resetCamera()"
+            >
+              <ng-icon name="heroArrowPath" size="20"></ng-icon>
+            </button>
+
+            <app-tooltip [message]="viewerHelp">
+              <button
+                type="button"
+                class="flex items-center rounded-full border bg-white p-1.5 text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                aria-label="How to use the 3D viewer"
+              >
+                <ng-icon name="heroLifebuoy" size="22"></ng-icon>
+              </button>
+            </app-tooltip>
+          </div>
+        </section>
+
+        <!-- Hidden when the panel is collapsed. -->
+        @if (isPanelOpen()) {
+          <div
+            class="relative w-1 shrink-0 cursor-col-resize bg-gray-200 transition-colors select-none hover:bg-sky-200 focus-visible:bg-sky-400 focus-visible:outline-none"
+            role="separator"
+            aria-orientation="vertical"
+            [attr.aria-label]="'Resize the ' + panelTitle() + ' panel'"
+            tabindex="0"
+            [attr.aria-valuemin]="panelWidthRange().min"
+            [attr.aria-valuemax]="panelWidthRange().max"
+            [attr.aria-valuenow]="panelWidthNow()"
+            [attr.aria-valuetext]="panelWidthText()"
+            (mousedown)="onDividerMouseDown($event)"
+            (keydown)="onDividerKeydown($event)"
+          >
+            <ng-icon
+              name="heroEllipsisVertical"
+              class="pointer-events-none absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-400"
+              aria-hidden="true"
+            ></ng-icon>
+          </div>
+        }
+
+        <div
+          #reportPanel
+          id="report-panel"
+          class="relative min-w-0"
+          [class]="
+            isDragging() ? '' : 'transition-all duration-300 ease-in-out'
+          "
+          [style.width]="panelStyleWidth()"
+          role="region"
+          [attr.aria-label]="panelTitle()"
+        >
+          @if (!isPanelOpen()) {
+            <button
+              type="button"
+              class="absolute top-4 right-0 z-10 flex items-center gap-2 rounded-l-full border border-r-0 border-gray-300 bg-white p-2 text-sm font-medium whitespace-nowrap shadow-md transition-colors hover:bg-gray-50 focus:outline-none"
+              (click)="openPanel()"
+              [title]="'Open ' + panelTitle()"
+            >
+              <ng-icon
+                name="heroChevronDoubleLeft"
+                class="h-4 w-4 text-gray-500"
+                aria-hidden="true"
+              ></ng-icon>
+              <span>{{ panelTitle() }}</span>
+            </button>
+          }
+
+          <!-- Clips content to the panel's width. Clipped is not gone: without
+             `inert`, every control in here stays focusable at zero width. -->
+          <div
+            class="h-full overflow-hidden"
+            [attr.inert]="isPanelOpen() ? null : ''"
+          >
+            <div class="flex h-full w-full flex-col bg-white">
+              <div class="flex shrink-0 items-center gap-2 border-b p-4">
+                <span class="flex-1 truncate text-sm font-medium">
+                  {{ panelHeading() }}
+                </span>
+                <button
+                  type="button"
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
+                  (click)="closePanel()"
+                  title="Close"
+                >
+                  <ng-icon
+                    name="heroXMark"
+                    aria-hidden="true"
+                    size="18"
+                  ></ng-icon>
+                </button>
+              </div>
+
+              <div class="min-h-0 flex-1">
+                <app-job-results-table
+                  [caption]="panelTitle()"
+                  [framed]="false"
+                  [columns]="columns()"
+                  [rows]="rows()"
+                  [downloadFiles]="tableDownloadFiles()"
+                  [downloadingKey]="downloadingKey()"
+                  [selectedId]="selectedId()"
+                  (downloadRequested)="downloadPrediction($event)"
+                  (rowSelected)="onRowSelected($event)"
+                ></app-job-results-table>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   }
 </div>

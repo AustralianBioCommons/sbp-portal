@@ -37,9 +37,11 @@ for (const card of [
 for (const viewport of [
   { name: "desktop", width: 1440, height: 900 },
   { name: "mobile", width: 390, height: 844 },
+  { name: "small desktop", width: 1280, height: 900 },
+  { name: "short desktop", width: 1920, height: 500 },
   { name: "tall desktop", width: 1440, height: 2600 },
 ]) {
-  test(`keeps the hero from painting over the footer on ${viewport.name}`, async ({
+  test(`keeps larger banners aligned and independent of viewport height on ${viewport.name}`, async ({
     page,
   }) => {
     await page.setViewportSize({
@@ -51,27 +53,19 @@ for (const viewport of [
 
     const background = page.locator("#home-background");
     const footer = page.locator("footer");
-    const initialTop = await background.evaluate(
-      (element) => element.getBoundingClientRect().top
+    const expectedHeight = viewport.width < 1280 ? 600 : viewport.width * 0.4;
+    const backgroundSize = await background.evaluate(
+      (element) => getComputedStyle(element).backgroundSize
+    );
+    const homeGradient = await background.evaluate(
+      (element) => getComputedStyle(element).backgroundImage
     );
 
-    const stickyScroll = await background.evaluate((element) => {
-      const home = element.closest("#home-page")!;
-      return Math.min(
-        700,
-        home.getBoundingClientRect().bottom - element.clientHeight,
-        document.documentElement.scrollHeight - window.innerHeight
-      );
-    });
-
-    if (stickyScroll >= initialTop) {
-      await page.evaluate((top) => window.scrollTo(0, top), stickyScroll);
-      await expect
-        .poll(() =>
-          background.evaluate((element) => element.getBoundingClientRect().top)
-        )
-        .toBe(0);
+    for (const size of backgroundSize.split(",")) {
+      const height = Number.parseFloat(size.trim().split(" ")[1]);
+      expect(Math.abs(height - expectedHeight)).toBeLessThan(1);
     }
+    await expect(background).toHaveCSS("background-attachment", "fixed, fixed");
 
     await page.evaluate(() =>
       window.scrollTo(0, document.documentElement.scrollHeight)
@@ -94,10 +88,38 @@ for (const viewport of [
     });
 
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect
-      .poll(() =>
-        background.evaluate((element) => element.getBoundingClientRect().top)
-      )
-      .toBe(initialTop);
+    await expect(background).toHaveCSS("background-attachment", "fixed, fixed");
+    await page.setViewportSize({ width: viewport.width, height: 320 });
+    await expect(background).toHaveCSS("background-size", backgroundSize);
+
+    for (const { path, selector } of [
+      { path: "/binder-design", selector: "app-theme-layout > div" },
+      {
+        path: "/binder-design/de-novo-design",
+        selector: "app-workflow-layout > div",
+      },
+    ]) {
+      await page.setViewportSize({
+        width: viewport.width,
+        height: viewport.height,
+      });
+      await page.goto(path);
+      const pageBackground = page.locator(selector);
+      const pageBackgroundSize = await pageBackground.evaluate(
+        (element) => getComputedStyle(element).backgroundSize
+      );
+      for (const size of pageBackgroundSize.split(",")) {
+        expect(size.trim()).toBe(`100% ${expectedHeight}px`);
+      }
+      await page.setViewportSize({ width: viewport.width, height: 320 });
+      await expect(pageBackground).toHaveCSS(
+        "background-size",
+        pageBackgroundSize
+      );
+    }
+    await expect(page.locator("app-workflow-layout > div")).toHaveCSS(
+      "background-image",
+      homeGradient.replace("to right", "to left").replace("90deg", "270deg")
+    );
   });
 }

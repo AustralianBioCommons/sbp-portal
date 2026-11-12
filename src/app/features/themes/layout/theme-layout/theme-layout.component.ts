@@ -1,13 +1,13 @@
 import { Component, input, ChangeDetectionStrategy } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroChevronRight } from "@ng-icons/heroicons/outline";
+import { heroArrowRight } from "@ng-icons/heroicons/outline";
 import { WorkflowItem } from "../../../../core/configs/themes.config";
 
 @Component({
   selector: "app-theme-layout",
   imports: [RouterLink, NgIconComponent],
-  providers: [provideIcons({ heroChevronRight })],
+  providers: [provideIcons({ heroArrowRight })],
   templateUrl: "./theme-layout.component.html",
   styleUrl: "./theme-layout.component.scss",
   changeDetection: ChangeDetectionStrategy.Eager,

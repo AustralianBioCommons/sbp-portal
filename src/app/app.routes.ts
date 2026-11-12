@@ -29,9 +29,9 @@ export const routes: Routes = [
       {
         path: "",
         loadComponent: () =>
-          import(
-            "./features/themes/structure-prediction/structure-prediction"
-          ).then((m) => m.StructurePredictionComponent),
+          import("./features/themes/structure-prediction/structure-prediction").then(
+            (m) => m.StructurePredictionComponent
+          ),
       },
       {
         path: "single-prediction",
@@ -46,9 +46,7 @@ export const routes: Routes = [
       {
         path: "interaction-screening",
         loadComponent: () =>
-          import(
-            "./features/workflows/interaction-screening/interaction-screening"
-          ),
+          import("./features/workflows/interaction-screening/interaction-screening"),
       },
     ],
   },

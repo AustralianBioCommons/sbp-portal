@@ -51,7 +51,7 @@
               <div>
                 <p class="block text-sm font-medium">
                   Target Structure @if (localPdbFile()) {
-                  <span class="font-normal text-gray-300 mx-2">|</span>
+                  <span class="mx-2 font-normal text-gray-300">|</span>
                   <span class="font-semibold text-sky-900">
                     Model: {{ localPdbFile()!.name.replace('.pdb',
                     '').replace('.PDB', '') }}
@@ -78,7 +78,7 @@
               >
                 <ng-icon
                   name="heroArrowUpTray"
-                  class="h-3.5 w-3.5 mr-1.5 inline-block"
+                  class="mr-1.5 inline-block h-3.5 w-3.5"
                   aria-hidden="true"
                 ></ng-icon>
                 {{ localPdbFile() ? 'Upload new structure' : 'Upload a PDB file'
@@ -87,9 +87,9 @@
             </div>
 
             <!-- Viewer + config panel — side by side with draggable divider -->
-            <div class="flex min-h-80 max-h-[65vh]">
+            <div class="flex max-h-[65vh] min-h-80">
               <!-- Viewer column -->
-              <div class="relative flex-1 min-w-0 overflow-hidden">
+              <div class="relative min-w-0 flex-1 overflow-hidden">
                 <app-molstar-viewer
                   #molstarViewer
                   class="absolute inset-0"
@@ -106,7 +106,7 @@
                 <!-- starting_pdb error — overlaid on viewer, takes no layout space -->
                 @if (hasFieldError('starting_pdb')) {
                 <div
-                  class="absolute top-28 left-4 right-4 z-10 flex items-center gap-2 rounded-md border border-red-200 bg-red-50/95 px-3 py-2.5 shadow-sm backdrop-blur-sm"
+                  class="absolute top-28 right-4 left-4 z-10 flex items-center gap-2 rounded-md border border-red-200 bg-red-50/95 px-3 py-2.5 shadow-sm backdrop-blur-sm"
                 >
                   <p class="text-sm text-red-500">
                     {{ getFieldError('starting_pdb') }}
@@ -118,7 +118,7 @@
               <!-- Draggable divider — hidden when the panel is collapsed -->
               @if (panelWidth() > 0) {
               <div
-                class="relative w-1 shrink-0 cursor-col-resize select-none bg-gray-200 transition-colors hover:bg-sky-200 focus-visible:bg-sky-400 focus-visible:outline-none"
+                class="relative w-1 shrink-0 cursor-col-resize bg-gray-200 transition-colors select-none hover:bg-sky-200 focus-visible:bg-sky-400 focus-visible:outline-none"
                 role="separator"
                 aria-orientation="vertical"
                 aria-label="Resize configuration panel"
@@ -131,7 +131,7 @@
               >
                 <ng-icon
                   name="heroEllipsisVertical"
-                  class="pointer-events-none absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-400"
+                  class="pointer-events-none absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-gray-400"
                   aria-hidden="true"
                 ></ng-icon>
               </div>
@@ -151,7 +151,7 @@
                 @if (panelWidth() === 0) {
                 <button
                   type="button"
-                  class="absolute top-4 right-0 z-10 bg-white flex items-center gap-2 whitespace-nowrap rounded-l-full border border-r-0 p-2 text-sm font-medium shadow-md transition-colors focus:outline-none"
+                  class="absolute top-4 right-0 z-10 flex items-center gap-2 rounded-l-full border border-r-0 bg-white p-2 text-sm font-medium whitespace-nowrap shadow-md transition-colors focus:outline-none"
                   [class]="hasConfigSectionErrors() ? 'border-red-500 text-red-600 hover:bg-red-50' : 'border-gray-300  hover:bg-gray-50'"
                   (click)="panelWidth.set(defaultPanelWidth)"
                   title="Open Input Configuration"
@@ -165,7 +165,7 @@
                   <span>Input Configuration</span>
                   @if (hasConfigSectionErrors()) {
                   <span
-                    class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold leading-none text-white"
+                    class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs leading-none font-bold text-white"
                     aria-label="Has errors"
                     >!</span
                   >
@@ -183,7 +183,7 @@
                   <div class="flex h-full w-full flex-col bg-white">
                     <!-- Panel header -->
                     <div
-                      class="flex shrink-0 p-4 items-center gap-2 border-b px-4"
+                      class="flex shrink-0 items-center gap-2 border-b p-4 px-4"
                     >
                       <span class="flex-1 truncate text-sm font-medium">
                         Input Configuration
@@ -204,7 +204,7 @@
 
                     <!-- Panel scrollable body — clip x so field tooltips can't trigger a horizontal scrollbar in the narrow panel -->
                     <div
-                      class="flex flex-col gap-4 flex-1 overflow-y-auto overflow-x-hidden p-4"
+                      class="flex flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-4"
                     >
                       <!-- Job Name -->
                       <div>
@@ -226,7 +226,7 @@
                         <input
                           id="jobNameInput"
                           type="text"
-                          class="block h-10 w-full px-4 border rounded-md text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
+                          class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:ring-2 focus:ring-sky-100 focus:outline-none"
                           [class.border-red-500]="hasJobNameError()"
                           [formControl]="form.controls.jobName"
                           placeholder="e.g. my-binder-job"
@@ -252,7 +252,7 @@
 
                       <!-- Binder Length Range -->
                       <div>
-                        <p class="block text-sm font-medium mb-1">
+                        <p class="mb-1 block text-sm font-medium">
                           Binder Length Range
                           <span class="text-red-500">*</span>
                         </p>
@@ -305,13 +305,13 @@
         "
       >
         @if (!form.controls.selectedTool.value) {
-        <div class="p-4 bg-sky-50 border border-sky-200 rounded-lg">
+        <div class="rounded-lg border border-sky-200 bg-sky-50 p-4">
           <h3 class="text-sm font-medium text-sky-800">
             Select a tool to see settings.
           </h3>
         </div>
         } @else if (!selectedToolHasParams()) {
-        <div class="p-4 bg-sky-50 border border-sky-200 rounded-lg">
+        <div class="rounded-lg border border-sky-200 bg-sky-50 p-4">
           <h3 class="text-sm font-medium text-sky-800">
             No Parameters Available
           </h3>
@@ -329,15 +329,15 @@
           aria-label="Tool specific parameters"
         >
           @for (p of selectedToolParams(); track p.name) {
-          <div class="bg-white border rounded-lg p-4">
+          <div class="rounded-lg border bg-white p-4">
             <label [for]="'param-' + p.name" class="block text-sm font-medium"
               >{{ p.label }}</label
             >
-            <div class="text-xs text-gray-500 mt-1">{{ p.description }}</div>
+            <div class="mt-1 text-xs text-gray-500">{{ p.description }}</div>
             <input
               [id]="'param-' + p.name"
               type="text"
-              class="mt-2 block h-10 w-full px-4 border rounded-md bg-white text-sm text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-100"
+              class="mt-2 block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:ring-2 focus:ring-sky-100 focus:outline-none"
             />
           </div>
           }

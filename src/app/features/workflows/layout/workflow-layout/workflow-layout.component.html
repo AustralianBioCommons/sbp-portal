@@ -1,6 +1,6 @@
 <!-- Loading Overlay -->
 @if (workflowSubmission.isSubmitting()) {
-<app-loading></app-loading>
+  <app-loading></app-loading>
 }
 
 <!-- Success Dialog -->
@@ -21,24 +21,24 @@
 
 <!-- Error Alert -->
 @if (showAlert()) {
-<app-alert
-  [type]="'error'"
-  [message]="alertMessage()"
-  [dismissible]="true"
-  (dismissed)="alertDismissed.emit()"
-></app-alert>
+  <app-alert
+    [type]="'error'"
+    [message]="alertMessage()"
+    [dismissible]="true"
+    (dismissed)="alertDismissed.emit()"
+  ></app-alert>
 }
 
 <div
-  class="bg-gray-100 bg-[url('/assets/workflows-bg.avif')] bg-no-repeat bg-size-[auto_600px] xl:bg-contain bg-top bg-fixed"
+  class="bg-gray-100 bg-linear-to-l bg-[linear-gradient(var(--tw-gradient-stops)),linear-gradient(black,black)] from-biocommons-primary/80 via-biocommons-primary/15 to-biocommons-secondary/50 bg-size-[100%_600px] bg-fixed bg-top bg-no-repeat xl:bg-size-[100%_40vw]"
 >
-  <div class="max-w-7xl px-6 mx-auto py-12">
+  <div class="mx-auto max-w-7xl px-6 py-12">
     <div class="rounded-lg border bg-white shadow-sm">
-      <header class="rounded-t-lg bg-white border-b">
-        <div class="px-6 pt-6 sm:px-12 sm:pt-12 space-y-8">
-          <div>
-            <h1 class="text-3xl font-semibold">{{ heading() }}</h1>
-            <p class="mt-2 text-sm text-gray-500">
+      <header class="rounded-t-lg border-b bg-white">
+        <div class="space-y-8 px-6 pt-6 sm:px-12 sm:pt-12">
+          <div class="space-y-6">
+            <h1 class="text-4xl leading-none font-semibold">{{ heading() }}</h1>
+            <p class="text-gray-500">
               <ng-content select="[description]"></ng-content>
             </p>
           </div>
@@ -49,44 +49,44 @@
             aria-label="Workflow sections"
           >
             @for (tab of tabs; track tab.id) {
-            <li class="shrink-0" role="presentation">
-              <button
-                #tabButton
-                role="tab"
-                [id]="tabId(tab.id)"
-                [attr.aria-selected]="isActiveTab(tab.id)"
-                [attr.aria-controls]="
-                  isActiveTab(tab.id) ? panelId(tab.id) : null
-                "
-                [attr.tabindex]="isActiveTab(tab.id) ? 0 : -1"
-                [attr.aria-label]="tab.shortLabel ? tab.label : null"
-                (click)="switchTab(tab.id)"
-                (keydown)="onTabListKeydown($event)"
-                [class]="
-                  isActiveTab(tab.id)
-                    ? 'border-sky-500 text-sky-600'
-                    : 'border-transparent text-gray-500 hover:border-gray-600'
-                "
-                class="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap border-b-3 pb-3 pt-1 rounded-t min-w-24 w-24 sm:w-auto sm:px-4 text-sm font-semibold transition-all focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-700"
-                type="button"
-              >
-                <ng-icon
-                  [name]="tab.icon"
-                  size="20"
-                  aria-hidden="true"
-                ></ng-icon>
-                @if (tab.shortLabel) {
-                <span class="sm:hidden">{{ tab.shortLabel }}</span>
-                <span class="hidden sm:inline">{{ tab.label }}</span>
-                } @else {
-                {{ tab.label }}
-                }
-              </button>
-            </li>
+              <li class="shrink-0" role="presentation">
+                <button
+                  #tabButton
+                  role="tab"
+                  [id]="tabId(tab.id)"
+                  [attr.aria-selected]="isActiveTab(tab.id)"
+                  [attr.aria-controls]="
+                    isActiveTab(tab.id) ? panelId(tab.id) : null
+                  "
+                  [attr.tabindex]="isActiveTab(tab.id) ? 0 : -1"
+                  [attr.aria-label]="tab.shortLabel ? tab.label : null"
+                  (click)="switchTab(tab.id)"
+                  (keydown)="onTabListKeydown($event)"
+                  [class]="
+                    isActiveTab(tab.id)
+                      ? 'border-sky-500 text-sky-600'
+                      : 'border-transparent text-gray-500 hover:border-gray-600'
+                  "
+                  class="inline-flex w-24 min-w-24 shrink-0 items-center justify-center gap-2 rounded-t border-b-3 pt-1 pb-3 text-sm font-semibold whitespace-nowrap transition-all focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-700 sm:w-auto sm:px-4"
+                  type="button"
+                >
+                  <ng-icon
+                    [name]="tab.icon"
+                    size="20"
+                    aria-hidden="true"
+                  ></ng-icon>
+                  @if (tab.shortLabel) {
+                    <span class="sm:hidden">{{ tab.shortLabel }}</span>
+                    <span class="hidden sm:inline">{{ tab.label }}</span>
+                  } @else {
+                    {{ tab.label }}
+                  }
+                </button>
+              </li>
             } @empty {
-            <li class="px-4 py-2 text-sm text-gray-500" role="presentation">
-              No tabs available
-            </li>
+              <li class="px-4 py-2 text-sm text-gray-500" role="presentation">
+                No tabs available
+              </li>
             }
           </ul>
         </div>
@@ -94,108 +94,117 @@
 
       <div class="rounded-b-lg bg-gray-50 p-6 sm:p-12">
         <!-- Execute Tab Content -->
-        @if (isActiveTab('execute')) {
-        <div
-          role="tabpanel"
-          [id]="panelId('execute')"
-          [attr.aria-labelledby]="tabId('execute')"
-        >
-          <h2 class="text-xl font-semibold">Execute this workflow</h2>
+        @if (isActiveTab("execute")) {
+          <div
+            role="tabpanel"
+            [id]="panelId('execute')"
+            [attr.aria-labelledby]="tabId('execute')"
+          >
+            <h2 class="mb-2 text-2xl leading-none font-semibold">
+              Execute this workflow
+            </h2>
 
-          <!-- Hide form and show access restricted message if user cannot execute workflows -->
-          @if ((auth.canExecuteWorkflows$ | async) === false) {
-          <div class="rounded-lg bg-white border mt-4 text-center py-8 px-4">
-            <p class="text-base font-semibold">Access Restricted</p>
-            @if ((auth.isAuthenticated$ | async) === false) {
-            <p class="text-sm text-gray-500 mt-4 mb-6">
-              To use this tool, please log in or register for a BioCommons
-              Access account and add the
-              <span class="font-semibold">SBP Workflow Execution bundle</span>
-              to your profile.
-            </p>
-            <app-button
-              type="button"
-              variant="primary"
-              widthClass="w-auto"
-              (click)="loginWithReturnUrl()"
-            >
-              Log in or Register
-            </app-button>
+            <!-- Hide form and show access restricted message if user cannot execute workflows -->
+            @if ((auth.canExecuteWorkflows$ | async) === false) {
+              <div
+                class="mt-6 rounded-lg border bg-white px-4 py-8 text-center"
+              >
+                <p class="text-base font-semibold">Access Restricted</p>
+                @if ((auth.isAuthenticated$ | async) === false) {
+                  <p class="mt-4 mb-6 text-sm text-gray-500">
+                    To use this tool, please log in or register for a BioCommons
+                    Access account and add the
+                    <span class="font-semibold"
+                      >SBP Workflow Execution bundle</span
+                    >
+                    to your profile.
+                  </p>
+                  <app-button
+                    type="button"
+                    variant="primary"
+                    widthClass="w-auto"
+                    (click)="loginWithReturnUrl()"
+                  >
+                    Log in or Register
+                  </app-button>
+                } @else {
+                  <p class="mt-4 mb-6 text-sm text-gray-500">
+                    You currently do not have access to this tool; please go to
+                    your profile page to add the
+                    <span class="font-semibold">SBP Workflow Execution</span>
+                    bundle.
+                  </p>
+                  <a
+                    [href]="profileUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex w-auto items-center justify-center overflow-hidden rounded-md bg-biocommons-primary px-4 py-2.5 text-sm font-medium whitespace-nowrap text-white no-underline transition-all hover:bg-sky-900"
+                  >
+                    Add bundle
+                  </a>
+                }
+              </div>
             } @else {
-            <p class="text-sm text-gray-500 mt-4 mb-6">
-              You currently do not have access to this tool; please go to your
-              profile page to add the
-              <span class="font-semibold">SBP Workflow Execution</span> bundle.
-            </p>
-            <a
-              [href]="profileUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center justify-center w-auto no-underline rounded-md px-4 py-2.5 text-sm font-medium text-white transition-all whitespace-nowrap overflow-hidden bg-biocommons-primary hover:bg-sky-900"
-            >
-              Add bundle
-            </a>
+              <ng-content></ng-content>
             }
           </div>
-          } @else {
-          <ng-content></ng-content>
-          }
-        </div>
         }
 
         <!-- About Tab Content -->
-        @if (isActiveTab('about')) {
-        <div
-          role="tabpanel"
-          [id]="panelId('about')"
-          [attr.aria-labelledby]="tabId('about')"
-          tabindex="0"
-          class="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-        >
-          <h2 class="text-xl font-semibold">About this workflow</h2>
+        @if (isActiveTab("about")) {
           <div
-            class="mt-4 rounded-lg border bg-white p-6 text-sm text-gray-500"
+            role="tabpanel"
+            [id]="panelId('about')"
+            [attr.aria-labelledby]="tabId('about')"
+            tabindex="0"
+            class="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
           >
-            <ng-content select="[overview]"></ng-content>
+            <h2 class="text-2xl leading-none font-semibold">
+              About this workflow
+            </h2>
+            <div
+              class="mt-6 rounded-lg border bg-white p-6 text-sm text-gray-500"
+            >
+              <ng-content select="[overview]"></ng-content>
+            </div>
           </div>
-        </div>
         }
 
         <!-- Example Output Tab Content -->
-        @if (isActiveTab('output')) {
-        <div
-          role="tabpanel"
-          [id]="panelId('output')"
-          [attr.aria-labelledby]="tabId('output')"
-          tabindex="0"
-          class="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-        >
-          <h2 class="text-xl font-semibold">Example Output</h2>
-          <div class="mt-4 rounded-lg border bg-white p-6 space-y-2">
-            <ng-content select="[output]">
-              <p class="text-sm text-gray-500">
-                Results, visualizations, and downloadable files will appear here
-                after submission.
-              </p>
-            </ng-content>
+        @if (isActiveTab("output")) {
+          <div
+            role="tabpanel"
+            [id]="panelId('output')"
+            [attr.aria-labelledby]="tabId('output')"
+            tabindex="0"
+            class="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+          >
+            <h2 class="text-2xl leading-none font-semibold">Example Output</h2>
+            <div class="mt-6 space-y-2 rounded-lg border bg-white p-6">
+              <ng-content select="[output]">
+                <p class="text-sm text-gray-500">
+                  Results, visualizations, and downloadable files will appear
+                  here after submission.
+                </p>
+              </ng-content>
+            </div>
           </div>
-        </div>
         }
 
         <!-- Papers Tab Content -->
-        @if (isActiveTab('papers')) {
-        <div
-          role="tabpanel"
-          [id]="panelId('papers')"
-          [attr.aria-labelledby]="tabId('papers')"
-          tabindex="0"
-          class="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-        >
-          <h2 class="text-xl font-semibold">Papers</h2>
-          <div class="mt-4 rounded-lg border bg-white p-6 space-y-2">
-            <ng-content select="[papers]"></ng-content>
+        @if (isActiveTab("papers")) {
+          <div
+            role="tabpanel"
+            [id]="panelId('papers')"
+            [attr.aria-labelledby]="tabId('papers')"
+            tabindex="0"
+            class="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+          >
+            <h2 class="text-2xl leading-none font-semibold">Papers</h2>
+            <div class="mt-6 space-y-2 rounded-lg border bg-white p-6">
+              <ng-content select="[papers]"></ng-content>
+            </div>
           </div>
-        </div>
         }
       </div>
     </div>

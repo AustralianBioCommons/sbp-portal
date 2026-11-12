@@ -1,18 +1,18 @@
-<div #topSentinel aria-hidden="true" class="h-px -mb-px"></div>
+<div #topSentinel aria-hidden="true" class="-mb-px h-px"></div>
 
 <nav
-  class="block sticky top-0 z-50 bg-white shrink-0 transition-shadow"
+  class="sticky top-0 z-50 block shrink-0 bg-white transition-shadow"
   [class.shadow]="scrolled()"
 >
   <div
-    class="px-6 border-b mx-auto relative flex items-center justify-between min-h-22 gap-4"
+    class="relative mx-auto flex min-h-22 items-center justify-between gap-4 border-b px-6"
   >
     <!-- Left: Burger Menu + Logo + Nav Links -->
-    <div class="flex items-center gap-4 shrink-0">
+    <div class="flex shrink-0 items-center gap-4">
       <button
         type="button"
         #menuButton
-        class="compact-menu-button text-sky-600 hover:text-sky-700 transition-all rounded"
+        class="compact-menu-button rounded text-sky-600 transition-all hover:text-sky-700"
         (click)="toggleMobileMenu(); $event.stopPropagation()"
         aria-label="Open menu"
         aria-controls="navigation-menu"
@@ -22,7 +22,7 @@
       </button>
       <a routerLink="/home" aria-label="Navigate to home page">
         <img
-          class="md:w-48 md:min-w-48 w-36 min-w-36 h-auto"
+          class="h-auto w-36 min-w-36 md:w-48 md:min-w-48"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />
@@ -30,159 +30,172 @@
 
       <!-- Divider -->
       <span
-        class="hidden lg:block h-8 w-px bg-gray-300 mr-2 lg:mr-4"
+        class="mr-2 hidden h-8 w-px bg-gray-300 lg:mr-4 lg:block"
         aria-hidden="true"
       ></span>
 
       <!-- Nav Links -->
       <nav
-        class="hidden lg:flex items-center gap-6 font-semibold text-biocommons-primary transition-all text-sm"
+        class="hidden items-center gap-6 text-sm font-semibold text-biocommons-primary transition-all lg:flex"
         aria-label="Main navigation"
       >
         @for (item of desktopNavItems; track item.label) {
-        <a
-          [routerLink]="item.path"
-          class="py-2 whitespace-nowrap border-b-2 no-underline text-biocommons-primary"
-          [class]="
-            isNavItemActive(item)
-              ? 'border-biocommons-primary'
-              : 'border-transparent hover:border-biocommons-primary/20'
-          "
-          [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
-        >
-          {{ item.label }}
-        </a>
+          <a
+            [routerLink]="item.path"
+            class="border-b-2 py-2 whitespace-nowrap text-biocommons-primary no-underline"
+            [class]="
+              isNavItemActive(item)
+                ? 'border-biocommons-primary'
+                : 'border-transparent hover:border-biocommons-primary/20'
+            "
+            [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
+          >
+            {{ item.label }}
+          </a>
         }
       </nav>
     </div>
 
     <!-- Right: Auth Section -->
-    <div class="flex items-center gap-4 shrink-0">
-      @if (isAuthenticated$ | async) { @let user = user$ | async; @if
-      (creditsEnabled) {
-      <!-- Credits remaining -->
-      <app-tooltip
-        #creditsTooltip
-        message="Credits are required to execute workflows and will be consumed upon workflow submission. Credit balance will refresh on the 1st of each month."
-      >
-        <div
-          class="flex items-center gap-2 rounded-xl border border-gray-300 hover:bg-gray-50 hover:cursor-pointer bg-white px-2 h-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500"
-          tabindex="0"
-          aria-label="Credits remaining"
-          [attr.aria-describedby]="creditsTooltip.tooltipId"
-        >
-          <div class="flex flex-col justify-center gap-1">
-            <span class="text-xs font-medium leading-none text-gray-700">
-              Credits remaining
-            </span>
-            <div class="flex items-center gap-2">
-              <div
-                class="h-1.5 w-24 rounded-full bg-gray-200"
-                role="progressbar"
-                [attr.aria-valuenow]="creditsRemaining()"
-                aria-valuemin="0"
-                [attr.aria-valuemax]="creditsTotal"
-              >
-                <div
-                  class="h-1.5 rounded-full bg-biocommons-secondary transition-all"
-                  [style.width.%]="creditsPercent()"
-                ></div>
+    <div class="flex shrink-0 items-center gap-4">
+      @if (isAuthenticated$ | async) {
+        @let user = user$ | async;
+        @if (creditsEnabled) {
+          <!-- Credits remaining -->
+          <app-tooltip
+            #creditsTooltip
+            message="Credits are required to execute workflows and will be consumed upon workflow submission. Credit balance will refresh on the 1st of each month."
+          >
+            <div
+              class="flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-2 hover:cursor-pointer hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:outline-none"
+              tabindex="0"
+              aria-label="Credits remaining"
+              [attr.aria-describedby]="creditsTooltip.tooltipId"
+            >
+              <div class="flex flex-col justify-center gap-1">
+                <span class="text-xs leading-none font-medium text-gray-700">
+                  Credits remaining
+                </span>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="h-1.5 w-24 rounded-full bg-gray-200"
+                    role="progressbar"
+                    [attr.aria-valuenow]="creditsRemaining()"
+                    aria-valuemin="0"
+                    [attr.aria-valuemax]="creditsTotal"
+                  >
+                    <div
+                      class="h-1.5 rounded-full bg-biocommons-secondary transition-all"
+                      [style.width.%]="creditsPercent()"
+                    ></div>
+                  </div>
+                  <span
+                    class="shrink-0 font-mono text-xs leading-none text-gray-500"
+                  >
+                    {{ creditsRemaining() ?? "—" }}/{{ creditsTotal }}
+                  </span>
+                </div>
               </div>
-              <span
-                class="text-xs font-mono leading-none text-gray-500 shrink-0"
-              >
-                {{ creditsRemaining() ?? "—" }}/{{ creditsTotal }}
-              </span>
+              <ng-icon
+                name="heroInformationCircle"
+                size="18"
+                class="text-gray-500"
+              ></ng-icon>
             </div>
-          </div>
-          <ng-icon
-            name="heroInformationCircle"
-            size="18"
-            class="text-gray-500"
-          ></ng-icon>
-        </div>
-      </app-tooltip>
-      }
-      <app-dropdown-menu
-        [isOpen]="userMenuOpen()"
-        (isOpenChange)="userMenuOpen.set($event)"
-        widthClass="w-auto"
-      >
-        <ng-template #trigger>
-          <button
-            type="button"
-            (click)="userMenuOpen.set(!userMenuOpen())"
-            class="focus:outline-hidden relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm hover:cursor-pointer focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-sky-200"
-            id="user-menu-button"
-            [attr.aria-expanded]="userMenuOpen()"
-            aria-haspopup="true"
-          >
-            <span class="absolute -inset-1.5"></span>
-            <span class="sr-only">Open user menu</span>
-            @if (user?.picture) { @if (!profileImageLoaded()) {
-            <ng-icon name="heroUser" size="24" class="text-gray-600"></ng-icon>
-            }
-            <img
-              class="h-10 w-10 rounded-full"
-              [class.hidden]="!profileImageLoaded()"
-              [src]="user?.picture"
-              alt="User"
-              (load)="profileImageLoaded.set(true)"
-              (error)="profileImageLoaded.set(false)"
-            />
-            } @else {
-            <ng-icon name="heroUser" size="24" class="text-gray-600"></ng-icon>
-            }
-          </button>
-        </ng-template>
-        <ng-template #menu>
-          <div
-            class="truncate px-4 py-3 text-sm text-biocommons-primary border-b"
-          >
-            {{ user?.email || "" }}
-          </div>
-          <button
-            type="button"
-            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
-            role="menuitem"
-            tabindex="-1"
-            (click)="userMenuOpen.set(false); openProfile()"
-          >
-            <ng-icon name="heroUserCircle" size="20"></ng-icon>
-            My Profile
-          </button>
-          <a
-            href="https://biocommons-sbp-help.freshdesk.com/support/tickets/new"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
-            role="menuitem"
-            tabindex="-1"
-            (click)="userMenuOpen.set(false)"
-          >
-            <img
-              src="/assets/freshdesk-logo.png"
-              alt=""
-              class="h-5 w-5 object-contain"
-            />
-            Support
-          </a>
-          <button
-            type="button"
-            class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
-            role="menuitem"
-            tabindex="-1"
-            (click)="logout()"
-          >
-            <ng-icon name="heroArrowRightStartOnRectangle" size="20"></ng-icon>
-            Log out
-          </button>
-        </ng-template>
-      </app-dropdown-menu>
+          </app-tooltip>
+        }
+        <app-dropdown-menu
+          [isOpen]="userMenuOpen()"
+          (isOpenChange)="userMenuOpen.set($event)"
+          widthClass="w-auto"
+        >
+          <ng-template #trigger>
+            <button
+              type="button"
+              (click)="userMenuOpen.set(!userMenuOpen())"
+              class="relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm hover:cursor-pointer focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-sky-200 focus:outline-hidden"
+              id="user-menu-button"
+              [attr.aria-expanded]="userMenuOpen()"
+              aria-haspopup="true"
+            >
+              <span class="absolute -inset-1.5"></span>
+              <span class="sr-only">Open user menu</span>
+              @if (user?.picture) {
+                @if (!profileImageLoaded()) {
+                  <ng-icon
+                    name="heroUser"
+                    size="24"
+                    class="text-gray-600"
+                  ></ng-icon>
+                }
+                <img
+                  class="h-10 w-10 rounded-full"
+                  [class.hidden]="!profileImageLoaded()"
+                  [src]="user?.picture"
+                  alt="User"
+                  (load)="profileImageLoaded.set(true)"
+                  (error)="profileImageLoaded.set(false)"
+                />
+              } @else {
+                <ng-icon
+                  name="heroUser"
+                  size="24"
+                  class="text-gray-600"
+                ></ng-icon>
+              }
+            </button>
+          </ng-template>
+          <ng-template #menu>
+            <div
+              class="truncate border-b px-4 py-3 text-sm text-biocommons-primary"
+            >
+              {{ user?.email || "" }}
+            </div>
+            <button
+              type="button"
+              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
+              role="menuitem"
+              tabindex="-1"
+              (click)="userMenuOpen.set(false); openProfile()"
+            >
+              <ng-icon name="heroUserCircle" size="20"></ng-icon>
+              My Profile
+            </button>
+            <a
+              href="https://biocommons-sbp-help.freshdesk.com/support/tickets/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
+              role="menuitem"
+              tabindex="-1"
+              (click)="userMenuOpen.set(false)"
+            >
+              <img
+                src="/assets/freshdesk-logo.png"
+                alt=""
+                class="h-5 w-5 object-contain"
+              />
+              Support
+            </a>
+            <button
+              type="button"
+              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
+              role="menuitem"
+              tabindex="-1"
+              (click)="logout()"
+            >
+              <ng-icon
+                name="heroArrowRightStartOnRectangle"
+                size="20"
+              ></ng-icon>
+              Log out
+            </button>
+          </ng-template>
+        </app-dropdown-menu>
       } @else {
-      <app-button variant="primary" widthClass="w-auto" (click)="login()">
-        Login
-      </app-button>
+        <app-button variant="primary" widthClass="w-auto" (click)="login()">
+          Login
+        </app-button>
       }
     </div>
   </div>
@@ -190,7 +203,7 @@
   <!-- Mobile Menu Backdrop -->
   <div
     class="fixed inset-0 z-40 bg-black/50 transition-opacity"
-    [class]="isMobileMenuOpen() ? '' : 'opacity-0 pointer-events-none'"
+    [class]="isMobileMenuOpen() ? '' : 'pointer-events-none opacity-0'"
     (click)="closeMobileMenu()"
     aria-hidden="true"
   ></div>
@@ -199,7 +212,7 @@
   <div
     #menuPanel
     id="navigation-menu"
-    class="compact-menu fixed top-0 left-0 h-full w-84 z-50 bg-white shadow-2xl transition-transform ease-in-out overflow-y-auto flex flex-col"
+    class="compact-menu fixed top-0 left-0 z-50 flex h-full w-84 flex-col overflow-y-auto bg-white shadow-2xl transition-transform ease-in-out"
     [style.transform]="
       isMobileMenuOpen() ? 'translateX(0)' : 'translateX(-100%)'
     "
@@ -211,7 +224,7 @@
   >
     <!-- Panel Header -->
     <div
-      class="flex items-center justify-between px-6 border-b sticky top-0 shrink-0 bg-white z-10 h-22"
+      class="sticky top-0 z-10 flex h-22 shrink-0 items-center justify-between border-b bg-white px-6"
     >
       <a
         routerLink="/home"
@@ -219,7 +232,7 @@
         aria-label="Navigate to home page"
       >
         <img
-          class="md:w-48 md:min-w-48 w-36 min-w-36 h-auto"
+          class="h-auto w-36 min-w-36 md:w-48 md:min-w-48"
           src="/assets/sbp-logo.png"
           alt="SBP Portal"
         />
@@ -228,7 +241,7 @@
         #closeMenuButton
         type="button"
         (click)="closeMobileMenu()"
-        class="rounded-lg h-8 w-8 flex items-center justify-center text-gray-900 hover:bg-gray-100 transition-all"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-900 transition-all hover:bg-gray-100"
         aria-label="Close menu"
       >
         <ng-icon name="heroXMark" size="24"></ng-icon>
@@ -237,57 +250,61 @@
 
     <!-- Panel Content -->
     <nav
-      class="p-6 flex-1 space-y-2 text-sm font-medium"
+      class="flex-1 space-y-2 p-6 text-sm font-medium"
       aria-label="Mobile navigation"
     >
-      @for (item of navItems; track item.label) { @if (item.children) {
-      <div class="space-y-2">
-        <a
-          [routerLink]="item.path"
-          (click)="closeMobileMenu()"
-          class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary"
-          [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
-          [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
-        >
-          {{ item.label }}
-        </a>
-        <div class="ml-6 space-y-2">
-          @for (child of item.children; track child.label) {
+      @for (item of navItems; track item.label) {
+        @if (item.children) {
+          <div class="space-y-2">
+            <a
+              [routerLink]="item.path"
+              (click)="closeMobileMenu()"
+              class="block rounded-md p-2 font-semibold text-biocommons-primary no-underline transition-all"
+              [class]="isNavItemActive(item) ? 'bg-sky-50' : 'hover:bg-gray-50'"
+              [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
+            >
+              {{ item.label }}
+            </a>
+            <div class="ml-6 space-y-2">
+              @for (child of item.children; track child.label) {
+                <a
+                  [routerLink]="child.path"
+                  (click)="closeMobileMenu()"
+                  class="block rounded-md p-2 text-biocommons-primary no-underline transition-all"
+                  [class]="
+                    isNavItemActive(child) ? 'bg-sky-50' : 'hover:bg-gray-50'
+                  "
+                  [attr.aria-current]="
+                    currentRoute() === child.path ? 'page' : null
+                  "
+                >
+                  {{ child.label }}
+                </a>
+              }
+            </div>
+          </div>
+        } @else if (item.external) {
           <a
-            [routerLink]="child.path"
+            [href]="item.path"
+            target="_blank"
+            rel="noopener noreferrer"
             (click)="closeMobileMenu()"
-            class="block p-2 rounded-md transition-all no-underline text-biocommons-primary"
-            [class]="
-              isNavItemActive(child) ? 'bg-sky-50 ' : ' hover:bg-gray-50'
-            "
-            [attr.aria-current]="currentRoute() === child.path ? 'page' : null"
+            class="block rounded-md p-2 font-semibold text-biocommons-primary no-underline transition-all hover:bg-gray-50"
           >
-            {{ child.label }}
+            {{ item.label }}
           </a>
-          }
-        </div>
-      </div>
-      } @else if (item.external) {
-      <a
-        [href]="item.path"
-        target="_blank"
-        rel="noopener noreferrer"
-        (click)="closeMobileMenu()"
-        class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary hover:bg-gray-50"
-      >
-        {{ item.label }}
-      </a>
-      } @else {
-      <a
-        [routerLink]="item.path"
-        (click)="closeMobileMenu()"
-        class="block p-2 rounded-md transition-all no-underline font-semibold text-biocommons-primary"
-        [class]="isNavItemActive(item) ? 'bg-sky-50 ' : ' hover:bg-gray-50'"
-        [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
-      >
-        {{ item.label }}
-      </a>
-      } }
+        } @else {
+          <a
+            [routerLink]="item.path"
+            (click)="closeMobileMenu()"
+            class="block rounded-md p-2 font-semibold text-biocommons-primary no-underline transition-all"
+            [class]="isNavItemActive(item) ? 'bg-sky-50' : 'hover:bg-gray-50'"
+            [attr.aria-current]="currentRoute() === item.path ? 'page' : null"
+          >
+            {{ item.label }}
+          </a>
+        }
+      }
     </nav>
   </div>
 </nav>

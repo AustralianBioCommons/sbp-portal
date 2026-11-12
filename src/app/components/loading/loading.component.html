@@ -2,19 +2,19 @@
   [class]="
     inline()
       ? 'flex items-center justify-center p-6'
-      : 'fixed inset-0 bg-white/90 flex items-center justify-center z-1000'
+      : 'fixed inset-0 z-1000 flex items-center justify-center bg-white/90'
   "
 >
   <div class="text-center">
     <!-- Spinner -->
-    <div class="relative mx-auto mb-6 w-12 h-12">
-      <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+    <div class="relative mx-auto mb-6 h-12 w-12">
+      <div class="absolute inset-0 rounded-full border-4 border-gray-100"></div>
       <div
-        class="absolute inset-0 border-4 border-transparent border-t-biocommons-secondary rounded-full animate-spin"
+        class="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-biocommons-secondary"
       ></div>
     </div>
 
     <!-- Loading text -->
-    <p class="text-biocommons-primary font-semibold">{{ message() }}</p>
+    <p class="font-semibold text-biocommons-primary">{{ message() }}</p>
   </div>
 </div>

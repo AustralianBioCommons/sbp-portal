@@ -42,7 +42,7 @@
         heading="Input Configuration"
         description="Provide query and target protein sequences in multi-FASTA format."
       >
-        <div class="mt-6 space-y-6">
+        <div class="space-y-4">
           <!-- Job Name -->
           <div class="rounded-lg border bg-white p-4">
             <label
@@ -68,7 +68,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:ring-2 focus:outline-none"
               placeholder="e.g. my-screening-job"
               maxlength="60"
             />
@@ -106,7 +106,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              class="block w-full rounded-md border px-4 py-2 font-mono text-sm text-gray-900 placeholder-gray-400 transition-colors focus:ring-2 focus:outline-none"
               placeholder=">seq1&#10;MKTAYIAKQRQISFVK&#10;>seq2&#10;ACDEFGHIKLMNPQRSTVWY"
             ></textarea>
             @if (hasQueryError()) {
@@ -143,7 +143,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="block w-full rounded-md border px-4 py-2 text-sm font-mono text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+              class="block w-full rounded-md border px-4 py-2 font-mono text-sm text-gray-900 placeholder-gray-400 transition-colors focus:ring-2 focus:outline-none"
               placeholder=">target1&#10;ACDEFGHIKLMNPQRSTVWY&#10;>target2&#10;MKTAYIAKQRQISFVK"
             ></textarea>
             @if (hasTargetError()) {
@@ -191,13 +191,13 @@
         "
       >
         @if (!form.controls.selectedTool.value) {
-        <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+        <div class="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-4">
           <h3 class="text-sm font-medium text-sky-800">
             Select a tool to see settings.
           </h3>
         </div>
         } @else {
-        <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+        <div class="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-4">
           <div class="flex items-start">
             <div class="shrink-0">
               <svg

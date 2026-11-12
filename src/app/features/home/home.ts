@@ -6,12 +6,12 @@ import {
 } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
-import { heroChevronRight } from "@ng-icons/heroicons/outline";
+import { heroArrowRight } from "@ng-icons/heroicons/outline";
 
 @Component({
   selector: "app-home",
   imports: [RouterLink, NgIconComponent],
-  providers: [provideIcons({ heroChevronRight })],
+  providers: [provideIcons({ heroArrowRight })],
   templateUrl: "./home.html",
   styleUrl: "./home.scss",
   host: { class: "block" },

@@ -67,7 +67,7 @@
                 ? 'border-red-500 focus:ring-red-100'
                 : 'focus:ring-sky-100'
             "
-            class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors"
+            class="block h-10 w-full rounded-md border px-4 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:ring-2 focus:outline-none"
             maxlength="60"
           />
           @if (hasJobNameError()) {
@@ -77,8 +77,8 @@
           }
         </div>
 
-        <div class="rounded-lg border p-4 mt-4">
-          <div class="block text-sm font-medium mb-1">
+        <div class="mt-4 rounded-lg border p-4">
+          <div class="mb-1 block text-sm font-medium">
             Entities
             <span class="text-red-500" aria-hidden="true">*</span>
           </div>
@@ -91,7 +91,7 @@
           >
             @for (row of entityRows(); track row.id; let i = $index) {
             <div
-              class="entity-row rounded-lg border bg-white p-4 transition-colors has-[.drag-handle:hover]:bg-gray-50/60 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:backdrop-blur-sm [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-placeholder]:opacity-35 [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
+              class="entity-row rounded-lg border bg-white p-4 transition-colors has-[.drag-handle:hover]:bg-gray-50/60 [&.cdk-drag-placeholder]:opacity-35 [&.cdk-drag-preview]:border-gray-400 [&.cdk-drag-preview]:shadow-2xl [&.cdk-drag-preview]:backdrop-blur-sm [.cdk-drop-list-dragging_&:not(.cdk-drag-placeholder)]:transition-transform"
               cdkDrag
               cdkDragLockAxis="y"
               cdkDragBoundary=".sequence-list"
@@ -155,7 +155,7 @@
                       ? 'border-red-500 focus:ring-red-100'
                       : 'focus:ring-sky-100'
                   "
-                    class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+                    class="block h-10 w-full rounded-md border bg-white px-4 text-sm text-gray-900 transition-colors focus:ring-2 focus:outline-none"
                   />
                   @if (shouldShowRowFieldError(row, 'copyNumber') &&
                   getRowErrors(i).copyNumber) {
@@ -194,7 +194,7 @@
                   >
                     <div class="relative">
                       <div
-                        class="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-all px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-gray-900 scrollbar-gutter-stable"
+                        class="pointer-events-none absolute inset-0 scrollbar-gutter-stable overflow-hidden px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] break-all whitespace-pre-wrap text-gray-900"
                         aria-hidden="true"
                       >
                         @for (cell of getSequenceCells(row.sequence,
@@ -219,7 +219,7 @@
                         (input)="updateRowSequence(row.id, $any($event.target).value)"
                         (scroll)="syncSequenceOverlayScroll($event)"
                         (blur)="touchRowField(row.id, 'sequence')"
-                        class="relative block w-full resize-none bg-transparent px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] text-transparent caret-gray-900 placeholder-gray-400 focus:outline-none field-sizing-content min-h-9.5 max-h-40 whitespace-pre-wrap break-all scrollbar-gutter-stable"
+                        class="relative block field-sizing-content max-h-40 min-h-9.5 w-full resize-none scrollbar-gutter-stable bg-transparent px-4 py-1 font-mono text-sm leading-7.5 tracking-[2px] break-all whitespace-pre-wrap text-transparent placeholder-gray-400 caret-gray-900 focus:outline-none"
                         [placeholder]="
                         row.moleculeType === 'ligand'
                           ? 'CC(=O)OC1=CC=CC=C1C(=O)O'
@@ -252,7 +252,7 @@
                   >
                   <button
                     type="button"
-                    class="flex h-10 w-10 items-center border justify-center rounded-lg text-biocommons-primary transition not-disabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    class="flex h-10 w-10 items-center justify-center rounded-lg border text-biocommons-primary transition not-disabled:hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
                     [disabled]="entityRows().length === 1"
                     (click)="removeEntityRow(row.id)"
                     [attr.aria-label]="'Delete entity ' + (i + 1)"
@@ -322,7 +322,7 @@
         "
       >
         @if (!form.controls.selectedTool.value) {
-        <div class="p-4 bg-sky-50 border border-sky-200 rounded-lg">
+        <div class="rounded-lg border border-sky-200 bg-sky-50 p-4">
           <h3 class="text-sm font-medium text-sky-800">
             Select a tool to see settings.
           </h3>
@@ -355,7 +355,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 transition-colors focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
             />
             @if ((stepTwoTouched() || randomSeedTouched()) &&
             toolSettingErrors().randomSeed) {
@@ -391,7 +391,7 @@
                   ? 'border-red-500 focus:ring-red-100'
                   : 'focus:ring-sky-100'
               "
-              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-colors"
+              class="mt-1 block h-10 w-full rounded-md border px-4 text-sm text-gray-900 transition-colors focus:ring-2 focus:outline-none"
             />
             @if ((stepTwoTouched() || colabfoldNumRecyclesTouched()) &&
             toolSettingErrors().colabfoldNumRecycles) {
@@ -402,7 +402,7 @@
           </div>
           } @if (form.controls.selectedTool.value === 'alphafold2') {
           <div
-            class="rounded-lg border p-4 flex items-center justify-start gap-2"
+            class="flex items-center justify-start gap-2 rounded-lg border p-4"
           >
             <label
               for="alphafold2-full-dbs"
@@ -424,7 +424,7 @@
           </div>
           } @if (form.controls.selectedTool.value === 'boltz') {
           <div
-            class="rounded-lg border p-4 flex items-center justify-start gap-2"
+            class="flex items-center justify-start gap-2 rounded-lg border p-4"
           >
             <label
               for="boltz-use-potentials"

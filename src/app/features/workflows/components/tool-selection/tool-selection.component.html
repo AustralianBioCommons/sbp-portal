@@ -6,61 +6,61 @@
   [attr.aria-describedby]="showRequiredError() ? errorId : null"
 >
   @for (tool of tools(); track tool.id) {
-  <label
-    class="flex items-center cursor-pointer gap-2 border rounded-full p-2 transition-all hover:bg-gray-50 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-600"
-    [class.pl-4]="!!tool.description"
-    [class.pr-4]="!!tool.description"
-    [class.pr-3]="!tool.description"
-    [class]="
-      showRequiredError()
-        ? 'border-red-500'
-        : selectedToolId() === tool.id
-        ? 'border-gray-900'
-        : 'border-gray-300'
-    "
-  >
-    <input
-      type="radio"
-      [name]="name()"
-      [value]="tool.id"
-      [checked]="selectedToolId() === tool.id"
-      [disabled]="disabled()"
-      (change)="onToolSelect(tool.id)"
-      (blur)="markAsTouched()"
-      class="sr-only"
-    />
-    <div
-      class="w-5 h-5 shrink-0 rounded-full border-2 flex items-center justify-center transition-all border-sky-500 bg-white"
+    <label
+      class="flex cursor-pointer items-center gap-2 rounded-full border p-2 transition-all hover:bg-gray-50"
+      [class.pl-4]="!!tool.description"
+      [class.pr-4]="!!tool.description"
+      [class.pr-3]="!tool.description"
+      [class]="
+        showRequiredError()
+          ? 'border-red-500'
+          : selectedToolId() === tool.id
+            ? 'border-gray-900'
+            : 'border-gray-300'
+      "
     >
-      @if (selectedToolId() === tool.id) {
-      <div class="w-2 h-2 rounded-full bg-sky-500"></div>
-      }
-    </div>
-    <span class="text-sm">
-      <span class="block">
-        <span class="font-semibold">{{ tool.label }}</span>
-        @if (tool.credits !== undefined) {
-        <span class="text-gray-500">
-          from {{ tool.credits }}
-          {{ tool.credits === 1 ? "credit" : "credits" }}
+      <input
+        type="radio"
+        [name]="name()"
+        [value]="tool.id"
+        [checked]="selectedToolId() === tool.id"
+        [disabled]="disabled()"
+        (change)="onToolSelect(tool.id)"
+        (blur)="markAsTouched()"
+        class="sr-only"
+      />
+      <div
+        class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-sky-500 bg-white transition-all"
+      >
+        @if (selectedToolId() === tool.id) {
+          <div class="h-2 w-2 rounded-full bg-sky-500"></div>
+        }
+      </div>
+      <span class="text-sm">
+        <span class="block">
+          <span class="font-semibold">{{ tool.label }}</span>
+          @if (tool.credits !== undefined) {
+            <span class="text-gray-500">
+              from {{ tool.credits }}
+              {{ tool.credits === 1 ? "credit" : "credits" }}
+            </span>
+          }
         </span>
+        @if (tool.description) {
+          <span class="block text-xs text-gray-600">
+            {{ tool.description }}
+          </span>
         }
       </span>
-      @if (tool.description) {
-      <span class="block text-xs text-gray-600">
-        {{ tool.description }}
-      </span>
-      }
-    </span>
-  </label>
+    </label>
   } @empty {
-  <div class="text-center py-4">
-    <span class="text-sm text-gray-500">No tools available</span>
-  </div>
+    <div class="py-4 text-center">
+      <span class="text-sm text-gray-500">No tools available</span>
+    </div>
   }
 </div>
 @if (showRequiredError()) {
-<p [id]="errorId" class="mt-2 text-xs text-red-600" role="alert">
-  {{ requiredErrorMessage() }}
-</p>
+  <p [id]="errorId" class="mt-2 text-xs text-red-600" role="alert">
+    {{ requiredErrorMessage() }}
+  </p>
 }
