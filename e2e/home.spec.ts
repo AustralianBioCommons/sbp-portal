@@ -57,9 +57,6 @@ for (const viewport of [
     const backgroundSize = await background.evaluate(
       (element) => getComputedStyle(element).backgroundSize
     );
-    const homeGradient = await background.evaluate(
-      (element) => getComputedStyle(element).backgroundImage
-    );
 
     for (const size of backgroundSize.split(",")) {
       const height = Number.parseFloat(size.trim().split(" ")[1]);
@@ -119,7 +116,7 @@ for (const viewport of [
     }
     await expect(page.locator("app-workflow-layout > div")).toHaveCSS(
       "background-image",
-      homeGradient.replace("to right", "to left").replace("90deg", "270deg")
+      /url\(".*\/assets\/workflows-bg\.avif"\)/
     );
   });
 }
