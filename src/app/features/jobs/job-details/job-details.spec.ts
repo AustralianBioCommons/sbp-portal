@@ -933,6 +933,43 @@ describe("JobDetailsComponent", () => {
 
   // --- Helpers --------------------------------------------------------------
 
+  it("explains Max score on hover and keyboard focus, and dismisses on Escape", async () => {
+    render();
+    await fixture.whenStable();
+    const host: HTMLElement = fixture.nativeElement;
+    const trigger =
+      host.querySelector<HTMLButtonElement>("app-tooltip button")!;
+
+    trigger.parentElement!.dispatchEvent(new MouseEvent("mouseenter"));
+    fixture.detectChanges();
+    expect(host.querySelector('[role="tooltip"]')?.textContent).toContain(
+      "Maximum ipTM score of all predictions."
+    );
+    expect(trigger.getAttribute("aria-describedby")).toBe(
+      host.querySelector('[role="tooltip"]')!.id
+    );
+
+    trigger.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
+    );
+    fixture.detectChanges();
+    expect(host.querySelector('[role="tooltip"]')).toBeNull();
+
+    trigger.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+    fixture.detectChanges();
+    expect(host.querySelector('[role="tooltip"]')).not.toBeNull();
+    trigger.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    fixture.detectChanges();
+    expect(host.querySelector('[role="tooltip"]')).toBeNull();
+  });
+
+  it("leaves Max score without a tooltip for an unknown workflow", () => {
+    mockJobsService.getJob.and.returnValue(of(packagedReportJob));
+    render();
+
+    expect(fixture.nativeElement.querySelector("app-tooltip")).toBeNull();
+  });
+
   it("should provide fallback values for helper methods", () => {
     const summaryItems = component.getSummaryItems(fallbackJob);
     const files = component.getFiles(fallbackJob);

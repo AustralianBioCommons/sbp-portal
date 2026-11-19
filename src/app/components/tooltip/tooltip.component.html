@@ -22,20 +22,19 @@
       ></ng-icon>
     </button>
   </ng-content>
-</div>
-
-<!-- Tooltip -->
-@if (open()) {
-  <div
-    [id]="tooltipId"
-    role="tooltip"
-    class="fixed z-1000 w-max max-w-48 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-xs whitespace-pre-line text-white opacity-95 shadow-lg sm:max-w-56 md:max-w-64 lg:max-w-72"
-    [style.left.px]="left()"
-    [style.top.px]="top()"
-  >
-    <span class="wrap-break-word">{{ message() }}</span>
+  <!-- Tooltip -->
+  @if (open()) {
     <div
-      class="absolute top-0 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-gray-900"
-    ></div>
-  </div>
-}
+      [id]="tooltipId"
+      role="tooltip"
+      class="fixed left-(--tooltip-x) z-1000 w-max max-w-48 translate-x-(--tooltip-shift) rounded-md bg-gray-900 px-3 py-2 text-xs whitespace-pre-line text-white opacity-95 shadow-lg [--tooltip-shift:clamp(calc(8px_-_var(--tooltip-x)),-50%,calc(100vw_-_100%_-_var(--tooltip-x)_-_8px))] before:absolute before:inset-x-0 before:-top-2 before:h-2 sm:max-w-56 md:max-w-64 lg:max-w-72"
+      [style.--tooltip-x]="left() + 'px'"
+      [style.top.px]="top()"
+    >
+      <span class="wrap-break-word">{{ message() }}</span>
+      <div
+        class="absolute top-0 -left-(--tooltip-shift) h-2 w-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-gray-900"
+      ></div>
+    </div>
+  }
+</div>

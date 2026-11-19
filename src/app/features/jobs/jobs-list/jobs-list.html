@@ -324,27 +324,33 @@
                 scope="col"
                 class="px-6 py-2 text-left text-sm font-medium whitespace-nowrap md:max-lg:px-4"
               >
-                <button
-                  type="button"
-                  (click)="toggleScoreSort()"
-                  class="inline-flex items-center gap-1 rounded text-sm font-semibold transition-all hover:text-sky-400"
-                >
-                  Max score @if (scoreSortDirection() === "asc") {
-                  <ng-icon
-                    name="heroArrowUp"
-                    size="12"
-                    class="shrink-0"
-                    [class.opacity-50]="activeSort() !== 'score'"
-                  ></ng-icon>
-                  } @else {
-                  <ng-icon
-                    name="heroArrowDown"
-                    size="12"
-                    class="shrink-0"
-                    [class.opacity-50]="activeSort() !== 'score'"
-                  ></ng-icon>
-                  }
-                </button>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    (click)="toggleScoreSort()"
+                    class="inline-flex items-center gap-1 rounded text-sm font-semibold transition-all hover:text-sky-400"
+                  >
+                    Max score @if (scoreSortDirection() === "asc") {
+                    <ng-icon
+                      name="heroArrowUp"
+                      size="12"
+                      class="shrink-0"
+                      [class.opacity-50]="activeSort() !== 'score'"
+                    ></ng-icon>
+                    } @else {
+                    <ng-icon
+                      name="heroArrowDown"
+                      size="12"
+                      class="shrink-0"
+                      [class.opacity-50]="activeSort() !== 'score'"
+                    ></ng-icon>
+                    }
+                  </button>
+                  <app-tooltip
+                    [message]="maxScoreHint"
+                    iconColor="text-white hover:text-sky-200"
+                  ></app-tooltip>
+                </div>
               </th>
             </tr>
           </thead>
