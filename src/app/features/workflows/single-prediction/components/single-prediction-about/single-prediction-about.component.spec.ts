@@ -43,6 +43,14 @@ describe("SinglePredictionAboutComponent", () => {
     ).find((button) => button.textContent?.trim() === "Boltz");
 
     expect(element.textContent).toContain("Full BFD database");
+    expect(
+      Array.from(
+        element.querySelectorAll(
+          "#single-prediction-tool-parameters-panel tbody th"
+        ),
+        (cell) => cell.textContent?.trim()
+      )
+    ).toEqual(["Full DBs"]);
     expect(boltzTab).toBeTruthy();
 
     boltzTab!.click();
@@ -50,6 +58,14 @@ describe("SinglePredictionAboutComponent", () => {
 
     expect(boltzTab!.getAttribute("aria-selected")).toBe("true");
     expect(element.textContent).toContain("Use Potentials");
+    expect(
+      Array.from(
+        element.querySelectorAll(
+          "#single-prediction-tool-parameters-panel tbody th"
+        ),
+        (cell) => cell.textContent?.trim()
+      )
+    ).toEqual(["Use Potentials"]);
     expect(element.textContent).toContain(
       "Steering potentials increase VRAM requirements"
     );
@@ -65,6 +81,14 @@ describe("SinglePredictionAboutComponent", () => {
     expect(element.textContent).toContain("Recycles");
     expect(element.textContent).toContain("Minimum: 1");
     expect(element.textContent).toContain("Maximum: 10");
+    expect(
+      Array.from(
+        element.querySelectorAll(
+          "#single-prediction-tool-parameters-panel tbody th"
+        ),
+        (cell) => cell.textContent?.trim()
+      )
+    ).toEqual(["Recycles"]);
   });
 
   it("falls back to the first tool-specific tab if the active tab is unknown", () => {
@@ -73,6 +97,6 @@ describe("SinglePredictionAboutComponent", () => {
     expect(component.activeToolParameters().id).toBe("alphafold2");
     expect(
       component.activeToolParameters().rows.map((row) => row.input)
-    ).toEqual(["Random Seed", "Full DBs"]);
+    ).toEqual(["Full DBs"]);
   });
 });

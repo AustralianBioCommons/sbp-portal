@@ -22,6 +22,7 @@ import {
   validateRnaSequence,
 } from "../shared/fasta.utils";
 import SinglePredictionComponent from "./single-prediction";
+import { SinglePredictionPayload } from "../shared/workflow.interfaces";
 
 // ── Typed mock responses conforming to service interfaces ──────────────────
 
@@ -372,10 +373,9 @@ describe("SinglePredictionComponent", () => {
 
   it("should build Boltz settings payload and cover fallback payload branch", () => {
     component.form.controls.selectedTool.setValue("boltz");
-    component.updateRandomSeed("12345678");
     component.boltzUsePotentials.set(true);
     expect(component["buildToolSettingsPayload"]("boltz")).toEqual({
-      random_seed: 12345678,
+      random_seed: jasmine.any(Number),
       boltz_use_potentials: true,
     });
   });
@@ -439,17 +439,8 @@ describe("SinglePredictionComponent", () => {
   });
 
   it("should expose tool-specific settings for all tools", () => {
-    component.updateRandomSeed("12345678");
-    const randomSeedItem = {
-      label: "random_seed",
-      value: "12345678",
-      fieldName: "random_seed",
-    };
-
-    // random_seed is exposed for every tool
     component.form.controls.selectedTool.setValue("colabfold");
     expect(component.getToolSettingsSummaryItems()).toEqual([
-      randomSeedItem,
       {
         label: "colabfold_num_recycles",
         value: "3",
@@ -459,7 +450,6 @@ describe("SinglePredictionComponent", () => {
 
     component.form.controls.selectedTool.setValue("alphafold2");
     expect(component.getToolSettingsSummaryItems()).toEqual([
-      randomSeedItem,
       {
         label: "alphafold2_full_dbs",
         value: "false",
@@ -469,7 +459,6 @@ describe("SinglePredictionComponent", () => {
 
     component.form.controls.selectedTool.setValue("boltz");
     expect(component.getToolSettingsSummaryItems()).toEqual([
-      randomSeedItem,
       {
         label: "boltz_use_potentials",
         value: "false",
@@ -498,47 +487,35 @@ describe("SinglePredictionComponent", () => {
     }
   });
 
-  it("should pre-fill Random Seed with a random 8-digit integer", () => {
-    const seed = component.randomSeed();
-    expect(seed).toMatch(/^\d{8}$/);
-    const value = Number.parseInt(seed, 10);
-    expect(value).toBeGreaterThanOrEqual(10000000);
-    expect(value).toBeLessThanOrEqual(99999999);
-  });
-
-  it("should enforce an integer Random Seed with at most 8 digits for every tool", () => {
-    for (const tool of ["colabfold", "alphafold2", "boltz"] as const) {
+  for (const tool of ["colabfold", "alphafold2", "boltz"] as const) {
+    it(`submits a generated eight-digit seed for ${tool} without exposing a seed field`, () => {
+      fillValidProteinRow();
       component.form.controls.selectedTool.setValue(tool);
+      component.isToolAvailable.set(true);
+      fixture.detectChanges();
+      const element: HTMLElement = fixture.nativeElement;
 
-      component.updateRandomSeed("999999999");
-      expect(component.isStep2Valid()).toBe(false);
-      expect(component.toolSettingErrors().randomSeed).toContain(
-        "at most 8 digits"
-      );
+      expect(element.querySelector("#random-seed")).toBeNull();
+      expect(element.textContent).not.toContain("Random Seed");
+      expect(
+        component
+          .getToolSettingsSummaryItems()
+          .some((item) => item.fieldName === "random_seed")
+      ).toBeFalse();
+      component.submitWorkflow();
 
-      component.updateRandomSeed("-1");
-      expect(component.isStep2Valid()).toBe(false);
-
-      component.updateRandomSeed("1234.5");
-      expect(component.isStep2Valid()).toBe(false);
-      expect(component.toolSettingErrors().randomSeed).toContain(
-        "whole number"
-      );
-
-      component.updateRandomSeed("12345678");
-      expect(component.toolSettingErrors().randomSeed).toBeUndefined();
-    }
-  });
+      const payload =
+        workflowSubmissionService.submitWorkflowWithDataset.calls.mostRecent()
+          .args[0] as SinglePredictionPayload;
+      expect(payload.random_seed).toEqual(jasmine.any(Number));
+      expect(Number.isInteger(payload.random_seed)).toBeTrue();
+      expect(payload.random_seed).toBeGreaterThanOrEqual(10000000);
+      expect(payload.random_seed).toBeLessThanOrEqual(99999999);
+    });
+  }
 
   it("should validate tool settings for AlphaFold2 and ColabFold", () => {
     component.form.controls.selectedTool.setValue("alphafold2");
-    component.updateRandomSeed("-1");
-    expect(component.isStep2Valid()).toBe(false);
-    expect(component.toolSettingErrors().randomSeed).toContain(
-      "at most 8 digits"
-    );
-
-    component.updateRandomSeed("7");
     expect(component.isStep2Valid()).toBe(true);
 
     component.form.controls.selectedTool.setValue("colabfold");
@@ -606,8 +583,8 @@ describe("SinglePredictionComponent", () => {
 
   it("should touch tool settings when submitting with invalid tool settings", () => {
     fillValidProteinRow();
-    component.form.controls.selectedTool.setValue("alphafold2");
-    component.updateRandomSeed("-3");
+    component.form.controls.selectedTool.setValue("colabfold");
+    component.updateColabfoldNumRecycles("0");
 
     component.submitWorkflow();
 
@@ -628,7 +605,6 @@ describe("SinglePredictionComponent", () => {
   it("should submit a valid workflow payload", () => {
     fillValidProteinRow("ACDEFGHIK", "2");
     component.form.controls.selectedTool.setValue("alphafold2");
-    component.updateRandomSeed("42");
     component.alphafold2FullDbs.set(true);
     component.isToolAvailable.set(true);
 
@@ -651,7 +627,7 @@ describe("SinglePredictionComponent", () => {
         .args[0];
     expect(payload["runName"]).toBe("test-run");
     expect(payload["tool"]).toBe("alphafold2");
-    expect(payload["random_seed"]).toBe(42);
+    expect(payload["random_seed"]).toEqual(jasmine.any(Number));
     expect(payload["alphafold2_full_dbs"]).toBe(true);
     expect(payload["fastaContent"]).toContain(">seq1_1");
     expect(payload["fastaFileUrl"]).toBe(MOCK_FASTA_RESPONSE.s3Uri);
@@ -738,21 +714,18 @@ describe("SinglePredictionComponent", () => {
   it("should close alerts and set touched flags for tool settings", () => {
     component.showAlert.set(true);
     component.alertMessage.set("problem");
-    component.setRandomSeedTouched();
     component.setColabfoldNumRecyclesTouched();
     component.closeAlert();
 
     expect(component.showAlert()).toBe(false);
     expect(component.alertMessage()).toBe("");
-    expect(component.randomSeedTouched()).toBe(true);
     expect(component.colabfoldNumRecyclesTouched()).toBe(true);
   });
 
   it("should include tool setting errors in form validation summary error count", () => {
     fillValidProteinRow();
-    component.form.controls.selectedTool.setValue("alphafold2");
-    component.updateRandomSeed("-5");
-    component.setRandomSeedTouched();
+    component.form.controls.selectedTool.setValue("colabfold");
+    component.updateColabfoldNumRecycles("0");
 
     const summary = component.getFormValidationSummary();
     expect(summary.valid).toBe(false);

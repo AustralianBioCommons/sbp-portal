@@ -97,6 +97,7 @@
                 <p class="uppercase">{{ item.label }}</p>
                 @if (item.tooltip; as hint) {
                 <app-tooltip
+                  class="font-normal"
                   [message]="hint"
                   iconColor="text-gray-600 hover:text-gray-700"
                 ></app-tooltip>
