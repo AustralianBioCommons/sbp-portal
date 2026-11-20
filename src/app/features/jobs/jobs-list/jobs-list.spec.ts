@@ -143,6 +143,48 @@ describe("JobsListComponent", () => {
     expect(component).toBeTruthy();
   });
 
+  it("explains the score for each workflow without changing score sorting", async () => {
+    const host: HTMLElement = fixture.nativeElement;
+    const trigger = host.querySelector<HTMLButtonElement>(
+      "th app-tooltip button"
+    )!;
+
+    trigger.parentElement!.dispatchEvent(new MouseEvent("mouseenter"));
+    await detectComponentChanges();
+    const tooltip = host.querySelector('[role="tooltip"]')!;
+    expect(
+      tooltip.textContent
+        ?.trim()
+        .startsWith(
+          "De Novo Design: Maximum ipTM score of designs passing quality filters."
+        )
+    ).toBeTrue();
+    expect(tooltip.textContent).toContain(
+      "Single Prediction: pTM score of prediction."
+    );
+    expect(tooltip.textContent).toContain(
+      "Bulk Prediction: Maximum pTM score of all predictions."
+    );
+    expect(tooltip.textContent).toContain(
+      "Interaction Screening: Maximum ipTM score of all predictions."
+    );
+    expect(trigger.getAttribute("aria-describedby")).toBe(tooltip.id);
+
+    mockJobsService.listJobs.calls.reset();
+    trigger.click();
+    await detectComponentChanges();
+    expect(mockJobsService.listJobs).not.toHaveBeenCalled();
+
+    const sortButton = Array.from(host.querySelectorAll("th button")).find(
+      (button) => button.textContent?.includes("Max score")
+    ) as HTMLButtonElement;
+    sortButton.click();
+    await detectComponentChanges();
+    expect(mockJobsService.listJobs).toHaveBeenCalledWith(
+      jasmine.objectContaining({ sortBy: "score", sortOrder: "desc" })
+    );
+  });
+
   it("shows a loading indicator through authentication, permission checks and the jobs request", async () => {
     fixture.destroy();
     const authLoading$ = new BehaviorSubject(true);

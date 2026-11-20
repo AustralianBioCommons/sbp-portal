@@ -428,13 +428,11 @@ export default class DeNovoDesignComponent
       errors["starting_pdb"] =
         "Structures with negative residue indices are not currently supported. Please re-number the structure or trim residues with negative residues to submit this workflow.";
     } else if (count !== null && count < 50) {
-      errors[
-        "starting_pdb"
-      ] = `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a larger structure.`;
+      errors["starting_pdb"] =
+        `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a larger structure.`;
     } else if (count !== null && count > 300) {
-      errors[
-        "starting_pdb"
-      ] = `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a smaller structure. Structures can be trimmed using PyMOL or ChimeraX to satisfy the size limit.`;
+      errors["starting_pdb"] =
+        `The target structure must be between 50 and 300 amino acids. This structure has ${count} amino acids. Please upload a smaller structure. Structures can be trimmed using PyMOL or ChimeraX to satisfy the size limit.`;
     } else {
       delete errors["starting_pdb"];
     }
@@ -603,9 +601,8 @@ export default class DeNovoDesignComponent
     const value = this.numberOfDesigns();
     const errors = { ...this.formErrors() };
     if (!Number.isInteger(value) || value < 1) {
-      errors[
-        "max_trajectories"
-      ] = `${this.numberOfDesignsField.label} must be a whole number of at least 1`;
+      errors["max_trajectories"] =
+        `${this.numberOfDesignsField.label} must be a whole number of at least 1`;
     } else {
       delete errors["max_trajectories"];
     }

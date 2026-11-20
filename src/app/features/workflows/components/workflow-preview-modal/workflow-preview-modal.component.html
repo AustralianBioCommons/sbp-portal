@@ -11,7 +11,7 @@
     </h2>
     <button
       type="button"
-      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-sky-100 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       aria-label="Close preview"
       [disabled]="isSubmitting()"
       (click)="onCancel()"
@@ -22,34 +22,34 @@
 
   <div modalBody class="max-h-[70vh] overflow-y-auto p-4">
     <div class="space-y-4">
-      <div class="bg-gray-50 border rounded-lg p-4 space-y-4 text-sm">
+      <div class="space-y-4 rounded-lg border bg-gray-50 p-4 text-sm">
         <!-- Workflow & Tool -->
         <div class="space-y-4">
-          <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+          <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
             <div class="space-y-1">
               <p class="font-medium">Workflow</p>
-              <p class="text-gray-600 wrap-break-word">
+              <p class="wrap-break-word text-gray-600">
                 {{ workflowName() || "—" }}
               </p>
             </div>
             <div class="space-y-1">
               <p class="font-medium">Tool</p>
               <div class="flex flex-wrap items-center gap-2">
-                <p class="text-gray-600 wrap-break-word">
+                <p class="wrap-break-word text-gray-600">
                   {{ selectedTool() || "—" }}
                 </p>
                 @if (hasParameters()) {
-                <span
-                  class="inline-block shrink-0 text-xs bg-sky-200 text-biocommons-primary px-2 py-1 rounded-full"
-                >
-                  Has Parameters
-                </span>
+                  <span
+                    class="inline-block shrink-0 rounded-full bg-sky-200 px-2 py-1 text-xs text-biocommons-primary"
+                  >
+                    Has Parameters
+                  </span>
                 } @else {
-                <span
-                  class="inline-block shrink-0 text-xs bg-gray-200 px-2 py-1 rounded-full"
-                >
-                  No Parameters
-                </span>
+                  <span
+                    class="inline-block shrink-0 rounded-full bg-gray-200 px-2 py-1 text-xs"
+                  >
+                    No Parameters
+                  </span>
                 }
               </div>
             </div>
@@ -61,49 +61,51 @@
         <!-- Input Configuration -->
         <div class="space-y-4">
           <div class="font-semibold">Input Configuration</div>
-          <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+          <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
             @for (item of inputItems(); track item.fieldName) {
-            <div class="space-y-1">
-              <p class="font-medium">{{ item.label }}</p>
-              @if (item.url && item.value) {
-              <a
-                [href]="item.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                class="text-sky-700 underline wrap-break-word hover:text-biocommons-primary"
-              >
-                {{ item.value }}
-              </a>
-              } @else {
-              <p class="text-gray-600 wrap-break-word">
-                {{ item.value || "—" }}
-              </p>
-              }
-            </div>
+              <div class="space-y-1">
+                <p class="font-medium">{{ item.label }}</p>
+                @if (item.url && item.value) {
+                  <a
+                    [href]="item.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    class="wrap-break-word text-sky-700 underline hover:text-biocommons-primary"
+                  >
+                    {{ item.value }}
+                  </a>
+                } @else {
+                  <p class="wrap-break-word text-gray-600">
+                    {{ item.value || "—" }}
+                  </p>
+                }
+              </div>
             }
           </div>
           @if (inputEntities().length > 0) {
-          <div class="space-y-1">
-            <p class="font-medium">Entities</p>
-            <ul class="space-y-1">
-              @for (entity of inputEntities(); track $index) {
-              <li class="text-gray-600 wrap-break-word">
-                {{ entity.type }} — {{ entity.name }} @if (entity.sequence) { —
-                <span class="font-mono">{{ entity.sequence }}</span>
+            <div class="space-y-1">
+              <p class="font-medium">Entities</p>
+              <ul class="space-y-1">
+                @for (entity of inputEntities(); track $index) {
+                  <li class="wrap-break-word text-gray-600">
+                    {{ entity.type }} — {{ entity.name }}
+                    @if (entity.sequence) {
+                      —
+                      <span class="font-mono">{{ entity.sequence }}</span>
+                    }
+                  </li>
                 }
-              </li>
-              }
-            </ul>
-          </div>
+              </ul>
+            </div>
           }
         </div>
 
         @if (credits() !== null) {
-        <app-credit-summary
-          [total]="credits()"
-          [remaining]="creditsRemaining()"
-        ></app-credit-summary>
+          <app-credit-summary
+            [total]="credits()"
+            [remaining]="creditsRemaining()"
+          ></app-credit-summary>
         }
 
         <hr class="border-t border-gray-200" />
@@ -112,18 +114,18 @@
         <div class="space-y-4">
           <div class="font-semibold">Tool Settings</div>
           @if (toolSettingItems().length > 0) {
-          <div class="grid gap-4 grid-cols-2 lg:grid-cols-3">
-            @for (item of toolSettingItems(); track item.fieldName) {
-            <div class="space-y-1">
-              <p class="font-medium">{{ item.label }}</p>
-              <p class="text-gray-600 wrap-break-word">
-                {{ item.value || "—" }}
-              </p>
+            <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
+              @for (item of toolSettingItems(); track item.fieldName) {
+                <div class="space-y-1">
+                  <p class="font-medium">{{ item.label }}</p>
+                  <p class="wrap-break-word text-gray-600">
+                    {{ item.value || "—" }}
+                  </p>
+                </div>
+              }
             </div>
-            }
-          </div>
           } @else {
-          <p class="text-gray-600">No tool settings</p>
+            <p class="text-gray-600">No tool settings</p>
           }
         </div>
       </div>

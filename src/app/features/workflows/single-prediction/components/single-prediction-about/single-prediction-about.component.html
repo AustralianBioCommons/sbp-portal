@@ -45,7 +45,8 @@
         including JackHMMER (<app-citation-link
           citationKey="hmmer"
         ></app-citation-link
-        >) to search small_bfd (when not using <code>Full DBs</code>), MGnify
+        >) to search small_bfd (when not using
+        <span class="text-sm font-medium text-gray-900">Full DBs</span>), MGnify
         (<app-citation-link citationKey="mgnify"></app-citation-link>), and
         uniref90 (plus PDB for structural templates and uniprot for a paired MSA
         when predicting multimers). HHsearch (<app-citation-link
@@ -53,7 +54,8 @@
         ></app-citation-link
         >) is used to search PDB70 for structural templates (and HHblits
         (<app-citation-link citationKey="hhsuite"></app-citation-link>) to
-        search UniRef30 + BFD when using <code>Full DBs</code>).
+        search UniRef30 + BFD when using
+        <span class="text-sm font-medium text-gray-900">Full DBs</span>).
       </p>
     </div>
 
@@ -118,24 +120,24 @@
     </p>
     <ul class="list-disc space-y-2 pl-5">
       <li>
-        <span class="font-medium text-gray-900">AlphaFold2:</span> uses the
-        standard AlphaFold2 search pipeline to generate an MSA and a list of
+        <span class="font-medium text-gray-900">AlphaFold2 (v2.3.2):</span> uses
+        the standard AlphaFold2 search pipeline to generate an MSA and a list of
         structural templates. This data is provided as input to an ensemble of 5
         deep-learning models (repeated 5 times each for multimer predictions) to
         predict protein structures.
       </li>
       <li>
-        <span class="font-medium text-gray-900">ColabFold:</span> uses an
-        accelerated MMseqs2-based homology search (colabfold_search) to generate
-        MSAs to use as neural network inputs. A single replicate of each of the
-        5 AlphaFold2 models is used for structure prediction.
+        <span class="font-medium text-gray-900">ColabFold (v1.6.0):</span> uses
+        an accelerated MMseqs2-based homology search (colabfold_search) to
+        generate MSAs to use as neural network inputs. A single replicate of
+        each of the 5 AlphaFold2 models is used for structure prediction.
       </li>
       <li>
-        <span class="font-medium text-gray-900">Boltz:</span> uses MMSeqs2-based
-        colabfold_search to generate input MSAs in combination with a
-        diffusion-based, AlphaFold3-like architecture for structure prediction.
-        As a result, Boltz is able to co-fold complexes containing proteins,
-        DNA, RNA and small molecules.
+        <span class="font-medium text-gray-900">Boltz (v2.2.1):</span> uses
+        MMSeqs2-based colabfold_search (v1.6.0) to generate input MSAs in
+        combination with a diffusion-based, AlphaFold3-like architecture for
+        structure prediction. As a result, Boltz is able to co-fold complexes
+        containing proteins, DNA, RNA and small molecules.
       </li>
     </ul>
   </div>
@@ -144,9 +146,11 @@
     class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"
   >
     <p>
-      In the SBP deployment, the Boltz-2 model is used within the LMI4Boltz
-      (<app-citation-link citationKey="lmi4boltz"></app-citation-link>)
-      framework to increase the maximum prediction size compared to the Boltz-2
+      In the SBP deployment, the Boltz-2 model (v2.2.1) is used within the
+      LMI4Boltz (v1.1.0) framework (<app-citation-link
+        citationKey="lmi4boltz"
+      ></app-citation-link
+      >) to increase the maximum prediction size compared with the original
       implementation.
     </p>
   </div>
@@ -161,6 +165,15 @@
     selected tool. Tool-specific input-size limits are enforced during
     configuration.
   </p>
+  <div
+    class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"
+  >
+    <p>
+      Size limits are based on the number of input tokens. For the purposes of
+      the SBP, 1 token = 1 residue for macromolecules and all ligands are worth
+      30 tokens.
+    </p>
+  </div>
 </section>
 
 <section class="space-y-4">
@@ -295,26 +308,26 @@
       aria-label="Tool-specific parameters"
     >
       @for (tab of toolParameterTabs; track tab.id) {
-      <button
-        type="button"
-        role="tab"
-        [id]="'single-prediction-tool-parameters-tab-' + tab.id"
-        [attr.aria-selected]="activeToolParameterTab() === tab.id"
-        [attr.aria-controls]="
-          activeToolParameterTab() === tab.id
-            ? 'single-prediction-tool-parameters-panel'
-            : null
-        "
-        [class]="
-          activeToolParameterTab() === tab.id
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
-        "
-        class="rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-        (click)="selectToolParameterTab(tab.id)"
-      >
-        {{ tab.label }}
-      </button>
+        <button
+          type="button"
+          role="tab"
+          [id]="'single-prediction-tool-parameters-tab-' + tab.id"
+          [attr.aria-selected]="activeToolParameterTab() === tab.id"
+          [attr.aria-controls]="
+            activeToolParameterTab() === tab.id
+              ? 'single-prediction-tool-parameters-panel'
+              : null
+          "
+          [class]="
+            activeToolParameterTab() === tab.id
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
+          "
+          class="rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+          (click)="selectToolParameterTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
       }
     </div>
 
@@ -354,20 +367,20 @@
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white text-gray-500">
             @for (row of activeToolParameters().rows; track row.input) {
-            <tr class="align-top">
-              <th
-                scope="row"
-                class="p-4 font-medium whitespace-nowrap text-gray-900"
-              >
-                {{ row.input }}
-              </th>
-              <td class="p-4">{{ row.description }}</td>
-              <td class="space-y-1 p-4">
-                @for (limit of row.formatAndLimits; track limit) {
-                <p>{{ limit }}</p>
-                }
-              </td>
-            </tr>
+              <tr class="align-top">
+                <th
+                  scope="row"
+                  class="p-4 font-medium whitespace-nowrap text-gray-900"
+                >
+                  {{ row.input }}
+                </th>
+                <td class="p-4">{{ row.description }}</td>
+                <td class="space-y-1 p-4">
+                  @for (limit of row.formatAndLimits; track limit) {
+                    <p>{{ limit }}</p>
+                  }
+                </td>
+              </tr>
             }
           </tbody>
         </table>

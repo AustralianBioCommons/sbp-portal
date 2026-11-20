@@ -322,7 +322,7 @@ export function buildChainPairMatrix(
     chains.map((colChain) =>
       rowChain === colChain
         ? null
-        : byPair.get(`${rowChain}:${colChain}`) ?? null
+        : (byPair.get(`${rowChain}:${colChain}`) ?? null)
     )
   );
 

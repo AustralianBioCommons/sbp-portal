@@ -1,7 +1,11 @@
 import { Routes } from "@angular/router";
 
 export const routes: Routes = [
-  { path: "", redirectTo: "/binder-design", pathMatch: "full" },
+  { path: "", redirectTo: "/home", pathMatch: "full" },
+  {
+    path: "home",
+    loadComponent: () => import("./features/home/home"),
+  },
   {
     path: "binder-design",
     children: [
@@ -25,9 +29,9 @@ export const routes: Routes = [
       {
         path: "",
         loadComponent: () =>
-          import(
-            "./features/themes/structure-prediction/structure-prediction"
-          ).then((m) => m.StructurePredictionComponent),
+          import("./features/themes/structure-prediction/structure-prediction").then(
+            (m) => m.StructurePredictionComponent
+          ),
       },
       {
         path: "single-prediction",
@@ -42,9 +46,7 @@ export const routes: Routes = [
       {
         path: "interaction-screening",
         loadComponent: () =>
-          import(
-            "./features/workflows/interaction-screening/interaction-screening"
-          ),
+          import("./features/workflows/interaction-screening/interaction-screening"),
       },
     ],
   },

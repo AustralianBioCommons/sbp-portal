@@ -1,47 +1,49 @@
 @if (errorMessage()) {
-<div
-  class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-  role="alert"
->
-  <ng-icon
-    name="heroExclamationCircle"
-    size="20"
-    class="shrink-0 text-red-500"
-    aria-hidden="true"
-  ></ng-icon>
-  <p class="wrap-break-word">{{ errorMessage() }}</p>
-</div>
+  <div
+    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+    role="alert"
+  >
+    <ng-icon
+      name="heroExclamationCircle"
+      size="20"
+      class="shrink-0 text-red-500"
+      aria-hidden="true"
+    ></ng-icon>
+    <p class="wrap-break-word">{{ errorMessage() }}</p>
+  </div>
 } @else if (loading()) {
-<app-loading message="Loading alignment..." [inline]="true"></app-loading>
+  <app-loading message="Loading alignment..." [inline]="true"></app-loading>
 } @else if (coverage(); as msa) {
-<div #wrapper class="w-full overflow-hidden">
-  <div class="w-fit space-y-6" [class.mx-auto]="centered()">
-    <canvas
-      #plot
-      class="block"
-      role="img"
-      [attr.aria-label]="summary()"
-    ></canvas>
+  <div #wrapper class="w-full overflow-hidden">
+    <div class="w-fit space-y-6" [class.mx-auto]="centered()">
+      <canvas
+        #plot
+        class="block"
+        role="img"
+        [attr.aria-label]="summary()"
+      ></canvas>
 
-    <div
-      class="space-y-2"
-      [style.margin-left.px]="plotRect().left"
-      [style.width.px]="plotRect().width"
-    >
       <div
-        class="h-6 border"
-        [style.background]="identityGradient"
-        aria-hidden="true"
-      ></div>
-      <div class="flex justify-between text-xs text-gray-600 tabular-nums">
-        @for (tick of identityTicks; track tick) {
-        <span>{{ tick }}</span>
-        }
+        class="space-y-2"
+        [style.margin-left.px]="plotRect().left"
+        [style.width.px]="plotRect().width"
+      >
+        <div
+          class="h-6 border"
+          [style.background]="identityGradient"
+          aria-hidden="true"
+        ></div>
+        <div class="flex justify-between text-xs text-gray-600 tabular-nums">
+          @for (tick of identityTicks; track tick) {
+            <span>{{ tick }}</span>
+          }
+        </div>
+        <p class="text-center text-xs font-medium">
+          Sequence identity to query
+        </p>
       </div>
-      <p class="text-center text-xs font-medium">Sequence identity to query</p>
     </div>
   </div>
-</div>
 } @else {
-<p class="text-sm">No alignment is available for this run.</p>
+  <p class="text-sm">No alignment is available for this run.</p>
 }

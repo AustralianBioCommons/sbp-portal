@@ -32,9 +32,9 @@ let nextToolSelectionId = 0;
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: "./tool-selection.component.scss",
 })
-export class ToolSelectionComponent<ToolId extends string = string>
-  implements ControlValueAccessor
-{
+export class ToolSelectionComponent<
+  ToolId extends string = string,
+> implements ControlValueAccessor {
   readonly tools = input.required<ToolOption<ToolId>[]>();
   readonly name = input(`selectedTool-${nextToolSelectionId++}`);
   readonly requiredErrorMessage = input("Select a tool to continue");

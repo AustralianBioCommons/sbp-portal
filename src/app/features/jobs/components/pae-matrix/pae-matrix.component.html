@@ -1,116 +1,119 @@
 @if (errorMessage()) {
-<div
-  class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-  role="alert"
->
-  <ng-icon
-    name="heroExclamationCircle"
-    size="20"
-    class="shrink-0 text-red-500"
-    aria-hidden="true"
-  ></ng-icon>
-  <p class="wrap-break-word">{{ errorMessage() }}</p>
-</div>
-} @else if (loading()) {
-<app-loading message="Loading PAE matrix..." [inline]="true"></app-loading>
-} @else if (matrix()) {
-<div class="space-y-6">
-  @if (countMismatch()) {
-  <p
-    class="rounded border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800"
+  <div
+    class="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+    role="alert"
   >
-    The structure accounts for {{ residues().length }} positions but the matrix
-    covers {{ size() }}, so labels may be offset and cross-highlighting is
-    turned off.
-  </p>
-  }
-
-  <div #wrapper class="w-full overflow-hidden">
-    <div class="mx-auto w-fit space-y-6">
-      <div
-        class="space-y-2"
-        [style.margin-left.px]="plotRect().left"
-        [style.width.px]="plotRect().side"
+    <ng-icon
+      name="heroExclamationCircle"
+      size="20"
+      class="shrink-0 text-red-500"
+      aria-hidden="true"
+    ></ng-icon>
+    <p class="wrap-break-word">{{ errorMessage() }}</p>
+  </div>
+} @else if (loading()) {
+  <app-loading message="Loading PAE matrix..." [inline]="true"></app-loading>
+} @else if (matrix()) {
+  <div class="space-y-6">
+    @if (countMismatch()) {
+      <p
+        class="rounded border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800"
       >
-        <p class="text-center text-xs font-medium">
-          Expected position error (Ångströms)
-        </p>
+        The structure accounts for {{ residues().length }} positions but the
+        matrix covers {{ size() }}, so labels may be offset and
+        cross-highlighting is turned off.
+      </p>
+    }
+
+    <div #wrapper class="w-full overflow-hidden">
+      <div class="mx-auto w-fit space-y-6">
         <div
-          class="h-6 border"
-          [style.background]="legendGradient"
-          aria-hidden="true"
-        ></div>
-        <div class="flex justify-between text-xs text-gray-500 tabular-nums">
-          @for (tick of legendTicks; track tick) {
-          <span>{{ tick }}</span>
+          class="space-y-2"
+          [style.margin-left.px]="plotRect().left"
+          [style.width.px]="plotRect().side"
+        >
+          <p class="text-center text-xs font-medium">
+            Expected position error (Ångströms)
+          </p>
+          <div
+            class="h-6 border"
+            [style.background]="legendGradient"
+            aria-hidden="true"
+          ></div>
+          <div class="flex justify-between text-xs text-gray-500 tabular-nums">
+            @for (tick of legendTicks; track tick) {
+              <span>{{ tick }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="relative">
+          <canvas #heatmap class="block" aria-hidden="true"></canvas>
+
+          <!-- Interactive layer -->
+          <div
+            class="absolute focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+            [class.cursor-crosshair]="interactive()"
+            [style.left.px]="plotRect().left"
+            [style.top.px]="plotRect().top"
+            [style.width.px]="plotRect().side"
+            [style.height.px]="plotRect().side"
+            tabindex="0"
+            role="application"
+            aria-roledescription="Predicted aligned error heat map"
+            [attr.aria-label]="surfaceLabel()"
+            [attr.aria-describedby]="instructionsId"
+            (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)"
+            (pointerup)="onPointerUp()"
+            (pointercancel)="onPointerUp()"
+            (pointerleave)="onPointerLeave()"
+            (keydown)="onKeyDown($event)"
+            (focus)="onFocus()"
+            (blur)="onBlur()"
+          ></div>
+
+          @if (tooltipPlacement(); as placement) {
+            @if (tooltipValue() !== null) {
+              <div
+                class="pointer-events-none absolute z-30 w-max rounded-md border bg-white px-2.5 py-1.5 shadow-md"
+                [style.left.px]="placement.x"
+                [style.top.px]="placement.y"
+                [style.transform]="placement.transform"
+                aria-hidden="true"
+              >
+                <div class="text-sm font-semibold text-gray-900 tabular-nums">
+                  {{ tooltipValue()!.toFixed(2) }} Å
+                </div>
+                <div class="text-xs text-gray-500">
+                  {{ residueLabel(tooltip()!.row) }} ↔
+                  {{ residueLabel(tooltip()!.col) }}
+                </div>
+              </div>
+            }
+          }
+          @if (selectionHandle(); as handle) {
+            <button
+              type="button"
+              class="absolute z-20 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+              [style.left.px]="handle.x"
+              [style.top.px]="handle.y"
+              aria-label="Clear selection"
+              (click)="clearSelection()"
+            >
+              <ng-icon name="heroXMark" size="14"></ng-icon>
+            </button>
           }
         </div>
       </div>
-
-      <div class="relative">
-        <canvas #heatmap class="block" aria-hidden="true"></canvas>
-
-        <!-- Interactive layer -->
-        <div
-          class="absolute focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-          [class.cursor-crosshair]="interactive()"
-          [style.left.px]="plotRect().left"
-          [style.top.px]="plotRect().top"
-          [style.width.px]="plotRect().side"
-          [style.height.px]="plotRect().side"
-          tabindex="0"
-          role="application"
-          aria-roledescription="Predicted aligned error heat map"
-          [attr.aria-label]="surfaceLabel()"
-          [attr.aria-describedby]="instructionsId"
-          (pointerdown)="onPointerDown($event)"
-          (pointermove)="onPointerMove($event)"
-          (pointerup)="onPointerUp()"
-          (pointercancel)="onPointerUp()"
-          (pointerleave)="onPointerLeave()"
-          (keydown)="onKeyDown($event)"
-          (focus)="onFocus()"
-          (blur)="onBlur()"
-        ></div>
-
-        @if (tooltipPlacement(); as placement) { @if (tooltipValue() !== null) {
-        <div
-          class="pointer-events-none absolute z-30 w-max rounded-md border bg-white px-2.5 py-1.5 shadow-md"
-          [style.left.px]="placement.x"
-          [style.top.px]="placement.y"
-          [style.transform]="placement.transform"
-          aria-hidden="true"
-        >
-          <div class="text-sm font-semibold text-gray-900 tabular-nums">
-            {{ tooltipValue()!.toFixed(2) }} Å
-          </div>
-          <div class="text-xs text-gray-500">
-            {{ residueLabel(tooltip()!.row) }} ↔
-            {{ residueLabel(tooltip()!.col) }}
-          </div>
-        </div>
-        } } @if (selectionHandle(); as handle) {
-        <button
-          type="button"
-          class="absolute z-20 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-          [style.left.px]="handle.x"
-          [style.top.px]="handle.y"
-          aria-label="Clear selection"
-          (click)="clearSelection()"
-        >
-          <ng-icon name="heroXMark" size="14"></ng-icon>
-        </button>
-        }
-      </div>
     </div>
-  </div>
 
-  <p [id]="instructionsId" class="sr-only">
-    Drag to select a block of residue pairs, or use the arrow keys to move the
-    cursor, Enter to select, Shift with arrows to extend, and Escape to clear.
-  </p>
-  <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
-</div>
+    <p [id]="instructionsId" class="sr-only">
+      Drag to select a block of residue pairs, or use the arrow keys to move the
+      cursor, Enter to select, Shift with arrows to extend, and Escape to clear.
+    </p>
+    <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
+  </div>
 } @else {
-<p class="text-sm">No PAE matrix is available for this run.</p>
+  <p class="text-sm">No PAE matrix is available for this run.</p>
 }

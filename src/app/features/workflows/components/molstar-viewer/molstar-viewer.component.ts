@@ -463,8 +463,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   clearSelection(): void {
     try {
       const lociSelects = this.plugin?.managers.interactivity.lociSelects as
-        | InteractivityManager.LociSelectManager
-        | undefined;
+        InteractivityManager.LociSelectManager | undefined;
       lociSelects?.deselectAll();
     } catch {
       // best-effort

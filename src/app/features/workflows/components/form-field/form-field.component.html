@@ -3,12 +3,12 @@
 <div class="space-y-1">
   <!-- Alert (Error) -->
   @if (showAlert()) {
-  <app-alert
-    [type]="alertType()"
-    [message]="alertMessage()"
-    [dismissible]="true"
-    (dismissed)="closeAlert()"
-  ></app-alert>
+    <app-alert
+      [type]="alertType()"
+      [message]="alertMessage()"
+      [dismissible]="true"
+      (dismissed)="closeAlert()"
+    ></app-alert>
   }
 
   <!-- Field Label -->
@@ -16,113 +16,117 @@
     <span>
       {{ getDisplayFieldLabel() }}
       @if (f.required) {
-      <span class="text-red-500" aria-hidden="true">*</span>
+        <span class="text-red-500" aria-hidden="true">*</span>
       }
     </span>
-    @let tip = tooltip() || f.description; @if (tip) {
-    <app-tooltip
-      [message]="tip"
-      iconColor="text-gray-400 hover:text-gray-500"
-    ></app-tooltip>
+    @let tip = tooltip() || f.description;
+    @if (tip) {
+      <app-tooltip
+        [message]="tip"
+        iconColor="text-gray-400 hover:text-gray-500"
+      ></app-tooltip>
     }
   </label>
 
   <!-- Field Input -->
   <div class="relative">
     <!-- String Input -->
-    @if (f.type === 'string' && !f.options) {
-    <input
-      [id]="fieldId"
-      type="text"
-      [class]="getInputClasses()"
-      [placeholder]="
-        f.placeholder || 'Enter ' + (f.label || f.name).toLowerCase()
-      "
-      [value]="fieldValue"
-      [required]="f.required"
-      [attr.minlength]="f.validation?.minLength"
-      [attr.maxlength]="f.validation?.maxLength"
-      [attr.pattern]="f.validation?.pattern"
-      (input)="onValueChange($any($event.target).value)"
-      (blur)="onBlur()"
-    />
+    @if (f.type === "string" && !f.options) {
+      <input
+        [id]="fieldId"
+        type="text"
+        [class]="getInputClasses()"
+        [placeholder]="
+          f.placeholder || 'Enter ' + (f.label || f.name).toLowerCase()
+        "
+        [value]="fieldValue"
+        [required]="f.required"
+        [attr.minlength]="f.validation?.minLength"
+        [attr.maxlength]="f.validation?.maxLength"
+        [attr.pattern]="f.validation?.pattern"
+        (input)="onValueChange($any($event.target).value)"
+        (blur)="onBlur()"
+      />
     }
 
     <!-- Number Input -->
-    @if (f.type === 'number') {
-    <input
-      [id]="fieldId"
-      type="number"
-      [class]="getInputClasses()"
-      [placeholder]="f.placeholder || 'Enter number'"
-      [attr.min]="f.validation?.min"
-      [attr.max]="f.validation?.max"
-      [attr.step]="numberStep"
-      [value]="fieldValue"
-      [required]="f.required"
-      (input)="onValueChange(+$any($event.target).value)"
-      (blur)="onBlur()"
-    />
+    @if (f.type === "number") {
+      <input
+        [id]="fieldId"
+        type="number"
+        [class]="getInputClasses()"
+        [placeholder]="f.placeholder || 'Enter number'"
+        [attr.min]="f.validation?.min"
+        [attr.max]="f.validation?.max"
+        [attr.step]="numberStep"
+        [value]="fieldValue"
+        [required]="f.required"
+        (input)="onValueChange(+$any($event.target).value)"
+        (blur)="onBlur()"
+      />
     }
 
     <!-- Boolean Input -->
-    @if (f.type === 'boolean') {
-    <div class="flex items-center">
-      <input
-        [id]="fieldId"
-        type="checkbox"
-        [class]="
-          'h-4 w-4 text-sky-600 rounded border-gray-300 focus:ring-sky-500 ' +
-          (hasError() ? 'border-red-300' : '')
-        "
-        [checked]="fieldValue === true"
-        (change)="onValueChange($any($event.target).checked)"
-        (blur)="onBlur()"
-      />
-      <span class="ml-2 text-sm text-gray-500">Enable this option</span>
-    </div>
+    @if (f.type === "boolean") {
+      <div class="flex items-center">
+        <input
+          [id]="fieldId"
+          type="checkbox"
+          [class]="
+            'h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500 ' +
+            (hasError() ? 'border-red-300' : '')
+          "
+          [checked]="fieldValue === true"
+          (change)="onValueChange($any($event.target).checked)"
+          (blur)="onBlur()"
+        />
+        <span class="ml-2 text-sm text-gray-500">Enable this option</span>
+      </div>
     }
 
     <!-- Select/Options Input -->
     @if (f.options && f.options.length > 0) {
-    <select
-      [id]="fieldId"
-      [class]="getSelectClasses()"
-      [value]="fieldValue"
-      [required]="f.required"
-      (change)="onValueChange($any($event.target).value)"
-      (blur)="onBlur()"
-    >
-      <option value="">Select {{ getDisplayFieldLabel() }}</option>
-      @for (option of f.options; track option) { @if (typeof option ===
-      'string') {
-      <option [value]="option">{{ option }}</option>
-      } @else {
-      <option [value]="option.value">{{ option.label || option.value }}</option>
-      } }
-    </select>
+      <select
+        [id]="fieldId"
+        [class]="getSelectClasses()"
+        [value]="fieldValue"
+        [required]="f.required"
+        (change)="onValueChange($any($event.target).value)"
+        (blur)="onBlur()"
+      >
+        <option value="">Select {{ getDisplayFieldLabel() }}</option>
+        @for (option of f.options; track option) {
+          @if (typeof option === "string") {
+            <option [value]="option">{{ option }}</option>
+          } @else {
+            <option [value]="option.value">
+              {{ option.label || option.value }}
+            </option>
+          }
+        }
+      </select>
     }
 
     <!-- File Input -->
-    @if (f.type === 'file') {
-    <input
-      type="file"
-      [class]="getFileClasses()"
-      [required]="f.required"
-      [accept]="f.validation?.accept ?? ''"
-      (change)="onFileChange($event)"
-      (blur)="onBlur()"
-    />
+    @if (f.type === "file") {
+      <input
+        type="file"
+        [class]="getFileClasses()"
+        [required]="f.required"
+        [accept]="f.validation?.accept ?? ''"
+        (change)="onFileChange($event)"
+        (blur)="onBlur()"
+      />
     }
 
     <!-- Field Error -->
     @if (hasError() && errorMessage()) {
-    <div class="mt-1 text-xs text-red-600">{{ errorMessage() }}</div>
+      <div class="mt-1 text-xs text-red-600">{{ errorMessage() }}</div>
     }
   </div>
 
   <!-- Field Help Text -->
   @if (hasRange) {
-  <div class="text-xs text-gray-500">{{ getRangeText(true) }}</div>
+    <div class="text-xs text-gray-500">{{ getRangeText(true) }}</div>
   }
 </div>

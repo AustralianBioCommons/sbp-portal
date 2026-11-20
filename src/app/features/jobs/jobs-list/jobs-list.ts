@@ -16,6 +16,7 @@ import { ButtonComponent } from "../../../components/button/button.component";
 import { LoadingComponent } from "../../../components/loading/loading.component";
 import { DropdownMenuComponent } from "../../../components/dropdown-menu/dropdown-menu.component";
 import { DialogComponent } from "../../../components/dialog/dialog.component";
+import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 import {
   JobListItem,
   JobListQueryParams,
@@ -24,6 +25,7 @@ import {
 import { HealthService } from "../services/health.service";
 import { statusTagClass } from "../shared/job-status.utils";
 import { formatToolName } from "../shared/job-tool.utils";
+import { MAX_SCORE_HINTS } from "../shared/job-score.utils";
 import {
   SCORE_DECIMALS,
   formatDecimals,
@@ -68,6 +70,7 @@ interface ListState {
     NgIconComponent,
     DropdownMenuComponent,
     DialogComponent,
+    TooltipComponent,
   ],
   providers: [
     provideIcons({
@@ -89,6 +92,9 @@ interface ListState {
 export default class JobsListComponent implements OnInit, OnDestroy {
   readonly formatDecimals = formatDecimals;
   readonly scoreDecimals = SCORE_DECIMALS;
+  readonly maxScoreHint = Object.entries(MAX_SCORE_HINTS)
+    .map(([workflow, hint]) => `${workflow}: ${hint}`)
+    .join("\n\n");
 
   private jobsService = inject(JobsService);
   private healthService = inject(HealthService);

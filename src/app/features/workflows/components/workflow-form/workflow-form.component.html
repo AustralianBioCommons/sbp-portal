@@ -1,109 +1,114 @@
 <!-- Sticky progress bar -->
 <div class="sticky top-22 z-30 w-full bg-gray-50 pt-4">
-  <div class="border-biocommons-secondary border rounded-t-lg bg-white">
-    <div class="mx-auto max-w-4xl px-6 pb-2 pt-4">
+  <div class="rounded-t-lg border border-biocommons-secondary bg-white">
+    <div class="mx-auto max-w-4xl px-6 pt-4 pb-2">
       <div class="flex items-start justify-between">
         @for (section of sections(); track section.id; let index = $index) {
-        @let active = isSectionActive(section.id); @let completed =
-        isSectionCompleted(section.id); @let visited =
-        isSectionVisited(section.id); @let valid = sectionValid(section.id);
-        @let last = isLast(section.id);
+          @let active = isSectionActive(section.id);
+          @let completed = isSectionCompleted(section.id);
+          @let visited = isSectionVisited(section.id);
+          @let valid = sectionValid(section.id);
+          @let last = isLast(section.id);
 
-        <div class="group relative flex flex-1 flex-col items-center">
-          <div class="flex w-full items-center">
-            <!-- Circle indicator -->
-            <div class="flex w-full justify-center">
-              <button
-                type="button"
-                class="appearance-none border-0 bg-transparent p-0 cursor-pointer disabled:cursor-not-allowed"
-                [disabled]="last && reviewDisabled()"
-                [attr.aria-label]="
-                  last ? 'Review and submit' : 'Go to ' + section.label
-                "
-                (click)="
-                  last
-                    ? onReviewClick($event)
-                    : scrollToSection($event, section.id)
-                "
-              >
-                <div
-                  class="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-medium transition-all"
-                  [class]="circleClasses(section.id)"
+          <div class="group relative flex flex-1 flex-col items-center">
+            <div class="flex w-full items-center">
+              <!-- Circle indicator -->
+              <div class="flex w-full justify-center">
+                <button
+                  type="button"
+                  class="cursor-pointer appearance-none border-0 bg-transparent p-0 disabled:cursor-not-allowed"
+                  [disabled]="last && reviewDisabled()"
+                  [attr.aria-label]="
+                    last ? 'Review and submit' : 'Go to ' + section.label
+                  "
+                  (click)="
+                    last
+                      ? onReviewClick($event)
+                      : scrollToSection($event, section.id)
+                  "
                 >
-                  @if (last && reviewDisabled()) { @if (valid) {
-                  <span class="text-gray-400">
-                    <ng-icon
-                      name="heroCheck"
-                      size="14"
-                      strokeWidth="2.5"
-                    ></ng-icon>
-                  </span>
-                  } @else if (active) {
-                  <span class="h-2 w-2 rounded-full bg-gray-400"></span>
-                  } @else if (visited) {
-                  <span class="text-gray-400 leading-0">!</span>
-                  } } @else if (last && active && !valid) {
-                  <span
-                    class="h-2 w-2 rounded-full bg-biocommons-primary"
-                  ></span>
-                  } @else if (last && active && valid) {
-                  <ng-icon
-                    name="heroCheck"
-                    size="14"
-                    strokeWidth="2.5"
-                  ></ng-icon>
-                  } @else if (active) {
-                  <span
-                    class="h-2 w-2 rounded-full bg-biocommons-primary"
-                  ></span>
-                  } @else if (completed && valid) {
-                  <ng-icon
-                    name="heroCheck"
-                    size="14"
-                    strokeWidth="2.5"
-                  ></ng-icon>
-                  } @else if (completed && !valid) {
-                  <span class="text-white leading-0">!</span>
-                  } @else if (visited && valid) {
-                  <ng-icon
-                    name="heroCheck"
-                    size="14"
-                    strokeWidth="2.5"
-                  ></ng-icon>
-                  } @else if (visited && !valid) {
-                  <span class="text-red-600 leading-0">!</span>
-                  }
-                </div>
-              </button>
+                  <div
+                    class="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-sm font-medium transition-all"
+                    [class]="circleClasses(section.id)"
+                  >
+                    @if (last && reviewDisabled()) {
+                      @if (valid) {
+                        <span class="text-gray-400">
+                          <ng-icon
+                            name="heroCheck"
+                            size="14"
+                            strokeWidth="2.5"
+                          ></ng-icon>
+                        </span>
+                      } @else if (active) {
+                        <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+                      } @else if (visited) {
+                        <span class="leading-0 text-gray-400">!</span>
+                      }
+                    } @else if (last && active && !valid) {
+                      <span
+                        class="h-2 w-2 rounded-full bg-biocommons-primary"
+                      ></span>
+                    } @else if (last && active && valid) {
+                      <ng-icon
+                        name="heroCheck"
+                        size="14"
+                        strokeWidth="2.5"
+                      ></ng-icon>
+                    } @else if (active) {
+                      <span
+                        class="h-2 w-2 rounded-full bg-biocommons-primary"
+                      ></span>
+                    } @else if (completed && valid) {
+                      <ng-icon
+                        name="heroCheck"
+                        size="14"
+                        strokeWidth="2.5"
+                      ></ng-icon>
+                    } @else if (completed && !valid) {
+                      <span class="leading-0 text-white">!</span>
+                    } @else if (visited && valid) {
+                      <ng-icon
+                        name="heroCheck"
+                        size="14"
+                        strokeWidth="2.5"
+                      ></ng-icon>
+                    } @else if (visited && !valid) {
+                      <span class="leading-0 text-red-600">!</span>
+                    }
+                  </div>
+                </button>
+              </div>
+
+              <!-- Connector line -->
+              @if (index < sections().length - 1) {
+                <div
+                  class="absolute top-3 left-1/2 h-0.5 w-full transition-all"
+                  [class]="connectorClasses(section.id)"
+                ></div>
+              }
             </div>
 
-            <!-- Connector line -->
-            @if (index < sections().length - 1) {
-            <div
-              class="absolute left-1/2 top-3 h-0.5 w-full transition-all"
-              [class]="connectorClasses(section.id)"
-            ></div>
-            }
+            <!-- Label -->
+            <button
+              type="button"
+              class="mt-2 cursor-pointer appearance-none border-0 bg-transparent p-0 text-center text-sm font-medium transition-all disabled:cursor-not-allowed"
+              [class]="labelClasses(section.id)"
+              [disabled]="last && reviewDisabled()"
+              (click)="
+                last
+                  ? onReviewClick($event)
+                  : scrollToSection($event, section.id)
+              "
+            >
+              <span class="hidden sm:inline">{{ section.label }}</span>
+              <span class="inline sm:hidden">
+                {{ section.mobileLabel || section.label }}
+              </span>
+            </button>
           </div>
-
-          <!-- Label -->
-          <button
-            type="button"
-            class="mt-2 appearance-none border-0 bg-transparent p-0 text-center text-sm font-medium transition-all cursor-pointer disabled:cursor-not-allowed"
-            [class]="labelClasses(section.id)"
-            [disabled]="last && reviewDisabled()"
-            (click)="
-              last ? onReviewClick($event) : scrollToSection($event, section.id)
-            "
-          >
-            <span class="hidden sm:inline">{{ section.label }}</span>
-            <span class="inline sm:hidden">
-              {{ section.mobileLabel || section.label }}
-            </span>
-          </button>
-        </div>
         } @empty {
-        <div class="text-sm text-gray-500">No sections defined</div>
+          <div class="text-sm text-gray-500">No sections defined</div>
         }
       </div>
     </div>
@@ -111,7 +116,7 @@
 </div>
 
 <div
-  class="border border-t-0 rounded-b-lg border-biocommons-secondary bg-white"
+  class="rounded-b-lg border border-t-0 border-biocommons-secondary bg-white"
 >
   <ng-content></ng-content>
 

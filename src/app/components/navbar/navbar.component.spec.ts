@@ -118,6 +118,7 @@ describe("Navbar", () => {
     }
 
     for (const { url, label } of [
+      { url: "/home", label: "Home" },
       { url: "/binder-design", label: "Binder Design" },
       { url: "/structure-prediction", label: "Structure Prediction" },
       { url: "/my-jobs", label: "My Jobs" },
@@ -151,12 +152,14 @@ describe("Navbar", () => {
       expect(component.currentRoute()).toBe(
         "/structure-prediction/single-prediction"
       );
-      expect(component.isNavItemActive(component.desktopNavItems[0])).toBe(
-        false
-      );
-      expect(component.isNavItemActive(component.desktopNavItems[1])).toBe(
-        true
-      );
+      const binderDesign = component.desktopNavItems.find(
+        (item) => item.path === "/binder-design"
+      )!;
+      const structurePrediction = component.desktopNavItems.find(
+        (item) => item.path === "/structure-prediction"
+      )!;
+      expect(component.isNavItemActive(binderDesign)).toBe(false);
+      expect(component.isNavItemActive(structurePrediction)).toBe(true);
     });
 
     it("should ignore non-NavigationEnd router events", () => {
@@ -184,9 +187,11 @@ describe("Navbar", () => {
     it("should not activate items with a shared path prefix", () => {
       component.currentRoute.set("/binder-design-other/de-novo-design");
 
-      expect(component.isNavItemActive(component.desktopNavItems[0])).toBe(
-        false
-      );
+      expect(
+        component.desktopNavItems.some((item) =>
+          component.isNavItemActive(item)
+        )
+      ).toBeFalse();
     });
   });
 
@@ -245,7 +250,9 @@ describe("Navbar", () => {
 
   describe("navItems", () => {
     it("should link each theme group to its landing page and list only enabled workflows", () => {
-      const [binderDesign, structurePrediction] = component.navItems;
+      const [binderDesign, structurePrediction] = component.navItems.filter(
+        (item) => item.children
+      );
 
       expect(binderDesign.path).toBe("/binder-design");
       expect(structurePrediction.path).toBe("/structure-prediction");
@@ -256,6 +263,7 @@ describe("Navbar", () => {
 
     it("should keep menu-only items out of the desktop links", () => {
       expect(component.desktopNavItems.map((item) => item.label)).toEqual([
+        "Home",
         "Binder Design",
         "Structure Prediction",
         "My Jobs",

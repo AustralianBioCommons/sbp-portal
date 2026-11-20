@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
+import { provideRouter, Router } from "@angular/router";
+import { RouterTestingHarness } from "@angular/router/testing";
+import HomeComponent from "../../features/home/home";
 
 import { FooterSectionsComponent } from "./footer.component";
 
@@ -10,6 +13,7 @@ describe("FooterSectionsComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FooterSectionsComponent],
+      providers: [provideRouter([{ path: "home", component: HomeComponent }])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(FooterSectionsComponent);
@@ -63,6 +67,15 @@ describe("FooterSectionsComponent", () => {
   });
 
   describe("template integration", () => {
+    it("should navigate to home without reloading the page", async () => {
+      await RouterTestingHarness.create();
+      const el: HTMLElement = fixture.nativeElement;
+      el.querySelector<HTMLAnchorElement>('a[href="/home"]')!.click();
+      await fixture.whenStable();
+
+      expect(TestBed.inject(Router).url).toBe("/home");
+    });
+
     it("should render all logo links", () => {
       const logoElements = fixture.debugElement.queryAll(
         By.css('img[alt*="logo"]')

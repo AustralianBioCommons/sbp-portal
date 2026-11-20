@@ -46,8 +46,8 @@ export class AlertComponent {
       this.type() === "success"
         ? "bg-green-50 border-success"
         : this.type() === "warning"
-        ? "bg-amber-50 border-amber-300"
-        : "bg-red-50 border-error";
+          ? "bg-amber-50 border-amber-300"
+          : "bg-red-50 border-error";
     return `${posClasses} flex max-w-md items-center rounded-md p-4 shadow ${colorClasses}`;
   });
 

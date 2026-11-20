@@ -4,14 +4,14 @@
 
   <!-- Dropdown Menu -->
   @if (isOpen()) {
-  <div
-    [class]="widthClass()"
-    class="absolute min-w-60 right-0 z-10 mt-2 origin-top-right overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
-    role="menu"
-    aria-orientation="vertical"
-    tabindex="-1"
-  >
-    <ng-container [ngTemplateOutlet]="menuTemplate()"></ng-container>
-  </div>
+    <div
+      [class]="widthClass()"
+      class="absolute right-0 z-10 mt-2 min-w-60 origin-top-right overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+      role="menu"
+      aria-orientation="vertical"
+      tabindex="-1"
+    >
+      <ng-container [ngTemplateOutlet]="menuTemplate()"></ng-container>
+    </div>
   }
 </div>

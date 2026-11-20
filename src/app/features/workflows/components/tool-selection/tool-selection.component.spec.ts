@@ -48,6 +48,33 @@ describe("ToolSelectionComponent", () => {
     expect(compiled.textContent).toContain("Tool 2");
   });
 
+  it("should show descriptions below tool names and add padding only to described tools", () => {
+    fixture.componentRef.setInput("tools", [
+      {
+        id: "tool1",
+        label: "Tool 1",
+        description: "1 credit per prediction · 10 Minimum",
+      },
+      { id: "tool2", label: "Tool 2" },
+    ]);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const labels = compiled.querySelectorAll("label");
+    const description = labels[0].querySelector(".text-xs");
+
+    expect(description?.textContent?.trim()).toBe(
+      "1 credit per prediction · 10 Minimum"
+    );
+    expect(description?.classList.contains("block")).toBe(true);
+    expect(labels[0].classList.contains("pl-4")).toBe(true);
+    expect(labels[0].classList.contains("pr-4")).toBe(true);
+    expect(labels[0].classList.contains("pr-3")).toBe(false);
+    expect(labels[1].querySelector(".text-xs")).toBeNull();
+    expect(labels[1].classList.contains("pl-4")).toBe(false);
+    expect(labels[1].classList.contains("pr-4")).toBe(false);
+    expect(labels[1].classList.contains("pr-3")).toBe(true);
+  });
+
   it("should notify the registered form change callback when tool is selected", () => {
     const onChange = jasmine.createSpy("onChange");
     component.registerOnChange(onChange);

@@ -65,10 +65,7 @@ import {
   SinglePredictionToolSettingsPayload,
   WorkflowTool,
 } from "../shared/workflow.interfaces";
-import {
-  parsePositiveInteger,
-  parseWholeNumber,
-} from "../shared/number-input.utils";
+import { parsePositiveInteger } from "../shared/number-input.utils";
 import { WorkflowPageBase } from "../shared/workflow-page-base";
 import { TooltipComponent } from "../../../components/tooltip/tooltip.component";
 
@@ -101,7 +98,6 @@ interface EntityRowErrors {
 }
 
 interface ToolSettingErrors {
-  randomSeed?: string;
   colabfoldNumRecycles?: string;
 }
 
@@ -124,17 +120,10 @@ const PREDICTION_SIZE_LIMIT_DEFAULT = 4000;
 const PREDICTION_SIZE_LIMIT_ALPHAFOLD2 = 1000;
 const PREDICTION_SIZE_LIMIT_BOLTZ_POTENTIALS = 2000;
 
-/** Exclusive upper bound for the random seed (enforces a maximum of 8 digits). */
-const MAX_RANDOM_SEED = 99999999;
 const MAX_COLABFOLD_NUM_RECYCLES = 10;
 
 /** ColabFold recycle count used until the user changes it. */
 const DEFAULT_COLABFOLD_NUM_RECYCLES = 3;
-
-/** Generates a random 8-digit integer to pre-fill the Random Seed field. */
-function generateRandomSeed(): string {
-  return String(Math.floor(Math.random() * 90000000) + 10000000);
-}
 
 @Component({
   selector: "app-single-prediction",
@@ -257,11 +246,10 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     return jobNameErrorMessage(this.form.controls.jobName.errors);
   }
 
-  randomSeed = signal(generateRandomSeed());
+  private readonly randomSeed = Math.floor(Math.random() * 90000000) + 10000000;
   alphafold2FullDbs = signal(false);
   colabfoldNumRecycles = signal(String(DEFAULT_COLABFOLD_NUM_RECYCLES));
   boltzUsePotentials = signal(false);
-  randomSeedTouched = signal(false);
   colabfoldNumRecyclesTouched = signal(false);
 
   // Single-page form sections (rendered + tracked by app-workflow-form)
@@ -536,16 +524,9 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     value: string;
     fieldName: string;
   }[] {
-    const randomSeedItem = {
-      label: "random_seed",
-      value: this.randomSeed(),
-      fieldName: "random_seed",
-    };
-
     switch (this.formValue().selectedTool) {
       case "alphafold2":
         return [
-          randomSeedItem,
           {
             label: "alphafold2_full_dbs",
             value: this.alphafold2FullDbs() ? "true" : "false",
@@ -554,7 +535,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         ];
       case "colabfold":
         return [
-          randomSeedItem,
           {
             label: "colabfold_num_recycles",
             value: this.colabfoldNumRecycles(),
@@ -563,7 +543,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
         ];
       case "boltz":
         return [
-          randomSeedItem,
           {
             label: "boltz_use_potentials",
             value: this.boltzUsePotentials() ? "true" : "false",
@@ -597,16 +576,8 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
     };
   }
 
-  updateRandomSeed(value: string): void {
-    this.randomSeed.set(value);
-  }
-
   updateColabfoldNumRecycles(value: string): void {
     this.colabfoldNumRecycles.set(value);
-  }
-
-  setRandomSeedTouched(): void {
-    this.randomSeedTouched.set(true);
   }
 
   setColabfoldNumRecyclesTouched(): void {
@@ -730,7 +701,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
 
   private touchToolSettings(): void {
     this.stepTwoTouched.set(true);
-    this.randomSeedTouched.set(true);
     this.colabfoldNumRecyclesTouched.set(true);
   }
 
@@ -776,12 +746,6 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   private validateToolSettings(): ToolSettingErrors {
     const errors: ToolSettingErrors = {};
 
-    const seed = parseWholeNumber(this.randomSeed());
-    if (seed === null || seed > MAX_RANDOM_SEED) {
-      errors.randomSeed =
-        "Random Seed must be a whole number with at most 8 digits";
-    }
-
     const recycles = parsePositiveInteger(this.colabfoldNumRecycles());
     if (
       this.formValue().selectedTool === "colabfold" &&
@@ -796,7 +760,7 @@ export default class SinglePredictionComponent extends WorkflowPageBase {
   private buildToolSettingsPayload(
     tool: SinglePredictionTool
   ): SinglePredictionToolSettingsPayload {
-    const random_seed = parseWholeNumber(this.randomSeed()) ?? 0;
+    const random_seed = this.randomSeed;
 
     switch (tool) {
       case "alphafold2":

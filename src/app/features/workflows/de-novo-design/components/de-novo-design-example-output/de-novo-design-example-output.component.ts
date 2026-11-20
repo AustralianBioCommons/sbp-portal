@@ -25,9 +25,9 @@ export class DeNovoDesignExampleOutputComponent {
     },
     table: {
       src: "assets/dnd-example-table.png",
-      alt: "De novo design results summary for 16 ranked designs, with Rank, PAE Interaction, ipTM, Design Length, Design Sequence and Design Name columns.",
-      width: 870,
-      height: 607,
+      alt: "De novo design results summary for 16 ranked designs, with Rank, PAE Interaction, ipTM, Design Length and Design Sequence columns.",
+      width: 719,
+      height: 598,
     },
   } satisfies Record<string, ExampleOutputImage>;
 }

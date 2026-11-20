@@ -36,12 +36,6 @@ export class SinglePredictionAboutComponent {
       label: "AlphaFold2",
       rows: [
         {
-          input: "Random Seed",
-          description:
-            "Reusing a fixed seed supports reproducibility when the same inputs and settings are used.",
-          formatAndLimits: ["Integer with maximum 8 digits."],
-        },
-        {
           input: "Full DBs",
           description:
             "Full BFD database is used for homolog search to improve search sensitivity for MSA generation.",
@@ -54,12 +48,6 @@ export class SinglePredictionAboutComponent {
       label: "ColabFold",
       rows: [
         {
-          input: "Random Seed",
-          description:
-            "Reusing a fixed seed supports reproducibility when the same inputs and settings are used.",
-          formatAndLimits: ["Integer with maximum 8 digits."],
-        },
-        {
           input: "Recycles",
           description:
             "Number of recycling iterations through the neural network model. Increasing recycles can improve prediction quality but slows down the prediction.",
@@ -71,12 +59,6 @@ export class SinglePredictionAboutComponent {
       id: "boltz",
       label: "Boltz",
       rows: [
-        {
-          input: "Random Seed",
-          description:
-            "Reusing a fixed seed supports reproducibility when the same inputs and settings are used.",
-          formatAndLimits: ["Integer with maximum 8 digits."],
-        },
         {
           input: "Use Potentials",
           description:
