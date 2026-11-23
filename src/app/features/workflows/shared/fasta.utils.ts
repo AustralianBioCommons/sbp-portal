@@ -469,7 +469,7 @@ export function validateBulkFastaProtein(
         valid: false,
         errorMessage: `Sequence for ${header} has too many chains. The maximum allowed is ${MAX_BULK_CHAINS}`,
         sequenceCount: 0,
-      }
+      };
     }
 
     const aaLength = rawSequence.replace(/:/g, "").length;

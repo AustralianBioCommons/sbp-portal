@@ -414,13 +414,12 @@ describe("fasta.utils", () => {
       expect(result.valid).toBe(false);
       expect(result.errorMessage).toContain('invalid ":" placement');
     });
-    
-    it('rejects entries with more than 26 chains', () => {
-          const result = validateBulkFastaProtein(">seq1\nACD" + (":ACD".repeat(26)));
-          expect(result.valid).toBe(false);
-          expect(result.errorMessage).toContain('has too many chains')
-        }
-    )
+
+    it("rejects entries with more than 26 chains", () => {
+      const result = validateBulkFastaProtein(">seq1\nACD" + ":ACD".repeat(26));
+      expect(result.valid).toBe(false);
+      expect(result.errorMessage).toContain("has too many chains");
+    });
 
     it("accepts 4000 amino acids per entry, excluding chain delimiters", () => {
       for (const sequence of [
