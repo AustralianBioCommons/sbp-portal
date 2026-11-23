@@ -335,6 +335,7 @@ export interface BulkFastaValidationResult {
 const BULK_FASTA_REGEX = /^[ARNDCQEGHILKMFPSTWYV:]+$/;
 export const MIN_BULK_ENTRIES = 10;
 const MAX_BULK_ENTRIES = 1000;
+const MAX_BULK_CHAINS = 26;
 const MAX_AA_LENGTH = 4000;
 
 const BULK_MIN_ENTRIES_MESSAGE = `Minimum ${MIN_BULK_ENTRIES} predictions at once. Please use the Single Prediction workflow for individual predictions.`;
@@ -345,6 +346,7 @@ const BULK_MIN_ENTRIES_MESSAGE = `Minimum ${MIN_BULK_ENTRIES} predictions at onc
  * - Sequences may contain the 20 canonical amino acids and ":" as a multimer chain delimiter.
  * - At least 10 and at most 1000 FASTA entries are allowed.
  * - Each entry must not exceed 4000 amino-acid characters (colons excluded from the count).
+ * - Maximum of 26 chains (separated by :) per entry
  */
 export function validateBulkFastaProtein(
   input: string
@@ -457,6 +459,15 @@ export function validateBulkFastaProtein(
       return {
         valid: false,
         errorMessage: `Sequence for "${header}" has invalid ":" placement. The colon must separate chains and cannot appear at the start, end, or consecutively (e.g. SEQUENCE1:SEQUENCE2)`,
+        sequenceCount: 0,
+      };
+    }
+
+    const nChains = rawSequence.split(":").filter((l) => l.length > 0).length;
+    if (nChains > MAX_BULK_CHAINS) {
+      return {
+        valid: false,
+        errorMessage: `Sequence for ${header} has too many chains. The maximum allowed is ${MAX_BULK_CHAINS}`,
         sequenceCount: 0,
       };
     }
