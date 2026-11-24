@@ -1,5 +1,6 @@
 import { TestBed } from "@angular/core/testing";
 import { Vec3 } from "molstar/lib/mol-math/linear-algebra";
+import type { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 
 import {
   MolstarViewerComponent,
@@ -22,6 +23,108 @@ const statics = () => MolstarViewerComponent as unknown as MolstarViewerStatics;
 /** A polymer chain: one entry per residue, no atoms. */
 const polymer = (...seqs: number[]) =>
   new Map(seqs.map((seq) => [seq, { polymer: true, atoms: [] }]));
+
+describe("MolstarViewerComponent coloring", () => {
+  it("finishes an active repaint before clearing and skips obsolete queued requests", async () => {
+    await TestBed.configureTestingModule({
+      imports: [MolstarViewerComponent],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(MolstarViewerComponent);
+    const component = fixture.componentInstance as unknown as {
+      applyExternalSelection(tokens: string): Promise<void>;
+      applySelection(tokens: string): Promise<void>;
+    };
+    let finishFirst!: () => void;
+    const firstPaint = new Promise<void>((resolve) => {
+      finishFirst = resolve;
+    });
+    const paint = spyOn(component, "applySelection").and.callFake((tokens) =>
+      tokens === "A1" ? firstPaint : Promise.resolve()
+    );
+    fixture.detectChanges();
+
+    const first = component.applyExternalSelection("A1");
+    await Promise.resolve();
+    const obsolete = component.applyExternalSelection("A2");
+    const clear = component.applyExternalSelection("");
+    expect(paint.calls.allArgs()).toEqual([["A1"]]);
+
+    finishFirst();
+    await Promise.all([first, obsolete, clear]);
+    expect(paint.calls.allArgs()).toEqual([["A1"], [""]]);
+
+    const abandoned = component.applyExternalSelection("A3");
+    fixture.destroy();
+    await abandoned;
+    expect(paint.calls.allArgs()).toEqual([["A1"], [""]]);
+  });
+
+  it("updates every loaded component in place and applies a pending theme after loading", async () => {
+    await TestBed.configureTestingModule({
+      imports: [MolstarViewerComponent],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(MolstarViewerComponent);
+    const component = fixture.componentInstance;
+    const components = [{}, {}, {}];
+    const updateTheme = jasmine.createSpy("updateTheme").and.resolveTo();
+    const plugin = {
+      managers: {
+        structure: {
+          hierarchy: {
+            current: {
+              structures: [
+                { components: components.slice(0, 2) },
+                { components: components.slice(2) },
+              ],
+            },
+          },
+          component: { updateRepresentationsTheme: updateTheme },
+        },
+      },
+    };
+    spyOnProperty(
+      component as unknown as { readonly plugin: PluginUIContext },
+      "plugin",
+      "get"
+    ).and.returnValue(plugin as unknown as PluginUIContext);
+    const reselect = spyOn(
+      component as unknown as {
+        applyExternalSelection(tokens: string): Promise<void>;
+      },
+      "applyExternalSelection"
+    ).and.resolveTo();
+    fixture.componentRef.setInput("isolateSelection", true);
+    fixture.componentRef.setInput("selectionRequest", { tokens: "A1" });
+    fixture.detectChanges();
+
+    fixture.componentRef.setInput("colorTheme", "plddt");
+    component.status.set("loading");
+    fixture.detectChanges();
+    expect(updateTheme).not.toHaveBeenCalled();
+
+    fixture.componentRef.setInput("colorTheme", "chain-id");
+    fixture.detectChanges();
+    expect(updateTheme).not.toHaveBeenCalled();
+
+    component.status.set("loaded");
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(updateTheme).toHaveBeenCalledOnceWith(components, {
+      color: "chain-id",
+    });
+    expect(reselect).not.toHaveBeenCalled();
+
+    fixture.componentRef.setInput("colorTheme", "plddt");
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(updateTheme.calls.mostRecent().args).toEqual([
+      components,
+      { color: "plddt-confidence" },
+    ]);
+    expect(reselect).not.toHaveBeenCalled();
+    expect(component.status()).toBe("loaded");
+  });
+});
 
 describe("MolstarViewerComponent.toOrderedTokens", () => {
   it("orders chains alphabetically then residues ascending", () => {
@@ -166,6 +269,28 @@ describe("MolstarViewerComponent load failures", () => {
 
     expect(errors).toEqual(["Could not render the structure."]);
     expect(component.errorMessage()).toBe("Could not render the structure.");
+  });
+});
+
+describe("MolstarViewerComponent keyboard upload", () => {
+  it("shows focus on the visible drop zone", async () => {
+    await TestBed.configureTestingModule({
+      imports: [MolstarViewerComponent],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(MolstarViewerComponent);
+    fixture.detectChanges();
+    const element: HTMLElement = fixture.nativeElement;
+    const input =
+      element.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const label = input.closest("label")!;
+    label.style.transition = "none";
+
+    input.focus();
+
+    expect(document.activeElement).toBe(input);
+    expect(getComputedStyle(label).outlineStyle).toBe("solid");
+    expect(getComputedStyle(label).outlineWidth).toBe("2px");
+    expect(getComputedStyle(label).outlineOffset).toBe("-2px");
   });
 });
 

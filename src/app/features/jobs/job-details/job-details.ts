@@ -461,7 +461,7 @@ export default class JobDetailsComponent implements OnInit {
         const filename =
           this.getDownloadFilename(
             response.headers.get("content-disposition")
-          ) ?? `${job.id}_results.zip`;
+          ) ?? `${job.jobName}_results.zip`;
         startBrowserDownload(response.body, filename);
       });
   }

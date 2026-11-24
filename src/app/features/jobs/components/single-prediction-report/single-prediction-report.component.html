@@ -45,49 +45,88 @@
               <p class="wrap-break-word">{{ structureError() }}</p>
             </div>
           } @else {
-            <app-plddt-legend></app-plddt-legend>
+            <app-plddt-legend
+              [class.invisible]="colorTheme() !== 'plddt'"
+              [attr.aria-hidden]="colorTheme() !== 'plddt'"
+            ></app-plddt-legend>
 
             <div
-              class="relative h-128 overflow-hidden rounded-lg border bg-white"
+              class="flex h-128 flex-col overflow-hidden rounded-lg border bg-white"
             >
-              <app-molstar-viewer
-                #viewer
-                class="absolute inset-0"
-                [structureSource]="structureSource()"
-                [enableUpload]="false"
-                [roundBottomRight]="true"
-                [selectionRequest]="viewerSelectionRequest()"
-                representation="cartoon"
-                colorTheme="plddt"
-                [showSequencePanel]="false"
-                [enablePicking]="false"
-                [isolateSelection]="true"
-                hint=""
-                (residueIndexDetected)="onResidueIndexDetected($event)"
-                (loadError)="onViewerLoadError()"
-              ></app-molstar-viewer>
+              <div class="relative min-h-0 flex-1">
+                <app-molstar-viewer
+                  #viewer
+                  class="absolute inset-0"
+                  [structureSource]="structureSource()"
+                  [enableUpload]="false"
+                  [roundBottomRight]="true"
+                  [selectionRequest]="viewerSelectionRequest()"
+                  representation="cartoon"
+                  [colorTheme]="colorTheme()"
+                  [showSequencePanel]="false"
+                  [enablePicking]="false"
+                  [isolateSelection]="true"
+                  hint=""
+                  (residueIndexDetected)="onResidueIndexDetected($event)"
+                  (loadError)="onViewerLoadError()"
+                ></app-molstar-viewer>
 
-              <div
-                class="absolute top-4 right-4 z-10 flex flex-col items-center gap-4"
-              >
-                <button
-                  type="button"
-                  class="flex items-center rounded-lg border bg-white p-1.5 text-gray-600 shadow-sm transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
-                  aria-label="Reset the view"
-                  (click)="viewer.resetCamera()"
+                <div
+                  class="absolute top-4 right-4 z-10 flex flex-col items-center gap-4"
                 >
-                  <ng-icon name="heroArrowPath" size="20"></ng-icon>
-                </button>
-
-                <app-tooltip [message]="viewerHelp">
-                  <div
-                    class="flex items-center rounded-full border bg-white p-1.5 text-gray-500"
-                    tabindex="0"
-                    aria-label="How to use the 3D viewer"
+                  <button
+                    type="button"
+                    class="flex items-center rounded-lg border bg-white p-1.5 text-gray-600 shadow-sm transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                    aria-label="Reset the view"
+                    (click)="viewer.resetCamera()"
                   >
-                    <ng-icon name="heroLifebuoy" size="22"></ng-icon>
-                  </div>
-                </app-tooltip>
+                    <ng-icon name="heroArrowPath" size="20"></ng-icon>
+                  </button>
+
+                  <app-tooltip [message]="viewerHelp">
+                    <div
+                      class="flex items-center rounded-full border bg-white p-1.5 text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                      role="img"
+                      tabindex="0"
+                      aria-label="How to use the 3D viewer"
+                    >
+                      <ng-icon
+                        name="heroLifebuoy"
+                        size="22"
+                        aria-hidden="true"
+                      ></ng-icon>
+                    </div>
+                  </app-tooltip>
+                </div>
+              </div>
+              <div
+                class="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-t bg-white px-4 py-3 text-xs text-gray-900"
+                role="radiogroup"
+                aria-label="Color by"
+              >
+                <span aria-hidden="true">Color by:</span>
+                <label class="flex cursor-pointer items-center gap-2 py-1">
+                  <input
+                    type="radio"
+                    [name]="'structure-color-' + runId()"
+                    value="plddt"
+                    [checked]="colorTheme() === 'plddt'"
+                    (change)="colorTheme.set('plddt')"
+                    class="accent-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  />
+                  pLDDT
+                </label>
+                <label class="flex cursor-pointer items-center gap-2 py-1">
+                  <input
+                    type="radio"
+                    [name]="'structure-color-' + runId()"
+                    value="chain-id"
+                    [checked]="colorTheme() === 'chain-id'"
+                    (change)="colorTheme.set('chain-id')"
+                    class="accent-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+                  />
+                  Chain
+                </label>
               </div>
             </div>
           }

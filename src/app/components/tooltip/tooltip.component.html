@@ -11,7 +11,7 @@
   <ng-content>
     <button
       type="button"
-      class="flex items-center rounded-full focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none"
+      class="flex items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
       aria-label="More information"
       [attr.aria-describedby]="tooltipId"
     >
@@ -27,7 +27,7 @@
     <div
       [id]="tooltipId"
       role="tooltip"
-      class="fixed left-(--tooltip-x) z-1000 w-max max-w-48 translate-x-(--tooltip-shift) rounded-md bg-gray-900 px-3 py-2 text-xs whitespace-pre-line text-white opacity-95 shadow-lg [--tooltip-shift:clamp(calc(8px_-_var(--tooltip-x)),-50%,calc(100vw_-_100%_-_var(--tooltip-x)_-_8px))] before:absolute before:inset-x-0 before:-top-2 before:h-2 sm:max-w-56 md:max-w-64 lg:max-w-72"
+      class="fixed left-(--tooltip-x) z-1000 w-max max-w-48 translate-x-(--tooltip-shift) rounded-md bg-gray-900 px-3 py-2 text-xs whitespace-pre-line text-white opacity-95 shadow-lg [--tooltip-shift:clamp(calc(8px-var(--tooltip-x)),-50%,calc(100vw-100%-var(--tooltip-x)-8px))] before:absolute before:inset-x-0 before:-top-2 before:h-2 sm:max-w-56 md:max-w-64 lg:max-w-72"
       [style.--tooltip-x]="left() + 'px'"
       [style.top.px]="top()"
     >

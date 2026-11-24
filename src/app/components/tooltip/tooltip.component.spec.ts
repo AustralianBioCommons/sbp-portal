@@ -50,6 +50,40 @@ describe("TooltipComponent", () => {
     expect(component.open()).toBe(false);
   });
 
+  it("repositions after rendering if focus moved the trigger", async () => {
+    const target = fixture.nativeElement.firstElementChild as HTMLElement;
+    spyOn(target, "getBoundingClientRect").and.returnValues(
+      { left: 100, width: 40, bottom: 50 } as DOMRect,
+      { left: 120, width: 40, bottom: 90 } as DOMRect
+    );
+
+    component.show({ currentTarget: target } as unknown as Event);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.left()).toBe(140);
+    expect(component.top()).toBe(96);
+  });
+
+  it("keeps a focused tooltip open and aligned when its scroll container moves", () => {
+    const target = fixture.nativeElement.firstElementChild as HTMLElement;
+    const button = target.querySelector("button")!;
+    const rect = spyOn(target, "getBoundingClientRect").and.returnValue({
+      left: 100,
+      width: 40,
+      bottom: 50,
+    } as DOMRect);
+    button.focus();
+    fixture.detectChanges();
+
+    rect.and.returnValue({ left: 120, width: 40, bottom: 90 } as DOMRect);
+    target.dispatchEvent(new Event("scroll"));
+
+    expect(component.open()).toBeTrue();
+    expect(component.left()).toBe(140);
+    expect(component.top()).toBe(96);
+  });
+
   it("describes its own default trigger", () => {
     const button: HTMLElement =
       fixture.nativeElement.querySelector("button[aria-label]");

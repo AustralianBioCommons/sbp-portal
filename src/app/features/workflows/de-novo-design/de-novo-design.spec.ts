@@ -242,6 +242,23 @@ describe("DeNovoDesignComponent", () => {
   });
 
   describe("PDB file handling", () => {
+    it("opens the hidden file input through the visible upload button", () => {
+      fixture.detectChanges();
+      const element: HTMLElement = fixture.nativeElement;
+      const input = element.querySelector<HTMLInputElement>(
+        'input[aria-label="Upload a target PDB structure"]'
+      )!;
+      const openPicker = spyOn(input, "click");
+      const button = Array.from(element.querySelectorAll("button")).find(
+        (button) => button.textContent?.includes("Upload a PDB file")
+      )!;
+
+      expect(getComputedStyle(input).display).toBe("none");
+      button.click();
+
+      expect(openPicker).toHaveBeenCalledTimes(1);
+    });
+
     it("rejects an invalid PDB file", () => {
       pdbUpload.validatePdbFile.and.returnValue({
         valid: false,

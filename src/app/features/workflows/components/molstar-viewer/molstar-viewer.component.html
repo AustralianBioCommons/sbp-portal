@@ -8,7 +8,7 @@
   <!-- Idle placeholder -->
   @if (status() === "idle" && enableUpload()) {
     <label
-      class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-bl-lg border-2 border-dashed text-center transition-colors"
+      class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-bl-lg border-2 border-dashed text-center transition-colors has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-sky-500"
       [class]="
         disabled()
           ? 'pointer-events-none border-transparent bg-gray-50 opacity-50'

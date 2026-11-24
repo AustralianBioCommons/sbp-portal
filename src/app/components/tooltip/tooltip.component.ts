@@ -2,6 +2,7 @@ import {
   Component,
   DOCUMENT,
   ElementRef,
+  Injector,
   afterNextRender,
   effect,
   inject,
@@ -25,9 +26,11 @@ let nextTooltipId = 0;
 export class TooltipComponent {
   private readonly document = inject(DOCUMENT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+  private trigger: HTMLElement | null = null;
 
   message = input.required<string>();
-  iconColor = input<string>("text-red-500 hover:text-red-600");
+  iconColor = input<string>("text-gray-500 hover:text-gray-600");
   readonly tooltipId = `app-tooltip-${nextTooltipId++}`;
 
   readonly open = signal(false);
@@ -40,10 +43,16 @@ export class TooltipComponent {
     const close = () => this.open.set(false);
     effect((onCleanup) => {
       if (!this.open()) return;
-      this.document.addEventListener("scroll", close, true);
+      const onScroll = () => {
+        const trigger = this.trigger;
+        if (trigger?.contains(this.document.activeElement))
+          this.position(trigger);
+        else close();
+      };
+      this.document.addEventListener("scroll", onScroll, true);
       this.document.defaultView?.addEventListener("resize", close);
       onCleanup(() => {
-        this.document.removeEventListener("scroll", close, true);
+        this.document.removeEventListener("scroll", onScroll, true);
         this.document.defaultView?.removeEventListener("resize", close);
       });
     });
@@ -60,9 +69,20 @@ export class TooltipComponent {
   }
 
   show(event: Event): void {
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.trigger = event.currentTarget as HTMLElement;
+    this.position(this.trigger);
+    this.open.set(true);
+    afterNextRender(
+      () => {
+        if (this.open() && this.trigger) this.position(this.trigger);
+      },
+      { injector: this.injector }
+    );
+  }
+
+  private position(trigger: HTMLElement): void {
+    const rect = trigger.getBoundingClientRect();
     this.left.set(rect.left + rect.width / 2);
     this.top.set(rect.bottom + 6);
-    this.open.set(true);
   }
 }

@@ -63,7 +63,7 @@
               <input
                 #pdbFileInput
                 type="file"
-                class="sr-only"
+                class="hidden"
                 accept=".pdb"
                 aria-label="Upload a target PDB structure"
                 [disabled]="isPdbUploading()"
@@ -118,7 +118,7 @@
               <!-- Draggable divider — hidden when the panel is collapsed -->
               @if (panelWidth() > 0) {
               <div
-                class="relative w-1 shrink-0 cursor-col-resize bg-gray-200 transition-colors select-none hover:bg-sky-200 focus-visible:bg-sky-400 focus-visible:outline-none"
+                class="relative w-1 shrink-0 cursor-col-resize bg-gray-200 transition-colors select-none hover:bg-sky-200 focus-visible:bg-sky-500 focus-visible:outline-none"
                 role="separator"
                 aria-orientation="vertical"
                 aria-label="Resize configuration panel"
@@ -151,7 +151,7 @@
                 @if (panelWidth() === 0) {
                 <button
                   type="button"
-                  class="absolute top-4 right-0 z-10 flex items-center gap-2 rounded-l-full border border-r-0 bg-white p-2 text-sm font-medium whitespace-nowrap shadow-md transition-colors focus:outline-none"
+                  class="absolute top-4 right-0 z-10 flex items-center gap-2 rounded-l-full border border-r-0 bg-white p-2 text-sm font-medium whitespace-nowrap shadow-md transition-colors focus-visible:-outline-offset-2"
                   [class]="hasConfigSectionErrors() ? 'border-red-500 text-red-600 hover:bg-red-50' : 'border-gray-300  hover:bg-gray-50'"
                   (click)="panelWidth.set(defaultPanelWidth)"
                   title="Open Input Configuration"
@@ -190,7 +190,7 @@
                       </span>
                       <button
                         type="button"
-                        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
+                        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                         (click)="panelWidth.set(0)"
                         title="Close"
                       >
@@ -205,6 +205,7 @@
                     <!-- Panel scrollable body — clip x so field tooltips can't trigger a horizontal scrollbar in the narrow panel -->
                     <div
                       class="flex flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto p-4"
+                      tabindex="-1"
                     >
                       <!-- Job Name -->
                       <div>

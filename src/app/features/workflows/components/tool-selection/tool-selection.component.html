@@ -1,13 +1,14 @@
 <div
   class="flex flex-wrap gap-4"
   role="radiogroup"
+  aria-label="Tool"
   tabindex="-1"
   [attr.aria-invalid]="showRequiredError() ? 'true' : null"
   [attr.aria-describedby]="showRequiredError() ? errorId : null"
 >
   @for (tool of tools(); track tool.id) {
     <label
-      class="flex cursor-pointer items-center gap-2 rounded-full border p-2 transition-all hover:bg-gray-50"
+      class="flex cursor-pointer items-center gap-2 rounded-full border p-2 transition-all hover:bg-gray-50 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-sky-500"
       [class.pl-4]="!!tool.description"
       [class.pr-4]="!!tool.description"
       [class.pr-3]="!tool.description"
@@ -27,10 +28,11 @@
         [disabled]="disabled()"
         (change)="onToolSelect(tool.id)"
         (blur)="markAsTouched()"
-        class="sr-only"
+        class="sr-only forced-colors:not-sr-only forced-colors:h-5 forced-colors:w-5"
       />
       <div
-        class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-sky-500 bg-white transition-all"
+        class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-sky-500 bg-white transition-all forced-colors:hidden"
+        aria-hidden="true"
       >
         @if (selectedToolId() === tool.id) {
           <div class="h-2 w-2 rounded-full bg-sky-500"></div>

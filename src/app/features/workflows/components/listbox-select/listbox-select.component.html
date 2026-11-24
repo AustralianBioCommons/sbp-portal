@@ -6,7 +6,7 @@
     aria-haspopup="listbox"
     [attr.aria-controls]="menuId"
     (click)="toggleMenu()"
-    class="flex h-10 w-full items-center justify-between rounded-md border bg-white px-4 text-left text-sm text-gray-900 transition-colors focus:ring-2 focus:outline-none"
+    class="flex h-10 w-full items-center justify-between rounded-md border bg-white px-4 text-left text-sm text-gray-900 transition-colors focus:ring-2"
     [class]="
       invalid()
         ? 'border-red-500 focus:ring-red-100'
@@ -43,7 +43,7 @@
           role="option"
           [attr.aria-selected]="value() === option.value"
           (click)="selectOption(option.value)"
-          class="flex min-h-8 w-full items-center rounded-lg px-2 py-1.5 text-left text-xs text-gray-900 transition-colors hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+          class="flex min-h-8 w-full items-center rounded-lg px-2 py-1.5 text-left text-xs text-gray-900 transition-colors hover:bg-gray-100 focus:bg-gray-100"
           [class.bg-gray-100]="value() === option.value"
         >
           {{ option.label }}
