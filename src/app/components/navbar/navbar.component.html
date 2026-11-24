@@ -12,7 +12,7 @@
       <button
         type="button"
         #menuButton
-        class="compact-menu-button rounded text-sky-600 transition-all hover:text-sky-700"
+        class="compact-menu-button inline-flex items-center justify-center rounded text-sky-600 transition-all hover:text-sky-700"
         (click)="toggleMobileMenu(); $event.stopPropagation()"
         aria-label="Open menu"
         aria-controls="navigation-menu"
@@ -67,7 +67,7 @@
             message="Credits are required to execute workflows and will be consumed upon workflow submission. Credit balance will refresh on the 1st of each month."
           >
             <div
-              class="flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-2 hover:cursor-pointer hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:outline-none"
+              class="flex h-10 items-center gap-2 rounded-xl border border-gray-300 bg-white px-2 hover:cursor-pointer hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
               tabindex="0"
               aria-label="Credits remaining"
               [attr.aria-describedby]="creditsTooltip.tooltipId"
@@ -104,48 +104,41 @@
             </div>
           </app-tooltip>
         }
-        <app-dropdown-menu
-          [isOpen]="userMenuOpen()"
-          (isOpenChange)="userMenuOpen.set($event)"
-          widthClass="w-auto"
+        <button
+          type="button"
+          [cdkMenuTriggerFor]="userMenu"
+          [cdkMenuPosition]="userMenuPositions"
+          class="relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm outline-2 outline-transparent transition-[outline-color] hover:outline-sky-200 focus-visible:outline-sky-500"
+          id="user-menu-button"
         >
-          <ng-template #trigger>
-            <button
-              type="button"
-              (click)="userMenuOpen.set(!userMenuOpen())"
-              class="relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm hover:cursor-pointer focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-sky-200 focus:outline-hidden"
-              id="user-menu-button"
-              [attr.aria-expanded]="userMenuOpen()"
-              aria-haspopup="true"
-            >
-              <span class="absolute -inset-1.5"></span>
-              <span class="sr-only">Open user menu</span>
-              @if (user?.picture) {
-                @if (!profileImageLoaded()) {
-                  <ng-icon
-                    name="heroUser"
-                    size="24"
-                    class="text-gray-600"
-                  ></ng-icon>
-                }
-                <img
-                  class="h-10 w-10 rounded-full"
-                  [class.hidden]="!profileImageLoaded()"
-                  [src]="user?.picture"
-                  alt="User"
-                  (load)="profileImageLoaded.set(true)"
-                  (error)="profileImageLoaded.set(false)"
-                />
-              } @else {
-                <ng-icon
-                  name="heroUser"
-                  size="24"
-                  class="text-gray-600"
-                ></ng-icon>
-              }
-            </button>
-          </ng-template>
-          <ng-template #menu>
+          <span class="absolute -inset-1.5"></span>
+          <span class="sr-only">Open user menu</span>
+          @if (user?.picture) {
+            @if (!profileImageLoaded()) {
+              <ng-icon
+                name="heroUser"
+                size="24"
+                class="text-gray-600"
+              ></ng-icon>
+            }
+            <img
+              class="h-10 w-10 rounded-full"
+              [class.hidden]="!profileImageLoaded()"
+              [src]="user?.picture"
+              alt="User"
+              (load)="profileImageLoaded.set(true)"
+              (error)="profileImageLoaded.set(false)"
+            />
+          } @else {
+            <ng-icon name="heroUser" size="24" class="text-gray-600"></ng-icon>
+          }
+        </button>
+        <ng-template #userMenu>
+          <div
+            cdkMenu
+            aria-label="User menu"
+            class="max-w-[calc(100vw-3rem)] min-w-60 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black/5"
+          >
             <div
               class="truncate border-b px-4 py-3 text-sm text-biocommons-primary"
             >
@@ -153,10 +146,9 @@
             </div>
             <button
               type="button"
-              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
-              role="menuitem"
-              tabindex="-1"
-              (click)="userMenuOpen.set(false); openProfile()"
+              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700 focus-visible:-outline-offset-2"
+              cdkMenuItem
+              (cdkMenuItemTriggered)="openProfile()"
             >
               <ng-icon name="heroUserCircle" size="20"></ng-icon>
               My Profile
@@ -165,10 +157,8 @@
               href="https://biocommons-sbp-help.freshdesk.com/support/tickets/new"
               target="_blank"
               rel="noopener noreferrer"
-              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
-              role="menuitem"
-              tabindex="-1"
-              (click)="userMenuOpen.set(false)"
+              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700 focus-visible:-outline-offset-2"
+              cdkMenuItem
             >
               <img
                 src="/assets/freshdesk-logo.png"
@@ -179,10 +169,9 @@
             </a>
             <button
               type="button"
-              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700"
-              role="menuitem"
-              tabindex="-1"
-              (click)="logout()"
+              class="flex w-full items-center justify-start gap-2 px-4 py-3 text-sm text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-700 focus-visible:-outline-offset-2"
+              cdkMenuItem
+              (cdkMenuItemTriggered)="logout()"
             >
               <ng-icon
                 name="heroArrowRightStartOnRectangle"
@@ -190,8 +179,8 @@
               ></ng-icon>
               Log out
             </button>
-          </ng-template>
-        </app-dropdown-menu>
+          </div>
+        </ng-template>
       } @else {
         <app-button variant="primary" widthClass="w-auto" (click)="login()">
           Login
@@ -217,6 +206,7 @@
       isMobileMenuOpen() ? 'translateX(0)' : 'translateX(-100%)'
     "
     role="dialog"
+    tabindex="-1"
     [attr.aria-modal]="isMobileMenuOpen() ? 'true' : null"
     [inert]="!isMobileMenuOpen()"
     [cdkTrapFocus]="isMobileMenuOpen()"

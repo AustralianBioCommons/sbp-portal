@@ -11,6 +11,8 @@ import {
   ChangeDetectionStrategy,
 } from "@angular/core";
 import { CdkTrapFocus } from "@angular/cdk/a11y";
+import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from "@angular/cdk/menu";
+import type { ConnectedPosition } from "@angular/cdk/overlay";
 import { CommonModule } from "@angular/common";
 import { NavigationEnd, Router, RouterLink } from "@angular/router";
 import { NgIconComponent, provideIcons } from "@ng-icons/core";
@@ -31,7 +33,6 @@ import {
   USER_CREDITS_ENABLED,
 } from "../../core/services/credits.service";
 import { THEMES } from "../../core/configs/themes.config";
-import { DropdownMenuComponent } from "../dropdown-menu/dropdown-menu.component";
 import { ButtonComponent } from "../button/button.component";
 import { TooltipComponent } from "../tooltip/tooltip.component";
 
@@ -50,7 +51,9 @@ export interface NavItem {
     CommonModule,
     NgIconComponent,
     RouterLink,
-    DropdownMenuComponent,
+    CdkMenu,
+    CdkMenuItem,
+    CdkMenuTrigger,
     ButtonComponent,
     TooltipComponent,
   ],
@@ -107,7 +110,22 @@ export class Navbar {
   currentRoute = signal(this.router.url.split(/[?#]/)[0]);
 
   // User menu state
-  userMenuOpen = signal(false);
+  protected readonly userMenuPositions: ConnectedPosition[] = [
+    {
+      originX: "end",
+      originY: "bottom",
+      overlayX: "end",
+      overlayY: "top",
+      offsetY: 8,
+    },
+    {
+      originX: "end",
+      originY: "top",
+      overlayX: "end",
+      overlayY: "bottom",
+      offsetY: -8,
+    },
+  ];
   profileImageLoaded = signal(false);
 
   scrolled = signal(false);

@@ -1,3 +1,4 @@
+import { DOWN_ARROW, ESCAPE, UP_ARROW } from "@angular/cdk/keycodes";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { provideHttpClient, withXhr } from "@angular/common/http";
 import { provideHttpClientTesting } from "@angular/common/http/testing";
@@ -204,6 +205,61 @@ describe("Navbar", () => {
     it("should call auth.logout", () => {
       component.logout();
       expect(mockAuthService.logout).toHaveBeenCalled();
+    });
+  });
+
+  describe("profile menu keyboard interaction", () => {
+    let trigger: HTMLButtonElement;
+
+    beforeEach(() => {
+      component.isAuthenticated$ = of(true);
+      component.user$ = of({ email: "test@example.com" });
+      fixture.detectChanges();
+      trigger = fixture.nativeElement.querySelector("#user-menu-button");
+    });
+
+    function keydown(element: Element, key: string, keyCode: number) {
+      element.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key,
+          keyCode,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+      fixture.detectChanges();
+    }
+
+    it("opens the menu with an arrow key and returns focus on Escape", async () => {
+      trigger.focus();
+      keydown(trigger, "ArrowDown", DOWN_ARROW);
+      await fixture.whenStable();
+      expect(trigger.getAttribute("aria-expanded")).toBe("true");
+      expect(document.activeElement?.textContent?.trim()).toBe("My Profile");
+
+      keydown(document.activeElement!, "ArrowUp", UP_ARROW);
+      expect(document.activeElement?.textContent?.trim()).toBe("Log out");
+
+      keydown(document.activeElement!, "Escape", ESCAPE);
+      expect(trigger.getAttribute("aria-expanded")).toBe("false");
+      expect(document.activeElement).toBe(trigger);
+    });
+
+    it("activates the profile action and restores focus", async () => {
+      const profile = spyOn(component, "openProfile");
+      trigger.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const item = document.querySelector<HTMLButtonElement>(
+        '[aria-label="User menu"] [role="menuitem"]'
+      )!;
+      item.click();
+      fixture.detectChanges();
+
+      expect(profile).toHaveBeenCalledTimes(1);
+      expect(trigger.getAttribute("aria-expanded")).toBe("false");
+      expect(document.activeElement).toBe(trigger);
     });
   });
 

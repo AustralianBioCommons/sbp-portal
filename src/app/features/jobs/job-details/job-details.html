@@ -132,7 +132,7 @@
                 [disabled]="isTabDisabled(tab.id)"
                 [attr.aria-disabled]="isTabDisabled(tab.id)"
                 (click)="setActiveTab(tab.id)"
-                class="inline-flex w-24 min-w-24 shrink-0 items-center justify-center gap-2 border-b-3 py-3 text-sm font-semibold whitespace-nowrap transition-all"
+                class="inline-flex w-24 min-w-24 shrink-0 items-center justify-center gap-2 border-b-3 py-3 text-sm font-semibold whitespace-nowrap transition-all focus-visible:-outline-offset-2"
                 [class]="
                   activeTab() === tab.id
                     ? 'border-sky-500 text-sky-600'

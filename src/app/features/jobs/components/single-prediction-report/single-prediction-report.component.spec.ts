@@ -33,7 +33,7 @@ class MolstarViewerStubComponent {
   representation = input<"cartoon" | "cartoon-and-sticks">(
     "cartoon-and-sticks"
   );
-  colorTheme = input<"default" | "plddt">("default");
+  colorTheme = input<"default" | "plddt" | "chain-id">("default");
   showSequencePanel = input(true);
   enablePicking = input(true);
   isolateSelection = input(false);
@@ -196,6 +196,60 @@ describe("SinglePredictionReportComponent", () => {
       label: "sample.cif",
     });
     expect(component.loading()).toBeFalse();
+  });
+
+  it("switches structure coloring without replacing the viewer or its selection", () => {
+    render();
+    const element: HTMLElement = fixture.nativeElement;
+    const viewer = fixture.debugElement.query(
+      By.directive(MolstarViewerStubComponent)
+    ).componentInstance as MolstarViewerStubComponent;
+    const plddt = element.querySelector<HTMLInputElement>(
+      'input[value="plddt"]'
+    )!;
+    const chain = element.querySelector<HTMLInputElement>(
+      'input[value="chain-id"]'
+    )!;
+    const legend = element.querySelector("app-plddt-legend")!;
+    const source = viewer.structureSource();
+    const requestCount = resultsService.getResultFileText.calls.count();
+    component.onResidueIndexDetected(residues);
+    component.onMatrixSelectionChange([0, 1]);
+    fixture.detectChanges();
+    const selection = viewer.selectionRequest();
+
+    expect(viewer.colorTheme()).toBe("plddt");
+    expect(plddt.checked).toBeTrue();
+    expect(chain.checked).toBeFalse();
+    expect(legend.classList.contains("invisible")).toBeFalse();
+    expect(legend.getAttribute("aria-hidden")).toBe("false");
+
+    chain.click();
+    fixture.detectChanges();
+
+    expect(viewer.colorTheme()).toBe("chain-id");
+    expect(plddt.checked).toBeFalse();
+    expect(chain.checked).toBeTrue();
+    expect(element.querySelector("app-plddt-legend")).toBe(legend);
+    expect(legend.classList.contains("invisible")).toBeTrue();
+    expect(legend.getAttribute("aria-hidden")).toBe("true");
+    expect(component.selectedIndices()).toEqual([0, 1]);
+    expect(viewer.selectionRequest()).toBe(selection);
+    expect(viewer.structureSource()).toBe(source);
+    expect(
+      fixture.debugElement.query(By.directive(MolstarViewerStubComponent))
+        .componentInstance
+    ).toBe(viewer);
+    expect(resultsService.getResultFileText.calls.count()).toBe(requestCount);
+
+    plddt.click();
+    fixture.detectChanges();
+
+    expect(viewer.colorTheme()).toBe("plddt");
+    expect(plddt.checked).toBeTrue();
+    expect(chain.checked).toBeFalse();
+    expect(legend.classList.contains("invisible")).toBeFalse();
+    expect(legend.getAttribute("aria-hidden")).toBe("false");
   });
 
   it("parses the fetched PAE matrix", () => {

@@ -134,7 +134,7 @@
             <app-tooltip [message]="viewerHelp">
               <button
                 type="button"
-                class="flex items-center rounded-full border bg-white p-1.5 text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                class="flex items-center rounded-full border bg-white p-1.5 text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
                 aria-label="How to use the 3D viewer"
               >
                 <ng-icon name="heroLifebuoy" size="22"></ng-icon>
@@ -146,7 +146,7 @@
         <!-- Hidden when the panel is collapsed. -->
         @if (isPanelOpen()) {
           <div
-            class="relative w-1 shrink-0 cursor-col-resize bg-gray-200 transition-colors select-none hover:bg-sky-200 focus-visible:bg-sky-400 focus-visible:outline-none"
+            class="relative w-1 shrink-0 cursor-col-resize bg-gray-200 transition-colors select-none hover:bg-sky-200 focus-visible:bg-sky-500 focus-visible:outline-none"
             role="separator"
             aria-orientation="vertical"
             [attr.aria-label]="'Resize the ' + panelTitle() + ' panel'"
@@ -180,7 +180,7 @@
           @if (!isPanelOpen()) {
             <button
               type="button"
-              class="absolute top-4 right-0 z-10 flex items-center gap-2 rounded-l-full border border-r-0 border-gray-300 bg-white p-2 text-sm font-medium whitespace-nowrap shadow-md transition-colors hover:bg-gray-50 focus:outline-none"
+              class="absolute top-4 right-0 z-10 flex items-center gap-2 rounded-l-full border border-r-0 border-gray-300 bg-white p-2 text-sm font-medium whitespace-nowrap shadow-md transition-colors hover:bg-gray-50 focus-visible:-outline-offset-2"
               (click)="openPanel()"
               [title]="'Open ' + panelTitle()"
             >
@@ -206,7 +206,7 @@
                 </span>
                 <button
                   type="button"
-                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none"
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                   (click)="closePanel()"
                   title="Close"
                 >

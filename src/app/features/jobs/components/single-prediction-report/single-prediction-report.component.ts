@@ -90,6 +90,7 @@ export class SinglePredictionReportComponent {
 
   readonly structureSource = signal<StructureSource | null>(null);
   readonly structureError = signal<string | null>(null);
+  readonly colorTheme = signal<"plddt" | "chain-id">("plddt");
 
   readonly paeMatrix = signal<PaeMatrix | null>(null);
   readonly paeError = signal<string | null>(null);

@@ -94,6 +94,33 @@ describe("ToolSelectionComponent", () => {
     expect(selectedRadio?.value).toBe("tool1");
   });
 
+  it("shows focus on the visible chip without changing selection or layout", () => {
+    fixture.detectChanges();
+    const element: HTMLElement = fixture.nativeElement;
+    const radio = element.querySelector<HTMLInputElement>(
+      'input[value="tool2"]'
+    )!;
+    const label = radio.closest("label")!;
+    label.style.transition = "none";
+    const before = label.getBoundingClientRect();
+
+    radio.focus({ preventScroll: true });
+
+    expect(document.activeElement).toBe(radio);
+    expect(radio.matches(":focus-visible")).toBeTrue();
+    const style = getComputedStyle(label);
+    expect(style.outlineStyle).toBe("solid");
+    expect(style.outlineWidth).toBe("2px");
+    expect(style.outlineOffset).toBe("2px");
+    expect(label.getBoundingClientRect().toJSON()).toEqual(before.toJSON());
+    expect(component.selectedToolId()).toBe("tool1");
+    expect(radio.checked).toBeFalse();
+
+    radio.blur();
+
+    expect(getComputedStyle(label).outlineStyle).toBe("none");
+  });
+
   it("should handle empty tools array", () => {
     fixture.componentRef.setInput("tools", []);
     fixture.detectChanges();

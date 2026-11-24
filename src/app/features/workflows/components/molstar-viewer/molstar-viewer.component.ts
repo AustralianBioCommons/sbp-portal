@@ -60,8 +60,8 @@ import {
  *  is typed with — hence the cast. */
 const PLDDT_COLOR_THEME = "plddt-confidence" as "uniform";
 
-/** gray-500, for everything outside an isolated selection. */
-const MUTED_STRUCTURE_COLOR = Color(0x6a7282);
+/** gray-400, for everything outside an isolated selection. */
+const MUTED_STRUCTURE_COLOR = Color(0x99a1af);
 
 /** The `binder-target` colours: orange for the binder, blue for the target. */
 const BINDER_STRUCTURE_COLOR = Color(0xea8b0b);
@@ -171,9 +171,12 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   representation = input<"cartoon" | "cartoon-and-sticks">(
     "cartoon-and-sticks"
   );
-  /** "plddt" is the AlphaFold confidence palette. "binder-target" paints
-   *  `binderChainId` as the binder and everything else as the target. */
-  colorTheme = input<"default" | "plddt" | "binder-target">("default");
+  /** "plddt" is the AlphaFold confidence palette; "chain-id" distinguishes
+   *  chains. "binder-target" paints `binderChainId` as the binder and the rest
+   *  as the target. */
+  colorTheme = input<"default" | "plddt" | "chain-id" | "binder-target">(
+    "default"
+  );
   /** The chain the pipeline writes the binder to, when its length cannot say. */
   binderChainId = input("A");
   /** Binder length, which names the chain when exactly one matches. */
@@ -214,6 +217,8 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
 
   private viewer: Viewer | null = null;
   private selectionSub: { unsubscribe(): void } | null = null;
+  private selectionUpdate = Promise.resolve();
+  private selectionRequestId = 0;
   private formSubmitAbortCtrl: AbortController | null = null;
   private readonly zone = inject(NgZone);
   /** Suppresses residuesSelected while a programmatic selection is applied, so
@@ -261,6 +266,15 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
             () => void this.applyExternalSelection(request.tokens)
           );
         }
+      });
+    });
+
+    effect(() => {
+      const theme = this.colorTheme();
+      const loaded = this.status() === "loaded";
+      untracked(() => {
+        if (!loaded || (theme !== "plddt" && theme !== "chain-id")) return;
+        this.zone.runOutsideAngular(() => void this.updateColorTheme(theme));
       });
     });
   }
@@ -321,6 +335,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.selectionRequestId++;
     this.cleanupSubscription();
     this.formSubmitAbortCtrl?.abort();
     this.formSubmitAbortCtrl = null;
@@ -504,6 +519,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   private async loadStructure(source: StructureSource): Promise<void> {
+    this.selectionRequestId++;
     this.status.set("loading");
     this.errorMessage.set("");
     this.cleanupSubscription();
@@ -654,6 +670,7 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   private clearViewer(): void {
+    this.selectionRequestId++;
     this.cleanupSubscription();
     void this.viewer?.plugin?.clear();
     this.selectedResidues.set([]);
@@ -683,9 +700,18 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  /** Select the residues named by "A56,B12", without emitting residuesSelected:
-   *  the parent form must not be overwritten. */
-  private async applyExternalSelection(residueString: string): Promise<void> {
+  /** Keep async repaints ordered so a late selection cannot undo a clear. */
+  private applyExternalSelection(residueString: string): Promise<void> {
+    const request = ++this.selectionRequestId;
+    this.selectionUpdate = this.selectionUpdate.then(() => {
+      if (request !== this.selectionRequestId) return;
+      return this.applySelection(residueString);
+    });
+    return this.selectionUpdate;
+  }
+
+  /** Select residues without emitting residuesSelected back to the parent. */
+  private async applySelection(residueString: string): Promise<void> {
     if (!this.plugin || this.status() !== "loaded") return;
 
     this._applyingExternalSelection = true;
@@ -810,6 +836,22 @@ export class MolstarViewerComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /** Update the theme while preserving the camera and muted selection context. */
+  private async updateColorTheme(theme: "plddt" | "chain-id"): Promise<void> {
+    if (!this.plugin) return;
+    const { hierarchy, component } = this.plugin.managers.structure;
+    const components = hierarchy.current.structures.flatMap(
+      (structure) => structure.components
+    );
+    try {
+      await component.updateRepresentationsTheme(components, {
+        color: theme === "plddt" ? PLDDT_COLOR_THEME : "chain-id",
+      });
+    } catch (e) {
+      console.warn("Mol* structure colouring failed:", e);
+    }
+  }
 
   /**
    * `layoutIsExpanded: false` hides every region, so the sequence bar only gets

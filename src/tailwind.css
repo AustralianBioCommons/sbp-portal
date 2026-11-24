@@ -31,11 +31,11 @@
     cursor: pointer;
   }
 
-  /* Keyboard focus indicator for interactive controls.
-     Uses outline (not ring) so it is never clipped by overflow-hidden
-     ancestors. Form inputs opt out and keep their own :focus ring. */
+  /* Keep keyboard focus separate from box shadows. Clipped controls use inset
+     outlines; form inputs keep their own focus styling. */
   button:focus-visible,
   [role="button"]:focus-visible,
+  [tabindex="0"]:focus-visible,
   a:focus-visible {
     @apply outline-2 outline-offset-2 outline-sky-500;
   }

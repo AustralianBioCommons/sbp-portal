@@ -71,7 +71,7 @@
           @for (row of sortedRows(); track row.id) {
             <tr
               tabindex="0"
-              class="cursor-pointer transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-600 aria-selected:hover:bg-green-50"
+              class="cursor-pointer transition-all hover:bg-gray-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-500 aria-selected:hover:bg-green-50"
               [class.bg-green-50]="row.id === selectedId()"
               [attr.aria-selected]="row.id === selectedId()"
               (click)="select(row)"
@@ -105,7 +105,7 @@
                   @if (file) {
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center rounded-lg border bg-white p-2 transition-all hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      class="inline-flex items-center justify-center rounded-lg border bg-white p-2 transition-all hover:bg-sky-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
                       [disabled]="downloadingKey() !== null"
                       [attr.aria-busy]="downloadingKey() === file.key"
                       [title]="

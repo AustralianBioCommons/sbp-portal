@@ -531,7 +531,37 @@ describe("JobDetailsComponent", () => {
     expect(resultsService.downloadAll).toHaveBeenCalledWith(mockJob.id);
     expect(createObjectUrlSpy).toHaveBeenCalledWith(jasmine.any(Blob));
     expect(clickSpy).toHaveBeenCalled();
+    expect(
+      (clickSpy.calls.mostRecent().object as HTMLAnchorElement).download
+    ).toBe("results.zip");
     expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:results");
+    expect(component.downloadingAllFiles()).toBeFalse();
+  });
+
+  it("should name the download all archive after the job when the filename header is unavailable", () => {
+    resultsService.downloadAll.and.returnValue(
+      of(new HttpResponse({ body: new Blob(["zip"]) }))
+    );
+    spyOn(URL, "createObjectURL").and.returnValue("blob:results");
+    spyOn(URL, "revokeObjectURL");
+    const clickSpy = spyOn(HTMLAnchorElement.prototype, "click");
+    render();
+    component.filesItems.set([
+      {
+        label: "Results CSV",
+        key: "results_csv",
+        url: "https://cdn.test/results.csv",
+        category: "stat_csv",
+      },
+    ]);
+
+    component.downloadAllFiles();
+
+    expect(resultsService.downloadAll).toHaveBeenCalledWith(mockJob.id);
+    expect(clickSpy).toHaveBeenCalled();
+    expect(
+      (clickSpy.calls.mostRecent().object as HTMLAnchorElement).download
+    ).toBe("Example job_results.zip");
     expect(component.downloadingAllFiles()).toBeFalse();
   });
 
